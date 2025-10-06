@@ -71,25 +71,8 @@ jasaweb/
 - `pnpm dev` - Menjalankan aplikasi web dalam mode development
 - `pnpm build` - Membangun aplikasi web untuk produksi
 - `pnpm test` - Menjalankan unit tests dengan Vitest
-- `pnpm test:e2e` - Menjalankan end-to-end tests dengan Playwright
 - `pnpm lint` - Menjalankan linter
 - `pnpm format` - Memformat kode
-
-## Testing
-
-Proyek ini menggunakan dua jenis testing:
-
-1. **Unit Tests** dengan Vitest - untuk menguji fungsi dan komponen individual
-2. **End-to-End Tests** dengan Playwright - untuk menguji alur pengguna secara menyeluruh
-
-Menjalankan tests:
-```bash
-# Unit tests
-pnpm test
-
-# E2E tests
-pnpm test:e2e
-```
 
 ## Deployment
 

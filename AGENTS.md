@@ -1,24 +1,121 @@
-# Repository Guidelines
+# Qwen Code Project Context - JasaWeb
 
-## Project Structure & Module Organization
-This repo is in the early planning stage; keep `README.md` as the public overview and `plan.md` as the product/architecture source of truth. When scaffolding the codebase, mirror the proposed monorepo layout: `apps/web` for the Astro marketing site, `apps/api` for the portal API, and `packages/ui` / `packages/config` for shared assets. Place integration tests under `apps/**/tests` and shared fixtures in `packages/testing`. Assets for the public site belong in `apps/web/public`, while portal uploads flow through S3 in production but use `apps/api/storage` mocks locally.
+## Project Overview
+This is a web-based service for managing clients and providing website development services. The project is called "JasaWeb" and aims to generate qualified leads for website services (School Websites, News Portals, Company Profiles) while providing a client portal for streamlined collaboration.
 
-## Build, Test, and Development Commands
-Use Node 20+ and pnpm workspaces (`corepack enable`). Typical flows:
-- `pnpm install` — install root + workspace dependencies.
-- `pnpm dev --filter apps/web` — run the Astro site locally at `localhost:4321`.
-- `pnpm dev --filter apps/api` — start the NestJS API with hot reload.
-- `pnpm build` — build all workspaces via the shared pipeline.
-- `pnpm lint` / `pnpm format` — run ESLint and Prettier across the tree.
+The project is structured as an early-stage monorepo with plans for:
+- `apps/web` - Astro-based marketing site
+- `apps/api` - NestJS API for the client portal
+- `packages/ui` / `packages/config` - Shared assets
 
-## Coding Style & Naming Conventions
-Adopt Prettier defaults (two-space indent, single quotes in TS/JS) and Tailwind utility-first styling. Co-locate components by feature; favor folders such as `apps/web/src/features/<domain>` and `apps/api/src/modules/<domain>`. Use PascalCase for React/Astro components, camelCase for variables/functions, SCREAMING_SNAKE_CASE for env keys. Store environment defaults in `.env.example` and never commit real secrets.
+## Project Goals & KPIs
+- Generate qualified leads for 3 main services: School Websites, News Portals, Company Profiles
+- Accelerate client collaboration through a Client Portal
+- Standardize delivery processes to reduce project cycle time
+- Achieve 5-8% conversion from landing page to contact form
+- Reduce average project delivery time to 8-10 weeks
 
-## Testing Guidelines
-Prefer Vitest for unit tests (`*.test.ts`) and Playwright for end-to-end portal flows (`apps/web/tests/e2e`). Keep contract tests for the API in `apps/api/tests/contracts`. Aim for ≥80% critical-path coverage and include regression cases for approvals, ticket SLAs, and billing workflows. Run `pnpm test` locally before every push and ensure CI is green prior to merge.
+## Technical Architecture
+- **Frontend**: Next.js 14 (SSR/ISR), Tailwind CSS, shadcn/ui
+- **Backend**: Node.js (NestJS) with REST/tRPC API
+- **Database**: PostgreSQL (multi-tenant via organization_id)
+- **ORM**: Prisma
+- **Authentication**: Auth.js/NextAuth with email/Google/Microsoft, 2FA, magic links
+- **Storage**: S3-compatible (minIO/Wasabi/AWS)
+- **Infrastructure**: Vercel (FE) + Fly.io/Railway (API), Docker, CDN
 
-## Commit & Pull Request Guidelines
-Existing history is short, using plain imperative summaries (e.g., "Update README.md"); continue with clear, scoped messages or adopt Conventional Commits if automation is added. Keep feature branches focused, link related issues, and describe migrations or seed data in the PR body. Attach screenshots or terminal output for UI changes and note any config updates that reviewers must apply.
+## Current Status
+The project is in early planning stage with detailed documentation in `plan.md` and implementation roadmap in `todo.md`. The codebase is not yet scaffolded according to the planned monorepo structure.
 
-## Security & Configuration Tips
-Follow the risk controls in `plan.md`: enforce RBAC, protect secrets with Doppler or 1Password, and enable 2FA on all integrations. Sanitize client uploads, log access decisions, and document infra changes in deployment runbooks.
+## Key Features (Planned)
+
+### Public Marketing Site
+- Landing pages for 3 service types (School, News, Company Profile)
+- Portfolio and case studies
+- Blog and resources
+- Contact forms and meeting booking
+
+### Client Portal
+- Project dashboard with milestones and status
+- File management & versioning
+- Approval workflows with comments
+- Ticket system with SLA tracking
+- Invoice & payment management
+- Reporting and analytics
+
+### Internal Admin/Ops
+- Lightweight CRM
+- Project management across clients
+- Component library and templates
+
+## Building and Running (Planned)
+
+The project will use a pnpm monorepo setup with the following commands once scaffolding is complete:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run the Astro marketing site locally
+pnpm dev --filter apps/web
+
+# Start the NestJS API with hot reload
+pnpm dev --filter apps/api
+
+# Build all workspaces
+pnpm build
+
+# Run linting and formatting
+pnpm lint && pnpm format
+
+# Run tests
+pnpm test
+```
+
+## Development Conventions
+
+### Coding Style
+- Prettier defaults (two-space indent, single quotes in TS/JS)
+- Tailwind utility-first styling
+- PascalCase for React/Astro components
+- camelCase for variables/functions
+- SCREAMING_SNAKE_CASE for environment variables
+
+### File Structure
+- Components co-located by feature: `apps/web/src/features/<domain>`
+- API modules by domain: `apps/api/src/modules/<domain>`
+- Environment defaults in `.env.example`
+- Never commit real secrets
+
+### Testing
+- Vitest for unit tests (`*.test.ts`)
+- Playwright for end-to-end tests (`apps/web/tests/e2e`)
+- Contract tests for API (`apps/api/tests/contracts`)
+- Target ≥80% coverage on critical paths
+
+## Security & Compliance
+- OWASP Top 10 compliance
+- Rate limiting and strict CORS
+- Password hashing with Argon2
+- Encryption at rest and in transit
+- Multi-tenant data isolation
+- Audit logging for critical actions
+- Privacy compliance (Indonesian PDP Act)
+
+## MVP Roadmap (10-12 Week Plan)
+
+### Wave 1 - MVP
+- Complete public site with CMS
+- Basic auth (email/password + magic link) with RBAC & multi-tenancy
+- Core modules: Projects, Milestones, Files, Approvals
+- Simple tickets (without automatic SLA) and manual invoice uploads
+- Dashboard widgets with project status
+
+### Wave 2-3 - Enhancements
+- Online payment gateways
+- Automated SLA and reporting
+- Knowledge Base
+- White-label portal and corporate SSO
+
+## Current Implementation Status
+The project is currently in the planning phase with detailed specifications in `plan.md` and a TODO list in `todo.md`. The actual codebase has not been scaffolded yet but follows the planned monorepo architecture outlined in `AGENTS.md`.
