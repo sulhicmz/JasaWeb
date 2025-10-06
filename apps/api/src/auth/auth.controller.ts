@@ -22,14 +22,14 @@ export class AuthController {
     private refreshTokenService: RefreshTokenService,
   ) {}
 
-  @Public()
-  @Post('register')
+  // @Public()
+  // @Post('register')
   async register(@Body() createUserDto: CreateUserDto): Promise<any> {
     return await this.authService.register(createUserDto);
   }
 
-  @Public()
-  @Post('login')
+  // @Public()
+  // @Post('login')
   async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
     return await this.authService.login(loginUserDto);
   }
