@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../common/database/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 
 export interface AuditLogEntry {
   actorId: string; // ID of the user performing the action

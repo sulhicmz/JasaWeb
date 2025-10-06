@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SessionService } from './session.service';
-import { PrismaModule } from '../common/database/prisma.module';
+import { PrismaModule } from '../database/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({

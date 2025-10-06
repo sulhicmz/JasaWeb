@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../common/database/prisma.module';
-import { MultiTenantPrismaService } from './database/multi-tenant-prisma.service';
+import { PrismaModule } from './prisma.module';
+import { MultiTenantPrismaService } from './multi-tenant-prisma.service';
 
 @Module({
   imports: [PrismaModule],

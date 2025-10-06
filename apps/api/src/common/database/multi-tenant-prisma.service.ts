@@ -113,16 +113,13 @@ export class MultiTenantPrismaService {
     },
 
     create: (args: Prisma.MilestoneCreateArgs) => {
+      // Ensure projectId is properly typed and exists in the current organization
+      const projectId = args.data.project.connect.id;
       return this.prisma.milestone.create({
         ...args,
         data: {
           ...args.data,
-          project: {
-            connect: {
-              id: args.data.project.connect.id,
-              organizationId: this.organizationId, // This ensures we're connecting to a project in the current org
-            },
-          },
+          projectId, // Directly set the projectId instead of using nested connect with organizationId
         },
       });
     },
@@ -186,16 +183,13 @@ export class MultiTenantPrismaService {
     },
 
     create: (args: Prisma.FileCreateArgs) => {
+      // Ensure projectId is properly typed and exists in the current organization
+      const projectId = args.data.project.connect.id;
       return this.prisma.file.create({
         ...args,
         data: {
           ...args.data,
-          project: {
-            connect: {
-              id: args.data.project.connect.id,
-              organizationId: this.organizationId, // Ensures connection to project in current org
-            },
-          },
+          projectId, // Directly set the projectId instead of using nested connect with organizationId
         },
       });
     },

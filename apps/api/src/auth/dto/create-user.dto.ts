@@ -9,7 +9,7 @@ export class CreateUserDto {
   name: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   password: string;
 
   @IsOptional()

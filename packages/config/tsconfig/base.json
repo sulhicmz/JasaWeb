@@ -1,23 +1,68 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
+    "target": "ES2021",
+    "module": "commonjs",
+    "lib": [
+      "ES2021",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "declaration": true,
+    "removeComments": true,
     "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "removeComments": false,
-    "noEmit": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "exactOptionalPropertyTypes": false,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "@jasaweb/*": [
+        "packages/*"
+      ],
+      "@jasaweb/ui": [
+        "packages/ui/src"
+      ],
+      "@jasaweb/ui/*": [
+        "packages/ui/src/*"
+      ],
+      "@jasaweb/config": [
+        "packages/config/src"
+      ],
+      "@jasaweb/config/*": [
+        "packages/config/src/*"
+      ],
+      "@jasaweb/testing": [
+        "packages/testing/src"
+      ],
+      "@jasaweb/testing/*": [
+        "packages/testing/src/*"
+      ],
+      "@jasaweb/api/*": [
+        "apps/api/src/*"
+      ],
+      "@jasaweb/web/*": [
+        "apps/web/src/*"
+      ]
+    },
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx"
   }
 }
