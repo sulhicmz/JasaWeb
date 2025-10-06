@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  name           String?
+  password       String
+  profilePicture String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  memberships    Membership[]
+  approvals      Approval[]
+  tickets        Ticket[]
+  invoices       Invoice[]
+  auditLogs      AuditLog[]
+  File           File[]
+  Task           Task[]
+  refreshTokens  RefreshToken[]
+  sessions       Session[]
+}
+
+model Organization {
+  id           String       @id @default(cuid())
+  name         String
+  billingEmail String
+  plan         String?
+  settings     Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  memberships  Membership[]
+  projects     Project[]
+  tickets      Ticket[]
+  invoices     Invoice[]
+  AuditLog     AuditLog[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  role           String // owner, admin, reviewer, finance, member
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+model Project {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  status         String // draft, progress, review, completed, paused, cancelled
+  startAt        DateTime?
+  dueAt          DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  milestones     Milestone[]
+  files          File[]
+  approvals      Approval[]
+  tasks          Task[]
+  tickets        Ticket[]
+  invoices       Invoice[]
+}
+
+model Milestone {
+  id        String    @id @default(cuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  dueAt     DateTime?
+  status    String // todo, in-progress, completed, overdue
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model File {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folder       String?
+  filename     String
+  version      String?
+  size         Int?
+  checksum     String?
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Approval {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  itemType    String // page, content, design, feature, etc.
+  itemId      String
+  status      String // pending, approved, rejected
+  decidedById String?
+  decidedBy   User?     @relation(fields: [decidedById], references: [id])
+  decidedAt   DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Task {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title      String
+  assigneeId String?
+  assignee   User?     @relation(fields: [assigneeId], references: [id])
+  status     String // todo, in-progress, review, completed
+  dueAt      DateTime?
+  labels     String[]  @default([])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type           String // bug, feature, improvement, question, task
+  priority       String // low, medium, high, critical
+  status         String // open, in-progress, in-review, resolved, closed
+  assigneeId     String?
+  assignee       User?        @relation(fields: [assigneeId], references: [id])
+  slaDueAt       DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Invoice {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  userId         String?
+  issuedBy       User?        @relation(fields: [userId], references: [id])
+  amount         Float
+  currency       String // USD, EUR, etc.
+  issuedAt       DateTime
+  dueAt          DateTime
+  status         String // draft, issued, paid, overdue, cancelled
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  sessionToken String @unique  // The session token
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  revokedAt  DateTime?
+  userAgent  String?
+  ipAddress  String?
+  
+  @@index([userId])
+}
+
+model RefreshToken {
+  id           String   @id @default(cuid())
+  tokenHash    String   @unique  // Hashed version for security
+  tokenIdentifier String @unique // Plaintext identifier for lookups (not the actual token)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  revokedAt    DateTime?
+  
+  @@index([userId])
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorId        String?
+  actor          User?        @relation(fields: [actorId], references: [id])
+  action         String // user_login, file_upload, approval_request, etc.
+  target         String // User, Project, File, etc.
+  meta           Json?
+  createdAt      DateTime     @default(now())
+}

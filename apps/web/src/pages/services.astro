@@ -1,0 +1,114 @@
+---
+// src/pages/services.astro
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Layanan">
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <h1 class="text-3xl font-bold text-center mb-4">Layanan Kami</h1>
+      <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">Kami menyediakan layanan pembuatan website profesional untuk berbagai kebutuhan bisnis Anda.</p>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-2xl font-bold mb-4 text-blue-600">
+            <i class="fas fa-school mr-2"></i>
+            Website Sekolah
+          </h2>
+          <p class="mb-4">Solusi lengkap untuk kebutuhan website sekolah dengan fitur-fitur penting seperti:</p>
+          <ul class="list-disc pl-6 mb-4 space-y-2">
+            <li>Profil sekolah dan informasi penting</li>
+            <li>Berita dan agenda sekolah</li>
+            <li>Profil guru dan staff</li>
+            <li>Galery kegiatan</li>
+            <li>PPDB (Penerimaan Peserta Didik Baru)</li>
+            <li>Integrasi dengan sistem LMS</li>
+          </ul>
+          <a href="/contact" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition">Konsultasi Gratis</a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-2xl font-bold mb-4 text-green-600">
+            <i class="fas fa-newspaper mr-2"></i>
+            Portal Berita
+          </h2>
+          <p class="mb-4">Platform berita yang cepat, SEO friendly, dan mudah dikelola dengan fitur-fitur:</p>
+          <ul class="list-disc pl-6 mb-4 space-y-2">
+            <li>Manajemen artikel dan kategori</li>
+            <li>Alur editorial (draft-review-publish)</li>
+            <li>Editor konten WYSIWYG</li>
+            <li>Optimasi untuk mesin pencari</li>
+            <li>Newsletter dan RSS feed</li>
+            <li>Integrasi social media</li>
+          </ul>
+          <a href="/contact" class="inline-block bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition">Konsultasi Gratis</a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-2xl font-bold mb-4 text-purple-600">
+            <i class="fas fa-building mr-2"></i>
+            Company Profile
+          </h2>
+          <p class="mb-4">Website perusahaan yang profesional dan menampilkan brand Anda secara elegan dengan:</p>
+          <ul class="list-disc pl-6 mb-4 space-y-2">
+            <li>Halaman produk dan layanan</li>
+            <li>Tentang perusahaan dan tim</li>
+            <li>Testimoni klien</li>
+            <li>Portofolio dan case study</li>
+            <li>Form kontak dan lokasi</li>
+            <li>Integrasi media sosial</li>
+          </ul>
+          <a href="/contact" class="inline-block bg-purple-600 text-white py-2 px-6 rounded-lg hover:bg-purple-700 transition">Konsultasi Gratis</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-gray-100">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-12">Paket Harga</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+          <h3 class="text-xl font-bold mb-2">Starter</h3>
+          <div class="text-3xl font-bold mb-4">Rp 2.500.000</div>
+          <ul class="list-disc pl-6 mb-4 space-y-2 text-left">
+            <li>Website statis</li>
+            <li>5 halaman</li>
+            <li>Desain responsif</li>
+            <li>Optimasi SEO dasar</li>
+            <li>Masa aktif 1 tahun</li>
+          </ul>
+          <a href="/contact" class="inline-block bg-gray-200 text-gray-800 py-2 px-6 rounded-lg">Pesan Sekarang</a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 text-center border-2 border-blue-500">
+          <h3 class="text-xl font-bold mb-2">Professional</h3>
+          <div class="text-3xl font-bold mb-4 text-blue-600">Rp 5.000.000</div>
+          <ul class="list-disc pl-6 mb-4 space-y-2 text-left">
+            <li>Website dinamis</li>
+            <li>Unlimited halaman</li>
+            <li>Fitur admin CMS</li>
+            <li>Optimasi SEO lanjut</li>
+            <li>Integrasi media sosial</li>
+            <li>Masa aktif 1 tahun</li>
+          </ul>
+          <a href="/contact" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg">Pesan Sekarang</a>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+          <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+          <div class="text-3xl font-bold mb-4">Rp 10.000.000</div>
+          <ul class="list-disc pl-6 mb-4 space-y-2 text-left">
+            <li>Website custom</li>
+            <li>Fitur sesuai kebutuhan</li>
+            <li>Integrasi sistem</li>
+            <li>Fitur e-commerce</li>
+            <li>Analitik lanjut</li>
+            <li>Masa aktif 1 tahun</li>
+          </ul>
+          <a href="/contact" class="inline-block bg-gray-200 text-gray-800 py-2 px-6 rounded-lg">Pesan Sekarang</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>

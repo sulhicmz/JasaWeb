@@ -1,0 +1,98 @@
+---
+// src/pages/index.astro
+import Layout from '../layouts/Layout.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+
+const pageTitle = 'Jasa Pembuatan Website Profesional - JasaWeb';
+const services = [
+  {
+    title: 'Website Sekolah',
+    description: 'Website sekolah yang informatif dan mudah dikelola oleh staff administrasi.',
+    icon: 'fas fa-school',
+    url: '/services#school'
+  },
+  {
+    title: 'Portal Berita',
+    description: 'Platform berita yang cepat, SEO friendly, dan dapat diintegrasikan dengan CMS.',
+    icon: 'fas fa-newspaper',
+    url: '/services#news'
+  },
+  {
+    title: 'Company Profile',
+    description: 'Website perusahaan yang profesional dan menampilkan brand Anda secara elegan.',
+    icon: 'fas fa-building',
+    url: '/services#company'
+  }
+];
+---
+
+<Layout title="Beranda">
+  <section class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-20">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6">Jasa Pembuatan Website Profesional</h1>
+      <p class="text-xl mb-10 max-w-2xl mx-auto">Layanan pembuatan website untuk sekolah, portal berita, dan company profile dengan tampilan modern dan fungsional.</p>
+      <div class="flex justify-center space-x-4">
+        <a href="/contact" class="bg-white text-blue-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition">Kontak Kami</a>
+        <a href="/services" class="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg hover:bg-white hover:text-blue-600 transition">Lihat Layanan</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-12">Layanan Kami</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {services.map(service => (
+          <ServiceCard service={service} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-gray-100">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-12">Kenapa Memilih Kami?</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-blue-500 text-4xl mb-4">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Cepat & Responsif</h3>
+          <p>Website Anda akan tampil cepat di semua perangkat.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-blue-500 text-4xl mb-4">
+            <i class="fas fa-search"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">SEO Friendly</h3>
+          <p>Struktur yang mendukung optimasi mesin pencari.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-blue-500 text-4xl mb-4">
+            <i class="fas fa-sync-alt"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Mudah Dikelola</h3>
+          <p>Interface yang sederhana untuk update konten.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-blue-500 text-4xl mb-4">
+            <i class="fas fa-headset"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Dukungan Penuh</h3>
+          <p>Layanan support setelah peluncuran website.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold mb-6">Siap Memulai Proyek Website Anda?</h2>
+      <p class="text-xl mb-10 max-w-2xl mx-auto">Hubungi kami untuk konsultasi gratis dan penawaran terbaik untuk kebutuhan website Anda.</p>
+      <a href="/contact" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition">Hubungi Kami</a>
+    </div>
+  </section>
+</Layout>

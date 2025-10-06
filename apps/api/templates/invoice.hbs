@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>New Invoice: {{invoiceNumber}}</title>
+</head>
+<body>
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h1 style="color: #333;">New Invoice Available</h1>
+    <h2 style="color: #007cba;">Invoice #{{invoiceNumber}}</h2>
+    <p>An invoice for <strong>{{amount}}</strong> has been issued and is now available in your account.</p>
+    <p><strong>Due Date:</strong> {{dueDate}}</p>
+    <div style="margin: 20px 0;">
+      <p>To view and pay your invoice:</p>
+      <a href="{{invoiceLink}}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0;">
+        View Invoice
+      </a>
+    </div>
+    <p>If you have already paid this invoice, please disregard this message.</p>
+    <br>
+    <p>Best regards,<br>The JasaWeb Team</p>
+  </div>
+</body>
+</html>

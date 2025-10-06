@@ -1,0 +1,13 @@
+{
+  "name": "@jasaweb/config",
+  "version": "1.0.0",
+  "description": "Shared configuration for JasaWeb",
+  "scripts": {
+    "lint": "echo 'TODO: Add lint script'"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}

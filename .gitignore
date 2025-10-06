@@ -1,0 +1,15 @@
+# Node / pnpm
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+.turbo/
+coverage/
+
+# Env & local
+.env
+.env.*
+.DS_Store
+

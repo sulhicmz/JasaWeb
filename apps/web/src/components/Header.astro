@@ -1,0 +1,55 @@
+---
+// src/components/Header.astro
+import { useState } from 'react';
+---
+
+<header class="bg-white shadow-md">
+  <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center">
+      <a href="/" class="text-xl font-bold text-blue-600">JasaWeb</a>
+    </div>
+    
+    <div class="hidden md:block">
+      <ul class="flex space-x-6">
+        <li><a href="/" class="text-gray-700 hover:text-blue-600">Beranda</a></li>
+        <li><a href="/services" class="text-gray-700 hover:text-blue-600">Layanan</a></li>
+        <li><a href="/portfolio" class="text-gray-700 hover:text-blue-600">Portofolio</a></li>
+        <li><a href="/blog" class="text-gray-700 hover:text-blue-600">Blog</a></li>
+        <li><a href="/contact" class="text-gray-700 hover:text-blue-600">Kontak</a></li>
+        <li><a href="/login" class="text-gray-700 hover:text-blue-600">Login</a></li>
+      </ul>
+    </div>
+    
+    <div class="md:hidden">
+      <button id="mobile-menu-button" class="text-gray-700">
+        <i class="fas fa-bars text-2xl"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Mobile menu toggle functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.createElement('div');
+    mobileMenu.id = 'mobile-menu';
+    mobileMenu.className = 'hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-lg py-4';
+    mobileMenu.innerHTML = `
+      <ul class="flex flex-col space-y-4 px-4">
+        <li><a href="/" class="block text-gray-700 hover:text-blue-600">Beranda</a></li>
+        <li><a href="/services" class="block text-gray-700 hover:text-blue-600">Layanan</a></li>
+        <li><a href="/portfolio" class="block text-gray-700 hover:text-blue-600">Portofolio</a></li>
+        <li><a href="/blog" class="block text-gray-700 hover:text-blue-600">Blog</a></li>
+        <li><a href="/contact" class="block text-gray-700 hover:text-blue-600">Kontak</a></li>
+        <li><a href="/login" class="block text-gray-700 hover:text-blue-600">Login</a></li>
+      </ul>
+    `;
+    
+    document.querySelector('header').appendChild(mobileMenu);
+    
+    mobileMenuButton.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  });
+</script>
