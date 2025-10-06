@@ -48,6 +48,7 @@ import { HealthModule } from './health/health.module';
     TicketModule,
     InvoiceModule,
     FileModule,
+    ApprovalModule,
     EmailModule,
     AuditModule,
     ErrorHandlingModule,
