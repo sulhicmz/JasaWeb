@@ -12,7 +12,7 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService,
   ) {}
 
-  async register(createUserDto: CreateUserDto) {
+  async register(createUserDto: CreateUserDto): Promise<{ access_token: string; refreshToken: string; expiresAt: Date; user: { id: any; email: any; name: any; profilePicture: any; } }> {
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(createUserDto.email);
     if (existingUser) {
@@ -44,7 +44,7 @@ export class AuthService {
     };
   }
 
-  async login(loginUserDto: LoginUserDto) {
+  async login(loginUserDto: LoginUserDto): Promise<{ access_token: string; refreshToken: string; expiresAt: Date; user: { id: any; email: any; name: any; profilePicture: any; } }> {
     const user = await this.usersService.findByEmail(loginUserDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');

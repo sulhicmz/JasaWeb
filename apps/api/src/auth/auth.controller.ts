@@ -1,10 +1,9 @@
-import { Controller, Post, Body, UseGuards, Request, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Request, Get, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { RefreshTokenService } from './refresh-token.service';
-import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -15,20 +14,20 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto) {
+  async register(@Body() createUserDto: CreateUserDto): Promise<any> {
     return await this.authService.register(createUserDto);
   }
 
   @Public()
   @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto) {
+  async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
     return await this.authService.login(loginUserDto);
   }
 
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body('refreshToken') refreshToken: string) {
+  async refresh(@Body('refreshToken') refreshToken: string): Promise<any> {
     if (!refreshToken) {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
@@ -58,7 +57,7 @@ export class AuthController {
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Body('refreshToken') refreshToken: string) {
+  async logout(@Body('refreshToken') refreshToken: string): Promise<any> {
     if (!refreshToken) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,

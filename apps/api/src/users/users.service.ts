@@ -7,7 +7,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<any> {
     return await this.prisma.user.create({
       data: {
         email: createUserDto.email,
@@ -18,23 +18,23 @@ export class UsersService {
     });
   }
 
-  async findAll() {
+  async findAll(): Promise<any[]> {
     return await this.prisma.user.findMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<any> {
     return await this.prisma.user.findUnique({
       where: { id },
     });
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<any> {
     return await this.prisma.user.findUnique({
       where: { email },
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<any> {
     return await this.prisma.user.update({
       where: { id },
       data: {
@@ -46,7 +46,7 @@ export class UsersService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<any> {
     return await this.prisma.user.delete({
       where: { id },
     });
