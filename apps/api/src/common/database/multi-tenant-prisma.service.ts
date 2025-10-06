@@ -12,7 +12,7 @@ import { Prisma } from '@prisma/client';
 export class MultiTenantPrismaService {
   constructor(
     private prisma: PrismaService,
-    @Inject(REQUEST) private request: Request,
+    @Inject(REQUEST) private request: any,
   ) {}
 
   /**
