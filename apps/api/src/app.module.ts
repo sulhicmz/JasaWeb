@@ -37,10 +37,10 @@ import { HealthModule } from './health/health.module';
         max: parseInt(process.env.CACHE_MAX) || 100, // Maximum number of items in cache
       }),
     }),
-    ThrottlerModule.forRoot({
+    ThrottlerModule.forRoot([{
       ttl: parseInt(process.env.THROTTLE_TTL) || 60, // Time window in seconds
       limit: parseInt(process.env.THROTTLE_LIMIT) || 10, // Max requests per window
-    }),
+    }]),
     AuthModule,
     UserModule,
     ProjectModule,

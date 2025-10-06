@@ -13,21 +13,18 @@ export class AuthController {
     private refreshTokenService: RefreshTokenService,
   ) {}
 
-  @UseGuards(ThrottlerGuard)
   @Public()
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
     return await this.authService.register(createUserDto);
   }
 
-  @UseGuards(ThrottlerGuard)
   @Public()
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
     return await this.authService.login(loginUserDto);
   }
 
-  @UseGuards(ThrottlerGuard)
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
@@ -58,7 +55,6 @@ export class AuthController {
     }
   }
 
-  @UseGuards(ThrottlerGuard)
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
