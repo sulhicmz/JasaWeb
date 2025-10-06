@@ -278,3 +278,16 @@ Sumber: `AGENTS.md` + `plan.md`. Checklist ini menyatukan tooling (pnpm, Vitest/
 - [x] Security features (multi-tenancy, RBAC, rate limiting) in place
 - [x] Monitoring and logging systems operational
 - [x] Performance optimizations (caching, health checks) completed
+
+### CODEBASE CLEANUP PLAN
+#### HIGH PRIORITY
+- [x] Remove unused dependencies and devDependencies (kept Playwright for E2E testing)
+- [x] Clean up redundant or duplicate files
+- [x] Optimize package.json files across monorepo
+- [x] Remove placeholder or example files that are no longer needed
+- [x] Update .gitignore to properly exclude build artifacts and temporary files
+- [x] Consolidate configuration files
+- [x] Remove unused TypeScript interfaces and types
+- [x] Clean up commented-out or dead code
+- [x] Optimize import statements and remove unused imports
+- [x] Remove temporary files and directories
