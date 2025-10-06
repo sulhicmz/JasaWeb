@@ -12,7 +12,7 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService,
   ) {}
 
-  async register(createUserDto: any) { // In a real app, we'd use proper DTO
+  async register(createUserDto: CreateUserDto) {
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(createUserDto.email);
     if (existingUser) {
@@ -44,7 +44,7 @@ export class AuthService {
     };
   }
 
-  async login(loginUserDto: any) { // In a real app, we'd use proper DTO
+  async login(loginUserDto: LoginUserDto) {
     const user = await this.usersService.findByEmail(loginUserDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');

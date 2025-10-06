@@ -17,14 +17,14 @@ export class AuthController {
   @Public()
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+    return await this.authService.register(createUserDto);
   }
 
   @UseGuards(ThrottlerGuard)
   @Public()
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto) {
-    return this.authService.login(loginUserDto);
+    return await this.authService.login(loginUserDto);
   }
 
   @UseGuards(ThrottlerGuard)
