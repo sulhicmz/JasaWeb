@@ -1,7 +1,7 @@
 ---
 title: "Keuntungan Menggunakan Portal Berita Modern"
 description: "Mengapa portal berita modern lebih efektif daripada platform tradisional dalam menyampaikan informasi."
-date: "2023-09-22"
+date: 2023-09-22
 author: "Admin JasaWeb"
 tags: ["berita", "portal", "teknologi"]
 ---

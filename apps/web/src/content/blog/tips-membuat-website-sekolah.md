@@ -1,7 +1,7 @@
 ---
 title: "Tips Membuat Website Sekolah yang Efektif"
 description: "Pelajari cara membuat website sekolah yang informatif dan mudah digunakan oleh siswa, orang tua, dan staff."
-date: "2023-10-15"
+date: 2023-10-15
 author: "Admin JasaWeb"
 tags: ["sekolah", "website", "pendidikan"]
 ---
