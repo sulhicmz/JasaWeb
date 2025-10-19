@@ -1,31 +1,91 @@
 import React from 'react';
 
-export interface CardProps {
+interface CardProps {
   children: React.ReactNode;
   className?: string;
-  title?: string;
-  description?: string;
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const Card: React.FC<CardProps> = ({ 
-  children, 
-  className = '', 
-  title, 
-  description 
-}) => {
+interface CardSectionProps {
+  children: React.ReactNode;
+  className?: string;
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+}
+
+const paddingClasses = {
+  none: 'p-0',
+  sm: 'p-4',
+  md: 'p-6',
+  lg: 'p-8',
+};
+
+const shadowClasses = {
+  none: 'shadow-none',
+  sm: 'shadow-sm',
+  md: 'shadow-md',
+  lg: 'shadow-lg',
+};
+
+const roundedClasses = {
+  none: 'rounded-none',
+  sm: 'rounded-sm',
+  md: 'rounded-md',
+  lg: 'rounded-lg',
+  xl: 'rounded-xl',
+};
+
+export const Card = ({
+  children,
+  className = '',
+  padding = 'md',
+  shadow = 'sm',
+  rounded = 'lg'
+}: CardProps) => {
+  const baseClasses = 'bg-white border border-gray-200';
+
   return (
-    <div className={`rounded-xl border bg-card text-card-foreground shadow ${className}`}>
-      {(title || description) && (
-        <div className="p-6 pb-4">
-          {title && <h3 className="font-semibold leading-none tracking-tight mb-1">{title}</h3>}
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
-        </div>
-      )}
-      <div className={!title && !description ? 'p-6' : 'px-6 pt-0 pb-6'}>
-        {children}
-      </div>
+    <div
+      className={`${baseClasses} ${paddingClasses[padding]} ${shadowClasses[shadow]} ${roundedClasses[rounded]} ${className}`.trim()}
+    >
+      {children}
     </div>
   );
 };
 
-export { Card };
+export const CardHeader = ({
+  children,
+  className = '',
+  padding = 'md'
+}: CardSectionProps) => {
+  return (
+    <div className={`border-b border-gray-100 ${paddingClasses[padding]} ${className}`.trim()}>
+      {children}
+    </div>
+  );
+};
+
+export const CardContent = ({
+  children,
+  className = '',
+  padding = 'md'
+}: CardSectionProps) => {
+  return (
+    <div className={`${paddingClasses[padding]} ${className}`.trim()}>
+      {children}
+    </div>
+  );
+};
+
+export const CardFooter = ({
+  children,
+  className = '',
+  padding = 'md'
+}: CardSectionProps) => {
+  return (
+    <div className={`border-t border-gray-100 ${paddingClasses[padding]} ${className}`.trim()}>
+      {children}
+    </div>
+  );
+};

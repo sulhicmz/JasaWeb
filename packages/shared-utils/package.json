@@ -1,30 +1,25 @@
 {
-  "name": "@jasaweb/ui",
+  "name": "@jasaweb/shared-utils",
   "version": "1.0.0",
-  "description": "Shared UI components for JasaWeb",
+  "description": "Shared utilities for JasaWeb monorepo",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "eslint src/**/*.ts* --fix"
+    "lint": "eslint src/**/*.ts --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:cov": "vitest --coverage"
   },
   "dependencies": {
-    "@jasaweb/shared-utils": "workspace:*",
     "clsx": "^2.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/jest-dom": "^6.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^1.6.1",
-    "@vitest/ui": "^1.0.0",
-    "jsdom": "^23.0.0",
     "tsup": "^7.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"

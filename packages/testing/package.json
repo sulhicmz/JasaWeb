@@ -3,11 +3,23 @@
   "version": "1.0.0",
   "description": "Shared testing utilities for JasaWeb",
   "scripts": {
-    "test": "echo 'TODO: Add test script'"
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
+    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/ui": "^1.0.0",
     "vitest": "^1.0.0",
-    "msw": "^2.0.0"
+    "msw": "^2.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "tsup": "^7.0.0"
   }
 }

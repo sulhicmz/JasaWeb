@@ -14,7 +14,6 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": false,
@@ -33,6 +32,12 @@
     "paths": {
       "@jasaweb/*": [
         "packages/*"
+      ],
+      "@jasaweb/shared-utils": [
+        "packages/shared-utils/src"
+      ],
+      "@jasaweb/shared-utils/*": [
+        "packages/shared-utils/src/*"
       ],
       "@jasaweb/ui": [
         "packages/ui/src"
