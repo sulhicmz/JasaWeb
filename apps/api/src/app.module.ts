@@ -10,6 +10,7 @@ import { MilestoneModule } from './milestones/milestone.module';
 import { TicketModule } from './tickets/ticket.module';
 import { InvoiceModule } from './invoices/invoice.module';
 import { FileModule } from './files/file.module';
+import { ApprovalModule } from './approvals/approval.module';
 import { EmailModule } from './common/services/email.module';
 import { AuditModule } from './common/services/audit.module';
 import { ErrorHandlingModule } from './common/services/error-handling.module';

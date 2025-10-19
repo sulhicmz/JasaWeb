@@ -1,31 +1,12 @@
-import {
-  Controller,
-  Post,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  Logger,
-  Get,
-  Param,
-  Res,
-  Delete,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
-import { Roles, Role } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { FileStorageService } from '../common/services/file-storage.service';
 import { LocalFileStorageService } from '../common/services/local-file-storage.service';
 import { ConfigService } from '@nestjs/config';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import * as path from 'path';
 
 // Define file upload validation options
-const VALID_MIME_TYPES = [
+export const VALID_MIME_TYPES = [
   'image/jpeg',
   'image/png',
   'image/gif',
@@ -40,12 +21,26 @@ const VALID_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
 
-@Controller('files')
-@UseGuards(RolesGuard) // Use the roles guard
-export class FileController {
-  private readonly logger = new Logger(FileController.name);
+export interface FileUploadDto {
+  file: Express.Multer.File;
+  projectId?: string;
+  uploadedById: string;
+}
+
+export interface FileUploadResult {
+  id: string;
+  filename: string;
+  size: number;
+  uploadedAt: Date;
+  url: string;
+}
+
+@Injectable()
+export class FileService {
+  private readonly logger = new Logger(FileService.name);
 
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
@@ -54,14 +49,9 @@ export class FileController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles can upload files
-  async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @CurrentOrganizationId() organizationId: string,
-    @Query('projectId') projectId?: string,
-  ) {
+  async uploadFile(fileUploadDto: FileUploadDto, organizationId: string): Promise<FileUploadResult> {
+    const { file, projectId, uploadedById } = fileUploadDto;
+
     // Validate file
     if (!file) {
       throw new BadRequestException('File is required');
@@ -91,9 +81,9 @@ export class FileController {
     try {
       // Determine if we're using S3 or local storage based on config
       const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-      
+
       let fileIdentifier: string;
-      
+
       if (useS3) {
         // Upload to S3
         fileIdentifier = await this.fileStorageService.uploadFile(file.buffer, {
@@ -103,7 +93,7 @@ export class FileController {
           metadata: {
             originalName: file.originalname,
             size: file.size.toString(),
-            uploadedBy: 'user_id_placeholder', // Would come from JWT
+            uploadedBy: uploadedById,
           },
         });
       } else {
@@ -111,31 +101,31 @@ export class FileController {
         const uploadResult = await this.localFileStorageService.uploadFile(file.buffer, {
           directory: `./uploads/${organizationId}`,
           filename: `${Date.now()}_${file.originalname}`,
-          allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'],
+          allowedExtensions: ALLOWED_EXTENSIONS,
         });
-        
+
         fileIdentifier = uploadResult.filename;
       }
 
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
-          projectId: projectId, // Can be null if not associated with a project
+          projectId: projectId,
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
-          uploadedById: 'user_id_placeholder', // Would come from JWT
+          uploadedById: uploadedById,
         },
       });
 
       this.logger.log(`File uploaded: ${file.originalname} for organization ${organizationId}`);
-      
+
       return {
         id: createdFile.id,
         filename: createdFile.filename,
         size: createdFile.size,
         uploadedAt: createdFile.createdAt,
-        url: `/files/download/${createdFile.id}`, // Temporary - would generate actual signed URL in real app
+        url: `/files/download/${createdFile.id}`,
       };
     } catch (error) {
       this.logger.error(`Error uploading file: ${error.message}`);
@@ -143,14 +133,7 @@ export class FileController {
     }
   }
 
-  @UseGuards(ThrottlerGuard)
-  @Get('download/:id')
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles can download files
-  async downloadFile(
-    @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
-    @Res() res: Response,
-  ) {
+  async downloadFile(id: string, organizationId: string, response: any) {
     try {
       // Find the file in the database (with multi-tenant isolation)
       const fileRecord = await this.multiTenantPrisma.file.findUnique({
@@ -163,7 +146,7 @@ export class FileController {
 
       // Determine if we're using S3 or local based on config
       const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-      
+
       if (useS3) {
         // Generate a signed URL for S3 download
         const signedUrl = await this.fileStorageService.generateDownloadUrl({
@@ -171,21 +154,21 @@ export class FileController {
           key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
           expiresIn: 3600, // 1 hour
         });
-        
+
         // Redirect to the signed URL
-        res.redirect(signedUrl);
+        response.redirect(signedUrl);
       } else {
         // Get file from local storage
         const filePath = `./uploads/${organizationId}/${fileRecord.filename}`;
         const fileBuffer = await this.localFileStorageService.getFile(filePath);
-        
+
         // Set response headers based on file type
-        res.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
-        res.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
-        res.setHeader('Content-Length', fileRecord.size);
-        
+        response.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
+        response.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
+        response.setHeader('Content-Length', fileRecord.size);
+
         // Send the file
-        res.send(fileBuffer);
+        response.send(fileBuffer);
       }
     } catch (error) {
       this.logger.error(`Error downloading file: ${error.message}`);
@@ -193,13 +176,7 @@ export class FileController {
     }
   }
 
-  @UseGuards(ThrottlerGuard)
-  @Delete(':id')
-  @Roles(Role.OrgOwner, Role.OrgAdmin) // Only org owners and admins can delete files
-  async deleteFile(
-    @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
-  ) {
+  async deleteFile(id: string, organizationId: string) {
     try {
       // First get the file record to know its details
       const fileRecord = await this.multiTenantPrisma.file.findUnique({
@@ -212,7 +189,7 @@ export class FileController {
 
       // Determine if we're using S3 or local based on config
       const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-      
+
       if (useS3) {
         // Delete from S3
         await this.fileStorageService.deleteFile(
@@ -231,7 +208,7 @@ export class FileController {
       });
 
       this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
-      
+
       return { message: 'File deleted successfully' };
     } catch (error) {
       this.logger.error(`Error deleting file: ${error.message}`);
@@ -239,12 +216,105 @@ export class FileController {
     }
   }
 
+  async findAll(projectId?: string, organizationId?: string) {
+    const whereClause: any = {};
+
+    if (projectId) {
+      whereClause.projectId = projectId;
+    }
+
+    if (organizationId) {
+      // If we need to filter by organization, we'd need to join through project
+      // For now, return all files (multi-tenant isolation should be handled at controller level)
+    }
+
+    return this.multiTenantPrisma.file.findMany({
+      where: whereClause,
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        uploadedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
+    const file = await this.multiTenantPrisma.file.findUnique({
+      where: { id },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        uploadedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      }
+    });
+
+    if (!file) {
+      throw new BadRequestException('File not found');
+    }
+
+    return file;
+  }
+
+  async findByProject(projectId: string) {
+    return this.findAll(projectId);
+  }
+
+  async getFileStats(projectId?: string, organizationId?: string) {
+    const whereClause: any = {};
+
+    if (projectId) {
+      whereClause.projectId = projectId;
+    }
+
+    const files = await this.multiTenantPrisma.file.findMany({
+      where: whereClause,
+    });
+
+    const total = files.length;
+    const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
+
+    // Group by file type
+    const byType: { [key: string]: number } = {};
+    files.forEach(file => {
+      const ext = path.extname(file.filename).toLowerCase();
+      byType[ext] = (byType[ext] || 0) + 1;
+    });
+
+    return {
+      total,
+      totalSize,
+      byType,
+      averageSize: total > 0 ? Math.round(totalSize / total) : 0,
+    };
+  }
+
   /**
    * Helper method to get MIME type from filename
    */
   private getMimeType(filename: string): string {
     const ext = path.extname(filename).toLowerCase();
-    
+
     const mimeTypes: { [key: string]: string } = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
@@ -259,7 +329,7 @@ export class FileController {
       '.xls': 'application/vnd.ms-excel',
       '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
-    
+
     return mimeTypes[ext] || 'application/octet-stream';
   }
 }

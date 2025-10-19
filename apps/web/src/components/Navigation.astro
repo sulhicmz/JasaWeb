@@ -1,0 +1,38 @@
+---
+// src/components/Navigation.astro
+export interface NavigationItem {
+  label: string;
+  href: string;
+  id?: string;
+}
+
+export interface NavigationProps {
+  items: NavigationItem[];
+  className?: string;
+  isMobile?: boolean;
+}
+
+const { items, className = '', isMobile = false } = Astro.props;
+---
+
+{isMobile ? (
+  <ul class={`flex flex-col space-y-4 px-4 ${className}`}>
+    {items.map((item) => (
+      <li>
+        <a href={item.href} class="block text-gray-700 hover:text-blue-600" id={item.id}>
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+) : (
+  <ul class={`flex space-x-6 ${className}`}>
+    {items.map((item) => (
+      <li>
+        <a href={item.href} class="text-gray-700 hover:text-blue-600" id={item.id}>
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+)}
