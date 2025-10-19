@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Shared configuration for JasaWeb",
   "scripts": {
-    "lint": "echo 'TODO: Add lint script'"
+    "build": "echo 'No build step required'",
+    "lint": "echo 'No lint step required'",
+    "format": "prettier --write tsconfig/**/*.json eslint/**/*.js prettier/**/*.js"
   },
   "devDependencies": {
     "eslint": "^8.0.0",
