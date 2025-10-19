@@ -12,3 +12,6 @@ export * from './components/Modal';
 // Utility functions and hooks
 export * from './utils/cn';
 export * from './utils/hooks';
+
+// Re-export shared utilities for convenience
+export * from '@jasaweb/shared-utils';

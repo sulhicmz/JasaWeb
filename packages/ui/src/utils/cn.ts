@@ -1,10 +1,3 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-/**
- * Utility function to merge Tailwind CSS classes
- * Combines clsx for conditional classes and tailwind-merge for deduplication
- */
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+// Re-export cn utility from shared-utils package
+// This maintains backward compatibility while consolidating utilities
+export { cn } from '@jasaweb/shared-utils';
