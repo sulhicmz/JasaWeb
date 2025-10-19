@@ -33,6 +33,12 @@
       "@jasaweb/*": [
         "packages/*"
       ],
+      "@jasaweb/shared-utils": [
+        "packages/shared-utils/src"
+      ],
+      "@jasaweb/shared-utils/*": [
+        "packages/shared-utils/src/*"
+      ],
       "@jasaweb/ui": [
         "packages/ui/src"
       ],
