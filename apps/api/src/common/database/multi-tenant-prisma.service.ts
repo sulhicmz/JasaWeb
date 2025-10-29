@@ -80,6 +80,16 @@ export class MultiTenantPrismaService {
         },
       });
     },
+
+    count: (args?: Prisma.ProjectCountArgs) => {
+      return this.prisma.project.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
   };
 
   /**
@@ -146,6 +156,19 @@ export class MultiTenantPrismaService {
           project: {
             organizationId: this.organizationId,
             ...args.where.project,
+          },
+        },
+      });
+    },
+
+    count: (args?: Prisma.MilestoneCountArgs) => {
+      return this.prisma.milestone.count({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
           },
         },
       });
@@ -220,6 +243,101 @@ export class MultiTenantPrismaService {
         },
       });
     },
+
+    count: (args?: Prisma.FileCountArgs) => {
+      return this.prisma.file.count({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
+          },
+        },
+      });
+    },
+  };
+
+  /**
+   * Approvals service methods
+   */
+  approval = {
+    findMany: (args?: Prisma.ApprovalFindManyArgs) => {
+      return this.prisma.approval.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
+          },
+        },
+      });
+    },
+
+    findUnique: (args: Prisma.ApprovalFindUniqueArgs) => {
+      return this.prisma.approval.findUnique({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where.project,
+          },
+        },
+      });
+    },
+
+    create: (args: Prisma.ApprovalCreateArgs) => {
+      const projectId = args.data.project.connect.id;
+      return this.prisma.approval.create({
+        ...args,
+        data: {
+          ...args.data,
+          projectId,
+        },
+      });
+    },
+
+    update: (args: Prisma.ApprovalUpdateArgs) => {
+      return this.prisma.approval.update({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where.project,
+          },
+        },
+        data: args.data,
+      });
+    },
+
+    delete: (args: Prisma.ApprovalDeleteArgs) => {
+      return this.prisma.approval.delete({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where.project,
+          },
+        },
+      });
+    },
+
+    count: (args?: Prisma.ApprovalCountArgs) => {
+      return this.prisma.approval.count({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
+          },
+        },
+      });
+    },
   };
 
   /**
@@ -272,6 +390,16 @@ export class MultiTenantPrismaService {
         ...args,
         where: {
           ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    count: (args?: Prisma.TicketCountArgs) => {
+      return this.prisma.ticket.count({
+        ...args,
+        where: {
+          ...args?.where,
           organizationId: this.organizationId,
         },
       });
@@ -329,6 +457,98 @@ export class MultiTenantPrismaService {
         where: {
           ...args.where,
           organizationId: this.organizationId,
+        },
+      });
+    },
+
+    count: (args?: Prisma.InvoiceCountArgs) => {
+      return this.prisma.invoice.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+  };
+
+  /**
+   * Tasks service methods
+   */
+  task = {
+    findMany: (args?: Prisma.TaskFindManyArgs) => {
+      return this.prisma.task.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
+          },
+        },
+      });
+    },
+
+    findUnique: (args: Prisma.TaskFindUniqueArgs) => {
+      return this.prisma.task.findUnique({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where.project,
+          },
+        },
+      });
+    },
+
+    create: (args: Prisma.TaskCreateArgs) => {
+      const projectId = args.data.project.connect.id;
+      return this.prisma.task.create({
+        ...args,
+        data: {
+          ...args.data,
+          projectId,
+        },
+      });
+    },
+
+    update: (args: Prisma.TaskUpdateArgs) => {
+      return this.prisma.task.update({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where.project,
+          },
+        },
+        data: args.data,
+      });
+    },
+
+    delete: (args: Prisma.TaskDeleteArgs) => {
+      return this.prisma.task.delete({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where.project,
+          },
+        },
+      });
+    },
+
+    count: (args?: Prisma.TaskCountArgs) => {
+      return this.prisma.task.count({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
+          },
         },
       });
     },

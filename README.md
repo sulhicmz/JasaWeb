@@ -70,7 +70,6 @@ jasaweb/
 
 - `pnpm dev` - Menjalankan aplikasi web dalam mode development
 - `pnpm build` - Membangun aplikasi web untuk produksi
-- `pnpm test` - Menjalankan unit tests dengan Vitest
 - `pnpm lint` - Menjalankan linter
 - `pnpm format` - Memformat kode
 
@@ -78,6 +77,12 @@ jasaweb/
 
 - Endpoint `GET /projects` pada layanan API sekarang mengembalikan ringkasan proyek (dengan metrik jumlah relasi) secara default untuk mengurangi ukuran payload.
 - Sertakan parameter kueri `?view=detail` apabila membutuhkan data lengkap beserta relasi proyek.
+
+## Optimasi Terbaru
+
+- Pengambilan metrik proyek kini menggunakan agregasi Prisma yang lebih ringan sehingga statistik seperti milestone selesai dan approval pending dihitung tanpa memuat seluruh daftar entitas ke memori.
+- MultiTenant Prisma service mendapatkan helper `count` baru yang otomatis membatasi kueri berdasarkan organisasi aktif untuk memastikan optimasi dapat digunakan ulang oleh modul lain.
+- Lihat [docs/optimization-plan.md](./docs/optimization-plan.md) untuk rincian analisis dan rencana optimasi yang telah dijalankan.
 
 ## Deployment
 
