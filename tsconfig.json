@@ -13,7 +13,9 @@
       "@jasaweb/api/*": ["apps/api/src/*"],
       "@jasaweb/web/*": ["apps/web/src/*"]
     },
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "rootDir": ".",
+    "outDir": "./dist"
   },
   "include": [
     "apps/**/*",

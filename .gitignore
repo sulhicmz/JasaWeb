@@ -6,6 +6,8 @@ node_modules/
 dist/
 .turbo/
 coverage/
+.cache/
+*.tsbuildinfo
 
 # Env & local
 .env
