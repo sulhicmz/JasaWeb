@@ -37,7 +37,7 @@ Sumber: `AGENTS.md` + `plan.md`. Checklist ini menyatukan tooling (pnpm, Vitest/
 ## 5) Quality — Test & Coverage
 - [ ] Unit test dengan Vitest (target cakupan kritikal ≥ 80%)
 - [ ] Kontrak API (`apps/api/tests/contracts`) dan snapshot stabil
-- [ ] Tambah `pnpm test` di root; jalankan di CI sebelum merge
+- [ ] Tambah perintah uji terarah (mis. `pnpm vitest run apps/api/example.test.ts`) di CI sebelum merge untuk mencegah Vitest menjalankan ribuan file dependensi
 
 ## 6) Keamanan & Kepatuhan
 - [ ] Rate limit, CORS ketat, CSRF untuk form

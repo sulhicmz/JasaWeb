@@ -123,21 +123,8 @@ export class ProjectService {
           select: {
             milestones: true,
             files: true,
-            approvals: true,
             tasks: true,
           },
-        },
-        milestones: {
-          where: { status: 'completed' },
-          select: { id: true },
-        },
-        approvals: {
-          where: { status: 'pending' },
-          select: { id: true },
-        },
-        tasks: {
-          where: { status: 'completed' },
-          select: { id: true },
         },
       },
     });
@@ -146,12 +133,30 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
+    const [completedMilestones, pendingApprovals, completedTasks] = await Promise.all([
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          projectId: id,
+          status: 'completed',
+        },
+      }),
+      this.multiTenantPrisma.approval.count({
+        where: {
+          projectId: id,
+          status: 'pending',
+        },
+      }),
+      this.multiTenantPrisma.task.count({
+        where: {
+          projectId: id,
+          status: 'completed',
+        },
+      }),
+    ]);
+
     const milestoneCount = project._count.milestones;
-    const completedMilestones = project.milestones.length;
     const fileCount = project._count.files;
-    const pendingApprovals = project.approvals.length;
     const taskCount = project._count.tasks;
-    const completedTasks = project.tasks.length;
 
     return {
       milestoneCount,

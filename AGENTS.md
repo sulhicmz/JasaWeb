@@ -68,8 +68,8 @@ pnpm build
 # Run linting and formatting
 pnpm lint && pnpm format
 
-# Run tests
-pnpm test
+# Run tests (jalankan secara terarah untuk mencegah Vitest mengeksekusi ribuan file dependensi)
+pnpm vitest run example.test.ts
 ```
 
 ## Development Conventions
