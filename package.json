@@ -4,15 +4,20 @@
   "description": "Web berbasis astro untuk manage client",
   "main": "index.js",
   "scripts": {
-    "dev": "cd apps/web && pnpm dev",
-    "build": "cd apps/web && pnpm build",
-    "start": "cd apps/web && pnpm start",
+    "dev": "pnpm --filter @jasaweb/web dev",
+    "dev:api": "pnpm --filter @jasaweb/api start:dev",
+    "build": "pnpm --filter @jasaweb/web build",
+    "build:all": "pnpm -r build",
+    "start": "pnpm --filter @jasaweb/web start",
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
-    "format": "prettier --write ."
+    "lint": "pnpm exec eslint . --ext .ts,.tsx --report-unused-disable-directives --cache --cache-location .cache/eslint",
+    "lint:fix": "pnpm run lint -- --fix",
+    "typecheck": "tsc --noEmit --project tsconfig.node.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "astro",
@@ -23,6 +28,8 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.0.0",
     "eslint": "^8.0.0",

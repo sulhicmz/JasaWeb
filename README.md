@@ -69,10 +69,15 @@ jasaweb/
 ## Perintah Pengembangan
 
 - `pnpm dev` - Menjalankan aplikasi web dalam mode development
+- `pnpm dev:api` - Menjalankan API NestJS dalam mode watch
 - `pnpm build` - Membangun aplikasi web untuk produksi
+- `pnpm build:all` - Menjalankan perintah build untuk seluruh workspace
 - `pnpm test` - Menjalankan unit tests dengan Vitest
-- `pnpm lint` - Menjalankan linter
+- `pnpm lint` - Menjalankan linter dengan cache dan konfigurasi monorepo
+- `pnpm lint:fix` - Menjalankan linter dan langsung memperbaiki isu yang dapat diperbaiki otomatis
+- `pnpm typecheck` - Menjalankan baseline TypeScript type checking (menggunakan `tsconfig.node.json`)
 - `pnpm format` - Memformat kode
+- `pnpm format:check` - Mengecek format tanpa melakukan perubahan
 
 ## Deployment
 
@@ -82,3 +87,4 @@ Instruksi deployment akan ditambahkan nanti sesuai dengan arsitektur deployment 
 
 - [Rencana Proyek (plan.md)](./plan.md) - Spesifikasi produk, arsitektur teknis, dan roadmap
 - [Panduan Kontribusi (AGENTS.md)](./AGENTS.md) - Panduan untuk kontributor dan konvensi pengembangan
+- [Optimisasi Repository (docs/repo-optimization.md)](./docs/repo-optimization.md) - Rencana dan status optimalisasi tooling

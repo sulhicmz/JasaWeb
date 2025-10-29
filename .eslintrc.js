@@ -6,7 +6,7 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -17,9 +17,12 @@ module.exports = {
     '@typescript-eslint',
   ],
   rules: {
-    'indent': ['error', 2],
+    'indent': 'off',
     'linebreak-style': ['error', 'unix'],
-    'quotes': ['error', 'single'],
+    'quotes': 'off',
     'semi': ['error', 'always'],
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
+    '@typescript-eslint/triple-slash-reference': 'off',
   },
 };
