@@ -74,6 +74,11 @@ jasaweb/
 - `pnpm lint` - Menjalankan linter
 - `pnpm format` - Memformat kode
 
+## Catatan API
+
+- Endpoint `GET /projects` pada layanan API sekarang mengembalikan ringkasan proyek (dengan metrik jumlah relasi) secara default untuk mengurangi ukuran payload.
+- Sertakan parameter kueri `?view=detail` apabila membutuhkan data lengkap beserta relasi proyek.
+
 ## Deployment
 
 Instruksi deployment akan ditambahkan nanti sesuai dengan arsitektur deployment yang direncanakan.

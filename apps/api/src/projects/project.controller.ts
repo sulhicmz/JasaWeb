@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ProjectService, CreateProjectDto, UpdateProjectDto } from './project.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
@@ -19,8 +19,9 @@ export class ProjectController {
 
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
-  findAll() {
-    return this.projectService.findAll();
+  findAll(@Query('view') view?: string) {
+    const normalizedView = view?.toLowerCase() === 'detail' ? 'detail' : 'summary';
+    return this.projectService.findAll(normalizedView);
   }
 
   @Get(':id')
