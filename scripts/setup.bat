@@ -272,7 +272,7 @@ call :print_success "Applications built successfully"
 
 REM Run tests
 call :print_info "Running tests..."
-pnpm test:run
+pnpm test
 if %errorlevel% neq 0 (
     call :print_warning "Some tests failed. Check the output above."
 ) else (
@@ -304,10 +304,12 @@ echo    - API: http://localhost:3000
 echo    - API Docs: http://localhost:3000/api/docs
 echo.
 echo 4. Useful commands:
-echo    %YELLOW%pnpm test%NC%                   # Run tests
-echo    %YELLOW%pnpm lint%NC%                   # Run linter
-echo    %YELLOW%pnpm build%NC%                  # Build for production
-echo    %YELLOW%pnpm db:studio%NC%              # Open Prisma Studio
+    echo    %YELLOW%pnpm test%NC%                   # Run tests
+    echo    %YELLOW%pnpm test:api%NC%               # Run API tests
+    echo    %YELLOW%pnpm test:e2e%NC%               # Run E2E tests
+    echo    %YELLOW%pnpm lint%NC%                   # Run linter
+    echo    %YELLOW%pnpm build%NC%                  # Build for production
+    echo    %YELLOW%pnpm db:studio%NC%              # Open Prisma Studio
 echo.
 echo 5. Database management:
 echo    %YELLOW%pnpm db:migrate%NC%             # Run migrations

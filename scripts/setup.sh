@@ -222,7 +222,7 @@ build_applications() {
 run_tests() {
     print_info "Running tests..."
     
-    if pnpm test:run; then
+    if pnpm test; then
         print_success "All tests passed"
     else
         print_warning "Some tests failed. Check the output above."
@@ -256,7 +256,7 @@ fi
 
 # Run tests
 echo "Running tests..."
-if ! pnpm test:run; then
+if ! pnpm test; then
     echo "❌ Tests failed"
     exit 1
 fi
@@ -317,6 +317,8 @@ print_next_steps() {
     echo ""
     echo "4. Useful commands:"
     echo "   ${YELLOW}pnpm test${NC}                   # Run tests"
+    echo "   ${YELLOW}pnpm test:api${NC}               # Run API tests"
+    echo "   ${YELLOW}pnpm test:e2e${NC}               # Run E2E tests"
     echo "   ${YELLOW}pnpm lint${NC}                   # Run linter"
     echo "   ${YELLOW}pnpm build${NC}                  # Build for production"
     echo "   ${YELLOW}pnpm db:studio${NC}              # Open Prisma Studio"

@@ -215,7 +215,9 @@ pnpm build:api        # Build API only
 pnpm test             # Run all tests
 pnpm test:unit        # Run unit tests only
 pnpm test:e2e         # Run end-to-end tests
+pnpm test:api         # Run API tests
 pnpm test:coverage    # Run tests with coverage
+pnpm test:ci          # Run tests in CI mode
 
 # Code Quality
 pnpm lint             # Run ESLint
@@ -223,17 +225,17 @@ pnpm lint:fix         # Fix ESLint issues
 pnpm format           # Format code with Prettier
 pnpm typecheck        # Run TypeScript checks
 
-# Database
+# Database (API)
 pnpm db:migrate       # Run database migrations
 pnpm db:generate      # Generate Prisma client
-pnpm db:seed          # Seed database with sample data
 pnpm db:studio        # Open Prisma Studio
+pnpm db:seed          # Seed database with sample data
 pnpm db:reset         # Reset database
 
 # Docker
-pnpm docker:up        # Start Docker services
-pnpm docker:down      # Stop Docker services
-pnpm docker:logs      # View Docker logs
+docker-compose up -d  # Start Docker services
+docker-compose down   # Stop Docker services
+docker-compose logs   # View Docker logs
 ```
 
 ## 🧪 Testing
@@ -241,11 +243,21 @@ pnpm docker:logs      # View Docker logs
 ### Test Structure
 
 ```
-tests/
-├── unit/              # Unit tests
-├── integration/       # Integration tests
-├── e2e/              # End-to-end tests
-└── fixtures/         # Test data and mocks
+apps/
+├── web/
+│   └── tests/
+│       └── e2e/      # Web E2E tests
+├── api/
+│   ├── src/
+│   │   └── **/*.spec.ts  # Unit tests
+│   └── test/
+│       ├── *.e2e-spec.ts # Integration tests
+│       └── setup.ts      # Test configuration
+packages/
+├── testing/          # Shared testing utilities
+└── ui/
+    └── src/
+        └── **/*.test.ts # Component tests
 ```
 
 ### Running Tests
@@ -260,18 +272,25 @@ pnpm test:watch
 # Run tests with coverage
 pnpm test:coverage
 
+# Run API tests only
+pnpm test:api
+
 # Run specific test file
-pnpm test apps/api/src/auth/auth.service.spec.ts
+pnpm test apps/api/src/auth/auth.controller.spec.ts
 
 # Run E2E tests
 pnpm test:e2e
+
+# Run tests in CI mode
+pnpm test:ci
 ```
 
 ### Coverage Requirements
 
-- **Minimum Coverage**: 80%
+- **Minimum Coverage**: 70% (configured in Jest)
+- **Target Coverage**: 80%+
 - **Critical Paths**: 95%
-- **Unit Tests**: All business logic
+- **Unit Tests**: All controllers and services
 - **Integration Tests**: API endpoints
 - **E2E Tests**: User workflows
 

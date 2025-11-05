@@ -12,7 +12,16 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
    ```
 3. **Set up development environment**
    ```bash
+   # For Unix/Linux/macOS
    ./scripts/setup.sh
+   
+   # For Windows
+   scripts\setup.bat
+   
+   # Or manually:
+   pnpm install
+   docker-compose up -d
+   pnpm db:migrate
    ```
 4. **Create a feature branch**
    ```bash
@@ -304,19 +313,29 @@ async createProjectWithMilestones(data: CreateProjectDto): Promise<Project> {
 ### Test Structure
 
 ```
-apps/api/src/
-├── auth/
-│   ├── auth.controller.ts
-│   ├── auth.service.ts
-│   └── auth.service.spec.ts    # Unit tests
-├── projects/
-│   ├── projects.controller.ts
-│   ├── projects.service.ts
-│   └── projects.service.spec.ts
-└── test/
-    ├── unit/                   # Unit tests
-    ├── integration/            # Integration tests
-    └── e2e/                   # End-to-end tests
+apps/
+├── api/
+│   ├── src/
+│   │   ├── auth/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   └── auth.controller.spec.ts    # Unit tests
+│   │   └── projects/
+│   │       ├── projects.controller.ts
+│   │       ├── projects.service.ts
+│   │       └── projects.controller.spec.ts
+│   └── test/
+│       ├── app.e2e-spec.ts                  # Integration tests
+│       ├── auth.e2e-spec.ts                 # Auth integration tests
+│       └── setup.ts                         # Test configuration
+├── web/
+│   └── tests/
+│       └── e2e/                             # Web E2E tests
+packages/
+├── testing/                                  # Shared testing utilities
+└── ui/
+    └── src/
+        └── **/*.test.ts                     # Component tests
 ```
 
 ### Unit Testing
@@ -382,10 +401,9 @@ describe('AuthService', () => {
 ### Integration Testing
 
 ```typescript
-// auth.integration.spec.ts
-describe('AuthController (Integration)', () => {
+// auth.e2e-spec.ts
+describe('AuthController (E2E)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -393,8 +411,6 @@ describe('AuthController (Integration)', () => {
     }).compile();
 
     app = module.createNestApplication();
-    prisma = module.get(PrismaService);
-    
     await app.init();
   });
 
@@ -402,21 +418,19 @@ describe('AuthController (Integration)', () => {
     await app.close();
   });
 
-  beforeEach(async () => {
-    await prisma.cleanDatabase(); // Helper to clean test data
-  });
-
   describe('/auth/login (POST)', () => {
     it('should login successfully with valid credentials', async () => {
-      // Arrange
-      const user = await prisma.user.create({
-        data: {
+      // First register a user
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
           email: 'test@example.com',
-          password: await bcrypt.hash('password123', 10),
-        },
-      });
+          password: 'password123',
+          name: 'Test User',
+        })
+        .expect(201);
 
-      // Act
+      // Then login
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
@@ -425,9 +439,9 @@ describe('AuthController (Integration)', () => {
         })
         .expect(200);
 
-      // Assert
-      expect(response.body).toHaveProperty('accessToken');
-      expect(response.body.user.email).toBe(user.email);
+      expect(response.body).toHaveProperty('token');
+      expect(response.body).toHaveProperty('refreshToken');
+      expect(response.body.user.email).toBe('test@example.com');
     });
   });
 });
@@ -533,7 +547,9 @@ async create(
 1. **Test your changes**
    ```bash
    pnpm test
+   pnpm test:api
    pnpm lint
+   pnpm typecheck
    pnpm typecheck
    ```
 

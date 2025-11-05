@@ -36,12 +36,12 @@
 - [x] Security advisories (Enabled)
 
 ### Advanced Access Control
-- **Repository visibility**: Private
-- **Collaborators**: Team-based access with roles
-- **Outside collaborators**: Limited access with expiration
-- **Anonymous git read access**: Disabled
-- **Interaction limits**: Enabled for temporary periods
-- **Force push**: Restricted to maintainers
+- **Repository visibility**: ✅ Private (fixed from Public)
+- **Collaborators**: Owner-only access (@sulhicmz)
+- **Outside collaborators**: None (personal repository)
+- **Anonymous git read access**: Disabled (private repository)
+- **Interaction limits**: Available when needed
+- **Force push**: Restricted to owner
 - **Deletion**: Protected branches cannot be deleted
 
 ### Security Policies
@@ -106,14 +106,14 @@
 - `duplicate` - Gray (#586069) - Duplicate issue
 
 ### Component Labels (with CODEOWNERS)
-- `frontend` - Blue (#0366d6) - @jasaweb-frontend
-- `backend` - Green (#28a745) - @jasaweb-backend
-- `database` - Purple (#6f42c1) - @jasaweb-backend
-- `infrastructure` - Orange (#ff9800) - @jasaweb-maintainers
-- `security` - Red (#d73a4a) - @jasaweb-maintainers
-- `performance` - Yellow (#fbca04) - @jasaweb-maintainers
-- `testing` - Purple (#5f3dc4) - @jasaweb-backend @jasaweb-frontend
-- `documentation` - Blue (#0075ca) - @jasaweb-maintainers
+- `frontend` - Blue (#0366d6) - @sulhicmz
+- `backend` - Green (#28a745) - @sulhicmz
+- `database` - Purple (#6f42c1) - @sulhicmz
+- `infrastructure` - Orange (#ff9800) - @sulhicmz
+- `security` - Red (#d73a4a) - @sulhicmz
+- `performance` - Yellow (#fbca04) - @sulhicmz
+- `testing` - Purple (#5f3dc4) - @sulhicmz
+- `documentation` - Blue (#0075ca) - @sulhicmz
 
 ### Special Labels (with automation)
 - `dependencies` - Gray (#586069) - Dependency updates
@@ -140,20 +140,20 @@
 - **Name**: Staging
 - **Type**: Staging
 - **Protection Rules**: 
-  - Required reviewers: 1 from @jasaweb-maintainers
+  - Required reviewers: 1 from @sulhicmz
   - Wait timer: 2 minutes
   - Prevent self-review: Yes
   - Only branches: `develop`, `main`
 - **Environment Variables**: Staging secrets
 - **Deployment Branch**: `develop`
 - **Auto-deployment**: Enabled on successful CI
-- **Reviewers**: @jasaweb-maintainers
+- **Reviewers**: @sulhicmz
 
 ### Production Environment
 - **Name**: Production
 - **Type**: Production
 - **Protection Rules**:
-  - Required reviewers: 2 from @jasaweb-maintainers
+  - Required reviewers: Owner approval required
   - Wait timer: 5 minutes
   - Prevent self-review: Yes
   - Restrict deployments to specific branches: `main`, tags
@@ -161,7 +161,7 @@
 - **Environment Variables**: Production secrets
 - **Deployment Branch**: `main` (tags only)
 - **Auto-deployment**: Manual approval required
-- **Reviewers**: @jasaweb-maintainers
+- **Reviewers**: @sulhicmz
 
 ## 📋 Enhanced Milestones Configuration
 

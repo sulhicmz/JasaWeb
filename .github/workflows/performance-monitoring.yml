@@ -31,26 +31,29 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
-        cache: 'npm'
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
 
     - name: Install dependencies
-      run: |
-        cd apps/web
-        npm install
+      run: pnpm install --frozen-lockfile
 
     - name: Build web application
       run: |
         cd apps/web
-        npm run build
+        pnpm build
 
     - name: Start application for monitoring
       run: |
         cd apps/web
-        npm run preview &
+        pnpm preview &
         sleep 10
 
     - name: Run Lighthouse CI
@@ -177,12 +180,12 @@ jobs:
         
         # Start API for testing
         cd apps/api
-        npm run build
-        npm run start:prod &
+        pnpm build
+        pnpm start:prod &
         sleep 10
         
         # Install artillery for load testing
-        npm install -g artillery
+        pnpm add -g artillery
         
         # Create artillery config
         cat > artillery-config.yml << 'EOF'
@@ -383,33 +386,37 @@ jobs:
         ref: main
         path: main-branch
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
-        cache: 'npm'
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
 
     - name: Build and test PR version
       run: |
         cd apps/web
-        npm install
-        npm run build
-        npm run preview &
+        pnpm build
+        pnpm preview &
         sleep 10
         
         # Run Lighthouse
-        npx @lhci/cli@0.12.x autorun --config=.lighthouserc-pr.json
+        pnpm exec @lhci/cli@0.12.x autorun --config=.lighthouserc-pr.json
 
     - name: Build and test main version
       run: |
         cd main-branch/apps/web
-        npm install
-        npm run build
-        npm run preview &
+        pnpm install --frozen-lockfile
+        pnpm build
+        pnpm preview &
         sleep 10
         
         # Run Lighthouse
-        npx @lhci/cli@0.12.x autorun --config=.lighthouserc-main.json
+        pnpm exec @lhci/cli@0.12.x autorun --config=.lighthouserc-main.json
 
     - name: Compare performance
       run: |
