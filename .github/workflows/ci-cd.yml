@@ -1,0 +1,439 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (build only)'
+        type: boolean
+        default: false
+      skip_security:
+        description: 'Skip security scans'
+        type: boolean
+        default: false
+      skip_performance:
+        description: 'Skip performance checks'
+        type: boolean
+        default: false
+      deploy_environment:
+        description: 'Deploy after successful pipeline'
+        type: choice
+        options:
+        - none
+        - staging
+        - production
+        default: none
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  CACHE_VERSION: 'v3'
+
+jobs:
+  # Smart dependency caching
+  setup:
+    name: Setup & Cache Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+      should-test: ${{ github.event.inputs.skip_tests != 'true' }}
+      should-security: ${{ github.event.inputs.skip_security != 'true' }}
+      should-performance: ${{ github.event.inputs.skip_performance != 'true' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ env.CACHE_VERSION }}-deps-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-deps-${{ runner.os }}
+      
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+  # Code quality checks (lint, format, typecheck)
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    needs: setup
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run linting
+        run: pnpm lint
+      
+      - name: Check formatting
+        run: pnpm format:check
+      
+      - name: Type checking
+        run: pnpm typecheck
+
+  # Consolidated testing
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: [setup, quality]
+    if: needs.setup.outputs.should-test == 'true'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration, e2e]
+        include:
+          - test-type: unit
+            command: pnpm test:run
+            coverage: true
+          - test-type: integration
+            command: pnpm test:integration
+            coverage: false
+          - test-type: e2e
+            command: pnpm test:e2e
+            coverage: false
+    
+    services:
+      postgres:
+        if: matrix.test-type == 'integration'
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jasaweb_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        if: matrix.test-type == 'integration'
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Setup test database
+        if: matrix.test-type == 'integration'
+        run: |
+          cd apps/api
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm prisma migrate deploy
+      
+      - name: Install Playwright
+        if: matrix.test-type == 'e2e'
+        run: |
+          cd apps/web
+          pnpm exec playwright install --with-deps
+      
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          if [ "${{ matrix.test-type }}" = "unit" ]; then
+            pnpm test:run --coverage
+          elif [ "${{ matrix.test-type }}" = "integration" ]; then
+            cd apps/api
+            DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm test:integration
+          elif [ "${{ matrix.test-type }}" = "e2e" ]; then
+            cd apps/web
+            pnpm test:e2e
+          fi
+      
+      - name: Upload coverage reports
+        if: matrix.coverage == 'true'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  # Consolidated security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.should-security == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run security audit
+        run: pnpm audit --audit-level moderate
+      
+      - name: Run TruffleHog secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --json
+      
+      - name: Run Semgrep security scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+            p/nodejs
+            p/typescript
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: typescript, javascript
+      
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # Build applications
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+    needs: [quality, test, security]
+    
+    strategy:
+      matrix:
+        app: [web, api]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build ${{ matrix.app }}
+        run: |
+          cd apps/${{ matrix.app }}
+          pnpm build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: apps/${{ matrix.app }}/dist/
+          retention-days: 7
+
+  # Consolidated performance monitoring
+  performance:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: needs.setup.outputs.should-performance == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-build'
+          merge-multiple: true
+          path: builds/
+      
+      - name: Bundle size analysis
+        run: |
+          echo "# 📦 Bundle Size Analysis" > bundle-report.md
+          echo "" >> bundle-report.md
+          echo "| App | Size | Status |" >> bundle-report.md
+          echo "|-----|------|--------|" >> bundle-report.md
+          
+          for app in web api; do
+            if [ -d "builds/$app" ]; then
+              size=$(du -sh builds/$app | cut -f1)
+              echo "| $app | $size | ✅ |" >> bundle-report.md
+            fi
+          done
+      
+      - name: Web performance check
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+        run: |
+          cd apps/web
+          pnpm preview &
+          sleep 10
+          
+          # Run Lighthouse
+          npx @lhci/cli@0.12.x autorun
+          
+          # Extract metrics
+          if [ -f .lighthouseci/lhr-*.json ]; then
+            lhr_file=$(ls .lighthouseci/lhr-*.json | head -1)
+            performance_score=$(cat "$lhr_file" | jq -r '.categories.performance.score * 100')
+            
+            echo "" >> ../../bundle-report.md
+            echo "## 🎯 Performance Score" >> ../../bundle-report.md
+            echo "**Web Performance**: $performance_score/100" >> ../../bundle-report.md
+            
+            if (( $(echo "$performance_score >= 90" | bc -l) )); then
+              echo "Status: ✅ Excellent" >> ../../bundle-report.md
+            elif (( $(echo "$performance_score >= 70" | bc -l) )); then
+              echo "Status: ⚠️ Good" >> ../../bundle-report.md
+            else
+              echo "Status: ❌ Needs Improvement" >> ../../bundle-report.md
+            fi
+          fi
+      
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: bundle-report.md
+          retention-days: 30
+
+  # Trigger deployment (optional)
+  deploy:
+    name: Trigger Deployment
+    runs-on: ubuntu-latest
+    needs: [build, performance]
+    if: github.event.inputs.deploy_environment != 'none' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Trigger deployment workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: context.ref,
+              inputs: {
+                environment: '${{ github.event.inputs.deploy_environment }}',
+                app: 'all'
+              }
+            });
+
+  # Pipeline summary
+  summary:
+    name: Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [quality, test, security, build, performance]
+    if: always()
+    
+    steps:
+      - name: Generate pipeline summary
+        run: |
+          echo "# 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.performance.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.quality.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.security.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
+            echo "✅ **Pipeline Status**: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Pipeline Status**: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi

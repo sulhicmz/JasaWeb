@@ -1,0 +1,220 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: string
+      app:
+        description: 'Application to deploy'
+        required: false
+        type: string
+        default: 'all'
+      build_artifacts:
+        description: 'Build artifacts to download'
+        required: false
+        type: string
+        default: 'latest'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+        - staging
+        - production
+        default: staging
+      app:
+        description: 'Application to deploy'
+        required: false
+        type: choice
+        options:
+        - all
+        - web
+        - api
+        default: all
+  push:
+    tags: ['v*']
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: inputs.environment == 'staging' || github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment: 
+      name: staging
+      url: https://staging.jasaweb.com
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: '*-build'
+        merge-multiple: true
+        path: builds/
+
+    - name: Deploy to Vercel (Web)
+      if: inputs.app == 'all' || inputs.app == 'web'
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+        vercel-args: '--prod'
+        working-directory: ./apps/web
+        alias-domains: staging.jasaweb.com
+
+    - name: Deploy to Railway (API)
+      if: inputs.app == 'all' || inputs.app == 'api'
+      uses: railway-app/railway-action@v1
+      with:
+        api-token: ${{ secrets.RAILWAY_TOKEN }}
+        service-id: ${{ secrets.RAILWAY_SERVICE_ID_API }}
+        environment: staging
+
+    - name: Health checks
+      run: |
+        echo "Running health checks..."
+        sleep 30
+        
+        # Web health check
+        curl -f https://staging.jasaweb.com/ || echo "Web health check failed"
+        
+        # API health check  
+        curl -f https://api-staging.jasaweb.com/health || echo "API health check failed"
+
+    - name: Notify team
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        text: |
+          🚀 Staging Deployment ${{ job.status == 'success' && 'Complete' || 'Failed' }}
+          
+          **Environment**: Staging
+          **Commit**: ${{ github.sha }}
+          **Apps**: ${{ inputs.app || 'all' }}
+          
+          **URLs**:
+          - Web: https://staging.jasaweb.com
+          - API: https://api-staging.jasaweb.com
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: inputs.environment == 'production' || github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    environment: 
+      name: production
+      url: https://jasaweb.com
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: '*-build'
+        merge-multiple: true
+        path: builds/
+
+    - name: Deploy to Vercel (Web)
+      if: inputs.app == 'all' || inputs.app == 'web'
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_WEB }}
+        vercel-args: '--prod'
+        working-directory: ./apps/web
+
+    - name: Deploy to Railway (API)
+      if: inputs.app == 'all' || inputs.app == 'api'
+      uses: railway-app/railway-action@v1
+      with:
+        api-token: ${{ secrets.RAILWAY_TOKEN }}
+        service-id: ${{ secrets.RAILWAY_SERVICE_ID_API }}
+        environment: production
+
+    - name: Production health checks
+      run: |
+        echo "Running production health checks..."
+        sleep 60
+        
+        # Web health check
+        curl -f https://jasaweb.com/ || exit 1
+        
+        # API health check
+        curl -f https://api.jasaweb.com/health || exit 1
+
+    - name: Create release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        body: |
+          ## 🚀 Release ${{ github.ref_name }}
+          
+          **Deployed to**: Production
+          **Commit**: ${{ github.sha }}
+          
+          ### 🌐 Live URLs
+          - **Web**: https://jasaweb.com
+          - **API**: https://api.jasaweb.com
+        draft: false
+        prerelease: false
+
+    - name: Notify team
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        text: |
+          🎉 Production Deployment ${{ job.status == 'success' && 'Complete!' || 'Failed!' }}
+          
+          **Version**: ${{ github.ref_name || github.sha }}
+          **Environment**: Production
+          **Apps**: ${{ inputs.app || 'all' }}
+          
+          **🌐 Live URLs**:
+          - Web: https://jasaweb.com
+          - API: https://api.jasaweb.com
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
