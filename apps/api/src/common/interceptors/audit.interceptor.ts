@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Reflector } from '@nestjs/core';
 import { AuditService } from '../services/audit.service';
+import { getErrorMessage } from '../utils/error.utils';
 
 export interface AuditLogOptions {
   action: string;
@@ -46,15 +47,17 @@ export class AuditInterceptor implements NestInterceptor {
     // Only proceed with audit if we have user and organization context
     if (user && organizationId) {
       // Log the action before the request is handled
-      this.auditService.log({
-        actorId: user.id,
-        organizationId,
-        action: options.action,
-        target: options.target,
-        targetId: this.extractTargetId(request, options.target), // Extract the ID of the target entity
-      }).catch(err => {
-        this.logger.error(`Failed to log audit event: ${err.message}`);
-      });
+      this.auditService
+        .log({
+          actorId: user.id,
+          organizationId,
+          action: options.action,
+          target: options.target,
+          targetId: this.extractTargetId(request, options.target), // Extract the ID of the target entity
+        })
+        .catch(err => {
+          this.logger.error(`Failed to log audit event: ${getErrorMessage(err)}`);
+        });
     }
 
     return next.handle().pipe(
@@ -64,7 +67,7 @@ export class AuditInterceptor implements NestInterceptor {
         },
         error: (error) => {
           // Log errors if needed
-          this.logger.error(`Error in audited action ${options.action}: ${error.message}`);
+          this.logger.error(`Error in audited action ${options.action}: ${getErrorMessage(error)}`);
         },
       }),
     );

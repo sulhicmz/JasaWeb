@@ -22,6 +22,7 @@ import { FileStorageService } from '../common/services/file-storage.service';
 import { LocalFileStorageService } from '../common/services/local-file-storage.service';
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { getErrorMessage } from '../common/utils/error.utils';
 import * as path from 'path';
 
 // Define file upload validation options
@@ -138,7 +139,7 @@ export class FileController {
         url: `/files/download/${createdFile.id}`, // Temporary - would generate actual signed URL in real app
       };
     } catch (error) {
-      this.logger.error(`Error uploading file: ${error.message}`);
+      this.logger.error(`Error uploading file: ${getErrorMessage(error)}`);
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -188,7 +189,7 @@ export class FileController {
         res.send(fileBuffer);
       }
     } catch (error) {
-      this.logger.error(`Error downloading file: ${error.message}`);
+      this.logger.error(`Error downloading file: ${getErrorMessage(error)}`);
       throw new BadRequestException('Error downloading file');
     }
   }
@@ -234,7 +235,7 @@ export class FileController {
       
       return { message: 'File deleted successfully' };
     } catch (error) {
-      this.logger.error(`Error deleting file: ${error.message}`);
+      this.logger.error(`Error deleting file: ${getErrorMessage(error)}`);
       throw new BadRequestException('Error deleting file');
     }
   }

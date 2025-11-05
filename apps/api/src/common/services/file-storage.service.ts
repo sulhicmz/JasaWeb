@@ -63,7 +63,13 @@ export class FileStorageService {
     });
 
     const expiresIn = options.expiresIn || 3600; // Default to 1 hour
-    return await getSignedUrl(this.s3Client, command, { expiresIn });
+    const signUrl = getSignedUrl as unknown as (
+      client: S3Client,
+      cmd: GetObjectCommand,
+      options: { expiresIn: number },
+    ) => Promise<string>;
+
+    return await signUrl(this.s3Client, command, { expiresIn });
   }
 
   /**
