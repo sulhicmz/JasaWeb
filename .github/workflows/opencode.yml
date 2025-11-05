@@ -16,6 +16,6 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run OpenCode CLI
-        uses: opencode-actions/opencode-cli@v1
+        uses: opencodehq/oc-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
