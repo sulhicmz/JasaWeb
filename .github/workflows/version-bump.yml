@@ -1,0 +1,92 @@
+name: Version Bump
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main, develop]
+
+jobs:
+  version-bump:
+    name: Automatic Version Bump
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'version-bump')
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+    - name: Determine version bump
+      id: version
+      run: |
+        if [[ "${{ contains(github.event.pull_request.labels.*.name, 'major') }}" == "true" ]]; then
+          echo "type=major" >> $GITHUB_OUTPUT
+        elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'minor') }}" == "true" ]]; then
+          echo "type=minor" >> $GITHUB_OUTPUT
+        else
+          echo "type=patch" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Bump version and create tag
+      run: |
+        # Bump version
+        npm version ${{ steps.version.outputs.type }} --no-git-tag-version
+        
+        # Get new version
+        NEW_VERSION=$(node -p "require('./package.json').version")
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+        
+        # Update app packages
+        cd apps/web && npm version $NEW_VERSION --no-git-tag-version
+        cd ../api && npm version $NEW_VERSION --no-git-tag-version
+        
+        # Update shared packages
+        cd ../../packages/ui && npm version $NEW_VERSION --no-git-tag-version
+        cd ../config && npm version $NEW_VERSION --no-git-tag-version
+        cd ../testing && npm version $NEW_VERSION --no-git-tag-version
+
+    - name: Commit and push changes
+      run: |
+        git add package.json apps/*/package.json packages/*/package.json
+        git commit -m "chore: bump version to ${{ env.NEW_VERSION }}"
+        git tag v${{ env.NEW_VERSION }}
+        git push origin main --follow-tags
+
+    - name: Create release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ env.NEW_VERSION }}
+        release_name: Release v${{ env.NEW_VERSION }}
+        body: |
+          ## 🚀 Release v${{ env.NEW_VERSION }}
+          
+          This is an automated release based on PR #${{ github.event.pull_request.number }}.
+          
+          ### 📋 Changes
+          
+          ${{ github.event.pull_request.body }}
+          
+          ### 🔗 Links
+          
+          - [PR #${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
+          - [Full Changelog](https://github.com/jasaweb/jasaweb/compare/v${{ github.event.pull_request.base.ref }}...v${{ env.NEW_VERSION }})
+        draft: false
+        prerelease: false

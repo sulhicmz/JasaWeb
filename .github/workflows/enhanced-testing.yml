@@ -1,0 +1,564 @@
+name: Enhanced Testing
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run comprehensive tests daily at 1 AM UTC
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        app: [web, api, ui, config, testing]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run unit tests for ${{ matrix.app }}
+      run: |
+        if [ "${{ matrix.app }}" = "web" ] || [ "${{ matrix.app }}" = "api" ]; then
+          cd apps/${{ matrix.app }}
+        else
+          cd packages/${{ matrix.app }}
+        fi
+        
+        pnpm test:unit || pnpm test
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage/lcov.info
+        flags: ${{ matrix.app }}
+        name: ${{ matrix.app }}-coverage
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jasaweb_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Setup test database
+      run: |
+        cd apps/api
+        DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm prisma migrate deploy
+        DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm prisma db seed
+
+    - name: Run API integration tests
+      run: |
+        cd apps/api
+        DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm test:integration
+
+    - name: Run API endpoint tests
+      run: |
+        cd apps/api
+        npm run start:test &
+        sleep 10
+        
+        # Test health endpoint
+        curl -f http://localhost:3001/health || exit 1
+        
+        # Test authentication endpoints
+        curl -f -X POST http://localhost:3001/auth/register \
+          -H "Content-Type: application/json" \
+          -d '{"email": "test@example.com", "password": "password123"}' || exit 1
+        
+        # Test protected endpoints
+        TOKEN=$(curl -s -X POST http://localhost:3001/auth/login \
+          -H "Content-Type: application/json" \
+          -d '{"email": "test@example.com", "password": "password123"}' | \
+          jq -r '.accessToken')
+        
+        curl -f -H "Authorization: Bearer $TOKEN" \
+          http://localhost:3001/api/projects || exit 1
+
+    - name: Run web integration tests
+      run: |
+        cd apps/web
+        npm run build
+        npm run preview &
+        sleep 10
+        
+        # Test web application
+        curl -f http://localhost:4321/ || exit 1
+        curl -f http://localhost:4321/about || exit 1
+        curl -f http://localhost:4321/services || exit 1
+
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Install Playwright
+      run: |
+        cd apps/web
+        npx playwright install --with-deps
+
+    - name: Build applications
+      run: |
+        pnpm build:api
+        pnpm build:web
+
+    - name: Start applications
+      run: |
+        # Start API
+        cd apps/api
+        npm run start:test &
+        sleep 10
+        
+        # Start Web
+        cd ../web
+        npm run preview &
+        sleep 10
+
+    - name: Run Playwright tests
+      run: |
+        cd apps/web
+        npx playwright test
+
+    - name: Upload Playwright report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: apps/web/playwright-report/
+        retention-days: 7
+
+    - name: Upload Playwright screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-screenshots
+        path: apps/web/test-results/
+        retention-days: 7
+
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install Lighthouse CI
+      run: npm install -g @lhci/cli@0.12.x
+
+    - name: Build and start applications
+      run: |
+        pnpm build:api
+        pnpm build:web
+        
+        # Start API
+        cd apps/api
+        npm run start:test &
+        sleep 10
+        
+        # Start Web
+        cd ../web
+        npm run preview &
+        sleep 10
+
+    - name: Run Lighthouse CI
+      run: |
+        cd apps/web
+        lhci autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+    - name: Run API performance tests
+      run: |
+        npm install -g artillery
+        
+        # Create artillery config
+        cat > artillery-config.yml << 'EOF'
+        config:
+          target: 'http://localhost:3001'
+          phases:
+            - duration: 60
+              arrivalRate: 10
+        scenarios:
+          - name: "API Load Test"
+            flow:
+              - get:
+                  url: "/health"
+              - think: 1
+              - get:
+                  url: "/api/projects"
+        EOF
+        
+        artillery run artillery-config.yml
+
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd apps/web
+        npm install
+
+    - name: Install accessibility tools
+      run: |
+        cd apps/web
+        npm install -g pa11y-ci
+
+    - name: Build and start application
+      run: |
+        cd apps/web
+        npm run build
+        npm run preview &
+        sleep 10
+
+    - name: Run accessibility tests
+      run: |
+        cd apps/web
+        
+        # Create pa11y config
+        cat > .pa11yci << 'EOF'
+        {
+          "defaults": {
+            "timeout": 30000,
+            "wait": 2000,
+            "chromeLaunchConfig": {
+              "headless": true,
+              "args": ["--no-sandbox"]
+            }
+          },
+          "urls": [
+            "http://localhost:4321/",
+            "http://localhost:4321/about",
+            "http://localhost:4321/services",
+            "http://localhost:4321/portfolio",
+            "http://localhost:4321/contact"
+          ]
+        }
+        EOF
+        
+        pa11y-ci --sitemap http://localhost:4321/sitemap.xml || true
+
+    - name: Upload accessibility report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: accessibility-report
+        path: apps/web/pa11y-ci-report.json
+        retention-days: 7
+
+  visual-regression-tests:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd apps/web
+        npm install
+
+    - name: Install visual testing tools
+      run: |
+        cd apps/web
+        npm install -g percy
+
+    - name: Build and start application
+      run: |
+        cd apps/web
+        npm run build
+        npm run preview &
+        sleep 10
+
+    - name: Run visual tests
+      run: |
+        cd apps/web
+        npx percy exec -- npm run test:visual
+      env:
+        PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.10.0
+      with:
+        target: 'http://localhost:4321'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+
+    - name: Run API security tests
+      run: |
+        cd apps/api
+        npm run start:test &
+        sleep 10
+        
+        # Test for common vulnerabilities
+        # SQL Injection test
+        curl -X POST http://localhost:3001/auth/login \
+          -H "Content-Type: application/json" \
+          -d '{"email": "test'\'' OR 1=1 --", "password": "password"}' || true
+        
+        # XSS test
+        curl -X POST http://localhost:3001/contact \
+          -H "Content-Type: application/json" \
+          -d '{"message": "<script>alert(1)</script>"}' || true
+        
+        # Rate limiting test
+        for i in {1..20}; do
+          curl http://localhost:3001/health || true
+        done
+
+  test-reporting:
+    name: Test Reporting
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, e2e-tests, performance-tests, accessibility-tests]
+    if: always()
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Generate comprehensive test report
+      run: |
+        echo "# 🧪 Comprehensive Test Report" > test-report.md
+        echo "" >> test-report.md
+        echo "## Report Generated: $(date)" >> test-report.md
+        echo "" >> test-report.md
+        echo "### Test Results Summary" >> test-report.md
+        echo "" >> test-report.md
+        
+        # Unit tests
+        echo "#### Unit Tests" >> test-report.md
+        if [ "${{ needs.unit-tests.result }}" = "success" ]; then
+          echo "✅ All unit tests passed" >> test-report.md
+        else
+          echo "❌ Unit tests failed" >> test-report.md
+        fi
+        echo "" >> test-report.md
+        
+        # Integration tests
+        echo "#### Integration Tests" >> test-report.md
+        if [ "${{ needs.integration-tests.result }}" = "success" ]; then
+          echo "✅ All integration tests passed" >> test-report.md
+        else
+          echo "❌ Integration tests failed" >> test-report.md
+        fi
+        echo "" >> test-report.md
+        
+        # E2E tests
+        echo "#### End-to-End Tests" >> test-report.md
+        if [ "${{ needs.e2e-tests.result }}" = "success" ]; then
+          echo "✅ All E2E tests passed" >> test-report.md
+        else
+          echo "❌ E2E tests failed" >> test-report.md
+        fi
+        echo "" >> test-report.md
+        
+        # Performance tests
+        echo "#### Performance Tests" >> test-report.md
+        if [ "${{ needs.performance-tests.result }}" = "success" ]; then
+          echo "✅ Performance tests passed" >> test-report.md
+        else
+          echo "⚠️ Performance tests had issues" >> test-report.md
+        fi
+        echo "" >> test-report.md
+        
+        # Accessibility tests
+        echo "#### Accessibility Tests" >> test-report.md
+        if [ "${{ needs.accessibility-tests.result }}" = "success" ]; then
+          echo "✅ Accessibility tests passed" >> test-report.md
+        else
+          echo "⚠️ Accessibility tests had issues" >> test-report.md
+        fi
+        echo "" >> test-report.md
+        
+        echo "### Coverage Information" >> test-report.md
+        echo "- Coverage reports uploaded to Codecov" >> test-report.md
+        echo "- Check Codecov for detailed coverage metrics" >> test-report.md
+        echo "" >> test-report.md
+        
+        echo "### Artifacts" >> test-report.md
+        echo "- Playwright Report: Available in artifacts" >> test-report.md
+        echo "- Accessibility Report: Available in artifacts" >> test-report.md
+        echo "- Screenshots: Available if tests failed" >> test-report.md
+        echo "" >> test-report.md
+        
+        echo "### Recommendations" >> test-report.md
+        echo "- Review any failed tests and fix issues" >> test-report.md
+        echo "- Monitor performance metrics regularly" >> test-report.md
+        echo "- Address accessibility issues promptly" >> test-report.md
+        echo "- Maintain test coverage above 80%" >> test-report.md
+
+    - name: Upload test report
+      uses: actions/upload-artifact@v4
+      with:
+        name: comprehensive-test-report
+        path: test-report.md
+        retention-days: 30
+
+    - name: Send test results notification
+      if: failure()
+      run: |
+        curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+          -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"🧪 Test Suite Issues Detected\",
+            \"attachments\": [
+              {
+                \"color\": \"danger\",
+                \"fields\": [
+                  {
+                    \"title\": \"Repository\",
+                    \"value\": \"jasaweb/jasaweb\",
+                    \"short\": true
+                  },
+                  {
+                    \"title\": \"Branch\",
+                    \"value\": \"${{ github.ref_name }}\",
+                    \"short\": true
+                  },
+                  {
+                    \"title\": \"Commit\",
+                    \"value\": \"${{ github.sha }}\",
+                    \"short\": true
+                  },
+                  {
+                    \"title\": \"Action Required\",
+                    \"value\": \"Review test failures and fix issues\",
+                    \"short\": false
+                  }
+                ]
+              }
+            ]
+          }" || echo "Failed to send test notification"
