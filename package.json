@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Web berbasis astro untuk manage client",
   "main": "index.js",
-"scripts": {
+  "scripts": {
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && pnpm start:dev",
@@ -49,6 +49,7 @@
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.0.0",
+    "concurrently": "^8.2.2",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0",
     "typescript": "^5.0.0",

@@ -22,7 +22,7 @@ If you discover a security vulnerability, please report it privately before disc
 
 #### **Alternative Methods**
 - **Email**: security@jasaweb.com
-- **Encrypted Email**: Use our PGP key (see below)
+- **Encrypted Email**: Request our PGP public key via security@jasaweb.com
 - **Discord**: Send a direct message to `@security-team`
 
 ### What to Include
@@ -35,18 +35,6 @@ Please provide as much information as possible:
 - **Reproduction Steps**: Step-by-step instructions to reproduce
 - **Proof of Concept**: Code snippets or screenshots
 - **Mitigation Suggestions**: If you have suggestions for fixing
-
-### PGP Key
-
-```
------BEGIN PGP PUBLIC KEY BLOCK-----
-
-mQINBGC7i8cBEADK2ZqT8V9X8Y7Z6W5V4U3T2R1Q0P9O8N7M6L5K4J3H2G1F0E9D8C7B6A5
-4321abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890
-abcd
-[Full PGP key would be here]
------END PGP PUBLIC KEY BLOCK-----
-```
 
 ## 🛡️ Security Measures
 

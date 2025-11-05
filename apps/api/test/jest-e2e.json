@@ -1,5 +1,5 @@
 {
-  "extends": "./jest.config.json",
+  "extends": "../jest.config.js",
   "displayName": "E2E Tests",
   "rootDir": ".",
   "testRegex": ".e2e-spec.ts$",

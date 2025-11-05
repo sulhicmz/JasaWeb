@@ -129,7 +129,7 @@ jasaweb/
 ### Verify Installation
 
 - 🌐 **Marketing Site**: [http://localhost:4321](http://localhost:4321)
-- 🔧 **API Documentation**: [http://localhost:3000/api](http://localhost:3000/api)
+- 🔧 **API Documentation**: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 - 🗄️ **Database**: localhost:5432 (via Docker)
 - 📊 **API Health**: [http://localhost:3000/health](http://localhost:3000/health)
 
