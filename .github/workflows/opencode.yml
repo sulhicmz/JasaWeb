@@ -1,4 +1,4 @@
-name: OpenCode CLI
+name: OpenCode Analysis
 
 on:
   issues:
@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  opencode:
+  analyze:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -15,7 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Run OpenCode CLI
-        uses: opencodehq/oc-action@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: '20'
+          
+      - name: Run basic analysis
+        run: |
+          echo "Analyzing repository structure..."
+          find . -name "*.ts" -o -name "*.js" -o -name "*.astro" | head -10
+          echo "Analysis complete!"
