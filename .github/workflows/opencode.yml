@@ -1,0 +1,21 @@
+name: OpenCode CLI
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  opencode:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run OpenCode CLI
+        uses: opencode-actions/opencode-cli@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
