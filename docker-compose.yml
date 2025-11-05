@@ -2,12 +2,12 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_DB: jasaweb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_DB:-jasaweb}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     ports:
       - '5432:5432'
     volumes:
@@ -17,26 +17,39 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - jasaweb-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
 
   redis:
     image: redis:7-alpine
     restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - jasaweb-network
+    security_opt:
+      - no-new-privileges:true
 
   minio:
     image: minio/minio:latest
     restart: always
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
     ports:
       - '9000:9000'
       - '9001:9001'
@@ -48,8 +61,11 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - jasaweb-network
+    security_opt:
+      - no-new-privileges:true
 
-  # Example API service (would be added when the API is containerized)
   api:
     build:
       context: .
@@ -62,23 +78,53 @@ services:
       minio:
         condition: service_healthy
     environment:
-      - DB_HOST=db
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-jasaweb}
       - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
       - S3_ENDPOINT=http://minio:9000
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
     ports:
       - "3000:3000"
     restart: on-failure
+    networks:
+      - jasaweb-network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
 
-  # Example web service (would be added when the web app is containerized)
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
     depends_on:
       - api
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - API_URL=http://api:3000
     ports:
       - "4321:4321"
     restart: on-failure
+    networks:
+      - jasaweb-network
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  jasaweb-network:
+    driver: bridge
 
 volumes:
   postgres_data:
