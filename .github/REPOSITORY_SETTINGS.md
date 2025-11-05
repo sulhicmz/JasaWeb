@@ -4,7 +4,7 @@
 
 ### Repository Information
 - **Name**: JasaWeb
-- **Description**: Web berbasis Astro untuk manage client
+- **Description**: Astro-based web platform for client management
 - **Website**: https://jasaweb.com
 - **Primary Language**: TypeScript
 

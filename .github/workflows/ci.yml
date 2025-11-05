@@ -62,7 +62,7 @@ jobs:
       run: pnpm install --frozen-lockfile
 
     - name: Run type checking
-      run: pnpm build --dry-run
+      run: pnpm typecheck
 
   test:
     name: Run Tests

@@ -1,9 +1,9 @@
 {
   "name": "jasaweb",
   "version": "1.0.0",
-  "description": "Web berbasis astro untuk manage client",
+  "description": "Astro-based web platform for client management",
   "main": "index.js",
-"scripts": {
+  "scripts": {
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && pnpm start:dev",
@@ -44,6 +44,7 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.0.0",

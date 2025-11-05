@@ -30,6 +30,7 @@ Branch: `main`
 - [x] Allow force pushes: No
 - [x] Allow deletions: No
 
+
 ## Develop Branch Protection
 Branch: `develop`
 
@@ -50,7 +51,7 @@ Branch: `develop`
 - [x] Dismiss stale PR approvals when new commits are pushed
 
 ### Other Restrictions
-- [x] Allow force pushes: Yes (for maintainers only)
+- [x] Allow force pushes: No
 - [x] Allow deletions: No
 
 ## Release Branch Protection

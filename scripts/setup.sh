@@ -277,20 +277,54 @@ verify_setup() {
     
     # Test API
     cd apps/api
-    if timeout 10s pnpm start:dev >/dev/null 2>&1; then
-        print_success "API can start successfully"
+    API_LOG=$(mktemp)
+    pnpm start:dev >"$API_LOG" 2>&1 &
+    API_PID=$!
+    sleep 8
+
+    if ps -p $API_PID >/dev/null 2>&1; then
+        if check_command curl; then
+            if curl -sf "http://localhost:3000/health" >/dev/null 2>&1 || curl -sf "http://localhost:3000" >/dev/null 2>&1; then
+                print_success "API responded successfully"
+            else
+                print_warning "Unable to verify API response. Check logs at $API_LOG"
+            fi
+        else
+            print_warning "curl not available. API health check skipped. Logs: $API_LOG"
+        fi
     else
-        print_warning "API startup test failed"
+        print_warning "API process exited early. Check logs at $API_LOG"
     fi
+
+    kill $API_PID >/dev/null 2>&1 || true
+    wait $API_PID 2>/dev/null || true
+    rm -f "$API_LOG"
     cd ../..
-    
+
     # Test Web
     cd apps/web
-    if timeout 10s pnpm dev >/dev/null 2>&1; then
-        print_success "Web application can start successfully"
+    WEB_LOG=$(mktemp)
+    pnpm dev >"$WEB_LOG" 2>&1 &
+    WEB_PID=$!
+    sleep 8
+
+    if ps -p $WEB_PID >/dev/null 2>&1; then
+        if check_command curl; then
+            if curl -sf "http://localhost:4321" >/dev/null 2>&1; then
+                print_success "Web application responded successfully"
+            else
+                print_warning "Unable to verify web application response. Check logs at $WEB_LOG"
+            fi
+        else
+            print_warning "curl not available. Web health check skipped. Logs: $WEB_LOG"
+        fi
     else
-        print_warning "Web application startup test failed"
+        print_warning "Web application process exited early. Check logs at $WEB_LOG"
     fi
+
+    kill $WEB_PID >/dev/null 2>&1 || true
+    wait $WEB_PID 2>/dev/null || true
+    rm -f "$WEB_LOG"
     cd ../..
 }
 
