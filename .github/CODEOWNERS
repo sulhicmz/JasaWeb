@@ -1,0 +1,72 @@
+# CODEOWNERS
+
+# Global owners for all files
+* @jasaweb-maintainers
+
+# Application-specific owners
+
+# Web Frontend (Astro)
+/apps/web/ @jasaweb-frontend
+apps/web/src/ @jasaweb-frontend
+apps/web/public/ @jasaweb-frontend
+apps/web/astro.config.* @jasaweb-frontend
+
+# API Backend (NestJS)
+/apps/api/ @jasaweb-backend
+apps/api/src/ @jasaweb-backend
+apps/api/prisma/ @jasaweb-backend
+apps/api/test/ @jasaweb-backend
+
+# Shared Packages
+/packages/ui/ @jasaweb-frontend
+/packages/config/ @jasaweb-backend @jasaweb-frontend
+/packages/testing/ @jasaweb-backend @jasaweb-frontend
+
+# Infrastructure and DevOps
+/.github/ @jasaweb-maintainers
+docker-compose.yml @jasaweb-maintainers
+Dockerfile* @jasaweb-maintainers
+*.dockerfile @jasaweb-maintainers
+
+# Configuration Files
+/package.json @jasaweb-maintainers
+/pnpm-workspace.yaml @jasaweb-maintainers
+/tsconfig*.json @jasaweb-maintainers
+/.eslintrc* @jasaweb-maintainers
+/.prettierrc* @jasaweb-maintainers
+
+# Documentation
+/docs/ @jasaweb-maintainers
+*.md @jasaweb-maintainers
+README.md @jasaweb-maintainers
+
+# Security and Compliance
+/.github/dependabot.* @jasaweb-maintainers
+/.github/workflows/security.yml @jasaweb-maintainers
+SECURITY.md @jasaweb-maintainers
+
+# Database
+**/*.sql @jasaweb-backend
+**/schema.prisma @jasaweb-backend
+**/migrations/ @jasaweb-backend
+
+# Environment and Configuration
+.env* @jasaweb-maintainers
+**/.env* @jasaweb-maintainers
+
+# Testing
+**/*.test.ts @jasaweb-backend @jasaweb-frontend
+**/*.spec.ts @jasaweb-backend @jasaweb-frontend
+**/test/ @jasaweb-backend @jasaweb-frontend
+**/tests/ @jasaweb-backend @jasaweb-frontend
+vitest.config.* @jasaweb-maintainers
+
+# Build and Deployment
+/dist/ @jasaweb-maintainers
+/build/ @jasaweb-maintainers
+**/dist/ @jasaweb-maintainers
+**/build/ @jasaweb-maintainers
+
+# Default fallback for unowned files
+# This line should be last
+* @jasaweb-maintainers

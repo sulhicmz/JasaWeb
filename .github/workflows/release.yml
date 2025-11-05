@@ -1,0 +1,286 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.3)'
+        required: true
+        type: string
+      pre_release:
+        description: 'Is this a pre-release?'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_id: ${{ steps.create-release.outputs.id }}
+      upload_url: ${{ steps.create-release.outputs.upload_url }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build applications
+      run: |
+        pnpm build:web
+        pnpm build:api
+
+    - name: Run tests
+      run: pnpm test:run
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get version from tag or input
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${GITHUB_REF#refs/tags/}"
+        fi
+        
+        # Generate changelog
+        npx conventional-changelog-cli -p angular -i CHANGELOG.md -s
+        
+        # Get changelog for this version
+        CHANGELOG=$(sed -n "/## \[$VERSION\]/,/^## /p" CHANGELOG.md | sed '$d')
+        
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+        release_name: Release ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+        body: |
+          ## 🚀 Release ${{ github.ref_name || format('v{0}', github.event.inputs.version) }}
+          
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ### 📦 Installation
+          
+          ```bash
+          npm install @jasaweb/web@${{ github.ref_name || github.event.inputs.version }}
+          npm install @jasaweb/api@${{ github.ref_name || github.event.inputs.version }}
+          ```
+          
+          ### 🔗 Links
+          
+          - [📋 Full Changelog](https://github.com/jasaweb/jasaweb/blob/main/CHANGELOG.md)
+          - [📦 npm packages](https://www.npmjs.com/org/jasaweb)
+          - [🐛 Bug Reports](https://github.com/jasaweb/jasaweb/issues)
+          - [💬 Discussions](https://github.com/jasaweb/jasaweb/discussions)
+        draft: false
+        prerelease: ${{ github.event.inputs.pre_release || false }}
+
+    - name: Update version in package.json
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${GITHUB_REF#refs/tags/}"
+        fi
+        
+        # Update root package.json
+        npm version $VERSION --no-git-tag-version
+        
+        # Update app packages
+        cd apps/web && npm version $VERSION --no-git-tag-version
+        cd ../api && npm version $VERSION --no-git-tag-version
+        
+        # Update shared packages
+        cd ../../packages/ui && npm version $VERSION --no-git-tag-version
+        cd ../config && npm version $VERSION --no-git-tag-version
+        cd ../testing && npm version $VERSION --no-git-tag-version
+
+    - name: Commit version changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add package.json apps/*/package.json packages/*/package.json
+        git commit -m "chore: bump version to ${{ github.ref_name || github.event.inputs.version }}"
+        git push
+
+  build-and-upload:
+    name: Build and Upload Artifacts
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        app: [web, api]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build ${{ matrix.app }}
+      run: |
+        cd apps/${{ matrix.app }}
+        pnpm build
+
+    - name: Upload ${{ matrix.app }} artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: apps/${{ matrix.app }}/dist/
+        asset_name: ${{ matrix.app }}-${{ github.ref_name || github.event.inputs.version }}.tar.gz
+        asset_content_type: application/gzip
+
+  publish-packages:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload]
+    if: startsWith(github.ref, 'refs/tags/') || github.event.inputs.pre_release == 'false'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'pnpm'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build packages
+      run: |
+        pnpm build:web
+        pnpm build:api
+
+    - name: Publish packages
+      run: |
+        # Publish shared packages first
+        cd packages/config && npm publish --access public
+        cd ../testing && npm publish --access public
+        cd ../ui && npm publish --access public
+        
+        # Publish applications
+        cd ../../apps/api && npm publish --access public
+        cd ../web && npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload]
+    if: startsWith(github.ref, 'refs/tags/') && contains(github.ref, '-rc')
+    environment: staging
+
+    steps:
+    - name: Deploy to Staging
+      run: |
+        echo "Deploying ${{ github.ref_name }} to staging..."
+        # Add your staging deployment commands here
+        # Example: curl -X POST ${{ secrets.STAGING_DEPLOY_WEBHOOK }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [create-release, build-and-upload, publish-packages]
+    if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-rc') && !contains(github.ref, '-beta') && !contains(github.ref, '-alpha')
+    environment: production
+
+    steps:
+    - name: Deploy to Production
+      run: |
+        echo "Deploying ${{ github.ref_name }} to production..."
+        # Add your production deployment commands here
+        # Example: curl -X POST ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK }}
+
+  notify-release:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [create-release, deploy-production]
+    if: always()
+
+    steps:
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#releases'
+        text: |
+          🚀 Release ${{ github.ref_name || github.event.inputs.version }} has been ${{ job.status == 'success' && 'deployed successfully!' || 'failed to deploy!' }}
+          
+          📦 View release: https://github.com/jasaweb/jasaweb/releases/tag/${{ github.ref_name || github.event.inputs.version }}
+          📋 Full changelog: https://github.com/jasaweb/jasaweb/blob/main/CHANGELOG.md
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    - name: Update GitHub Status
+      if: job.status == 'success'
+      run: |
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/jasaweb/jasaweb/statuses/${{ github.sha }} \
+          -d '{
+            "state": "success",
+            "target_url": "https://github.com/jasaweb/jasaweb/releases/tag/${{ github.ref_name || github.event.inputs.version }}",
+            "description": "Release ${{ github.ref_name || github.event.inputs.version }} deployed successfully",
+            "context": "release/deployment"
+          }'
