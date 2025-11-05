@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Web berbasis astro untuk manage client",
   "main": "index.js",
-"scripts": {
+  "scripts": {
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && pnpm start:dev",
@@ -34,7 +34,12 @@
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules dist apps/*/dist packages/*/dist",
     "setup": "./scripts/setup.sh",
     "setup:windows": "scripts\\setup.bat",
-    "quick-start": "./scripts/quick-start.sh"
+    "quick-start": "./scripts/quick-start.sh",
+    "security:audit": "pnpm audit --audit-level moderate",
+    "security:audit:fix": "pnpm audit --fix",
+    "security:check": "pnpm security:audit && pnpm security:outdated",
+    "security:outdated": "pnpm outdated",
+    "security:scan": "node scripts/security-scan.js"
   },
   "keywords": [
     "astro",
@@ -48,6 +53,7 @@
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.0.0",
     "eslint": "^8.0.0",
+    "eslint-plugin-security": "^3.0.1",
     "prettier": "^3.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
