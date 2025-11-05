@@ -4,6 +4,7 @@ import { FileStorageService } from '../common/services/file-storage.service';
 import { LocalFileStorageService } from '../common/services/local-file-storage.service';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
+import { getErrorMessage } from '../common/utils/error.utils';
 
 // Define file upload validation options
 export const VALID_MIME_TYPES = [
@@ -128,7 +129,7 @@ export class FileService {
         url: `/files/download/${createdFile.id}`,
       };
     } catch (error) {
-      this.logger.error(`Error uploading file: ${error.message}`);
+      this.logger.error(`Error uploading file: ${getErrorMessage(error)}`);
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -171,7 +172,7 @@ export class FileService {
         response.send(fileBuffer);
       }
     } catch (error) {
-      this.logger.error(`Error downloading file: ${error.message}`);
+      this.logger.error(`Error downloading file: ${getErrorMessage(error)}`);
       throw new BadRequestException('Error downloading file');
     }
   }
@@ -211,7 +212,7 @@ export class FileService {
 
       return { message: 'File deleted successfully' };
     } catch (error) {
-      this.logger.error(`Error deleting file: ${error.message}`);
+      this.logger.error(`Error deleting file: ${getErrorMessage(error)}`);
       throw new BadRequestException('Error deleting file');
     }
   }

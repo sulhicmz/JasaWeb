@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 

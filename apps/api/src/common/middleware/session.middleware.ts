@@ -49,7 +49,8 @@ export class SessionMiddleware implements NestMiddleware {
       // Continue with the request
       next();
     } catch (error) {
-      this.logger.error(`Session validation failed: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Session validation failed: ${message}`);
       throw new UnauthorizedException('Session validation failed');
     }
   }

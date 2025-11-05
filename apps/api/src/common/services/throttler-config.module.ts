@@ -7,10 +7,12 @@ import { ConfigModule } from '@nestjs/config';
   imports: [
     ConfigModule,
     ThrottlerModule.forRootAsync({
-      useFactory: () => ({
-        ttl: parseInt(process.env.THROTTLE_TTL) || 60, // Time window in seconds
-        limit: parseInt(process.env.THROTTLE_LIMIT) || 10, // Max requests per window
-      }),
+      useFactory: () => ([
+        {
+          ttl: Number.parseInt(process.env.THROTTLE_TTL || '', 10) || 60, // Time window in seconds
+          limit: Number.parseInt(process.env.THROTTLE_LIMIT || '', 10) || 10, // Max requests per window
+        },
+      ]),
     }),
   ],
   providers: [

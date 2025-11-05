@@ -28,7 +28,9 @@ export class ApprovalService {
         itemType,
         itemId,
         status: 'pending',
-        requestedById: requesterId,
+        note: null,
+        decidedAt: null,
+        decidedById: null,
       },
     });
   }

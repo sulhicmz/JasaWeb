@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
+import { getErrorMessage } from '../utils/error.utils';
 
 export interface EmailOptions {
   to: string | string[];
@@ -29,7 +30,7 @@ export class EmailService {
 
       this.logger.log(`Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
     } catch (error) {
-      this.logger.error(`Failed to send email: ${error.message}`);
+      this.logger.error(`Failed to send email: ${getErrorMessage(error)}`);
       throw error;
     }
   }

@@ -1,23 +1,21 @@
 # CODEOWNERS
 
-# Global owners for all files
 # Note: This is a personal repository, teams are not available
 # Using repository owner as fallback for all team references
-* @sulhicmz
 
 # Application-specific owners
 
 # Web Frontend (Astro)
 /apps/web/ @sulhicmz
-apps/web/src/ @sulhicmz
-apps/web/public/ @sulhicmz
-apps/web/astro.config.* @sulhicmz
+/apps/web/src/ @sulhicmz
+/apps/web/public/ @sulhicmz
+/apps/web/astro.config.* @sulhicmz
 
 # API Backend (NestJS)
 /apps/api/ @sulhicmz
-apps/api/src/ @sulhicmz
-apps/api/prisma/ @sulhicmz
-apps/api/test/ @sulhicmz
+/apps/api/src/ @sulhicmz
+/apps/api/prisma/ @sulhicmz
+/apps/api/test/ @sulhicmz
 
 # Shared Packages
 /packages/ui/ @sulhicmz

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { getErrorMessage } from '../utils/error.utils';
 
 export interface AuditLogEntry {
   actorId: string; // ID of the user performing the action
@@ -30,7 +31,7 @@ export class AuditService {
 
       this.logger.log(`Audit log created: ${entry.action} by user ${entry.actorId} in org ${entry.organizationId}`);
     } catch (error) {
-      this.logger.error(`Failed to create audit log: ${error.message}`);
+      this.logger.error(`Failed to create audit log: ${getErrorMessage(error)}`);
       // We don't throw an error here because failing to log shouldn't break the main functionality
     }
   }

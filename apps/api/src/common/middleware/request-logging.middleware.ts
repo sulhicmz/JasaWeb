@@ -23,8 +23,8 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     const startTime = Date.now();
     
     // Capture the original end method to intercept the response
-    const originalEnd = res.end;
-    res.end = (chunk: any, encoding: any, callback: any) => {
+    const originalEnd = res.end.bind(res);
+    res.end = ((chunk?: any, encoding?: any, callback?: () => void) => {
       const responseTime = Date.now() - startTime;
       
       // Log the request/response details
@@ -46,8 +46,8 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       this.logger.log(JSON.stringify(log));
       
       // Call the original end method
-      return originalEnd.call(res, chunk, encoding, callback);
-    };
+      return originalEnd(chunk as never, encoding as never, callback as never);
+    }) as typeof res.end;
 
     next();
   }

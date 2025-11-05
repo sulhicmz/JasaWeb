@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AuditService } from './audit.service';
+import { getErrorMessage } from '../utils/error.utils';
 
 export interface ErrorLogData {
   errorId?: string;
@@ -58,7 +59,7 @@ export class ErrorHandlingService {
         });
       } catch (auditError) {
         // If audit logging fails, log to console but don't break execution
-        this.logger.warn(`Failed to log to audit trail: ${auditError.message}`);
+        this.logger.warn(`Failed to log to audit trail: ${getErrorMessage(auditError)}`);
       }
     }
   }

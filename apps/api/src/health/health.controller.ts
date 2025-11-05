@@ -2,6 +2,7 @@ import { Controller, Get, Logger } from '@nestjs/common';
 import { HealthCheck, HealthCheckService, HttpHealthIndicator } from '@nestjs/terminus';
 import { PrismaHealthIndicator } from './prisma.health';
 import { Public } from '../common/decorators/public.decorator';
+import { getErrorMessage } from '../common/utils/error.utils';
 
 @Controller('health')
 export class HealthController {
@@ -26,7 +27,7 @@ export class HealthController {
         () => this.prismaHealthIndicator.isHealthy('database'),
       ]);
     } catch (error) {
-      this.logger.error(`Health check failed: ${error.message}`);
+      this.logger.error(`Health check failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -40,7 +41,7 @@ export class HealthController {
         () => this.prismaHealthIndicator.isHealthy('database'),
       ]);
     } catch (error) {
-      this.logger.error(`Database health check failed: ${error.message}`);
+      this.logger.error(`Database health check failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -54,7 +55,7 @@ export class HealthController {
         () => this.http.pingCheck('http', 'https://httpbin.org/get'),
       ]);
     } catch (error) {
-      this.logger.error(`HTTP health check failed: ${error.message}`);
+      this.logger.error(`HTTP health check failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
