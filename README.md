@@ -301,6 +301,35 @@ pnpm test:e2e
 - **Swagger UI**: [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
 - **OpenAPI Spec**: [http://localhost:3000/api/docs-json](http://localhost:3000/api/docs-json)
 
+## 🚀 CI/CD Pipeline
+
+This repository implements a comprehensive GitHub Actions workflow system:
+
+### **Active Workflows**
+- **CI/CD Pipeline** (`ci-main.yml`) - Main pipeline with smart caching and parallel testing
+- **Security Scanning** (`enhanced-security.yml`) - Comprehensive security analysis  
+- **Vulnerability Management** (`vulnerability-management.yml`) - Automated patching
+- **Performance Monitoring** (`performance-monitoring.yml`) - Application performance tracking
+- **Automated Deployments** (`automated-deployments.yml`) - Staging/production deployments
+- **Release Management** (`release.yml`) - Automated releases and publishing
+
+### **Key Features**
+- ✅ Smart dependency caching with versioning
+- ✅ Parallel testing across all workspaces
+- ✅ Comprehensive security scanning (CodeQL, Snyk, TruffleHog)
+- ✅ Automated vulnerability patching
+- ✅ Performance monitoring and alerting
+- ✅ Branch protection compliance verification
+- ✅ Automated deployments with rollback capabilities
+
+### **Status Monitoring**
+- 📊 **CI/CD Performance**: Real-time pipeline monitoring
+- 🔒 **Security Dashboard**: Vulnerability tracking and compliance
+- 📈 **Performance Metrics**: Application and infrastructure monitoring
+- 🚨 **Automated Alerts**: Slack and GitHub notifications for critical issues
+
+For detailed workflow documentation, see [`.github/WORKFLOWS.md`](./.github/WORKFLOWS.md).
+
 ## 🚀 Deployment
 
 ### Environment Setup

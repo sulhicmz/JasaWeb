@@ -1,0 +1,453 @@
+name: Performance Monitoring Dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+  schedule:
+    # Run performance monitoring every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  CACHE_VERSION: 'v2'  # Standardized cache version
+
+jobs:
+  # Web performance monitoring
+  web-performance-monitoring:
+    name: Web Performance Monitoring
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd apps/web
+        npm install
+
+    - name: Build web application
+      run: |
+        cd apps/web
+        npm run build
+
+    - name: Start application for monitoring
+      run: |
+        cd apps/web
+        npm run preview &
+        sleep 10
+
+    - name: Run Lighthouse CI
+      run: |
+        cd apps/web
+        npx @lhci/cli@0.12.x autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+    - name: Analyze Core Web Vitals
+      run: |
+        echo "🎯 Analyzing Core Web Vitals..."
+        
+        # Extract Lighthouse results
+        if [ -f .lighthouseci/lhr-*.json ]; then
+          lhr_file=$(ls .lighthouseci/lhr-*.json | head -1)
+          
+          LCP=$(cat "$lhr_file" | jq -r '.audits["largest-contentful-paint"].numericValue / 1000')
+          FID=$(cat "$lhr_file" | jq -r '.audits["max-potential-fid"].numericValue')
+          CLS=$(cat "$lhr_file" | jq -r '.audits["cumulative-layout-shift"].numericValue')
+          TTFB=$(cat "$lhr_file" | jq -r '.audits["server-response-time"].numericValue / 1000')
+          PERFORMANCE_SCORE=$(cat "$lhr_file" | jq -r '.categories.performance.score * 100')
+          
+          echo "## Core Web Vitals Results" >> performance-results.md
+          echo "" >> performance-results.md
+          echo "| Metric | Value | Status |" >> performance-results.md
+          echo "|--------|-------|--------|" >> performance-results.md
+          
+          # LCP
+          if (( $(echo "$LCP <= 2.5" | bc -l) )); then
+            echo "| Largest Contentful Paint (LCP) | ${LCP}s | ✅ Good |" >> performance-results.md
+          elif (( $(echo "$LCP <= 4.0" | bc -l) )); then
+            echo "| Largest Contentful Paint (LCP) | ${LCP}s | ⚠️ Needs Improvement |" >> performance-results.md
+          else
+            echo "| Largest Contentful Paint (LCP) | ${LCP}s | ❌ Poor |" >> performance-results.md
+          fi
+          
+          # FID
+          if (( $(echo "$FID <= 100" | bc -l) )); then
+            echo "| First Input Delay (FID) | ${FID}ms | ✅ Good |" >> performance-results.md
+          elif (( $(echo "$FID <= 300" | bc -l) )); then
+            echo "| First Input Delay (FID) | ${FID}ms | ⚠️ Needs Improvement |" >> performance-results.md
+          else
+            echo "| First Input Delay (FID) | ${FID}ms | ❌ Poor |" >> performance-results.md
+          fi
+          
+          # CLS
+          if (( $(echo "$CLS <= 0.1" | bc -l) )); then
+            echo "| Cumulative Layout Shift (CLS) | $CLS | ✅ Good |" >> performance-results.md
+          elif (( $(echo "$CLS <= 0.25" | bc -l) )); then
+            echo "| Cumulative Layout Shift (CLS) | $CLS | ⚠️ Needs Improvement |" >> performance-results.md
+          else
+            echo "| Cumulative Layout Shift (CLS) | $CLS | ❌ Poor |" >> performance-results.md
+          fi
+          
+          # TTFB
+          if (( $(echo "$TTFB <= 0.8" | bc -l) )); then
+            echo "| Time to First Byte (TTFB) | ${TTFB}s | ✅ Good |" >> performance-results.md
+          elif (( $(echo "$TTFB <= 1.8" | bc -l) )); then
+            echo "| Time to First Byte (TTFB) | ${TTFB}s | ⚠️ Needs Improvement |" >> performance-results.md
+          else
+            echo "| Time to First Byte (TTFB) | ${TTFB}s | ❌ Poor |" >> performance-results.md
+          fi
+          
+          # Performance Score
+          if (( $(echo "$PERFORMANCE_SCORE >= 90" | bc -l) )); then
+            echo "| Performance Score | ${PERFORMANCE_SCORE} | ✅ Excellent |" >> performance-results.md
+          elif (( $(echo "$PERFORMANCE_SCORE >= 50" | bc -l) )); then
+            echo "| Performance Score | ${PERFORMANCE_SCORE} | ⚠️ Needs Improvement |" >> performance-results.md
+          else
+            echo "| Performance Score | ${PERFORMANCE_SCORE} | ❌ Poor |" >> performance-results.md
+          fi
+        fi
+
+    - name: Bundle Size Analysis
+      run: |
+        echo "" >> performance-results.md
+        echo "## 📦 Bundle Size Analysis" >> performance-results.md
+        echo "" >> performance-results.md
+        
+        cd apps/web/dist
+        
+        # Analyze bundle sizes
+        echo "| File | Size | Type |" >> ../../performance-results.md
+        echo "|------|------|------|" >> ../../performance-results.md
+        
+        total_size=0
+        find . -name "*.js" -o -name "*.css" | while read file; do
+          size_bytes=$(stat -c%s "$file")
+          size_kb=$((size_bytes / 1024))
+          total_size=$((total_size + size_kb))
+          
+          if [[ "$file" == *.js ]]; then
+            type="JavaScript"
+          else
+            type="CSS"
+          fi
+          
+          echo "| $file | ${size_kb}KB | $type |" >> ../../performance-results.md
+        done
+        
+        echo "" >> ../../performance-results.md
+        echo "**Total Bundle Size: ${total_size}KB**" >> ../../performance-results.md
+        
+        # Bundle size recommendations
+        if [[ $total_size -le 1024 ]]; then
+          echo "✅ Bundle size is excellent (< 1MB)" >> ../../performance-results.md
+        elif [[ $total_size -le 2048 ]]; then
+          echo "⚠️ Bundle size is acceptable (< 2MB)" >> ../../performance-results.md
+        else
+          echo "❌ Bundle size is too large (> 2MB)" >> ../../performance-results.md
+          echo "Consider:" >> ../../performance-results.md
+          echo "- Code splitting" >> ../../performance-results.md
+          echo "- Tree shaking" >> ../../performance-results.md
+          echo "- Image optimization" >> ../../performance-results.md
+          echo "- Lazy loading" >> ../../performance-results.md
+        fi
+
+    - name: API Performance Monitoring
+      run: |
+        echo "" >> performance-results.md
+        echo "## 🚀 API Performance" >> performance-results.md
+        echo "" >> performance-results.md
+        
+        # Start API for testing
+        cd apps/api
+        npm run build
+        npm run start:prod &
+        sleep 10
+        
+        # Install artillery for load testing
+        npm install -g artillery
+        
+        # Create artillery config
+        cat > artillery-config.yml << 'EOF'
+        config:
+          target: 'http://localhost:3000'
+          phases:
+            - duration: 30
+              arrivalRate: 5
+              name: "Warm up"
+            - duration: 60
+              arrivalRate: 20
+              name: "Load test"
+        scenarios:
+          - name: "Health Check"
+            weight: 50
+            flow:
+              - get:
+                  url: "/health"
+          - name: "API Endpoints"
+            weight: 30
+            flow:
+              - get:
+                  url: "/api/projects"
+          - name: "Authentication"
+            weight: 20
+            flow:
+              - post:
+                  url: "/auth/login"
+                  json:
+                    email: "test@example.com"
+                    password: "password123"
+        EOF
+        
+        # Run load test
+        artillery run artillery-config.yml --output artillery-results.json
+        
+        # Analyze results
+        if [ -f artillery-results.json ]; then
+          avg_response_time=$(cat artillery-results.json | jq -r '.aggregate.responseTimes.mean')
+          p95_response_time=$(cat artillery-results.json | jq -r '.aggregate.responseTimes.p95')
+          p99_response_time=$(cat artillery-results.json | jq -r '.aggregate.responseTimes.p99')
+          requests_per_second=$(cat artillery-results.json | jq -r '.aggregate.rps.mean')
+          error_rate=$(cat artillery-results.json | jq -r '.aggregate.scenariosFailed / .aggregate.scenariosCreated * 100')
+          
+          echo "| Metric | Value | Status |" >> ../../performance-results.md
+          echo "|--------|-------|--------|" >> ../../performance-results.md
+          
+          # Response time checks
+          if (( $(echo "$avg_response_time <= 200" | bc -l) )); then
+            echo "| Average Response Time | ${avg_response_time}ms | ✅ Good |" >> ../../performance-results.md
+          else
+            echo "| Average Response Time | ${avg_response_time}ms | ⚠️ Slow |" >> ../../performance-results.md
+          fi
+          
+          if (( $(echo "$p95_response_time <= 500" | bc -l) )); then
+            echo "| 95th Percentile | ${p95_response_time}ms | ✅ Good |" >> ../../performance-results.md
+          else
+            echo "| 95th Percentile | ${p95_response_time}ms | ⚠️ Slow |" >> ../../performance-results.md
+          fi
+          
+          # RPS check
+          if (( $(echo "$requests_per_second >= 50" | bc -l) )); then
+            echo "| Requests per Second | $requests_per_second | ✅ Good |" >> ../../performance-results.md
+          else
+            echo "| Requests per Second | $requests_per_second | ⚠️ Low |" >> ../../performance-results.md
+          fi
+          
+          # Error rate check
+          if (( $(echo "$error_rate <= 1" | bc -l) )); then
+            echo "| Error Rate | ${error_rate}% | ✅ Good |" >> ../../performance-results.md
+          else
+            echo "| Error Rate | ${error_rate}% | ❌ High |" >> ../../performance-results.md
+          fi
+        fi
+
+    - name: Database Performance Check
+      run: |
+        echo "" >> performance-results.md
+        echo "## 🗄️ Database Performance" >> performance-results.md
+        echo "" >> performance-results.md
+        
+        cd apps/api
+        
+        # Run database performance tests
+        node -e "
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        
+        async function testDbPerformance() {
+          const results = [];
+          
+          // Test query performance
+          const start = Date.now();
+          await prisma.project.count();
+          results.push({ query: 'Count projects', time: Date.now() - start });
+          
+          const start2 = Date.now();
+          await prisma.project.findMany({ take: 10 });
+          results.push({ query: 'Select 10 projects', time: Date.now() - start2 });
+          
+          const start3 = Date.now();
+          await prisma.project.findMany({ take: 50 });
+          results.push({ query: 'Select 50 projects', time: Date.now() - start3 });
+          
+          console.log('Database Query Performance:');
+          results.forEach(r => {
+            console.log(\`- \${r.query}: \${r.time}ms\`);
+          });
+          
+          await prisma.\$disconnect();
+        }
+        
+        testDbPerformance().catch(console.error);
+        " >> ../../performance-results.md
+
+    - name: Generate Performance Report
+      run: |
+        echo "# 📊 Performance Monitoring Report" > performance-report.md
+        echo "" >> performance-report.md
+        echo "**Date**: $(date)" >> performance-report.md
+        echo "**Commit**: ${{ github.sha }}" >> performance-report.md
+        echo "**Branch**: ${{ github.ref_name }}" >> performance-report.md
+        echo "" >> performance-report.md
+        cat performance-results.md >> performance-report.md
+        
+        # Add recommendations
+        echo "" >> performance-report.md
+        echo "## 🎯 Performance Recommendations" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "### Web Performance" >> performance-report.md
+        echo "- Monitor Core Web Vitals regularly" >> performance-report.md
+        echo "- Optimize images and assets" >> performance-report.md
+        echo "- Implement code splitting" >> performance-report.md
+        echo "- Use CDN for static assets" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "### API Performance" >> performance-report.md
+        echo "- Implement caching strategies" >> performance-report.md
+        echo "- Optimize database queries" >> performance-report.md
+        echo "- Use connection pooling" >> performance-report.md
+        echo "- Monitor response times" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "### Database Performance" >> performance-report.md
+        echo "- Add appropriate indexes" >> performance-report.md
+        echo "- Monitor query performance" >> performance-report.md
+        echo "- Consider read replicas for scaling" >> performance-report.md
+
+    - name: Upload Performance Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-monitoring-report
+        path: performance-report.md
+        retention-days: 30
+
+    - name: Update Performance Badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Extract performance score for badge
+        if [ -f .lighthouseci/lhr-*.json ]; then
+          lhr_file=$(ls .lighthouseci/lhr-*.json | head -1)
+          score=$(cat "$lhr_file" | jq -r '.categories.performance.score * 100')
+          
+          # Create badge data
+          echo "Creating performance badge with score: $score"
+          
+          # Here you would typically update a badge service or README
+          echo "Performance score: $score"
+        fi
+
+    - name: Send Performance Alert
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        channel: '#performance'
+        text: |
+          🚨 Performance Test Issues Detected
+          Repository: ${{ github.repository }}
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref_name }}
+          
+          Please review the performance test results and address any issues.
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Performance regression detection
+  regression-detection:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout PR code
+      uses: actions/checkout@v4
+
+    - name: Checkout main branch for comparison
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        path: main-branch
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Build and test PR version
+      run: |
+        cd apps/web
+        npm install
+        npm run build
+        npm run preview &
+        sleep 10
+        
+        # Run Lighthouse
+        npx @lhci/cli@0.12.x autorun --config=.lighthouserc-pr.json
+
+    - name: Build and test main version
+      run: |
+        cd main-branch/apps/web
+        npm install
+        npm run build
+        npm run preview &
+        sleep 10
+        
+        # Run Lighthouse
+        npx @lhci/cli@0.12.x autorun --config=.lighthouserc-main.json
+
+    - name: Compare performance
+      run: |
+        echo "## 🔄 Performance Regression Analysis" >> regression-report.md
+        echo "" >> regression-report.md
+        
+        # Compare Lighthouse scores
+        if [ -f .lighthouseci/lhr-pr.json ] && [ -f ../main-branch/.lighthouseci/lhr-main.json ]; then
+          pr_score=$(cat .lighthouseci/lhr-pr.json | jq -r '.categories.performance.score * 100')
+          main_score=$(cat ../main-branch/.lighthouseci/lhr-main.json | jq -r '.categories.performance.score * 100')
+          
+          echo "| Version | Performance Score |" >> regression-report.md
+          echo "|---------|------------------|" >> regression-report.md
+          echo "| Main Branch | $main_score |" >> regression-report.md
+          echo "| PR Branch | $pr_score |" >> regression-report.md
+          echo "" >> regression-report.md
+          
+          # Check for regression
+          if (( $(echo "$pr_score < $main_score - 5" | bc -l) )); then
+            echo "⚠️ **Performance Regression Detected**" >> regression-report.md
+            echo "Performance score decreased by $(echo "$main_score - $pr_score" | bc) points" >> regression-report.md
+            echo "" >> regression-report.md
+            echo "Please review the changes and optimize performance before merging." >> regression-report.md
+          else
+            echo "✅ **No significant performance regression**" >> regression-report.md
+          fi
+        fi
+
+    - name: Comment PR with regression results
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('regression-report.md', 'utf8');
+          
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: `## 🔄 Performance Regression Analysis\n\n${report}`
+          });

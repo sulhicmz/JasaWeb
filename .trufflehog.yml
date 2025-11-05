@@ -1,0 +1,109 @@
+# TruffleHog Configuration
+# Custom rules for JasaWeb project
+
+rules:
+  # AWS Access Keys
+  - id: aws-access-key
+    pattern: |
+      AKIA[0-9A-Z]{16}
+    keywords:
+      - AKIA
+
+  # GitHub Personal Access Tokens
+  - id: github-pat
+    pattern: |
+      ghp_[0-9a-zA-Z]{36}
+    keywords:
+      - ghp_
+
+  # GitHub OAuth Tokens
+  - id: github-oauth
+    pattern: |
+      gho_[0-9a-zA-Z]{36}
+    keywords:
+      - gho_
+
+  # GitHub App Tokens
+  - id: github-app
+    pattern: |
+      ghu_[0-9a-zA-Z]{36}
+    keywords:
+      - ghu_
+
+  # GitHub Server Tokens
+  - id: github-server
+    pattern: |
+      ghs_[0-9a-zA-Z]{36}
+    keywords:
+      - ghs_
+
+  # GitHub Refresh Tokens
+  - id: github-refresh
+    pattern: |
+      ghr_[0-9a-zA-Z]{36}
+    keywords:
+      - ghr_
+
+  # Generic API Keys
+  - id: generic-api-key
+    pattern: |
+      [Aa][Pp][Ii]_?[Kk][Ee][Yy].*['\"][0-9a-zA-Z]{20,}['\"]
+    keywords:
+      - api
+      - key
+
+  # Database URLs
+  - id: database-url
+    pattern: |
+      [Dd][Aa][Tt][Aa][Bb][Aa][Ss][Ee]_?[Uu][Rr][Ll].*['\"][^'\"]{20,}['\"]
+    keywords:
+      - database
+      - url
+
+  # JWT Secrets
+  - id: jwt-secret
+    pattern: |
+      [Jj][Ww][Tt]_?[Ss][Ee][Cc][Rr][Ee][Tt].*['\"][0-9a-zA-Z]{20,}['\"]
+    keywords:
+      - jwt
+      - secret
+
+  # Private Keys
+  - id: private-key
+    pattern: |
+      -----BEGIN (RSA |OPENSSH |DSA |EC |PGP )?PRIVATE KEY-----
+    keywords:
+      - BEGIN
+      - PRIVATE
+      - KEY
+
+  # Passwords in configuration
+  - id: config-password
+    pattern: |
+      [Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd].*[:=]\s*['\"][^'\"]{8,}['\"]
+    keywords:
+      - password
+
+allowlist:
+  # Example files and test data
+  - path: \.example$
+  - path: \.test$
+  - path: \.spec$
+  - path: /test/
+  - path: /tests/
+  - path: /mock/
+  - path: /fixture/
+
+  # Documentation
+  - path: \.md$
+  - path: /docs/
+
+  # Generated files
+  - path: /node_modules/
+  - path: /dist/
+  - path: /build/
+
+  # Known false positives
+  - regex: "password.*example"
+  - regex: "secret.*test"
+  - regex: "key.*demo"

@@ -1,58 +1,163 @@
 version: 2
 updates:
-  # Enable version updates for npm
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "jasaweb-team"
-    assignees:
-      - "jasaweb-maintainer"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "npm"
+# Root package dependencies
+- package-ecosystem: "npm"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 10
+  reviewers:
+    - "jasaweb-maintainers"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "deps"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "npm"
+  allow:
+    - dependency-type: "production"
+    - dependency-type: "development"
 
-  # Enable version updates for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "jasaweb-team"
-    assignees:
-      - "jasaweb-maintainer"
-    commit-message:
-      prefix: "ci"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
+# API package dependencies
+- package-ecosystem: "npm"
+  directory: "/apps/api"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-backend"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "deps(api)"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "npm"
+    - "api"
 
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "jasaweb-team"
-    assignees:
-      - "jasaweb-maintainer"
-    commit-message:
-      prefix: "docker"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "docker"
+# Web package dependencies
+- package-ecosystem: "npm"
+  directory: "/apps/web"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-frontend"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "deps(web)"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "npm"
+    - "web"
+
+# UI package dependencies
+- package-ecosystem: "npm"
+  directory: "/packages/ui"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-frontend"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "deps(ui)"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "npm"
+    - "ui"
+
+# Config package dependencies
+- package-ecosystem: "npm"
+  directory: "/packages/config"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-backend"
+    - "jasaweb-frontend"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "deps(config)"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "npm"
+    - "config"
+
+# Testing package dependencies
+- package-ecosystem: "npm"
+  directory: "/packages/testing"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-backend"
+    - "jasaweb-frontend"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "deps(testing)"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "npm"
+    - "testing"
+
+# GitHub Actions dependencies
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-maintainers"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "ci"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "github-actions"
+
+# Docker dependencies
+- package-ecosystem: "docker"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+    day: "monday"
+    time: "09:00"
+  open-pull-requests-limit: 5
+  reviewers:
+    - "jasaweb-maintainers"
+  assignees:
+    - "jasaweb-maintainers"
+  commit-message:
+    prefix: "docker"
+    include: "scope"
+  labels:
+    - "dependencies"
+    - "docker"

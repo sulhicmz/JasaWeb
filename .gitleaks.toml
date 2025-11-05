@@ -1,0 +1,82 @@
+# Gitleaks Configuration for JasaWeb
+
+title = "Gitleaks config for JasaWeb"
+
+# Extend the default Gitleaks configuration
+[extend]
+useDefault = true
+
+# Custom rules specific to JasaWeb
+[[rules]]
+description = "JasaWeb Database URL"
+id = "jasaweb-database-url"
+regex = '''[Dd][Aa][Tt][Aa][Bb][Aa][Ss][Ee]_?[Uu][Rr][Ll].*['\"]\s*=\s*['\"][^'\"]{20,}['\"]'''
+keywords = ["database", "url"]
+
+[[rules]]
+description = "JasaWeb JWT Secret"
+id = "jasaweb-jwt-secret"
+regex = '''[Jj][Ww][Tt]_?[Ss][Ee][Cc][Rr][Ee][Tt].*['\"]\s*=\s*['\"][0-9a-zA-Z]{20,}['\"]'''
+keywords = ["jwt", "secret"]
+
+[[rules]]
+description = "JasaWeb API Keys"
+id = "jasaweb-api-key"
+regex = '''[Aa][Pp][Ii]_?[Kk][Ee][Yy].*['\"]\s*=\s*['\"][0-9a-zA-Z]{20,}['\"]'''
+keywords = ["api", "key"]
+
+[[rules]]
+description = "JasaWeb Email Configuration"
+id = "jasaweb-email-config"
+regex = '''[Ee][Mm][Aa][Ii][Ll]_?[Pp][Aa][Ss][Ss].*['\"]\s*=\s*['\"][^'\"]{8,}['\"]'''
+keywords = ["email", "pass"]
+
+[[rules]]
+description = "JasaWeb S3 Configuration"
+id = "jasaweb-s3-config"
+regex = '''[Ss]3_?[Aa][Cc][Cc][Ee][Ss][Ss]_?[Kk][Ee][Yy].*['\"]\s*=\s*['\"][0-9a-zA-Z]{20,}['\"]'''
+keywords = ["s3", "access", "key"]
+
+[[rules]]
+description = "JasaWeb Redis Configuration"
+id = "jasaweb-redis-config"
+regex = '''[Rr][Ee][Dd][Ii][Ss]_?[Pp][Aa][Ss][Ss].*['\"]\s*=\s*['\"][^'\"]{8,}['\"]'''
+keywords = ["redis", "pass"]
+
+# Allowlist for known false positives
+[allowlist]
+description = "Global allowlist"
+paths = [
+  '''\.example$''',
+  '''\.test$''',
+  '''\.spec$''',
+  '''/test/''',
+  '''/tests/''',
+  '''/mock/''',
+  '''/fixture/''',
+  '''\.md$''',
+  '''/docs/''',
+  '''/node_modules/''',
+  '''/dist/''',
+  '''/build/''',
+  '''\.git/''',
+  '''/coverage/''',
+  '''/logs/'''
+]
+
+# Allowlist specific regex patterns
+[[allowlist.regexes]]
+description = "Example passwords"
+regex = "password.*example"
+
+[[allowlist.regexes]]
+description = "Test secrets"
+regex = "secret.*test"
+
+[[allowlist.regexes]]
+description = "Demo keys"
+regex = "key.*demo"
+
+[[allowlist.regexes]]
+description = "Mock tokens"
+regex = "token.*mock"

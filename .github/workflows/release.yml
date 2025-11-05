@@ -19,6 +19,7 @@ on:
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8.15.0'
+  CACHE_VERSION: 'v2'  # Standardized cache version
 
 jobs:
   create-release:
@@ -47,6 +48,19 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'pnpm'
+    
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pnpm-store
+          node_modules
+          packages/*/node_modules
+          apps/*/node_modules
+        key: ${{ env.CACHE_VERSION }}-release-${{ github.ref_name || github.event.inputs.version }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+        restore-keys: |
+          ${{ env.CACHE_VERSION }}-release-${{ runner.os }}
+          ${{ env.CACHE_VERSION }}-pnpm-${{ runner.os }}
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -158,6 +172,19 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'pnpm'
+    
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pnpm-store
+          node_modules
+          packages/*/node_modules
+          apps/*/node_modules
+        key: ${{ env.CACHE_VERSION }}-release-build-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+        restore-keys: |
+          ${{ env.CACHE_VERSION }}-release-build-${{ runner.os }}
+          ${{ env.CACHE_VERSION }}-pnpm-${{ runner.os }}
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
@@ -201,6 +228,19 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'pnpm'
         registry-url: 'https://registry.npmjs.org'
+    
+    - name: Cache pnpm dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pnpm-store
+          node_modules
+          packages/*/node_modules
+          apps/*/node_modules
+        key: ${{ env.CACHE_VERSION }}-release-publish-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+        restore-keys: |
+          ${{ env.CACHE_VERSION }}-release-publish-${{ runner.os }}
+          ${{ env.CACHE_VERSION }}-pnpm-${{ runner.os }}
 
     - name: Install dependencies
       run: pnpm install --frozen-lockfile

@@ -1,0 +1,7 @@
+{
+  "extends": "./jest.config.json",
+  "displayName": "E2E Tests",
+  "rootDir": ".",
+  "testRegex": ".e2e-spec.ts$",
+  "testTimeout": 60000
+}

@@ -1,0 +1,323 @@
+name: CI/CD Pipeline (Main)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      skip_integration_tests:
+        description: 'Skip integration tests'
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.0'
+  CACHE_VERSION: 'v2'  # Incremented for new cache strategy
+
+jobs:
+  # 1. Smart dependency caching (from optimized-ci)
+  setup-cache:
+    name: Setup Dependency Cache
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+      pnpm-store-hash: ${{ steps.hash.outputs.hash }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      
+      - name: Hash pnpm-lock.yaml
+        id: hash
+        run: echo "hash=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+      
+      - name: Cache pnpm dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ env.CACHE_VERSION }}-pnpm-${{ steps.hash.outputs.hash }}-${{ runner.os }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-pnpm-${{ runner.os }}
+
+  # 2. Code quality checks (lint, format, typecheck)
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    needs: setup-cache
+    if: needs.setup-cache.outputs.cache-hit != 'true'
+    
+    strategy:
+      matrix:
+        check: [lint, format, typecheck]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run ${{ matrix.check }}
+        run: |
+          case "${{ matrix.check }}" in
+            "lint")
+              pnpm lint
+              ;;
+            "format")
+              pnpm format:check
+              ;;
+            "typecheck")
+              pnpm typecheck
+              ;;
+          esac
+
+  # 3. Optimized testing matrix (from optimized-ci)
+  test-matrix:
+    name: Test Matrix
+    runs-on: ubuntu-latest
+    needs: setup-cache
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [web, api, ui, config, testing]
+        include:
+          - workspace: web
+            type: unit
+            script: test:unit
+          - workspace: api
+            type: unit
+            script: test:unit
+          - workspace: ui
+            type: unit
+            script: test
+          - workspace: config
+            type: unit
+            script: test
+          - workspace: testing
+            type: unit
+            script: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run ${{ matrix.workspace }} ${{ matrix.type }} tests
+        run: |
+          if [[ "${{ matrix.workspace }}" == "web" || "${{ matrix.workspace }}" == "api" ]]; then
+            cd apps/${{ matrix.workspace }}
+          else
+            cd packages/${{ matrix.workspace }}
+          fi
+          
+          pnpm ${{ matrix.script }} || pnpm test
+      
+      - name: Upload coverage reports
+        if: matrix.workspace == 'web' || matrix.workspace == 'api'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: ${{ matrix.workspace }}
+          name: ${{ matrix.workspace }}-coverage
+
+  # 4. Security audit (from ci.yml)
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: setup-cache
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run security audit
+        run: pnpm audit --audit-level moderate
+
+  # 5. Build applications (from ci.yml with optimizations)
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+    needs: [code-quality, test-matrix, security]
+    
+    strategy:
+      matrix:
+        app: [web, api]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build ${{ matrix.app }}
+        run: |
+          cd apps/${{ matrix.app }}
+          pnpm build
+      
+      - name: Analyze bundle size (web only)
+        if: matrix.app == 'web'
+        run: |
+          cd apps/${{ matrix.app }}/dist
+          echo "## Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          
+          find . -name "*.js" -o -name "*.css" | while read file; do
+            size=$(du -h "$file" | cut -f1)
+            echo "| $file | $size |" >> $GITHUB_STEP_SUMMARY
+          done
+          
+          total_size=$(du -sh . | cut -f1)
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total Bundle Size: $total_size**" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: apps/${{ matrix.app }}/dist/
+          retention-days: 7
+
+  # 6. Integration tests (optional, from optimized-ci)
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event.inputs.skip_integration_tests != 'true' && needs.build.result == 'success'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jasaweb_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+      
+      - name: Setup test database
+        run: |
+          cd apps/api
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm prisma migrate deploy
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm prisma db seed
+      
+      - name: Run API integration tests
+        run: |
+          cd apps/api
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm test:integration
+      
+      - name: Run API endpoint tests
+        run: |
+          cd apps/api
+          npm run start:test &
+          sleep 10
+          
+          # Test health endpoint
+          curl -f http://localhost:3001/health || exit 1
+          
+          # Test authentication endpoints
+          curl -f -X POST http://localhost:3001/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"email": "test@example.com", "password": "password123"}' || exit 1
