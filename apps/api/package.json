@@ -29,6 +29,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.0.0",
     "@nestjs/terminus": "^11.0.0",
+    "@nestjs/helmet": "^1.0.0",
     "@nestjs/throttler": "^6.4.0",
     "bcrypt": "^5.1.0",
     "cache-manager": "^7.2.3",
@@ -42,6 +43,8 @@
     "pg": "^8.11.0",
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
