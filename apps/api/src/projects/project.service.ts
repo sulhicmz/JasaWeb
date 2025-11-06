@@ -20,7 +20,14 @@ const projectSummarySelect = {
   updatedAt: true,
   organizationId: true,
   _count: {
-    select: projectRelationsInclude,
+    select: {
+      milestones: true,
+      files: true,
+      approvals: true,
+      tasks: true,
+      tickets: true,
+      invoices: true,
+    },
   },
 } as const;
 

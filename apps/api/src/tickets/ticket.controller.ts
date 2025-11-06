@@ -99,7 +99,7 @@ export class TicketController {
     // Send notification email to the assigned user if any
     if (ticket.assignee) {
       await this.emailService.sendTicketCreatedNotification(
-        ticket.assignee.email,
+        ticket.assignee?.email,
         ticket.title,
         ticket.project?.name || 'General',
         ticket.description,

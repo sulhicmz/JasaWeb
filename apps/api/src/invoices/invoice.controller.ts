@@ -67,7 +67,7 @@ export class InvoiceController {
     }
 
     // Create the invoice
-    const invoice = await this.multiTenantPrisma.invoice.create({
+const invoice = await this.multiTenantPrisma.invoice.create({
       data: {
         ...createInvoiceDto,
         organizationId,
@@ -79,19 +79,6 @@ export class InvoiceController {
             id: true,
             name: true,
             billingEmail: true,
-          },
-        },
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        issuedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
           },
         },
       },
@@ -302,9 +289,9 @@ export class InvoiceController {
 
     // Send notification if status changed to issued
     if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
-      if (updatedInvoice.organization.billingEmail) {
+if (updatedInvoice.organization?.billingEmail) {
         await this.emailService.sendInvoiceNotification(
-          updatedInvoice.organization.billingEmail,
+updatedInvoice.organization?.billingEmail,
           updatedInvoice.id,
           updatedInvoice.amount,
           updatedInvoice.dueAt.toISOString().split('T')[0],
