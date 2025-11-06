@@ -23,6 +23,7 @@ import { LocalFileStorageService } from '../common/services/local-file-storage.s
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import * as path from 'path';
+import type { UploadedFilePayload } from './file.service';
 
 // Define file upload validation options
 const VALID_MIME_TYPES = [
@@ -58,10 +59,14 @@ export class FileController {
   @UseInterceptors(FileInterceptor('file'))
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles can upload files
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: UploadedFilePayload,
     @CurrentOrganizationId() organizationId: string,
     @Query('projectId') projectId?: string,
   ) {
+    if (!projectId) {
+      throw new BadRequestException('Project ID is required for file uploads');
+    }
+
     // Validate file
     if (!file) {
       throw new BadRequestException('File is required');
@@ -120,7 +125,7 @@ export class FileController {
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
-          projectId: projectId, // Can be null if not associated with a project
+          projectId,
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
@@ -137,8 +142,9 @@ export class FileController {
         uploadedAt: createdFile.createdAt,
         url: `/files/download/${createdFile.id}`, // Temporary - would generate actual signed URL in real app
       };
-    } catch (error) {
-      this.logger.error(`Error uploading file: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      this.logger.error(`Error uploading file: ${errorMessage}`);
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -187,8 +193,9 @@ export class FileController {
         // Send the file
         res.send(fileBuffer);
       }
-    } catch (error) {
-      this.logger.error(`Error downloading file: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      this.logger.error(`Error downloading file: ${errorMessage}`);
       throw new BadRequestException('Error downloading file');
     }
   }
@@ -233,8 +240,9 @@ export class FileController {
       this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
       
       return { message: 'File deleted successfully' };
-    } catch (error) {
-      this.logger.error(`Error deleting file: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      this.logger.error(`Error deleting file: ${errorMessage}`);
       throw new BadRequestException('Error deleting file');
     }
   }
@@ -261,5 +269,9 @@ export class FileController {
     };
     
     return mimeTypes[ext] || 'application/octet-stream';
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : 'Unknown error';
   }
 }

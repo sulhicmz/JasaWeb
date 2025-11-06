@@ -70,72 +70,69 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+.env.*
+!.env.example
+.DS_Store
 
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Next.js build output
-.next
-out
+# Security & Secrets
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets
 
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Storybook build outputs
-.out
-.storybook-out
-storybook-static
-
-# Temporary folders
-tmp/
-temp/
-
-# Editor directories and files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
 
-# OS generated files
+# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+Desktop.ini
 
-# Astro
-.astro/
+# Testing
+coverage/
+.nyc_output/
+*.lcov
 
-# Prisma
-*.db
-*.db-journal
-
-# Docker
-.dockerignore
-
-# GitHub
-.github/workflows/*.tmp
-
-# Cache
-.cache/
-.parcel-cache/
-
-# Backup files
+# Temporary
+tmp/
+temp/
+*.tmp
+*.temp
 *.bak
 *.backup
-*.old
 
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Misc
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vercel/

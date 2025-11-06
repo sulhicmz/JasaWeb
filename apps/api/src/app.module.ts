@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { validateEnv } from './common/config/env.validation';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
@@ -25,22 +26,28 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 
+const parseEnvNumber = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate: validateEnv,
     }),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
-        ttl: parseInt(process.env.CACHE_TTL) || 5, // Time to live in seconds
-        max: parseInt(process.env.CACHE_MAX) || 100, // Maximum number of items in cache
+        ttl: parseEnvNumber(process.env.CACHE_TTL, 5), // Time to live in seconds
+        max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
       }),
     }),
     ThrottlerModule.forRoot([{
-      ttl: parseInt(process.env.THROTTLE_TTL) || 60, // Time window in seconds
-      limit: parseInt(process.env.THROTTLE_LIMIT) || 10, // Max requests per window
+      ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
+      limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
     }]),
     AuthModule,
     UserModule,

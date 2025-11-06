@@ -5,6 +5,13 @@ import { LocalFileStorageService } from '../common/services/local-file-storage.s
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 
+export type UploadedFilePayload = {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+};
+
 // Define file upload validation options
 export const VALID_MIME_TYPES = [
   'image/jpeg',
@@ -25,8 +32,8 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
 
 export interface FileUploadDto {
-  file: Express.Multer.File;
-  projectId?: string;
+  file: UploadedFilePayload;
+  projectId: string;
   uploadedById: string;
 }
 
@@ -51,6 +58,10 @@ export class FileService {
 
   async uploadFile(fileUploadDto: FileUploadDto, organizationId: string): Promise<FileUploadResult> {
     const { file, projectId, uploadedById } = fileUploadDto;
+
+    if (!projectId) {
+      throw new BadRequestException('Project ID is required for file uploads');
+    }
 
     // Validate file
     if (!file) {
@@ -110,11 +121,11 @@ export class FileService {
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
-          projectId: projectId,
+          projectId,
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
-          uploadedById: uploadedById,
+          uploadedById,
         },
       });
 
@@ -127,8 +138,9 @@ export class FileService {
         uploadedAt: createdFile.createdAt,
         url: `/files/download/${createdFile.id}`,
       };
-    } catch (error) {
-      this.logger.error(`Error uploading file: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      this.logger.error(`Error uploading file: ${errorMessage}`);
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -170,8 +182,9 @@ export class FileService {
         // Send the file
         response.send(fileBuffer);
       }
-    } catch (error) {
-      this.logger.error(`Error downloading file: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      this.logger.error(`Error downloading file: ${errorMessage}`);
       throw new BadRequestException('Error downloading file');
     }
   }
@@ -210,8 +223,9 @@ export class FileService {
       this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
 
       return { message: 'File deleted successfully' };
-    } catch (error) {
-      this.logger.error(`Error deleting file: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      this.logger.error(`Error deleting file: ${errorMessage}`);
       throw new BadRequestException('Error deleting file');
     }
   }
@@ -287,9 +301,9 @@ export class FileService {
       whereClause.projectId = projectId;
     }
 
-    const files = await this.multiTenantPrisma.file.findMany({
+    const files = (await this.multiTenantPrisma.file.findMany({
       where: whereClause,
-    });
+    })) as Array<{ size: number | null; filename: string }>;
 
     const total = files.length;
     const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
@@ -331,5 +345,9 @@ export class FileService {
     };
 
     return mimeTypes[ext] || 'application/octet-stream';
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : 'Unknown error';
   }
 }

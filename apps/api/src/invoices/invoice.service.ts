@@ -300,9 +300,9 @@ export class InvoiceService {
   }
 
   async getInvoiceStats(organizationId: string) {
-    const invoices = await this.multiTenantPrisma.invoice.findMany({
+    const invoices = (await this.multiTenantPrisma.invoice.findMany({
       where: { organizationId },
-    });
+    })) as Array<{ status: string; amount: number }>;
 
     const total = invoices.length;
     const draft = invoices.filter(inv => inv.status === 'draft').length;
