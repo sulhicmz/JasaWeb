@@ -1,0 +1,50 @@
+name: AI Build Auto-Fix
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      # → Sesuaikan stack Anda (Node.js, Python, dll)
+      - name: Setup & Build
+        run: |
+          npm ci
+          if npm run build; then
+            echo "BUILD_OK=true" >> $GITHUB_ENV
+          else
+            echo "BUILD_OK=false" >> $GITHUB_ENV
+          fi
+        continue-on-error: true
+
+      - name: Configure Git
+        if: env.BUILD_OK == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: AI Fix with Qwen3-Coder
+        if: env.BUILD_OK == 'false'
+        uses: sst/opencode/github@latest
+        env:
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+        with:
+          model: iflowcn/qwen3-coder
+          prompt: |
+            The build failed. Fix the minimal set of files to make it succeed.
+            Preserve all behavior. Only correct syntax, imports, types, or config.
+
+      - name: Commit fix
+        if: env.BUILD_OK == 'false'
+        run: |
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "fix: auto-resolve build error" && git push)
