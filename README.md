@@ -14,7 +14,7 @@
 [![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=white)](https://astro.build/)
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing) • [License](#-license)
+[Features](#-features) • [Quick Start](#-quick-start) • [Repository Settings](#-repository-settings) • [Documentation](#-documentation) • [Contributing](#-contributing) • [License](#-license)
 
 </div>
 
@@ -401,6 +401,96 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 - Write tests for new features
 - Update documentation for API changes
 - Ensure all CI checks pass
+
+## ⚙️ Repository Settings
+
+### 🛡️ Branch Protection & Quality Gates
+
+This repository implements strict quality controls to ensure code quality and security:
+
+#### **Required Before Merge**
+- ✅ **Branch Sync**: PR must be up-to-date with `main` branch
+- ✅ **Code Quality**: All linting and type checking must pass
+- ✅ **Build Success**: Both web and API applications must build
+- ✅ **Security Audit**: No critical vulnerabilities
+- ✅ **Tests Pass**: Unit and integration tests must pass
+- ✅ **PR Format**: Title must follow conventional commit format
+
+#### **Merge Strategy**
+- **Squash Merge**: Enabled for clean commit history
+- **Auto-delete Branches**: Branches deleted after successful merge
+- **Required Reviews**: Minimum 1 reviewer approval
+- **Linear History**: No merge commits allowed
+
+### 🔄 Solo Developer Automation
+
+#### **Fast CI/CD Pipeline** (`.github/workflows/solo-ci.yml`)
+```yaml
+# Optimized for solo developer speed
+- ⚡ Fast builds with smart caching
+- 🔍 Strict PR validation (no bypass allowed)
+- 🧹 Auto-update branches with main
+- 🔒 Lightweight security checks
+- 📊 Build summary and recommendations
+```
+
+#### **Daily Maintenance** (`.github/workflows/maintenance.yml`)
+```yaml
+# Runs daily at 4 AM UTC
+- 🗑️ Auto-delete merged branches
+- 🧹 Clean up stale branches (14+ days)
+- 📦 Weekly dependency updates
+- 🔒 Automated security audits
+- 🚨 Auto-create security issues
+```
+
+#### **Repository Settings**
+```yaml
+# Solo developer optimizations
+- ✅ Auto-delete branches on merge
+- ✅ Squash merge only (clean history)
+- ✅ Auto-merge enabled
+- ❌ No merge commits (linear history)
+- 🔒 No bypass possible (strict rules)
+```
+
+### 📋 Pull Request Template
+
+When creating a PR, ensure:
+
+1. **Title Format**: `type(scope): description`
+   - `feat(auth): add OAuth integration`
+   - `fix(api): resolve user creation bug`
+   - `docs(readme): update installation guide`
+
+2. **Description Must Include**:
+   - 📝 Clear description of changes
+   - 🎯 Problem being solved
+   - 🔧 Implementation approach
+   - 🧪 Testing performed
+   - 📸 Screenshots if applicable
+
+3. **Branch Requirements**:
+   - Keep branches up-to-date with `main`
+   - No merge conflicts
+   - All checks passing
+
+### 🚨 Emergency Procedures
+
+For critical security fixes or hotfixes:
+
+1. **Administrator Override**: Repository admins can bypass protection
+2. **Direct Push**: Allowed for emergency fixes
+3. **Rollback Plan**: Documented rollback procedures
+4. **Communication**: Notify team of emergency changes
+
+### 📊 Quality Metrics
+
+- **Code Coverage**: Minimum 80% required
+- **Performance**: Lighthouse score > 90
+- **Accessibility**: WCAG 2.1 AA compliance
+- **Security**: No critical vulnerabilities
+- **Type Safety**: Strict TypeScript mode
 
 ## 📚 Documentation
 

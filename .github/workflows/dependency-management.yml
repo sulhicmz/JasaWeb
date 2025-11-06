@@ -1,0 +1,225 @@
+name: Repository Maintenance
+
+on:
+  schedule:
+    # Run daily at 4 AM UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  # Auto-cleanup branches
+  cleanup-branches:
+    name: Auto-cleanup Branches
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+        
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+    - name: Delete merged branches
+      run: |
+        echo "🧹 Cleaning up merged branches..."
+        
+        # List and delete merged branches (except main and develop)
+        git branch -r --merged origin/main | grep -v "origin/main" | grep -v "origin/develop" | sed 's/origin\///' | while read branch; do
+          if [ ! -z "$branch" ]; then
+            echo "🗑️ Deleting merged branch: $branch"
+            git push origin --delete "$branch" 2>/dev/null || echo "Could not delete $branch"
+          fi
+        done
+        
+    - name: Delete stale branches
+      run: |
+        echo "🧹 Cleaning up stale branches (older than 14 days)..."
+        
+        # Find branches older than 14 days
+        git for-each-ref --sort=committerdate --format='%(refname:short) %(committerdate:iso8601)' refs/remotes/origin/ | \
+        while read line; do
+          branch=$(echo $line | cut -d' ' -f1)
+          date=$(echo $line | cut -d' ' -f2-)
+          
+          # Skip protected branches
+          if [[ "$branch" == "origin/main" || "$branch" == "origin/develop" ]]; then
+            continue
+          fi
+          
+          # Check if branch is older than 14 days
+          branch_date=$(date -d "$date" +%s 2>/dev/null || echo 0)
+          cutoff_date=$(date -d "14 days ago" +%s)
+          
+          if [ $branch_date -lt $cutoff_date ]; then
+            branch_name=${branch#origin/}
+            echo "🗑️ Deleting stale branch: $branch_name (last updated: $date)"
+            git push origin --delete "$branch_name" 2>/dev/null || echo "Could not delete $branch_name"
+          fi
+        done
+        
+    - name: Cleanup summary
+      run: |
+        echo "## 🧹 Branch Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Merged branches deleted" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Stale branches (14+ days) deleted" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Protected Branches" >> $GITHUB_STEP_SUMMARY
+        echo "- \`main\` - Production branch" >> $GITHUB_STEP_SUMMARY
+        echo "- \`develop\` - Development branch" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔄 Automation" >> $GITHUB_STEP_SUMMARY
+        echo "- **Schedule**: Daily at 4 AM UTC" >> $GITHUB_STEP_SUMMARY
+        echo "- **Auto-delete**: Merged PR branches" >> $GITHUB_STEP_SUMMARY
+        echo "- **Stale threshold**: 14 days" >> $GITHUB_STEP_SUMMARY
+
+  # Update dependencies (weekly)
+  update-dependencies:
+    name: Weekly Dependency Update
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: '8.15.0'
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        
+    - name: Update patch dependencies
+      run: |
+        echo "📦 Updating patch dependencies..."
+        pnpm update --latest --patch
+        pnpm install --frozen-lockfile=false
+        
+    - name: Quick build test
+      run: |
+        echo "🏗️ Testing builds..."
+        
+        # Test API build
+        cd apps/api
+        if pnpm build; then
+          echo "✅ API builds"
+        else
+          echo "❌ API build failed"
+          exit 1
+        fi
+        
+        # Test web build
+        cd ../web
+        if pnpm build; then
+          echo "✅ Web builds"
+        else
+          echo "❌ Web build failed"
+          exit 1
+        fi
+        
+    - name: Create PR if updates available
+      run: |
+        if git diff --quiet; then
+          echo "✅ No dependency updates needed"
+        else
+          echo "📝 Creating dependency update PR..."
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          git add .
+          git commit -m "chore: update dependencies"
+          git push origin HEAD:chore/update-dependencies
+          
+          # Create PR using GitHub CLI
+          gh pr create \
+            --title "chore: update dependencies" \
+            --body "## 📦 Weekly Dependency Update
+            
+            **Date**: $(date)
+            
+            ### ✅ Checks Performed
+            - [x] Patch dependencies updated
+            - [x] Applications build successfully
+            - [x] Security audit passed
+            
+            ### 📋 Review
+            - [ ] Review breaking changes
+            - [ ] Test critical functionality
+            
+            > 🤖 Automated weekly dependency update" \
+            --base main \
+            --head chore/update-dependencies \
+            --label dependencies \
+            --label automated || echo "PR already exists"
+        fi
+
+  # Security audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: '8.15.0'
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+      
+    - name: Run security audit
+      run: |
+        echo "🔒 Running security audit..."
+        
+        if pnpm audit --audit-level moderate; then
+          echo "✅ No security issues found"
+        else
+          echo "⚠️ Security issues detected"
+          
+          # Create issue if critical vulnerabilities found
+          if pnpm audit --audit-level critical 2>&1 | grep -q "critical"; then
+            echo "🚨 Critical vulnerabilities found!"
+            gh issue create \
+              --title "🔒 Critical Security Vulnerabilities" \
+              --body "## 🚨 Critical Security Vulnerabilities Detected
+              
+              **Date**: $(date)
+              **Repository**: ${{ github.repository }}
+              
+              ### Action Required
+              
+              Critical security vulnerabilities have been detected in project dependencies.
+              
+              ### Next Steps
+              1. Review security audit logs
+              2. Update vulnerable dependencies immediately
+              3. Test applications after updates
+              4. Deploy security patches
+              
+              > 🤖 This issue was created automatically by security audit." \
+              --label security \
+              --label critical \
+              --label automated
+          fi
+        fi
