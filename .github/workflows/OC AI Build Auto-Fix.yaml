@@ -7,7 +7,7 @@ on:
 jobs:
   fix:
     runs-on: ubuntu-latest
-    permissions:
+permissions:
       id-token: write
       contents: write
       pull-requests: write
@@ -17,13 +17,31 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
+# → Sesuaikan stack Anda (Node.js, Python, dll)
+      - name: Setup & Build
+        run: |
+          npm ci
+          if npm run build; then
+            echo "BUILD_OK=true" >> $GITHUB_ENV
+          else
+            echo "BUILD_OK=false" >> $GITHUB_ENV
+          fi
+        continue-on-error: true
+
+      - name: Configure Git
+        if: env.BUILD_OK == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: AI Fix with Qwen3-Coder
+        if: env.BUILD_OK == 'false'
         uses: sst/opencode/github@latest
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:
           model: iflowcn/qwen3-coder
-          prompt: |
+prompt: |
             Pastikan build berhasil. Perform a final intelligent review with these tasks:
             1. **Conflict Awareness**: Check for logical merge conflicts (e.g., duplicated logic, outdated config).
             2. **Documentation Sync**: If the code changes affect APIs, features, CLI, or architecture, update:
@@ -32,3 +50,9 @@ jobs:
                - CHANGELOG.md (if applicable)
             3. **Clarity & Maintainability**: Suggest minor docstring or comment improvements if missing.
             4. **Commit changes only if necessary** — prefer minimal, safe updates.
+
+      - name: Commit fix
+        if: env.BUILD_OK == 'false'
+        run: |
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "fix: auto-resolve build error" && git push)

@@ -7,7 +7,7 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
-    permissions:
+permissions:
       id-token: write
       contents: write
       pull-requests: write
