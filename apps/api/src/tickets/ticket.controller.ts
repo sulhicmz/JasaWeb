@@ -100,9 +100,9 @@ export class TicketController {
     if (ticket.assignee) {
       await this.emailService.sendTicketCreatedNotification(
         ticket.assignee.email,
-        ticket.title,
+        ticket.title || '',
         ticket.project?.name || 'General',
-        ticket.description,
+        ticket.description || '',
       );
     }
 
@@ -275,9 +275,9 @@ export class TicketController {
       if (assigneeUser) {
         await this.emailService.sendTicketCreatedNotification(
           assigneeUser.email,
-          updatedTicket.title,
+          updatedTicket.title || '',
           updatedTicket.project?.name || 'General',
-          updatedTicket.description,
+          updatedTicket.description || '',
         );
       }
     }
@@ -300,7 +300,7 @@ export class TicketController {
       }
     }
 
-    this.logger.log(`Ticket updated: ${updatedTicket.title} for organization ${organizationId}`);
+    this.logger.log(`Ticket updated: ${updatedTicket.title || ''} for organization ${organizationId}`);
 
     return updatedTicket;
   }
@@ -324,7 +324,7 @@ export class TicketController {
       where: { id },
     });
 
-    this.logger.log(`Ticket deleted: ${deletedTicket.title} for organization ${organizationId}`);
+    this.logger.log(`Ticket deleted: ${deletedTicket.title || ''} for organization ${organizationId}`);
 
     return { message: 'Ticket deleted successfully' };
   }

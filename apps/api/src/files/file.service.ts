@@ -134,7 +134,7 @@ export class FileService {
       return {
         id: createdFile.id,
         filename: createdFile.filename,
-        size: createdFile.size,
+        size: createdFile.size || 0,
         uploadedAt: createdFile.createdAt,
         url: `/files/download/${createdFile.id}`,
       };
@@ -177,7 +177,7 @@ export class FileService {
         // Set response headers based on file type
         response.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
         response.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
-        response.setHeader('Content-Length', fileRecord.size);
+        response.setHeader('Content-Length', fileRecord.size?.toString() || '0');
 
         // Send the file
         response.send(fileBuffer);
