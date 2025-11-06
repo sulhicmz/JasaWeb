@@ -32,7 +32,7 @@
     "@nestjs/swagger": "^7.0.0",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.4.0",
-    "bcrypt": "^5.1.0",
+    "bcrypt": "^6.0.0",
     "compression": "^1.7.4",
     "cache-manager": "^7.2.3",
     "class-transformer": "^0.5.1",
