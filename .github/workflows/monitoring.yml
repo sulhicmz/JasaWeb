@@ -1,11 +1,11 @@
-name: Monitoring and Health Checks
+name: Monitoring
 
 on:
   schedule:
-    # Run health checks every 5 minutes
-    - cron: '*/5 * * * *'
-    # Run comprehensive monitoring every hour
-    - cron: '0 * * * *'
+    # Run health checks every 15 minutes (reduced from 5)
+    - cron: '*/15 * * * *'
+    # Run comprehensive monitoring every 6 hours (reduced from 1)
+    - cron: '0 */6 * * *'
   workflow_dispatch:
   push:
     branches: [main]
@@ -13,392 +13,207 @@ on:
       - '.github/workflows/monitoring.yml'
       - 'apps/api/src/health/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   health-check:
-    name: Application Health Check
+    name: Health Check
     runs-on: ubuntu-latest
-    if: github.event.schedule == '*/5 * * * *'
-
+    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
     steps:
-    - name: Check Production Health
-      run: |
-        echo "🔍 Checking production application health..."
-        
-        # Check web application
-        WEB_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://jasaweb.com || echo "000")
-        if [ "$WEB_STATUS" = "200" ]; then
-          echo "✅ Web application healthy (HTTP $WEB_STATUS)"
-        else
-          echo "❌ Web application unhealthy (HTTP $WEB_STATUS)"
-          echo "::warning::Web application health check failed"
-        fi
-        
-        # Check API health
-        API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.jasaweb.com/health || echo "000")
-        if [ "$API_STATUS" = "200" ]; then
-          echo "✅ API healthy (HTTP $API_STATUS)"
-        else
-          echo "❌ API unhealthy (HTTP $API_STATUS)"
-          echo "::warning::API health check failed"
-        fi
-        
-        # Check API response time
-        API_RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" https://api.jasaweb.com/health || echo "0")
-        if (( $(echo "$API_RESPONSE_TIME < 2.0" | bc -l) )); then
-          echo "✅ API response time acceptable (${API_RESPONSE_TIME}s)"
-        else
-          echo "⚠️ API response time slow (${API_RESPONSE_TIME}s)"
-          echo "::warning::API response time above threshold"
-        fi
+      - name: Check application health
+        run: |
+          echo "🔍 Checking application health..."
 
-    - name: Check Database Health
-      run: |
-        echo "🗄️ Checking database health..."
-        
-        # This would typically connect to your database
-        # For now, we'll simulate the check
-        DB_STATUS=$(curl -s -X POST https://api.jasaweb.com/health/db -H "Content-Type: application/json" -d '{"check": true}' || echo '{"status": "error"}')
-        
-        if echo "$DB_STATUS" | grep -q '"status":"ok"'; then
-          echo "✅ Database healthy"
-        else
-          echo "❌ Database unhealthy"
-          echo "::warning::Database health check failed"
-        fi
+          # Function to check service health
+          check_service() {
+            local url=$1
+            local name=$2
+            local status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+            local response_time=$(curl -s -o /dev/null -w "%{time_total}" "$url" || echo "0")
 
-    - name: Check External Services
-      run: |
-        echo "🌐 Checking external services..."
-        
-        # Check email service
-        SMTP_STATUS=$(timeout 10 bash -c "</dev/tcp/smtp.gmail.com/587" 2>/dev/null && echo "open" || echo "closed")
-        if [ "$SMTP_STATUS" = "open" ]; then
-          echo "✅ SMTP service reachable"
-        else
-          echo "⚠️ SMTP service unreachable"
-          echo "::warning::SMTP service health check failed"
-        fi
-        
-        # Check storage service
-        S3_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://s3.amazonaws.com/jasaweb-storage || echo "000")
-        if [ "$WEB_STATUS" = "200" ] || [ "$WEB_STATUS" = "403" ]; then
-          echo "✅ S3 storage accessible"
-        else
-          echo "⚠️ S3 storage issue (HTTP $S3_STATUS)"
-          echo "::warning::S3 storage health check failed"
-        fi
+            if [ "$status" = "200" ]; then
+              echo "✅ $name healthy (HTTP $status, ${response_time}s)"
+              return 0
+            else
+              echo "❌ $name unhealthy (HTTP $status)"
+              echo "::warning::$name health check failed"
+              return 1
+            fi
+          }
 
-    - name: Send Health Alert
-      if: failure()
-      run: |
-        echo "🚨 Sending health alert..."
-        curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
-          -H 'Content-type: application/json' \
-          --data "{
-            \"text\": \"🚨 JasaWeb Health Check Failed\",
-            \"attachments\": [
-              {
+          # Check services
+          check_service "https://jasaweb.com" "Web Application"
+          check_service "https://api.jasaweb.com/health" "API"
+
+      - name: Send alert on failure
+        if: failure()
+        run: |
+          curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-type: application/json' \
+            --data "{
+              \"text\": \"🚨 JasaWeb Health Check Failed\",
+              \"attachments\": [{
                 \"color\": \"danger\",
                 \"fields\": [
-                  {
-                    \"title\": \"Time\",
-                    \"value\": \"$(date)\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"Repository\",
-                    \"value\": \"jasaweb/jasaweb\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"Workflow\",
-                    \"value\": \"Monitoring and Health Checks\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"Action Required\",
-                    \"value\": \"Please check application status and logs\",
-                    \"short\": false
-                  }
+                  {\"title\": \"Time\", \"value\": \"$(date)\", \"short\": true},
+                  {\"title\": \"Action\", \"value\": \"Immediate investigation required\", \"short\": false}
                 ]
-              }
-            ]
-          }" || echo "Failed to send Slack alert"
+              }]
+            }" || echo "Failed to send alert"
 
   comprehensive-monitoring:
     name: Comprehensive Monitoring
     runs-on: ubuntu-latest
-    if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
-
+    if: github.event.schedule == '0 */6 * * *' || github.event_name == 'workflow_dispatch'
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Install monitoring tools
-      run: |
-        npm install -g @lhci/cli
-        npm install -g lighthouse
+      - name: Install monitoring tools
+        run: npm install -g lighthouse
 
-    - name: Run Lighthouse Performance Audit
-      run: |
-        echo "🚀 Running Lighthouse performance audit..."
-        
-        # Run Lighthouse on main site
-        lighthouse https://jasaweb.com \
-          --output=json \
-          --output-path=./lighthouse-report.json \
-          --chrome-flags="--headless" \
-          --quiet
-        
-        # Extract key metrics
-        PERFORMANCE_SCORE=$(cat lighthouse-report.json | jq -r '.categories.performance.score * 100')
-        FCP=$(cat lighthouse-report.json | jq -r '.audits["first-contentful-paint"].numericValue / 1000')
-        LCP=$(cat lighthouse-report.json | jq -r '.audits["largest-contentful-paint"].numericValue / 1000')
-        TTI=$(cat lighthouse-report.json | jq -r '.audits["interactive"].numericValue / 1000')
-        CLS=$(cat lighthouse-report.json | jq -r '.audits["cumulative-layout-shift"].numericValue')
-        
-        echo "📊 Performance Metrics:"
-        echo "Performance Score: ${PERFORMANCE_SCORE}"
-        echo "First Contentful Paint: ${FCP}s"
-        echo "Largest Contentful Paint: ${LCP}s"
-        echo "Time to Interactive: ${TTI}s"
-        echo "Cumulative Layout Shift: ${CLS}"
-        
-        # Check against thresholds
-        if (( $(echo "$PERFORMANCE_SCORE >= 90" | bc -l) )); then
-          echo "✅ Performance score excellent"
-        elif (( $(echo "$PERFORMANCE_SCORE >= 50" | bc -l) )); then
-          echo "⚠️ Performance score needs improvement"
-          echo "::warning::Performance score below 90: ${PERFORMANCE_SCORE}"
-        else
-          echo "❌ Performance score poor"
-          echo "::error::Performance score below 50: ${PERFORMANCE_SCORE}"
-        fi
-        
-        if (( $(echo "$FCP <= 1.8" | bc -l) )); then
-          echo "✅ First Contentful Paint good"
-        else
-          echo "⚠️ First Contentful Paint slow: ${FCP}s"
-          echo "::warning::FCP above 1.8s threshold"
-        fi
+      - name: Run Lighthouse audit
+        run: |
+          echo "🚀 Running Lighthouse audit..."
+          lighthouse https://jasaweb.com \
+            --output=json \
+            --output-path=./lighthouse-report.json \
+            --chrome-flags="--headless" \
+            --quiet || true
 
-    - name: Check SSL Certificate
-      run: |
-        echo "🔒 Checking SSL certificates..."
-        
-        # Check main domain
-        SSL_MAIN=$(echo | openssl s_client -servername jasaweb.com -connect jasaweb.com:443 2>/dev/null | openssl x509 -noout -dates | grep "notAfter" | cut -d= -f2)
-        SSL_MAIN_EPOCH=$(date -d "$SSL_MAIN" +%s)
-        CURRENT_EPOCH=$(date +%s)
-        DAYS_LEFT=$(( (SSL_MAIN_EPOCH - CURRENT_EPOCH) / 86400 ))
-        
-        if [ $DAYS_LEFT -gt 30 ]; then
-          echo "✅ SSL certificate valid for $DAYS_LEFT days"
-        elif [ $DAYS_LEFT -gt 7 ]; then
-          echo "⚠️ SSL certificate expires in $DAYS_LEFT days"
-          echo "::warning::SSL certificate expiring soon"
-        else
-          echo "❌ SSL certificate expires in $DAYS_LEFT days"
-          echo "::error::SSL certificate expiring very soon"
-        fi
+          if [ -f lighthouse-report.json ]; then
+            PERFORMANCE_SCORE=$(cat lighthouse-report.json | jq -r '.categories.performance.score * 100' || echo "0")
+            FCP=$(cat lighthouse-report.json | jq -r '.audits["first-contentful-paint"].numericValue / 1000' || echo "0")
+            LCP=$(cat lighthouse-report.json | jq -r '.audits["largest-contentful-paint"].numericValue / 1000' || echo "0")
 
-    - name: Monitor Error Rates
-      run: |
-        echo "📈 Checking error rates..."
-        
-        # This would typically query your monitoring service
-        # For demonstration, we'll simulate the check
-        ERROR_RATE=$(curl -s "https://api.jasaweb.com/metrics/error-rate?period=1h" || echo "0")
-        
-        if (( $(echo "$ERROR_RATE <= 1.0" | bc -l) )); then
-          echo "✅ Error rate acceptable: ${ERROR_RATE}%"
-        elif (( $(echo "$ERROR_RATE <= 5.0" | bc -l) )); then
-          echo "⚠️ Error rate elevated: ${ERROR_RATE}%"
-          echo "::warning::Error rate above 1%"
-        else
-          echo "❌ Error rate high: ${ERROR_RATE}%"
-          echo "::error::Error rate above 5%"
-        fi
+            echo "Performance Score: ${PERFORMANCE_SCORE}"
+            echo "First Contentful Paint: ${FCP}s"
+            echo "Largest Contentful Paint: ${LCP}s"
 
-    - name: Check Resource Usage
-      run: |
-        echo "💻 Checking resource usage..."
-        
-        # This would typically query your monitoring service
-        CPU_USAGE=$(curl -s "https://api.jasaweb.com/metrics/cpu" || echo "0")
-        MEMORY_USAGE=$(curl -s "https://api.jasaweb.com/metrics/memory" || echo "0")
-        DISK_USAGE=$(curl -s "https://api.jasaweb.com/metrics/disk" || echo "0")
-        
-        echo "CPU Usage: ${CPU_USAGE}%"
-        echo "Memory Usage: ${MEMORY_USAGE}%"
-        echo "Disk Usage: ${DISK_USAGE}%"
-        
-        # Check thresholds
-        if (( $(echo "$CPU_USAGE <= 80" | bc -l) )); then
-          echo "✅ CPU usage acceptable"
-        else
-          echo "⚠️ CPU usage high: ${CPU_USAGE}%"
-          echo "::warning::CPU usage above 80%"
-        fi
-        
-        if (( $(echo "$MEMORY_USAGE <= 85" | bc -l) )); then
-          echo "✅ Memory usage acceptable"
-        else
-          echo "⚠️ Memory usage high: ${MEMORY_USAGE}%"
-          echo "::warning::Memory usage above 85%"
-        fi
+            echo "PERFORMANCE_SCORE=${PERFORMANCE_SCORE}" >> $GITHUB_ENV
+            echo "FCP=${FCP}" >> $GITHUB_ENV
+            echo "LCP=${LCP}" >> $GITHUB_ENV
 
-    - name: Generate Monitoring Report
-      run: |
-        echo "# 📊 Monitoring Report" > monitoring-report.md
-        echo "" >> monitoring-report.md
-        echo "## Report Generated: $(date)" >> monitoring-report.md
-        echo "" >> monitoring-report.md
-        echo "### Performance Metrics" >> monitoring-report.md
-        echo "- Performance Score: ${PERFORMANCE_SCORE:-N/A}" >> monitoring-report.md
-        echo "- First Contentful Paint: ${FCCP:-N/A}s" >> monitoring-report.md
-        echo "- Largest Contentful Paint: ${LCP:-N/A}s" >> monitoring-report.md
-        echo "- Time to Interactive: ${TTI:-N/A}s" >> monitoring-report.md
-        echo "" >> monitoring-report.md
-        echo "### System Health" >> monitoring-report.md
-        echo "- CPU Usage: ${CPU_USAGE:-N/A}%" >> monitoring-report.md
-        echo "- Memory Usage: ${MEMORY_USAGE:-N/A}%" >> monitoring-report.md
-        echo "- Disk Usage: ${DISK_USAGE:-N/A}%" >> monitoring-report.md
-        echo "- Error Rate: ${ERROR_RATE:-N/A}%" >> monitoring-report.md
-        echo "" >> monitoring-report.md
-        echo "### SSL Status" >> monitoring-report.md
-        echo "- Certificate expires in: ${DAYS_LEFT:-N/A} days" >> monitoring-report.md
-        echo "" >> monitoring-report.md
-        echo "### Recommendations" >> monitoring-report.md
-        echo "- Review performance metrics regularly" >> monitoring-report.md
-        echo "- Monitor error rates and resource usage" >> monitoring-report.md
-        echo "- Renew SSL certificate before expiration" >> monitoring-report.md
+            if (( $(echo "$PERFORMANCE_SCORE < 50" | bc -l) )); then
+              echo "::warning::Performance score below 50: ${PERFORMANCE_SCORE}"
+            fi
+          fi
 
-    - name: Upload Monitoring Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: monitoring-report
-        path: monitoring-report.md
-        retention-days: 7
+      - name: Check SSL certificate
+        run: |
+          echo "🔒 Checking SSL certificate..."
+          SSL_EXPIRY=$(echo | openssl s_client -servername jasaweb.com -connect jasaweb.com:443 2>/dev/null | openssl x509 -noout -dates | grep "notAfter" | cut -d= -f2 || echo "")
 
-    - name: Send Comprehensive Report
-      run: |
-        echo "📊 Sending comprehensive monitoring report..."
-        curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
-          -H 'Content-type: application/json' \
-          --data "{
-            \"text\": \"📊 JasaWeb Hourly Monitoring Report\",
-            \"attachments\": [
-              {
+          if [ -n "$SSL_EXPIRY" ]; then
+            SSL_EPOCH=$(date -d "$SSL_EXPIRY" +%s)
+            CURRENT_EPOCH=$(date +%s)
+            DAYS_LEFT=$(( (SSL_EPOCH - CURRENT_EPOCH) / 86400 ))
+
+            echo "SSL certificate expires in $DAYS_LEFT days"
+            echo "DAYS_LEFT=${DAYS_LEFT}" >> $GITHUB_ENV
+
+            if [ $DAYS_LEFT -le 30 ]; then
+              echo "::warning::SSL certificate expires in $DAYS_LEFT days"
+            fi
+          fi
+
+      - name: Generate monitoring report
+        run: |
+          echo "# 📊 Monitoring Report" > monitoring-report.md
+          echo "" >> monitoring-report.md
+          echo "## Report Generated: $(date)" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          echo "### Performance Metrics" >> monitoring-report.md
+          echo "- Performance Score: ${PERFORMANCE_SCORE:-N/A}" >> monitoring-report.md
+          echo "- First Contentful Paint: ${FCP:-N/A}s" >> monitoring-report.md
+          echo "- Largest Contentful Paint: ${LCP:-N/A}s" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          echo "### SSL Status" >> monitoring-report.md
+          echo "- Certificate expires in: ${DAYS_LEFT:-N/A} days" >> monitoring-report.md
+          echo "" >> monitoring-report.md
+          echo "### Recommendations" >> monitoring-report.md
+          echo "- Monitor performance metrics regularly" >> monitoring-report.md
+          echo "- Renew SSL certificate before expiration" >> monitoring-report.md
+
+      - name: Upload monitoring report
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-report
+          path: monitoring-report.md
+          retention-days: 7
+
+      - name: Send monitoring report
+        if: always()
+        run: |
+          curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-type: application/json' \
+            --data "{
+              \"text\": \"📊 JasaWeb Monitoring Report\",
+              \"attachments\": [{
                 \"color\": \"good\",
                 \"fields\": [
-                  {
-                    \"title\": \"Performance Score\",
-                    \"value\": \"${PERFORMANCE_SCORE:-N/A}\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"Error Rate\",
-                    \"value\": \"${ERROR_RATE:-N/A}%\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"CPU Usage\",
-                    \"value\": \"${CPU_USAGE:-N/A}%\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"Memory Usage\",
-                    \"value\": \"${MEMORY_USAGE:-N/A}%\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"SSL Certificate\",
-                    \"value\": \"${DAYS_LEFT:-N/A} days remaining\",
-                    \"short\": true
-                  },
-                  {
-                    \"title\": \"Report Time\",
-                    \"value\": \"$(date)\",
-                    \"short\": true
-                  }
+                  {\"title\": \"Performance Score\", \"value\": \"${PERFORMANCE_SCORE:-N/A}\", \"short\": true},
+                  {\"title\": \"SSL Certificate\", \"value\": \"${DAYS_LEFT:-N/A} days remaining\", \"short\": true},
+                  {\"title\": \"Report Time\", \"value\": \"$(date)\", \"short\": true}
                 ]
-              }
-            ]
-          }" || echo "Failed to send comprehensive report"
+              }]
+            }" || echo "Failed to send report"
 
-  uptime-monitoring:
-    name: Uptime Monitoring
+  uptime-check:
+    name: Uptime Check
     runs-on: ubuntu-latest
-    if: github.event.schedule == '*/5 * * * *'
-
+    if: github.event.schedule == '*/15 * * * *' || github.event_name == 'workflow_dispatch'
     steps:
-    - name: Check Service Uptime
-      run: |
-        echo "⏱️ Checking service uptime..."
-        
-        # Array of services to check
-        services=("https://jasaweb.com" "https://api.jasaweb.com/health")
-        
-        for service in "${services[@]}"; do
-          echo "Checking $service..."
-          
-          # Measure response time and status
-          start_time=$(date +%s.%N)
-          status=$(curl -s -o /dev/null -w "%{http_code}" "$service" || echo "000")
-          end_time=$(date +%s.%N)
-          
-          response_time=$(echo "$end_time - $start_time" | bc)
-          
-          if [ "$status" = "200" ]; then
-            if (( $(echo "$response_time < 5.0" | bc -l) )); then
-              echo "✅ $service - OK (${response_time}s)"
+      - name: Check service uptime
+        run: |
+          echo "⏱️ Checking service uptime..."
+
+          services=("https://jasaweb.com" "https://api.jasaweb.com/health")
+          failed=0
+
+          for service in "${services[@]}"; do
+            echo "Checking $service..."
+
+            start_time=$(date +%s.%N)
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$service" || echo "000")
+            end_time=$(date +%s.%N)
+            response_time=$(echo "$end_time - $start_time" | bc)
+
+            if [ "$status" = "200" ]; then
+              if (( $(echo "$response_time < 5.0" | bc -l) )); then
+                echo "✅ $service - OK (${response_time}s)"
+              else
+                echo "⚠️ $service - Slow response (${response_time}s)"
+                echo "::warning::Slow response from $service"
+              fi
             else
-              echo "⚠️ $service - Slow response (${response_time}s)"
-              echo "::warning::Slow response from $service"
-            fi
-          else
-            echo "❌ $service - FAILED (HTTP $status)"
-            echo "::error::Service $service is down"
-            
-            # Send immediate alert for downtime
-            curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
-              -H 'Content-type: application/json' \
-              --data "{
-                \"text\": \"🚨 Service Down: $service\",
-                \"attachments\": [
-                  {
+              echo "❌ $service - FAILED (HTTP $status)"
+              echo "::error::Service $service is down"
+              failed=1
+
+              # Send immediate alert
+              curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+                -H 'Content-type: application/json' \
+                --data "{
+                  \"text\": \"🚨 Service Down: $service\",
+                  \"attachments\": [{
                     \"color\": \"danger\",
                     \"fields\": [
-                      {
-                        \"title\": \"Service\",
-                        \"value\": \"$service\",
-                        \"short\": true
-                      },
-                      {
-                        \"title\": \"Status Code\",
-                        \"value\": \"$status\",
-                        \"short\": true
-                      },
-                      {
-                        \"title\": \"Time\",
-                        \"value\": \"$(date)\",
-                        \"short\": true
-                      },
-                      {
-                        \"title\": \"Action\",
-                        \"value\": \"Immediate investigation required\",
-                        \"short\": false
-                      }
+                      {\"title\": \"Service\", \"value\": \"$service\", \"short\": true},
+                      {\"title\": \"Status Code\", \"value\": \"$status\", \"short\": true},
+                      {\"title\": \"Time\", \"value\": \"$(date)\", \"short\": true}
                     ]
-                  }
-                ]
-              }" || echo "Failed to send downtime alert"
-          fi
-        done
+                  }]
+                }" || echo "Failed to send alert"
+            fi
+          done
+
+          exit $failed
