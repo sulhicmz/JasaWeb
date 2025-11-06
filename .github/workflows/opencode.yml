@@ -26,4 +26,4 @@ jobs:
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:
-          model: iflowcn/qwen3-coder
+model: iflowcn/qwen3-coder

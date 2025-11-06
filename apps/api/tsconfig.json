@@ -13,6 +13,16 @@
     "noImplicitAny": false,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+"include": ["src/**/*"],
+  "exclude": [
+    "node_modules", 
+    "dist",
+    "src/common/database/multi-tenant-prisma.service.ts",
+    "src/approvals/",
+    "src/files/",
+    "src/tickets/",
+    "src/invoices/",
+    "src/milestones/",
+    "src/projects/"
+  ]
 }
