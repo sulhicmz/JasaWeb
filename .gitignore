@@ -18,12 +18,9 @@ coverage/
 test-results/
 playwright-report/
 test-results.xml
-*.test.ts
-*.test.js
-*.spec.ts
-*.spec.js
 
 # Environment files
+.env
 .env.*
 !.env.example
 
