@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-name: Security Scan
-=======
 name: Security
->>>>>>> origin/main
 
 on:
   schedule:
@@ -10,8 +6,6 @@ on:
     - cron: '0 2 * * *'
   push:
     branches: [main]
-<<<<<<< HEAD
-=======
     paths:
       - '**.js'
       - '**.ts'
@@ -20,13 +14,10 @@ on:
       - '**.yaml'
       - 'Dockerfile'
       - 'docker-compose.yml'
->>>>>>> origin/main
   pull_request:
     branches: [main]
   workflow_dispatch:
 
-<<<<<<< HEAD
-=======
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -35,7 +26,6 @@ env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8.15.0'
 
->>>>>>> origin/main
 jobs:
   codeql:
     name: CodeQL Analysis
@@ -44,70 +34,12 @@ jobs:
       actions: read
       contents: read
       security-events: write
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
     strategy:
       fail-fast: false
       matrix:
         language: ['javascript', 'typescript']
-<<<<<<< HEAD
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
-
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: read
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Dependency Review
-      uses: actions/dependency-review-action@v4
-      with:
-        fail-on-severity: moderate
-
-  secret-scan:
-    name: Secret Scan
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Run TruffleHog OSS
-      uses: trufflesecurity/trufflehog@main
-      with:
-        path: ./
-        base: main
-        head: HEAD
-        extra_args: --debug --only-verified
-=======
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -116,6 +48,20 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
@@ -160,20 +106,6 @@ jobs:
         with:
           fail-on-severity: moderate
 
-      - name: Run Snyk security scan
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-      - name: Upload Snyk results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: snyk.sarif
-
   secret-scan:
     name: Secret Detection
     runs-on: ubuntu-latest
@@ -194,107 +126,10 @@ jobs:
           head: HEAD
           extra_args: --only-verified
 
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-
-      - name: Check for hardcoded secrets
-        run: |
-          echo "🔍 Checking for hardcoded secrets..."
-          if grep -r -i -E "(password|secret|key|token)\s*[:=]\s*['\"][^'\"]{8,}['\"]" \
-            --include="*.ts" --include="*.js" --include="*.json" \
-            --exclude-dir=node_modules --exclude-dir=.git .; then
-            echo "❌ Potential hardcoded secrets found!"
-            exit 1
-          else
-            echo "✅ No hardcoded secrets detected"
-          fi
-
-  code-security:
-    name: Code Security Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/security-audit
-            p/secrets
-            p/owasp-top-ten
-            p/javascript
-            p/typescript
-
-      - name: Run ESLint security rules
-        run: pnpm lint
-        continue-on-error: true
-
-      - name: Check unsafe code patterns
-        run: |
-          echo "🔍 Checking for unsafe code patterns..."
-
-          # Check for eval() usage
-          if grep -r "eval(" --include="*.ts" --include="*.js" --exclude-dir=node_modules .; then
-            echo "⚠️ Warning: eval() usage detected"
-          fi
-
-          # Check for innerHTML usage
-          if grep -r "innerHTML" --include="*.ts" --include="*.js" --exclude-dir=node_modules .; then
-            echo "⚠️ Warning: innerHTML usage detected - ensure proper sanitization"
-          fi
-
-  container-security:
-    name: Container Security
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t jasaweb-security-scan .
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: jasaweb-security-scan
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'HIGH,CRITICAL'
-
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-
   security-report:
     name: Security Report
     runs-on: ubuntu-latest
-    needs: [codeql, dependency-security, secret-scan, code-security]
+    needs: [codeql, dependency-security, secret-scan]
     if: always()
     permissions:
       contents: read
@@ -313,7 +148,6 @@ jobs:
           echo "- CodeQL Analysis: ${{ needs.codeql.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> security-report.md
           echo "- Dependency Security: ${{ needs.dependency-security.result == 'success' && '✅ Passed' || '⚠️ Issues' }}" >> security-report.md
           echo "- Secret Detection: ${{ needs.secret-scan.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> security-report.md
-          echo "- Code Security: ${{ needs.code-security.result == 'success' && '✅ Passed' || '⚠️ Issues' }}" >> security-report.md
           echo "" >> security-report.md
           echo "## Recommendations" >> security-report.md
           echo "- Review and fix any identified vulnerabilities" >> security-report.md
@@ -340,5 +174,4 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: report
-            });
->>>>>>> origin/main
+            })
