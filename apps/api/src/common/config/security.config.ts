@@ -1,5 +1,10 @@
 import { registerAs } from '@nestjs/config';
 
+const parseNumber = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
 export default registerAs('security', () => ({
   // JWT Configuration
   jwt: {
@@ -11,29 +16,29 @@ export default registerAs('security', () => ({
 
   // Password Policy
   password: {
-    minLength: parseInt(process.env.PASSWORD_MIN_LENGTH) || 8,
+    minLength: parseNumber(process.env.PASSWORD_MIN_LENGTH, 8),
     requireUppercase: process.env.PASSWORD_REQUIRE_UPPERCASE !== 'false',
     requireLowercase: process.env.PASSWORD_REQUIRE_LOWERCASE !== 'false',
     requireNumbers: process.env.PASSWORD_REQUIRE_NUMBERS !== 'false',
     requireSpecialChars: process.env.PASSWORD_REQUIRE_SPECIAL !== 'false',
-    maxAge: parseInt(process.env.PASSWORD_MAX_AGE_DAYS) || 90,
-    preventReuse: parseInt(process.env.PASSWORD_PREVENT_REUSE) || 5,
+    maxAge: parseNumber(process.env.PASSWORD_MAX_AGE_DAYS, 90),
+    preventReuse: parseNumber(process.env.PASSWORD_PREVENT_REUSE, 5),
   },
 
   // Account Lockout
   lockout: {
     enabled: process.env.ACCOUNT_LOCKOUT_ENABLED !== 'false',
-    maxAttempts: parseInt(process.env.LOCKOUT_MAX_ATTEMPTS) || 5,
-    duration: parseInt(process.env.LOCKOUT_DURATION_MINUTES) || 30,
-    resetAfter: parseInt(process.env.LOCKOUT_RESET_AFTER_MINUTES) || 60,
+    maxAttempts: parseNumber(process.env.LOCKOUT_MAX_ATTEMPTS, 5),
+    duration: parseNumber(process.env.LOCKOUT_DURATION_MINUTES, 30),
+    resetAfter: parseNumber(process.env.LOCKOUT_RESET_AFTER_MINUTES, 60),
   },
 
   // Session Configuration
   session: {
     secret: process.env.SESSION_SECRET || 'change-me-in-production',
-    maxAge: parseInt(process.env.SESSION_MAX_AGE_HOURS) || 24,
-    absoluteTimeout: parseInt(process.env.SESSION_ABSOLUTE_TIMEOUT_HOURS) || 72,
-    inactivityTimeout: parseInt(process.env.SESSION_INACTIVITY_TIMEOUT_MINUTES) || 30,
+    maxAge: parseNumber(process.env.SESSION_MAX_AGE_HOURS, 24),
+    absoluteTimeout: parseNumber(process.env.SESSION_ABSOLUTE_TIMEOUT_HOURS, 72),
+    inactivityTimeout: parseNumber(process.env.SESSION_INACTIVITY_TIMEOUT_MINUTES, 30),
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict' as const,
@@ -42,16 +47,16 @@ export default registerAs('security', () => ({
   // Rate Limiting
   rateLimit: {
     global: {
-      ttl: parseInt(process.env.RATE_LIMIT_TTL) || 60,
-      limit: parseInt(process.env.RATE_LIMIT_MAX) || 100,
+      ttl: parseNumber(process.env.RATE_LIMIT_TTL, 60),
+      limit: parseNumber(process.env.RATE_LIMIT_MAX, 100),
     },
     auth: {
-      ttl: parseInt(process.env.AUTH_RATE_LIMIT_TTL) || 900,
-      limit: parseInt(process.env.AUTH_RATE_LIMIT_MAX) || 5,
+      ttl: parseNumber(process.env.AUTH_RATE_LIMIT_TTL, 900),
+      limit: parseNumber(process.env.AUTH_RATE_LIMIT_MAX, 5),
     },
     api: {
-      ttl: parseInt(process.env.API_RATE_LIMIT_TTL) || 60,
-      limit: parseInt(process.env.API_RATE_LIMIT_MAX) || 100,
+      ttl: parseNumber(process.env.API_RATE_LIMIT_TTL, 60),
+      limit: parseNumber(process.env.API_RATE_LIMIT_MAX, 100),
     },
   },
 

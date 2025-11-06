@@ -237,8 +237,11 @@ export class RefreshTokenService {
       throw new Error('Invalid expiresIn format');
     }
 
-    const value = parseInt(matches[1], 10);
-    const unit = matches[2];
+    const [, rawValue, unit] = matches;
+    const value = Number.parseInt(rawValue ?? '', 10);
+    if (Number.isNaN(value) || !unit) {
+      throw new Error('Invalid expiresIn format');
+    }
 
     const now = new Date();
     switch (unit) {

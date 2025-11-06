@@ -19,10 +19,10 @@ class EnvironmentVariables {
   PORT: number = 3000;
 
   @IsString()
-  DATABASE_URL: string;
+  DATABASE_URL!: string;
 
   @IsString()
-  JWT_SECRET: string;
+  JWT_SECRET!: string;
 
   @IsString()
   @IsOptional()
@@ -65,7 +65,7 @@ class EnvironmentVariables {
   REDIS_PORT: number = 6379;
 }
 
-export function validate(config: Record<string, unknown>) {
+export function validateEnv(config: Record<string, unknown>) {
   const validatedConfig = plainToClass(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });

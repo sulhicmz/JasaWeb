@@ -56,9 +56,10 @@ export class ErrorHandlingService {
             userAgent: errorLogData.userAgent,
           },
         });
-      } catch (auditError) {
+      } catch (auditError: unknown) {
         // If audit logging fails, log to console but don't break execution
-        this.logger.warn(`Failed to log to audit trail: ${auditError.message}`);
+        const message = auditError instanceof Error ? auditError.message : 'Unknown error';
+        this.logger.warn(`Failed to log to audit trail: ${message}`);
       }
     }
   }
