@@ -116,7 +116,7 @@ jobs:
       run: |
         echo "🔍 Building Docker image for security scanning..."
         docker build -t jasaweb-security-scan .
-        
+
         echo "🔍 Running Trivy vulnerability scanner..."
         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
           -v $PWD:/root/.cache/ aquasec/trivy:latest image \
@@ -151,18 +151,18 @@ jobs:
 
     - name: Comment PR with security results
       if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('security-report.md', 'utf8');
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 🔒 Security Scan Results\n\n${report}`
-            });
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('security-report.md', 'utf8');
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## 🔒 Security Scan Results\n\n${report}`
+          });
 
   dependency-security-check:
     name: Dependency Security Check
@@ -193,7 +193,7 @@ jobs:
       run: |
         echo "🔍 Checking for known vulnerabilities in dependencies..."
         pnpm audit --json > audit-report.json || true
-        
+
         # Parse audit report and create summary
         if [ -s audit-report.json ]; then
           echo "⚠️ Vulnerabilities found:"
@@ -206,7 +206,7 @@ jobs:
       run: |
         echo "🔍 Checking for outdated dependencies..."
         pnpm outdated --json > outdated-report.json || true
-        
+
         if [ -s outdated-report.json ]; then
           echo "📦 Outdated dependencies:"
           cat outdated-report.json | jq -r 'to_entries[] | "- \(.key): \(.value.current) → \(.value.latest)"'
@@ -222,19 +222,19 @@ jobs:
         echo "- **Date**: $(date)" >> dependency-report.md
         echo "- **Total Dependencies**: $(pnpm list --depth=0 | grep -c '└──' || echo '0')" >> dependency-report.md
         echo "" >> dependency-report.md
-        
+
         if [ -s audit-report.json ]; then
           echo "## 🔴 Security Vulnerabilities" >> dependency-report.md
           cat audit-report.json | jq -r '.vulnerabilities | to_entries[] | "- **\(.key)**: \(.value.severity) - \(.value.title)"' >> dependency-report.md
           echo "" >> dependency-report.md
         fi
-        
+
         if [ -s outdated-report.json ]; then
           echo "## 📦 Outdated Dependencies" >> dependency-report.md
           cat outdated-report.json | jq -r 'to_entries[] | "- **\(.key)**: \(.value.current) → \(.value.latest)"' >> dependency-report.md
           echo "" >> dependency-report.md
         fi
-        
+
         echo "## ✅ Recommendations" >> dependency-report.md
         echo "- Update dependencies with security vulnerabilities" >> dependency-report.md
         echo "- Review outdated dependencies for compatibility" >> dependency-report.md
@@ -280,17 +280,17 @@ jobs:
     - name: Check for unsafe code patterns
       run: |
         echo "🔍 Checking for unsafe code patterns..."
-        
+
         # Check for eval() usage
         if grep -r "eval(" --include="*.ts" --include="*.js" --exclude-dir=node_modules .; then
           echo "⚠️ Warning: eval() usage detected"
         fi
-        
+
         # Check for innerHTML usage
         if grep -r "innerHTML" --include="*.ts" --include="*.js" --exclude-dir=node_modules .; then
           echo "⚠️ Warning: innerHTML usage detected - ensure proper sanitization"
         fi
-        
+
         # Check for dangerous regex patterns
         if grep -r -E "(RegExp|\/.*\/[gimuy]*)" --include="*.ts" --include="*.js" --exclude-dir=node_modules . | grep -v "node_modules"; then
           echo "⚠️ Warning: RegExp usage detected - review for ReDoS vulnerabilities"
