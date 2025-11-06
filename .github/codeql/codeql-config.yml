@@ -1,0 +1,17 @@
+name: "JasaWeb CodeQL Config"
+
+paths:
+  - apps
+  - packages
+  - scripts
+
+paths-ignore:
+  - node_modules
+  - dist
+  - build
+  - .next
+  - coverage
+  - .git
+
+queries:
+  - uses: security-and-quality
