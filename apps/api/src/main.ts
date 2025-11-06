@@ -6,7 +6,7 @@ import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exc
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { ErrorHandlingService } from './common/services/error-handling.service';
 import helmet from 'helmet';
-import * as compression from 'compression';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

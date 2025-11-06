@@ -1,8 +1,6 @@
 import { Injectable, Scope, Inject, BadRequestException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { Request } from 'express';
 import { PrismaService } from '../database/prisma.service';
-import { Prisma } from '@prisma/client';
 
 /**
  * Service that wraps Prisma to enforce multi-tenant data isolation
@@ -30,7 +28,7 @@ export class MultiTenantPrismaService {
    * Projects service methods
    */
   project = {
-    findMany: (args?: Prisma.ProjectFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.project.findMany({
         ...args,
         where: {
@@ -40,7 +38,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.ProjectFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.project.findUnique({
         ...args,
         where: {
@@ -50,7 +48,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.ProjectCreateArgs) => {
+    create: (args: any) => {
       return this.prisma.project.create({
         ...args,
         data: {
@@ -60,7 +58,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: Prisma.ProjectUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.project.update({
         ...args,
         where: {
@@ -71,7 +69,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.ProjectDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.project.delete({
         ...args,
         where: {
@@ -81,7 +79,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.ProjectCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.project.count({
         ...args,
         where: {
@@ -93,10 +91,33 @@ export class MultiTenantPrismaService {
   };
 
   /**
+   * Users service methods
+   */
+  user = {
+    findUnique: (args: any) => {
+      return this.prisma.user.findFirst({
+        ...args,
+        where: {
+          AND: [args.where ?? {}, { memberships: { some: { organizationId: this.organizationId } } }],
+        },
+      });
+    },
+
+    findMany: (args?: any) => {
+      return this.prisma.user.findMany({
+        ...args,
+        where: {
+          AND: [args?.where ?? {}, { memberships: { some: { organizationId: this.organizationId } } }],
+        },
+      });
+    },
+  };
+
+  /**
    * Milestones service methods
    */
   milestone = {
-    findMany: (args?: Prisma.MilestoneFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.milestone.findMany({
         ...args,
         where: {
@@ -109,7 +130,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.MilestoneFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.milestone.findUnique({
         ...args,
         where: {
@@ -122,19 +143,28 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.MilestoneCreateArgs) => {
-      // Ensure projectId is properly typed and exists in the current organization
-      const projectId = args.data.project.connect.id;
-      return this.prisma.milestone.create({
-        ...args,
-        data: {
-          ...args.data,
-          projectId, // Directly set the projectId instead of using nested connect with organizationId
-        },
-      });
+    create: (args: any) => {
+      if ('projectId' in args.data && !(args.data as any).project) {
+        const { projectId, ...rest } = args.data as any;
+        if (!projectId) {
+          throw new BadRequestException('Milestone creation requires a project reference.');
+        }
+
+        return this.prisma.milestone.create({
+          ...args,
+          data: {
+            ...rest,
+            project: {
+              connect: { id: projectId },
+            },
+          },
+        });
+      }
+
+      return this.prisma.milestone.create(args);
     },
 
-    update: (args: Prisma.MilestoneUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.milestone.update({
         ...args,
         where: {
@@ -148,7 +178,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.MilestoneDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.milestone.delete({
         ...args,
         where: {
@@ -161,7 +191,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.MilestoneCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.milestone.count({
         ...args,
         where: {
@@ -179,7 +209,7 @@ export class MultiTenantPrismaService {
    * Files service methods
    */
   file = {
-    findMany: (args?: Prisma.FileFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.file.findMany({
         ...args,
         where: {
@@ -192,7 +222,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.FileFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.file.findUnique({
         ...args,
         where: {
@@ -205,19 +235,28 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.FileCreateArgs) => {
-      // Ensure projectId is properly typed and exists in the current organization
-      const projectId = args.data.project.connect.id;
-      return this.prisma.file.create({
-        ...args,
-        data: {
-          ...args.data,
-          projectId, // Directly set the projectId instead of using nested connect with organizationId
-        },
-      });
+    create: (args: any) => {
+      if ('projectId' in args.data && !(args.data as any).project) {
+        const { projectId, ...rest } = args.data as any;
+        if (!projectId) {
+          throw new BadRequestException('File creation requires a project reference.');
+        }
+
+        return this.prisma.file.create({
+          ...args,
+          data: {
+            ...rest,
+            project: {
+              connect: { id: projectId },
+            },
+          },
+        });
+      }
+
+      return this.prisma.file.create(args);
     },
 
-    update: (args: Prisma.FileUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.file.update({
         ...args,
         where: {
@@ -231,7 +270,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.FileDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.file.delete({
         ...args,
         where: {
@@ -244,7 +283,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.FileCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.file.count({
         ...args,
         where: {
@@ -262,7 +301,7 @@ export class MultiTenantPrismaService {
    * Approvals service methods
    */
   approval = {
-    findMany: (args?: Prisma.ApprovalFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.approval.findMany({
         ...args,
         where: {
@@ -275,7 +314,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.ApprovalFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.approval.findUnique({
         ...args,
         where: {
@@ -288,7 +327,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.ApprovalCreateArgs) => {
+    create: (args: any) => {
       const projectId = args.data.project.connect.id;
       return this.prisma.approval.create({
         ...args,
@@ -299,7 +338,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: Prisma.ApprovalUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.approval.update({
         ...args,
         where: {
@@ -313,7 +352,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.ApprovalDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.approval.delete({
         ...args,
         where: {
@@ -326,7 +365,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.ApprovalCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.approval.count({
         ...args,
         where: {
@@ -344,7 +383,7 @@ export class MultiTenantPrismaService {
    * Tickets service methods
    */
   ticket = {
-    findMany: (args?: Prisma.TicketFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.ticket.findMany({
         ...args,
         where: {
@@ -354,7 +393,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.TicketFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.ticket.findUnique({
         ...args,
         where: {
@@ -364,7 +403,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.TicketCreateArgs) => {
+    create: (args: any) => {
       return this.prisma.ticket.create({
         ...args,
         data: {
@@ -374,7 +413,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: Prisma.TicketUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.ticket.update({
         ...args,
         where: {
@@ -385,7 +424,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.TicketDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.ticket.delete({
         ...args,
         where: {
@@ -395,7 +434,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.TicketCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.ticket.count({
         ...args,
         where: {
@@ -410,7 +449,7 @@ export class MultiTenantPrismaService {
    * Invoices service methods
    */
   invoice = {
-    findMany: (args?: Prisma.InvoiceFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.invoice.findMany({
         ...args,
         where: {
@@ -420,7 +459,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.InvoiceFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.invoice.findUnique({
         ...args,
         where: {
@@ -430,7 +469,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.InvoiceCreateArgs) => {
+    create: (args: any) => {
       return this.prisma.invoice.create({
         ...args,
         data: {
@@ -440,7 +479,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: Prisma.InvoiceUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.invoice.update({
         ...args,
         where: {
@@ -451,7 +490,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.InvoiceDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.invoice.delete({
         ...args,
         where: {
@@ -461,7 +500,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.InvoiceCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.invoice.count({
         ...args,
         where: {
@@ -476,7 +515,7 @@ export class MultiTenantPrismaService {
    * Tasks service methods
    */
   task = {
-    findMany: (args?: Prisma.TaskFindManyArgs) => {
+    findMany: (args?: any) => {
       return this.prisma.task.findMany({
         ...args,
         where: {
@@ -489,7 +528,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: Prisma.TaskFindUniqueArgs) => {
+    findUnique: (args: any) => {
       return this.prisma.task.findUnique({
         ...args,
         where: {
@@ -502,7 +541,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: Prisma.TaskCreateArgs) => {
+    create: (args: any) => {
       const projectId = args.data.project.connect.id;
       return this.prisma.task.create({
         ...args,
@@ -513,7 +552,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: Prisma.TaskUpdateArgs) => {
+    update: (args: any) => {
       return this.prisma.task.update({
         ...args,
         where: {
@@ -527,7 +566,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: Prisma.TaskDeleteArgs) => {
+    delete: (args: any) => {
       return this.prisma.task.delete({
         ...args,
         where: {
@@ -540,7 +579,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: Prisma.TaskCountArgs) => {
+    count: (args?: any) => {
       return this.prisma.task.count({
         ...args,
         where: {

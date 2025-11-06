@@ -14,23 +14,24 @@ export class ValidationExceptionFilter implements ExceptionFilter {
 
     const responseObj = exception.getResponse();
     let message = 'Validation failed';
-    let errors = [];
+    const errors: Array<Record<string, unknown>> = [];
 
-    if (typeof responseObj === 'object') {
+    if (typeof responseObj === 'object' && responseObj !== null) {
       const validationErrors = (responseObj as any).message;
-      
+
       if (Array.isArray(validationErrors)) {
-        errors = validationErrors.map((err: any) => {
+        validationErrors.forEach((err: any) => {
           if (typeof err === 'object' && err !== null) {
-            return {
+            errors.push({
               field: err.property,
               message: err.constraints ? Object.values(err.constraints)[0] : 'Validation error',
               value: err.value,
-            };
+            });
+          } else if (typeof err === 'string') {
+            errors.push({ message: err });
           }
-          return { message: err };
         });
-      } else {
+      } else if (typeof validationErrors === 'string') {
         message = validationErrors;
       }
     }
