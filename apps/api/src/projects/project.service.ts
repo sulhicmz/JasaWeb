@@ -161,9 +161,9 @@ export class ProjectService {
       }),
     ]);
 
-    const milestoneCount = project._count.milestones;
-    const fileCount = project._count.files;
-    const taskCount = project._count.tasks;
+    const milestoneCount = (project as any)._count?.milestones || 0;
+    const fileCount = (project as any)._count?.files || 0;
+    const taskCount = (project as any)._count?.tasks || 0;
 
     return {
       milestoneCount,

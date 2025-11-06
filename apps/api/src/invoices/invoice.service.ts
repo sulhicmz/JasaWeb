@@ -187,9 +187,9 @@ const invoice = await this.multiTenantPrisma.invoice.create({
     });
 
     // Send notification email about payment
-    if (updatedInvoice.organization.billingEmail) {
+    if ((updatedInvoice as any).organization?.billingEmail) {
       await this.emailService.sendInvoiceNotification(
-        updatedInvoice.organization.billingEmail,
+        (updatedInvoice as any).organization.billingEmail,
         updatedInvoice.id,
         updatedInvoice.amount,
         updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
@@ -244,9 +244,9 @@ const invoice = await this.multiTenantPrisma.invoice.create({
 
     // Send notification if status changed to issued
     if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
-      if (updatedInvoice.organization?.billingEmail) {
+      if ((updatedInvoice as any).organization?.billingEmail) {
         await this.emailService.sendInvoiceNotification(
-          updatedInvoice.organization?.billingEmail,
+          (updatedInvoice as any).organization?.billingEmail,
           updatedInvoice.id,
           updatedInvoice.amount,
           updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
