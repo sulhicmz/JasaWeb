@@ -1,0 +1,26 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deep Review with DeepSeek-R1
+        uses: sst/opencode/github@latest
+        env:
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+        with:
+          model: iflowcn/deepseek-r1
+          prompt: |
+            You are a principal engineer. Review this PR for:
+            - Logical errors, race conditions, security flaws
+            - Algorithm efficiency
+            - Code clarity and maintainability
+            Be precise and constructive.

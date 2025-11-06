@@ -1,0 +1,22 @@
+name: AI Issue Triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  respond:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: AI Response with Qwen3-Max
+        uses: sst/opencode/github@latest
+        env:
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+        with:
+          model: iflowcn/qwen3-max
+          prompt: |
+            Issue: "${{ github.event.issue.title }}"
+            Body: "${{ github.event.issue.body }}"
+            Respond helpfully as a maintainer. Ask clarifying questions if needed.
