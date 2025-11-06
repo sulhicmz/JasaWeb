@@ -7,15 +7,17 @@ on:
 jobs:
   fix:
     runs-on: ubuntu-latest
-    permissions:
+permissions:
+      id-token: write
       contents: write
       pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-      # → Sesuaikan stack Anda (Node.js, Python, dll)
+# → Sesuaikan stack Anda (Node.js, Python, dll)
       - name: Setup & Build
         run: |
           npm ci
@@ -39,9 +41,18 @@ jobs:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:
           model: iflowcn/qwen3-coder
-          prompt: |
+prompt: |
             The build failed. Fix the minimal set of files to make it succeed.
             Preserve all behavior. Only correct syntax, imports, types, or config.
+            
+            Pastikan build berhasil. Perform a final intelligent review with these tasks:
+            1. **Conflict Awareness**: Check for logical merge conflicts (e.g., duplicated logic, outdated config).
+            2. **Documentation Sync**: If the code changes affect APIs, features, CLI, or architecture, update:
+               - README.md
+               - docs/*.md
+               - CHANGELOG.md (if applicable)
+            3. **Clarity & Maintainability**: Suggest minor docstring or comment improvements if missing.
+            4. **Commit changes only if necessary** — prefer minimal, safe updates.
 
       - name: Commit fix
         if: env.BUILD_OK == 'false'

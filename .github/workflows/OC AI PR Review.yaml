@@ -7,8 +7,11 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
-    permissions:
+permissions:
+      id-token: write
+      contents: write
       pull-requests: write
+      issues: write
     steps:
       - uses: actions/checkout@v4
 

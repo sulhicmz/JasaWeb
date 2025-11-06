@@ -1,0 +1,241 @@
+name: ⚙️ Configuration Issue
+description: Report configuration problems, environment setup issues, or deployment settings
+title: "[CONFIG]: "
+labels: ["configuration", "environment", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # ⚙️ Configuration Issue Report
+        
+        Use this template for reporting configuration problems, environment setup issues,
+        or deployment settings problems. Please provide detailed information about your
+        configuration and environment.
+
+  - type: dropdown
+    id: config-type
+    attributes:
+      label: Configuration Type
+      description: What type of configuration issue are you experiencing?
+      options:
+        - Environment Variables
+        - Database Configuration
+        - Authentication Settings
+        - Docker Configuration
+        - Build Configuration
+        - CI/CD Configuration
+        - Server/Infrastructure Settings
+        - Third-party Integration
+        - Package Configuration
+        - Development Environment Setup
+        - Production Deployment Settings
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Which environment is affected?
+      options:
+        - Local Development
+        - Development Server
+        - Staging Environment
+        - Production Environment
+        - Testing Environment
+        - Multiple Environments
+        - Docker Container
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-component
+    attributes:
+      label: Affected Component
+      description: Which component's configuration is problematic?
+      options:
+        - Web Frontend (Astro)
+        - API Backend (NestJS)
+        - Database (PostgreSQL)
+        - Authentication System
+        - File Management/Storage
+        - Client Portal
+        - Admin Panel
+        - CI/CD Pipeline
+        - Docker Services
+        - Monitoring/Logging
+        - Third-party Services
+        - Multiple Components
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue Description
+      description: Clear description of the configuration problem
+      placeholder: |
+        Describe the configuration issue:
+        - What is not working as expected?
+        - What should happen vs. what is happening?
+        - When did this issue start occurring?
+        - Has this configuration worked before?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Messages
+      description: Any error messages or logs related to the configuration issue
+      placeholder: |
+        Include error messages, stack traces, or relevant log output:
+        ```
+        Error: Database connection failed
+        at Connection.connect (/app/src/database/connection.js:45:11)
+        ```
+
+  - type: textarea
+    id: configuration-details
+    attributes:
+      label: Configuration Details
+      description: Details about the problematic configuration (sanitize sensitive data)
+      placeholder: |
+        Share relevant configuration details (REMOVE any sensitive information):
+        - Environment variable names (not values)
+        - Configuration file snippets
+        - Docker compose settings
+        - Build configuration
+        - Database connection settings (without credentials)
+        
+        Example:
+        ```env
+        DATABASE_URL=postgresql://user:***@localhost:5432/db
+        JWT_SECRET=***
+        NODE_ENV=development
+        ```
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: How to reproduce this configuration issue
+      placeholder: |
+        1. Set environment variable '...' to '...'
+        2. Run command '...'
+        3. Observe error '...'
+        4. Expected behavior should be '...'
+
+  - type: textarea
+    id: recent-changes
+    attributes:
+      label: Recent Configuration Changes
+      description: What configuration changes were made recently?
+      placeholder: |
+        List recent changes that might be related:
+        - Updated environment variables
+        - Modified configuration files
+        - Changed Docker settings
+        - Updated dependencies
+        - Modified build scripts
+        - Infrastructure changes
+
+  - type: textarea
+    id: environment-details
+    attributes:
+      label: Environment Details
+      description: Details about the affected environment
+      placeholder: |
+        - Operating System: Windows 11, macOS 14, Ubuntu 22.04
+        - Node.js version: v20.x.x
+        - pnpm version: 8.x.x
+        - Docker version: 24.x.x (if applicable)
+        - Database version: PostgreSQL 15.x (if applicable)
+        - Browser: Chrome 119, Firefox 120 (if applicable)
+        - Cloud provider: AWS, Vercel, Railway (if applicable)
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen with the correct configuration?
+      placeholder: |
+        Describe the expected behavior:
+        - Application should start without errors
+        - Database connection should be established
+        - Authentication should work properly
+        - Build process should complete successfully
+        - Other expected outcomes
+
+  - type: textarea
+    id: attempted-solutions
+    attributes:
+      label: Attempted Solutions
+      description: What have you tried to fix this configuration issue?
+      placeholder: |
+        List troubleshooting steps you've already taken:
+        - Verified environment variable names
+        - Checked configuration file syntax
+        - Restarted services
+        - Cleared caches
+        - Reverted recent changes
+        - Consulted documentation
+        - Other attempts
+
+  - type: textarea
+    id: documentation-reference
+    attributes:
+      label: Documentation Reference
+      description: Which documentation were you following?
+      placeholder: |
+        Reference the documentation you were using:
+        - README.md section
+        - Setup guide
+        - Configuration documentation
+        - External service documentation
+        - Other resources
+
+  - type: checkboxes
+    id: validation-checklist
+    attributes:
+      label: Validation Checklist
+      description: Please confirm the following checks
+      options:
+        - label: I have removed all sensitive data (passwords, tokens, secrets) from this issue
+          required: true
+        - label: I have double-checked environment variable names and spelling
+          required: true
+        - label: I have verified configuration file syntax and formatting
+          required: true
+        - label: I have searched for similar configuration issues in the repository
+          required: true
+        - label: I have consulted the project documentation and README
+        - label: I have tried the configuration in a clean environment
+        - label: I have checked for conflicting configurations
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 📚 Configuration Resources
+        
+        - [Environment Setup Guide](../../README.md#setup)
+        - [Configuration Documentation](../../docs/)
+        - [Docker Configuration](../../docker-compose.yml)
+        - [Environment Variables](../../.env.example)
+        - [Package Configuration](../../package.json)
+        
+        ## 🔐 Security Reminder
+        
+        **NEVER** include actual values for:
+        - Passwords or API keys
+        - Database credentials
+        - JWT secrets
+        - Private keys or certificates
+        - Any sensitive tokens
+        
+        Use placeholder values like `***`, `your-secret-here`, or `example-value`.
+
+        Thank you for helping improve our configuration! 🛠️

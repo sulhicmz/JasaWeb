@@ -6,7 +6,29 @@ body:
   - type: markdown
     attributes:
       value: |
+        # ✨ Feature Request
+        
         Thanks for suggesting a new feature! Please provide as much detail as possible.
+        
+        **Before submitting**: Please search existing issues to avoid duplicate feature requests.
+
+  - type: input
+    id: related-issues
+    attributes:
+      label: Related Issues
+      description: Link any related issues or PRs (use "None" if no related issues)
+      placeholder: "#123, #456, or None"
+    validations:
+      required: true
+
+  - type: input
+    id: feature-keywords
+    attributes:
+      label: Feature Keywords
+      description: Key terms that describe this feature (helps find duplicates)
+      placeholder: "authentication, dashboard, export, API, etc."
+    validations:
+      required: true
 
   - type: textarea
     id: feature-description
@@ -120,9 +142,11 @@ body:
       label: Confirmation
       description: Please confirm the following
       options:
-        - label: I have searched existing issues for similar requests
+        - label: I have searched existing issues for similar requests (checked keywords: [feature keywords from above])
           required: true
-        - label: I have read the project documentation
+        - label: I have read the project documentation and roadmap
           required: true
         - label: This feature aligns with the project goals
+          required: true
+        - label: This is not a duplicate of any existing feature request
           required: true

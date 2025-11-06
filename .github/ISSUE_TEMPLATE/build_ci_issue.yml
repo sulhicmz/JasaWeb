@@ -1,0 +1,220 @@
+name: 🔨 Build/CI Issue
+description: Report build failures, CI/CD problems, or deployment issues
+title: "[BUILD]: "
+labels: ["build", "ci/cd", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🔨 Build/CI Issue Report
+        
+        Use this template for reporting build failures, CI/CD pipeline issues, or deployment problems.
+        Please provide detailed information to help us diagnose and fix the issue quickly.
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of build/CI issue are you experiencing?
+      options:
+        - Build Failure (Compilation)
+        - Test Failure
+        - Linting/Formatting Error
+        - Type Checking Error
+        - Dependency Installation Issue
+        - Security Scan Failure
+        - Performance Test Failure
+        - Deployment Failure
+        - Workflow/Action Error
+        - Cache Issue
+        - Environment Configuration
+        - Docker Build Issue
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-workflow
+    attributes:
+      label: Affected Workflow
+      description: Which CI/CD workflow is affected?
+      options:
+        - CI Pipeline (ci.yml)
+        - Enhanced Testing (enhanced-testing.yml)
+        - Security Scan (security.yml)
+        - Performance Testing (performance.yml)
+        - Monitoring (monitoring.yml)
+        - Release (release.yml)
+        - Version Bump (version-bump.yml)
+        - OpenCode (opencode.yml)
+        - Multiple Workflows
+        - Local Development
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-app
+    attributes:
+      label: Affected Application
+      description: Which application is affected?
+      options:
+        - Web Frontend (Astro)
+        - API Backend (NestJS)
+        - UI Package
+        - Config Package
+        - All Applications
+        - Infrastructure Only
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: workflow-run-url
+    attributes:
+      label: Workflow Run URL
+      description: Link to the failing GitHub Actions workflow run
+      placeholder: https://github.com/sulhicmz/JasaWeb/actions/runs/123456789
+
+  - type: input
+    id: commit-sha
+    attributes:
+      label: Commit SHA
+      description: The commit hash that triggered the failure
+      placeholder: abc123def456...
+
+  - type: input
+    id: branch-name
+    attributes:
+      label: Branch Name
+      description: The branch where the issue occurred
+      placeholder: main, develop, feature/xyz
+
+  - type: textarea
+    id: error-message
+    attributes:
+      label: Error Message
+      description: Copy and paste the complete error message
+      placeholder: |
+        Include the full error message, stack trace, and any relevant log output.
+        Use code blocks with appropriate language highlighting.
+        Example:
+        ```bash
+        Error: Build failed with status code 1
+        at /home/runner/work/_actions/...
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: How to reproduce this issue
+      placeholder: |
+        1. Push changes to branch '...'
+        2. CI workflow triggers
+        3. Build step fails with error '...'
+        4. See full error in logs
+    validations:
+      required: true
+
+  - type: textarea
+    id: recent-changes
+    attributes:
+      label: Recent Changes
+      description: What changes were made that might have caused this issue?
+      placeholder: |
+        List recent changes that could be related:
+        - Updated dependencies in package.json
+        - Modified configuration files
+        - Changed build scripts
+        - Updated environment variables
+        - Modified Docker files
+        - Other code changes
+
+  - type: textarea
+    id: environment-info
+    attributes:
+      label: Environment Information
+      description: Details about the environment where the issue occurs
+      placeholder: |
+        - Node.js version:
+        - pnpm version:
+        - Operating System:
+        - Browser (if applicable):
+        - Docker version (if applicable):
+        - GitHub Actions runner: ubuntu-latest, windows-latest, etc.
+
+  - type: textarea
+    id: local-status
+    attributes:
+      label: Local Development Status
+      description: Does this issue occur in local development?
+      placeholder: |
+        - Can you reproduce locally? Yes/No
+        - Local environment details:
+        - Local error messages (if different):
+        - Steps to reproduce locally:
+
+  - type: textarea
+    id: attempted-solutions
+    attributes:
+      label: Attempted Solutions
+      description: What have you tried to fix this issue?
+      placeholder: |
+        List troubleshooting steps you've already taken:
+        - Cleared workflow cache
+        - Updated dependencies
+        - Rebased branch
+        - Checked environment variables
+        - Ran commands locally
+        - Other attempts
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+      placeholder: |
+        Include:
+        - Related issues or PRs
+        - Screenshots of error messages
+        - Configuration file contents (sanitized)
+        - Network or infrastructure issues
+        - Team communications about this issue
+
+  - type: checkboxes
+    id: troubleshooting-checklist
+    attributes:
+      label: Troubleshooting Checklist
+      description: Please confirm what you've already tried
+      options:
+        - label: I have checked the workflow logs for complete error details
+          required: true
+        - label: I have searched for similar issues in the repository
+          required: true
+        - label: I have tried reproducing the issue locally
+        - label: I have checked for recent dependency updates
+        - label: I have verified environment variables and secrets
+        - label: I have reviewed recent changes in the failing commit
+        - label: I have checked the CI/CD documentation
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 📚 Related Resources
+        
+        - [CI/CD Optimization Guide](../../.github/CICD_OPTIMIZATION.md)
+        - [Workflow Changes](../../.github/WORKFLOW_CHANGES.md)
+        - [Troubleshooting Guide](../../docs/EMERGENCY_RESOLUTION_PLAN.md)
+        - [GitHub Actions Documentation](https://docs.github.com/en/actions)
+        
+        ## 🚨 Urgent Issues
+        
+        If this is blocking main branch deployment or affecting production:
+        - Add the `urgent` label
+        - Mention @jasaweb/core-team in a comment
+        - Consider creating a hotfix branch
+
+        Thank you for helping improve our build process! 🚀
