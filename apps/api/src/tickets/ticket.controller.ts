@@ -293,7 +293,7 @@ export class TicketController {
           await this.emailService.sendTicketStatusChangedNotification(
             assigneeUser.email,
             updatedTicket.id,
-            updatedTicket.title,
+            (updatedTicket as any).title,
             updatedTicket.status,
           );
         }
