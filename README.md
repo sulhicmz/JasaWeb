@@ -82,7 +82,7 @@ jasaweb/
    ```bash
    # Install and use correct Node.js version
    nvm use
-   
+
    # Enable pnpm
    corepack enable
    pnpm --version
@@ -99,7 +99,7 @@ jasaweb/
    cp .env.example .env
    cp apps/api/.env.example apps/api/.env
    cp apps/web/.env.example apps/web/.env
-   
+
    # Edit environment files with your configuration
    # See Environment Configuration section below
    ```
@@ -108,10 +108,10 @@ jasaweb/
    ```bash
    # Start database and other services
    docker-compose up -d
-   
+
    # Run database migrations
    pnpm db:migrate
-   
+
    # Seed database (optional)
    pnpm db:seed
    ```
@@ -120,7 +120,7 @@ jasaweb/
    ```bash
    # Start all applications in development mode
    pnpm dev
-   
+
    # Or start individual applications
    pnpm dev:web    # Marketing site at http://localhost:4321
    pnpm dev:api    # API at http://localhost:3000
@@ -322,7 +322,7 @@ pnpm test:e2e
    ```bash
    # Build for production
    pnpm build
-   
+
    # Deploy to specific environment
    pnpm deploy:staging
    pnpm deploy:production
@@ -405,6 +405,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 ## 📚 Documentation
 
 - [📋 Project Plan](./plan.md) - Detailed specifications and roadmap
+- [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
 - [🤖 Agent Guidelines](./AGENTS.md) - Development conventions
 - [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [🛡️ Security Policy](./SECURITY.md) - Security guidelines
