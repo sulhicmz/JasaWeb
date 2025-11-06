@@ -123,7 +123,7 @@ export class SessionService {
       where: {
         OR: [
           { expiresAt: { lt: new Date() } },
-          { revokedAt: { not: null } },
+          { revokedAt: null },
         ],
       },
     });

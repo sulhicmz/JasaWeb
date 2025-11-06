@@ -134,7 +134,7 @@ export class FileService {
       return {
         id: createdFile.id,
         filename: createdFile.filename,
-        size: createdFile.size,
+        size: createdFile.size || 0,
         uploadedAt: createdFile.createdAt,
         url: `/files/download/${createdFile.id}`,
       };

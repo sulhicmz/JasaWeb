@@ -314,6 +314,11 @@ export class TicketController {
   ) {
     const ticket = await this.multiTenantPrisma.ticket.findUnique({
       where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+      },
     });
 
     if (!ticket) {
@@ -322,6 +327,11 @@ export class TicketController {
 
     const deletedTicket = await this.multiTenantPrisma.ticket.delete({
       where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+      },
     });
 
     this.logger.log(`Ticket deleted: ${deletedTicket.title} for organization ${organizationId}`);
