@@ -15,16 +15,10 @@ export class PrismaHealthIndicator extends HealthIndicator {
       
       // If we reach here, the database is healthy
       return this.getStatus(key, true);
-<<<<<<< HEAD
-    } catch (error) {
-      // If there's an error, the database is not healthy
-      throw new HealthCheckError('Prisma check failed', this.getStatus(key, false, { error: error.message }));
-=======
     } catch (error: unknown) {
       // If there's an error, the database is not healthy
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new HealthCheckError('Prisma check failed', this.getStatus(key, false, { error: errorMessage }));
->>>>>>> origin/main
     }
   }
 }

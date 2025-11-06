@@ -167,15 +167,9 @@ export class MilestoneService {
   async getMilestoneStats(projectId?: string) {
     const whereClause = projectId ? { projectId } : {};
 
-<<<<<<< HEAD
-    const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: whereClause,
-    });
-=======
     const milestones = (await this.multiTenantPrisma.milestone.findMany({
       where: whereClause,
     })) as Array<{ status: string }>;
->>>>>>> origin/main
 
     const total = milestones.length;
     const todo = milestones.filter(m => m.status === 'todo').length;

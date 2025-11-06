@@ -5,8 +5,6 @@ import { LocalFileStorageService } from '../common/services/local-file-storage.s
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 
-<<<<<<< HEAD
-=======
 export type UploadedFilePayload = {
   originalname: string;
   mimetype: string;
@@ -14,7 +12,6 @@ export type UploadedFilePayload = {
   buffer: Buffer;
 };
 
->>>>>>> origin/main
 // Define file upload validation options
 export const VALID_MIME_TYPES = [
   'image/jpeg',
@@ -35,13 +32,8 @@ export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
 
 export interface FileUploadDto {
-<<<<<<< HEAD
-  file: Express.Multer.File;
-  projectId?: string;
-=======
   file: UploadedFilePayload;
   projectId: string;
->>>>>>> origin/main
   uploadedById: string;
 }
 
@@ -67,13 +59,10 @@ export class FileService {
   async uploadFile(fileUploadDto: FileUploadDto, organizationId: string): Promise<FileUploadResult> {
     const { file, projectId, uploadedById } = fileUploadDto;
 
-<<<<<<< HEAD
-=======
     if (!projectId) {
       throw new BadRequestException('Project ID is required for file uploads');
     }
 
->>>>>>> origin/main
     // Validate file
     if (!file) {
       throw new BadRequestException('File is required');
@@ -132,19 +121,11 @@ export class FileService {
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
-<<<<<<< HEAD
-          projectId: projectId,
-          filename: file.originalname,
-          version: '1.0', // Initial version
-          size: file.size,
-          uploadedById: uploadedById,
-=======
           projectId,
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
           uploadedById,
->>>>>>> origin/main
         },
       });
 
@@ -153,14 +134,6 @@ export class FileService {
       return {
         id: createdFile.id,
         filename: createdFile.filename,
-<<<<<<< HEAD
-        size: createdFile.size,
-        uploadedAt: createdFile.createdAt,
-        url: `/files/download/${createdFile.id}`,
-      };
-    } catch (error) {
-      this.logger.error(`Error uploading file: ${error.message}`);
-=======
         size: createdFile.size || 0,
         uploadedAt: createdFile.createdAt,
         url: `/files/download/${createdFile.id}`,
@@ -168,7 +141,6 @@ export class FileService {
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error uploading file: ${errorMessage}`);
->>>>>>> origin/main
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -210,14 +182,9 @@ export class FileService {
         // Send the file
         response.send(fileBuffer);
       }
-<<<<<<< HEAD
-    } catch (error) {
-      this.logger.error(`Error downloading file: ${error.message}`);
-=======
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error downloading file: ${errorMessage}`);
->>>>>>> origin/main
       throw new BadRequestException('Error downloading file');
     }
   }
@@ -256,14 +223,9 @@ export class FileService {
       this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
 
       return { message: 'File deleted successfully' };
-<<<<<<< HEAD
-    } catch (error) {
-      this.logger.error(`Error deleting file: ${error.message}`);
-=======
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error deleting file: ${errorMessage}`);
->>>>>>> origin/main
       throw new BadRequestException('Error deleting file');
     }
   }
@@ -339,15 +301,9 @@ export class FileService {
       whereClause.projectId = projectId;
     }
 
-<<<<<<< HEAD
-    const files = await this.multiTenantPrisma.file.findMany({
-      where: whereClause,
-    });
-=======
     const files = (await this.multiTenantPrisma.file.findMany({
       where: whereClause,
     })) as Array<{ size: number | null; filename: string }>;
->>>>>>> origin/main
 
     const total = files.length;
     const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
@@ -390,11 +346,8 @@ export class FileService {
 
     return mimeTypes[ext] || 'application/octet-stream';
   }
-<<<<<<< HEAD
-=======
-
+  
   private getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
   }
->>>>>>> origin/main
 }

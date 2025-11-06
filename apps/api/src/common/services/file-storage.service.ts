@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-<<<<<<< HEAD
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { 
+  S3Client, 
+  PutObjectCommand, 
+  DeleteObjectCommand, 
+  GetObjectCommand,
+  HeadObjectCommand
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import * as fs from 'fs';
-import * as path from 'path';
-=======
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
->>>>>>> origin/main
 
 export interface FileUploadOptions {
   bucket: string;
@@ -19,6 +19,14 @@ export interface FileDownloadOptions {
   bucket: string;
   key: string;
   expiresIn?: number; // Expiration time in seconds for signed URLs
+}
+
+export interface FileMetadata {
+  contentLength?: number;
+  contentType?: string;
+  lastModified?: Date;
+  eTag?: string;
+  metadata?: Record<string, string>;
 }
 
 @Injectable()
@@ -61,21 +69,14 @@ export class FileStorageService {
    * Generate a presigned URL for downloading a file
    */
   async generateDownloadUrl(options: FileDownloadOptions): Promise<string> {
-<<<<<<< HEAD
     const command = new GetObjectCommand({
       Bucket: options.bucket,
       Key: options.key,
     });
 
-    const expiresIn = options.expiresIn || 3600; // Default to 1 hour
-    return await getSignedUrl(this.s3Client, command, { expiresIn });
-=======
-    const baseEndpoint = process.env.S3_ENDPOINT
-      ? process.env.S3_ENDPOINT.replace(/\/$/, '')
-      : `https://${options.bucket}.s3.amazonaws.com`;
-
-    return `${baseEndpoint}/${options.key}`;
->>>>>>> origin/main
+    return await getSignedUrl(this.s3Client, command, { 
+      expiresIn: options.expiresIn || 3600 
+    });
   }
 
   /**
@@ -93,22 +94,15 @@ export class FileStorageService {
   /**
    * Get file information (metadata, size, etc.)
    */
-  async getFileMetadata(bucket: string, key: string) {
+  async getFileMetadata(bucket: string, key: string): Promise<FileMetadata> {
     try {
-      // Note: AWS SDK v3 doesn't have a direct headObject equivalent
-      // We'll use GetObjectCommand but only fetch metadata
-      const command = new GetObjectCommand({
+      const command = new HeadObjectCommand({
         Bucket: bucket,
         Key: key,
       });
       
-<<<<<<< HEAD
       const response = await this.s3Client.send(command);
       
-=======
-      const response = (await this.s3Client.send(command)) as any;
-
->>>>>>> origin/main
       return {
         contentLength: response.ContentLength,
         contentType: response.ContentType,
