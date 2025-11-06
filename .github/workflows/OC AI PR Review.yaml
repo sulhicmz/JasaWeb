@@ -16,7 +16,7 @@ permissions:
       - uses: actions/checkout@v4
 
       - name: Deep Review with DeepSeek-R1
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@v1.0.35
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:

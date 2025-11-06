@@ -7,7 +7,7 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
-permissions:
+    permissions:
       id-token: read
       contents: write
       pull-requests: read
@@ -16,7 +16,7 @@ permissions:
       - uses: actions/checkout@v4
 
       - name: Update Docs with TStars-2.0
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@v1.0.35
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:
