@@ -4,15 +4,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
-<<<<<<< HEAD
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-=======
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
@@ -20,12 +11,11 @@
     },
     "strict": true,
     "noImplicitAny": true,
-    "skipLibCheck": true
+    "skipLibCheck": false
   },
   "include": ["src/**/*"],
   "exclude": [
     "node_modules", 
     "dist"
   ]
->>>>>>> origin/main
 }
