@@ -9,7 +9,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/**',
         'tests/**',
@@ -19,7 +19,16 @@ export default defineConfig({
         'playwright.config.ts',
         '.eslintrc.js',
         '.prettierrc.js',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/test/**',
       ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
     },
   },
 });
