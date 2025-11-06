@@ -42,6 +42,9 @@ permissions:
         with:
           model: iflowcn/qwen3-coder
 prompt: |
+            The build failed. Fix the minimal set of files to make it succeed.
+            Preserve all behavior. Only correct syntax, imports, types, or config.
+            
             Pastikan build berhasil. Perform a final intelligent review with these tasks:
             1. **Conflict Awareness**: Check for logical merge conflicts (e.g., duplicated logic, outdated config).
             2. **Documentation Sync**: If the code changes affect APIs, features, CLI, or architecture, update:
