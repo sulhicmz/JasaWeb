@@ -29,8 +29,9 @@ export class AuditService {
       });
 
       this.logger.log(`Audit log created: ${entry.action} by user ${entry.actorId} in org ${entry.organizationId}`);
-    } catch (error) {
-      this.logger.error(`Failed to create audit log: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to create audit log: ${message}`);
       // We don't throw an error here because failing to log shouldn't break the main functionality
     }
   }

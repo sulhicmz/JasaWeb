@@ -97,16 +97,16 @@ export class TicketController {
     });
 
     // Send notification email to the assigned user if any
-    if (ticket.assignee) {
+    if ((ticket as any).assignee) {
       await this.emailService.sendTicketCreatedNotification(
-        ticket.assignee.email,
-        ticket.title,
-        ticket.project?.name || 'General',
-        ticket.description,
+        (ticket as any).assignee?.email,
+        (ticket as any).title,
+        (ticket as any).project?.name || 'General',
+        (ticket as any).description,
       );
     }
 
-    this.logger.log(`Ticket created: ${ticket.title} for organization ${organizationId}`);
+    this.logger.log(`Ticket created: ${(ticket as any).title} for organization ${organizationId}`);
 
     return ticket;
   }
@@ -275,9 +275,9 @@ export class TicketController {
       if (assigneeUser) {
         await this.emailService.sendTicketCreatedNotification(
           assigneeUser.email,
-          updatedTicket.title,
-          updatedTicket.project?.name || 'General',
-          updatedTicket.description,
+          (updatedTicket as any).title,
+          (updatedTicket as any).project?.name || 'General',
+          (updatedTicket as any).description,
         );
       }
     }
@@ -293,14 +293,14 @@ export class TicketController {
           await this.emailService.sendTicketStatusChangedNotification(
             assigneeUser.email,
             updatedTicket.id,
-            updatedTicket.title,
+            (updatedTicket as any).title,
             updatedTicket.status,
           );
         }
       }
     }
 
-    this.logger.log(`Ticket updated: ${updatedTicket.title} for organization ${organizationId}`);
+    this.logger.log(`Ticket updated: ${(updatedTicket as any).title} for organization ${organizationId}`);
 
     return updatedTicket;
   }
@@ -314,6 +314,11 @@ export class TicketController {
   ) {
     const ticket = await this.multiTenantPrisma.ticket.findUnique({
       where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+      },
     });
 
     if (!ticket) {
@@ -322,9 +327,14 @@ export class TicketController {
 
     const deletedTicket = await this.multiTenantPrisma.ticket.delete({
       where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+      },
     });
 
-    this.logger.log(`Ticket deleted: ${deletedTicket.title} for organization ${organizationId}`);
+    this.logger.log(`Ticket deleted: ${(deletedTicket as any).title} for organization ${organizationId}`);
 
     return { message: 'Ticket deleted successfully' };
   }

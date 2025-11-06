@@ -14,6 +14,9 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { RefreshTokenService } from './refresh-token.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import type { Request as ExpressRequest } from 'express';
+
+type AuthenticatedRequest = ExpressRequest & { user?: unknown };
 
 @Controller('auth')
 export class AuthController {
@@ -47,6 +50,12 @@ export class AuthController {
 
     try {
       const result = await this.refreshTokenService.rotateRefreshToken(refreshToken);
+      if (!result) {
+        return {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: 'Invalid refresh token',
+        };
+      }
       return {
         statusCode: HttpStatus.OK,
         message: 'Token refreshed successfully',
@@ -99,7 +108,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
+  getProfile(@Request() req: AuthenticatedRequest) {
+    return req.user ?? null;
   }
 }

@@ -42,7 +42,7 @@ export class InvoiceService {
     }
 
     // Create the invoice
-    const invoice = await this.multiTenantPrisma.invoice.create({
+const invoice = await this.multiTenantPrisma.invoice.create({
       data: {
         ...createInvoiceDto,
         organizationId,
@@ -54,19 +54,6 @@ export class InvoiceService {
             id: true,
             name: true,
             billingEmail: true,
-          },
-        },
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        issuedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
           },
         },
       },
@@ -200,12 +187,12 @@ export class InvoiceService {
     });
 
     // Send notification email about payment
-    if (updatedInvoice.organization.billingEmail) {
+    if ((updatedInvoice as any).organization?.billingEmail) {
       await this.emailService.sendInvoiceNotification(
-        updatedInvoice.organization.billingEmail,
+        (updatedInvoice as any).organization.billingEmail,
         updatedInvoice.id,
         updatedInvoice.amount,
-        updatedInvoice.dueAt.toISOString().split('T')[0],
+        updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
       );
     }
 
@@ -257,12 +244,12 @@ export class InvoiceService {
 
     // Send notification if status changed to issued
     if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
-      if (updatedInvoice.organization.billingEmail) {
+      if ((updatedInvoice as any).organization?.billingEmail) {
         await this.emailService.sendInvoiceNotification(
-          updatedInvoice.organization.billingEmail,
+          (updatedInvoice as any).organization?.billingEmail,
           updatedInvoice.id,
           updatedInvoice.amount,
-          updatedInvoice.dueAt.toISOString().split('T')[0],
+          updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
         );
       }
     }
@@ -300,9 +287,9 @@ export class InvoiceService {
   }
 
   async getInvoiceStats(organizationId: string) {
-    const invoices = await this.multiTenantPrisma.invoice.findMany({
+    const invoices = (await this.multiTenantPrisma.invoice.findMany({
       where: { organizationId },
-    });
+    })) as Array<{ status: string; amount: number }>;
 
     const total = invoices.length;
     const draft = invoices.filter(inv => inv.status === 'draft').length;
