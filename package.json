@@ -49,7 +49,7 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^24.10.0",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.0.0",
     "eslint": "^8.0.0",
