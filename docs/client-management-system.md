@@ -9,11 +9,10 @@
 - [Data Models](#data-models)
 - [API Reference](#api-reference)
 - [Client Portal Features](#client-portal-features)
-- [Multi-Tenancy](#multi-tenancy)
 - [Security & Compliance](#security--compliance)
-- [Integration Guide](#integration-guide)
+- [Performance Optimization](#performance-optimization)
+- [Deployment Guide](#deployment-guide)
 - [Best Practices](#best-practices)
-- [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -21,20 +20,32 @@
 
 ### Purpose
 
-The JasaWeb Enterprise Client Management System is a comprehensive platform designed to streamline web development service delivery through an integrated client portal. It serves as a single source of truth for project collaboration, file management, approvals, support tickets, and billing.
+The JasaWeb Enterprise Client Management System is a comprehensive platform designed to streamline web development service delivery for schools, news portals, and company profiles. It provides a unified solution for managing client relationships, projects, approvals, billing, and support.
 
 ### Key Objectives
 
-- **Lead Generation**: Generate qualified leads for School Websites, News Portals, and Company Profiles
-- **Client Collaboration**: Accelerate project delivery through transparent communication
-- **Process Standardization**: Reduce project cycle time to 8-10 weeks
-- **Client Satisfaction**: Achieve NPS ≥ 8/10 with SLA response ≤ 4 hours
+- **Lead Generation**: Generate qualified leads with 5-8% conversion rate from landing page to contact form
+- **Client Collaboration**: Accelerate client collaboration through integrated Client Portal
+- **Standardized Delivery**: Reduce project cycle time to 8-10 weeks through standardized processes
+- **Client Satisfaction**: Achieve NPS score ≥ 8/10
+- **Support Excellence**: Maintain SLA response time ≤ 4 hours during business hours
 
-### Target Audience
+### Target Users
 
-- **External Clients**: Organizations purchasing web development services
-- **Internal Teams**: Project managers, designers, developers, and support staff
-- **Stakeholders**: Finance teams, reviewers, and decision-makers
+#### External Users (Clients)
+- **Organization Owner**: Full access to organization resources
+- **Organization Admin**: Manage users and projects
+- **Finance**: Handle billing and payments
+- **Reviewer/Stakeholder**: Review and approve deliverables
+- **Guest**: Read-only access to specific resources
+
+#### Internal Users (Team)
+- **Project Manager**: Oversee project delivery
+- **Designer**: Create and manage design assets
+- **Developer**: Implement features and fixes
+- **Support**: Handle client tickets and issues
+- **Finance**: Manage invoicing and payments
+- **Super Admin**: System-wide administration
 
 ---
 
@@ -42,529 +53,468 @@ The JasaWeb Enterprise Client Management System is a comprehensive platform desi
 
 ### Technology Stack
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Client Layer                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ Marketing    │  │ Client       │  │ Admin        │  │
-│  │ Website      │  │ Portal       │  │ Dashboard    │  │
-│  │ (Astro)      │  │ (Astro)      │  │ (Astro)      │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│                    API Layer                             │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │           NestJS REST API                         │  │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │  │
-│  │  │ Auth   │ │Projects│ │ Files  │ │Tickets │   │  │
-│  │  └────────┘ └────────┘ └────────┘ └────────┘   │  │
-│  └──────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────────┐
-│                    Data Layer                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ PostgreSQL   │  │ Redis Cache  │  │ S3 Storage   │  │
-│  │ (Prisma ORM) │  │ (Optional)   │  │ (Files)      │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
+#### Frontend
+- **Framework**: Astro 4.0+ (Marketing Site)
+- **Styling**: Tailwind CSS 3.3+
+- **Components**: Custom component library
+- **State Management**: Native Astro state management
+- **Forms**: Zod schema validation
 
-### Component Overview
+#### Backend
+- **Framework**: NestJS 10.0+
+- **Language**: TypeScript 5.0+
+- **API Style**: RESTful with OpenAPI/Swagger documentation
+- **Authentication**: JWT-based with refresh tokens
+- **Authorization**: Role-Based Access Control (RBAC)
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Frontend** | Astro 4.0 + TypeScript | Server-side rendering, static generation |
-| **Backend API** | NestJS 10.0 | RESTful API, business logic |
-| **Database** | PostgreSQL 15+ | Primary data storage |
-| **ORM** | Prisma 6.16.3 | Type-safe database access |
-| **Authentication** | JWT + Session | Secure user authentication |
-| **File Storage** | S3-compatible | Document and asset storage |
-| **Styling** | Tailwind CSS | Utility-first CSS framework |
-| **Testing** | Vitest + Jest | Unit and integration testing |
+#### Database
+- **Primary Database**: PostgreSQL 15+
+- **ORM**: Prisma 6.16+
+- **Multi-tenancy**: Organization-based data isolation
+- **Caching**: Redis (optional)
+- **Search**: PostgreSQL full-text search
 
-### Deployment Architecture
+#### Infrastructure
+- **Package Manager**: pnpm 8.15+
+- **Containerization**: Docker & Docker Compose
+- **CI/CD**: GitHub Actions
+- **Monitoring**: Sentry (errors), OpenTelemetry (traces)
+- **Storage**: S3-compatible object storage
+
+### Monorepo Structure
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Production                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ CDN          │  │ Load         │  │ Application  │  │
-│  │ (Static)     │→ │ Balancer     │→ │ Servers      │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│                                            ↓             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ Database     │  │ Cache        │  │ Object       │  │
-│  │ (Primary)    │  │ (Redis)      │  │ Storage      │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────┘
+jasaweb/
+├── apps/
+│   ├── web/              # Marketing website (Astro)
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   ├── layouts/
+│   │   │   ├── pages/
+│   │   │   └── styles/
+│   │   └── public/
+│   │
+│   └── api/              # Backend API (NestJS)
+│       ├── src/
+│       │   ├── auth/     # Authentication module
+│       │   ├── users/    # User management
+│       │   ├── projects/ # Project management
+│       │   ├── files/    # File management
+│       │   ├── approvals/# Approval workflow
+│       │   ├── tickets/  # Support tickets
+│       │   ├── invoices/ # Billing & invoicing
+│       │   ├── milestones/# Project milestones
+│       │   └── common/   # Shared utilities
+│       └── prisma/
+│           └── schema.prisma
+│
+├── packages/
+│   ├── ui/               # Shared UI components
+│   ├── config/           # Shared configurations
+│   └── testing/          # Testing utilities
+│
+├── docs/                 # Documentation
+├── tests/                # Integration & E2E tests
+└── scripts/              # Utility scripts
 ```
+
+### Multi-Tenancy Architecture
+
+The system implements organization-based multi-tenancy:
+
+```typescript
+// Automatic tenant isolation
+@Injectable()
+export class MultiTenantPrismaService {
+  constructor(private prisma: PrismaClient) {}
+
+  // All queries automatically filtered by organizationId
+  async findMany(model: string, args: any) {
+    const organizationId = this.getCurrentOrganizationId();
+    return this.prisma[model].findMany({
+      ...args,
+      where: {
+        ...args.where,
+        organizationId,
+      },
+    });
+  }
+}
+```
+
+**Benefits:**
+- Data isolation between organizations
+- Simplified queries (no manual filtering)
+- Enhanced security
+- Scalable architecture
 
 ---
 
-## 🎨 Core Features
+## 🚀 Core Features
 
 ### 1. Organization Management
 
-#### Overview
-Organizations represent client companies or entities using the platform. Each organization has its own isolated data space (multi-tenancy).
+#### Features
+- Multi-organization support
+- Organization settings and preferences
+- Billing configuration
+- Custom branding (future)
 
-#### Key Features
-- **Organization Profile**: Name, billing email, plan, custom settings
-- **Member Management**: Add/remove users, assign roles
-- **Billing Configuration**: Payment methods, invoicing preferences
-- **Custom Settings**: Organization-specific configurations (JSON)
-
-#### Data Model
+#### Key Operations
 ```typescript
-interface Organization {
-  id: string;
-  name: string;
-  billingEmail: string;
-  plan?: string;
-  settings?: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
+// Create organization
+POST /api/organizations
+{
+  "name": "Acme Corporation",
+  "billingEmail": "billing@acme.com",
+  "plan": "enterprise"
+}
+
+// Update organization settings
+PATCH /api/organizations/:id
+{
+  "settings": {
+    "timezone": "Asia/Jakarta",
+    "language": "id",
+    "notifications": {
+      "email": true,
+      "inApp": true
+    }
+  }
 }
 ```
 
-### 2. Project Management
+### 2. User & Membership Management
 
-#### Overview
-Projects are the core entity representing client engagements. Each project tracks deliverables, milestones, files, and approvals.
+#### Features
+- User registration and authentication
+- Role-based access control
+- Multi-organization membership
+- User invitations
+- Profile management
 
-#### Key Features
-- **Project Lifecycle**: Draft → In Progress → Review → Completed
-- **Timeline Management**: Start date, due date, milestone tracking
-- **Status Tracking**: Real-time project status updates
-- **Resource Allocation**: Team assignments, task distribution
+#### User Roles
 
-#### Project States
+| Role | Permissions | Use Case |
+|------|-------------|----------|
+| **Owner** | Full access to organization | Organization founder |
+| **Admin** | Manage users, projects, settings | Team lead |
+| **Finance** | View/manage invoices, payments | Accounting team |
+| **Reviewer** | Review and approve deliverables | Stakeholders |
+| **Member** | View assigned projects | Team members |
+| **Guest** | Read-only access | External reviewers |
+
+### 3. Project Management
+
+#### Features
+- Project creation and tracking
+- Status management (draft, progress, review, completed, paused, cancelled)
+- Timeline and deadline tracking
+- Project statistics and metrics
+- Multi-view support (summary/detail)
+
+#### Key Operations
 ```typescript
-enum ProjectStatus {
-  DRAFT = 'draft',
-  IN_PROGRESS = 'progress',
-  REVIEW = 'review',
-  COMPLETED = 'completed',
-  PAUSED = 'paused',
-  CANCELLED = 'cancelled'
+// Create project
+POST /api/projects
+{
+  "name": "School Website Redesign",
+  "status": "draft",
+  "startAt": "2025-01-01T00:00:00Z",
+  "dueAt": "2025-03-01T00:00:00Z"
 }
-```
 
-#### Data Model
-```typescript
-interface Project {
-  id: string;
-  organizationId: string;
-  name: string;
-  status: ProjectStatus;
-  startAt?: Date;
-  dueAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-
-  // Relations
-  milestones: Milestone[];
-  files: File[];
-  approvals: Approval[];
-  tasks: Task[];
-  tickets: Ticket[];
-  invoices: Invoice[];
+// Get project with statistics
+GET /api/projects/:id/stats
+Response:
+{
+  "milestoneCount": 5,
+  "completedMilestones": 3,
+  "fileCount": 24,
+  "pendingApprovals": 2,
+  "taskCount": 15,
+  "completedTasks": 10,
+  "progress": 60
 }
-```
 
-### 3. Milestone Tracking
+// List projects (summary view)
+GET /api/projects?view=summary
 
-#### Overview
-Milestones represent key deliverables or phases within a project. They help track progress and ensure timely delivery.
-
-#### Key Features
-- **Milestone Planning**: Define key project phases
-- **Due Date Management**: Track deadlines and overdue items
-- **Status Updates**: Todo → In Progress → Completed
-- **Progress Calculation**: Automatic progress percentage
-
-#### Milestone States
-```typescript
-enum MilestoneStatus {
-  TODO = 'todo',
-  IN_PROGRESS = 'in-progress',
-  COMPLETED = 'completed',
-  OVERDUE = 'overdue'
-}
+// List projects (detailed view)
+GET /api/projects?view=detail
 ```
 
 ### 4. File Management
 
-#### Overview
-Centralized file storage for project assets, documents, and deliverables with version control and access management.
-
-#### Key Features
-- **File Upload/Download**: Secure file transfer
-- **Version Control**: Track file versions and changes
-- **Folder Organization**: Hierarchical folder structure
-- **File Preview**: Preview images, PDFs, and documents
-- **Access Control**: Role-based file access
-- **Metadata Tracking**: File size, checksum, upload timestamp
+#### Features
+- File upload and storage
+- Version control
+- Folder organization
+- File preview (images, PDFs)
+- Access control
+- Checksum verification
 
 #### Supported File Types
-- **Documents**: PDF, DOC, DOCX, TXT
+- **Documents**: PDF, DOC, DOCX, XLS, XLSX
 - **Images**: JPG, PNG, GIF, SVG, WEBP
-- **Design Files**: PSD, AI, SKETCH, FIGMA
-- **Archives**: ZIP, RAR, TAR
-- **Videos**: MP4, MOV, AVI (limited)
+- **Design**: PSD, AI, SKETCH, FIGMA (links)
+- **Archives**: ZIP, RAR, 7Z
 
-#### Data Model
+#### Key Operations
 ```typescript
-interface File {
-  id: string;
-  projectId: string;
-  folder?: string;
-  filename: string;
-  version?: string;
-  size?: number;
-  checksum?: string;
-  uploadedById: string;
-  createdAt: Date;
-  updatedAt: Date;
+// Upload file
+POST /api/projects/:projectId/files
+Content-Type: multipart/form-data
+{
+  "file": <binary>,
+  "folder": "designs/homepage",
+  "version": "1.0"
 }
+
+// List files
+GET /api/projects/:projectId/files?folder=designs
+
+// Download file
+GET /api/files/:id/download
 ```
 
 ### 5. Approval Workflow
 
-#### Overview
-Structured approval process for designs, content, and deliverables with audit trail and notification system.
-
-#### Key Features
-- **Approval Requests**: Submit items for client approval
-- **Review Process**: Comment, approve, or reject
-- **Audit Trail**: Track all approval decisions
-- **Notifications**: Email alerts for pending approvals
-- **Timestamping**: Record decision timestamps
+#### Features
+- Multi-stage approval process
+- Comment and feedback system
+- Approval history and audit trail
+- Email notifications
+- Timestamp and digital signature
 
 #### Approval Types
-- **Design Approval**: UI/UX designs, mockups
-- **Content Approval**: Copy, images, videos
-- **Page Approval**: Complete page layouts
-- **Feature Approval**: New functionality
-- **Final Approval**: Project completion sign-off
+- **Design**: UI/UX designs, mockups
+- **Content**: Copy, images, videos
+- **Feature**: New functionality
+- **Page**: Complete page layouts
+- **Deployment**: Production releases
 
-#### Approval States
+#### Key Operations
 ```typescript
-enum ApprovalStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected'
+// Request approval
+POST /api/projects/:projectId/approvals
+{
+  "itemType": "design",
+  "itemId": "homepage-mockup-v2",
+  "note": "Please review the updated homepage design"
 }
+
+// Approve/Reject
+PATCH /api/approvals/:id
+{
+  "status": "approved",
+  "note": "Looks great! Approved for implementation."
+}
+
+// Get approval history
+GET /api/approvals/:id/history
 ```
 
-#### Data Model
-```typescript
-interface Approval {
-  id: string;
-  projectId: string;
-  itemType: string;
-  itemId: string;
-  status: ApprovalStatus;
-  decidedById?: string;
-  decidedAt?: Date;
-  note?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+### 6. Support Ticket System
 
-### 6. Task Management
-
-#### Overview
-Task tracking system for project work items with assignment, status tracking, and deadline management.
-
-#### Key Features
-- **Task Creation**: Define work items and requirements
-- **Assignment**: Assign tasks to team members
-- **Status Tracking**: Monitor task progress
-- **Labels**: Categorize tasks with custom labels
-- **Due Dates**: Set and track task deadlines
-
-#### Task States
-```typescript
-enum TaskStatus {
-  TODO = 'todo',
-  IN_PROGRESS = 'in-progress',
-  REVIEW = 'review',
-  COMPLETED = 'completed'
-}
-```
-
-### 7. Support Ticket System
-
-#### Overview
-Integrated support system for client inquiries, bug reports, and feature requests with SLA tracking.
-
-#### Key Features
-- **Ticket Creation**: Submit support requests
-- **Priority Management**: Low, Medium, High, Critical
-- **SLA Tracking**: Monitor response times
-- **Assignment**: Route tickets to appropriate team members
-- **Status Updates**: Track ticket lifecycle
-- **Resolution Tracking**: Record solutions and outcomes
+#### Features
+- Ticket creation and tracking
+- Priority management (low, medium, high, critical)
+- SLA tracking
+- Assignment and routing
+- Status workflow
+- Resolution tracking
 
 #### Ticket Types
+- **Bug**: Software defects
+- **Feature**: Feature requests
+- **Improvement**: Enhancement suggestions
+- **Question**: General inquiries
+- **Task**: Action items
+
+#### SLA Targets
+
+| Priority | Response Time | Resolution Time |
+|----------|---------------|-----------------|
+| **Critical** | 1 hour | 4 hours |
+| **High** | 4 hours | 24 hours |
+| **Medium** | 8 hours | 3 days |
+| **Low** | 24 hours | 7 days |
+
+#### Key Operations
 ```typescript
-enum TicketType {
-  BUG = 'bug',
-  FEATURE = 'feature',
-  IMPROVEMENT = 'improvement',
-  QUESTION = 'question',
-  TASK = 'task'
+// Create ticket
+POST /api/tickets
+{
+  "type": "bug",
+  "priority": "high",
+  "title": "Login page not loading",
+  "description": "Users cannot access the login page",
+  "projectId": "project-123"
+}
+
+// Update ticket
+PATCH /api/tickets/:id
+{
+  "status": "in-progress",
+  "assigneeId": "support-user-456"
+}
+
+// Resolve ticket
+PATCH /api/tickets/:id/resolve
+{
+  "resolution": "Fixed authentication service configuration",
+  "status": "resolved"
 }
 ```
 
-#### Priority Levels
-```typescript
-enum TicketPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
-}
-```
+### 7. Invoice & Payment Management
 
-#### Ticket States
-```typescript
-enum TicketStatus {
-  OPEN = 'open',
-  IN_PROGRESS = 'in-progress',
-  IN_REVIEW = 'in-review',
-  RESOLVED = 'resolved',
-  CLOSED = 'closed'
-}
-```
-
-### 8. Invoice & Billing
-
-#### Overview
-Comprehensive billing system for project invoicing, payment tracking, and financial reporting.
-
-#### Key Features
-- **Invoice Generation**: Create and send invoices
-- **Payment Tracking**: Monitor payment status
-- **Milestone Billing**: Invoice based on project milestones
-- **Payment Methods**: Multiple payment gateway support
-- **Receipt Generation**: Automatic receipt creation
-- **Currency Support**: Multi-currency invoicing
+#### Features
+- Invoice generation
+- Payment tracking
+- Multiple payment methods
+- Payment history
+- Receipt generation
+- Milestone-based billing
 
 #### Invoice States
+- **Draft**: Being prepared
+- **Issued**: Sent to client
+- **Paid**: Payment received
+- **Overdue**: Past due date
+- **Cancelled**: Voided
+
+#### Key Operations
 ```typescript
-enum InvoiceStatus {
-  DRAFT = 'draft',
-  ISSUED = 'issued',
-  PAID = 'paid',
-  OVERDUE = 'overdue',
-  CANCELLED = 'cancelled'
+// Create invoice
+POST /api/invoices
+{
+  "projectId": "project-123",
+  "amount": 5000000,
+  "currency": "IDR",
+  "issuedAt": "2025-01-01T00:00:00Z",
+  "dueAt": "2025-01-15T00:00:00Z",
+  "status": "issued"
 }
+
+// Record payment
+POST /api/invoices/:id/payments
+{
+  "amount": 5000000,
+  "gateway": "bank_transfer",
+  "reference": "TRX-20250101-001",
+  "paidAt": "2025-01-05T10:30:00Z"
+}
+
+// Download invoice
+GET /api/invoices/:id/download
 ```
 
-#### Data Model
-```typescript
-interface Invoice {
-  id: string;
-  organizationId: string;
-  projectId?: string;
-  amount: number;
-  currency: string;
-  issuedAt: Date;
-  dueAt: Date;
-  status: InvoiceStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
+### 8. Audit Logging
 
-### 9. Audit Logging
-
-#### Overview
-Comprehensive audit trail for all critical system actions ensuring accountability and compliance.
-
-#### Key Features
-- **Action Logging**: Record all important actions
-- **User Tracking**: Track who performed each action
-- **Timestamp Recording**: Precise action timestamps
-- **Metadata Storage**: Additional context for each action
-- **Compliance Support**: Meet regulatory requirements
+#### Features
+- Comprehensive activity tracking
+- User action logging
+- Security audit trail
+- Compliance reporting
+- Searchable logs
 
 #### Logged Actions
-- User authentication (login, logout)
+- User authentication (login, logout, failed attempts)
 - File operations (upload, download, delete)
-- Approval decisions (approve, reject)
-- Project changes (create, update, delete)
-- Invoice operations (create, pay, cancel)
-- User management (add, remove, role change)
+- Approval actions (request, approve, reject)
+- Payment transactions
+- User management (create, update, delete)
+- Settings changes
+
+#### Key Operations
+```typescript
+// Query audit logs
+GET /api/audit-logs?action=file_upload&startDate=2025-01-01
+
+// Get user activity
+GET /api/audit-logs/user/:userId
+
+// Get organization activity
+GET /api/audit-logs/organization/:orgId
+```
 
 ---
 
 ## 👥 User Roles & Permissions
 
-### Role-Based Access Control (RBAC)
-
-The system implements a comprehensive RBAC system with organization-level and project-level permissions.
-
-### External/Client Roles
-
-#### 1. Organization Owner
-**Permissions:**
-- Full access to organization settings
-- Manage all organization members
-- View and manage all projects
-- Access all financial information
-- Configure billing and payment methods
-- Delete organization (with confirmation)
-
-**Use Cases:**
-- Company CEO or business owner
-- Primary decision-maker
-- Contract signatory
-
-#### 2. Organization Admin
-**Permissions:**
-- Manage organization members (except owner)
-- Create and manage projects
-- View financial information
-- Manage files and approvals
-- Create and manage tickets
-
-**Use Cases:**
-- Project manager on client side
-- IT administrator
-- Operations manager
-
-#### 3. Finance Role
-**Permissions:**
-- View all invoices and payments
-- Download receipts and financial reports
-- Update payment information
-- View project budgets
-- Limited project access (read-only)
-
-**Use Cases:**
-- Accounting department
-- Finance manager
-- Bookkeeper
-
-#### 4. Reviewer/Stakeholder
-**Permissions:**
-- View assigned projects
-- Approve or reject submissions
-- Comment on deliverables
-- View project files
-- Limited edit capabilities
-
-**Use Cases:**
-- Content reviewer
-- Design approver
-- Department head
-
-#### 5. Guest (Read-Only)
-**Permissions:**
-- View assigned projects (read-only)
-- View project files
-- View project status and milestones
-- No edit or approval capabilities
-
-**Use Cases:**
-- External stakeholders
-- Temporary consultants
-- Observers
-
-### Internal/Staff Roles
-
-#### 1. Super Admin
-**Permissions:**
-- Full system access
-- Manage all organizations
-- System configuration
-- User management across organizations
-- Access audit logs
-
-#### 2. Project Manager
-**Permissions:**
-- Manage assigned projects
-- Create and assign tasks
-- Upload and organize files
-- Request approvals
-- Create invoices
-- Manage project timeline
-
-#### 3. Designer
-**Permissions:**
-- Upload design files
-- Request design approvals
-- View project requirements
-- Comment on feedback
-
-#### 4. Developer
-**Permissions:**
-- Access project files
-- Update task status
-- Upload deliverables
-- View project specifications
-
-#### 5. Support Agent
-**Permissions:**
-- View and manage tickets
-- Access project information
-- Communicate with clients
-- Update ticket status
-
 ### Permission Matrix
 
-| Action | Owner | Admin | Finance | Reviewer | Guest | PM | Support |
-|--------|-------|-------|---------|----------|-------|----|---------|
-| View Projects | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create Projects | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Edit Projects | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Delete Projects | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Upload Files | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ | ❌ |
-| Download Files | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Delete Files | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Request Approval | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Approve/Reject | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| Create Tickets | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
-| Manage Tickets | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| View Invoices | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| Create Invoices | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Manage Members | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| View Audit Logs | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Feature | Owner | Admin | Finance | Reviewer | Member | Guest |
+|---------|-------|-------|---------|----------|--------|-------|
+| **Organization** |
+| View organization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Update settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Delete organization | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Users** |
+| View users | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Invite users | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Update roles | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Remove users | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Projects** |
+| View projects | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create projects | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Update projects | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Delete projects | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Files** |
+| View files | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Upload files | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Delete files | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Approvals** |
+| View approvals | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Request approval | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
+| Approve/Reject | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| **Tickets** |
+| View tickets | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create tickets | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Update tickets | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Invoices** |
+| View invoices | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Create invoices | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Record payments | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Audit Logs** |
+| View logs | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+### Implementing RBAC
+
+```typescript
+// Role guard decorator
+@Injectable()
+export class RolesGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
+    if (!requiredRoles) return true;
+
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    return requiredRoles.some(role => user.roles?.includes(role));
+  }
+}
+
+// Usage in controller
+@Controller('projects')
+export class ProjectsController {
+  @Post()
+  @Roles('owner', 'admin')
+  @UseGuards(RolesGuard)
+  async create(@Body() dto: CreateProjectDto) {
+    return this.projectsService.create(dto);
+  }
+}
+```
 
 ---
 
-## 🗄️ Data Models
+## 📊 Data Models
 
-### Entity Relationship Diagram
-
-```
-┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│    User     │───────│ Membership  │───────│Organization │
-└─────────────┘       └─────────────┘       └─────────────┘
-       │                                            │
-       │                                            │
-       │              ┌─────────────┐              │
-       └──────────────│   Project   │──────────────┘
-                      └─────────────┘
-                            │
-        ┌───────────────────┼───────────────────┐
-        │                   │                   │
-   ┌─────────┐         ┌─────────┐        ┌─────────┐
-   │Milestone│         │  File   │        │Approval │
-   └─────────┘         └─────────┘        └─────────┘
-        │                   │                   │
-   ┌─────────┐         ┌─────────┐        ┌─────────┐
-   │  Task   │         │ Ticket  │        │ Invoice │
-   └─────────┘         └─────────┘        └─────────┘
-```
-
-### Core Entities
+### Core Models
 
 #### User
 ```prisma
@@ -610,28 +560,11 @@ model Organization {
 }
 ```
 
-#### Membership
-```prisma
-model Membership {
-  id             String       @id @default(cuid())
-  role           String       // owner, admin, reviewer, finance, member
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  userId         String
-  user           User         @relation(fields: [userId], references: [id])
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-
-  @@unique([userId, organizationId])
-}
-```
-
 #### Project
 ```prisma
 model Project {
   id             String       @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
   name           String
   status         String
   startAt        DateTime?
@@ -640,6 +573,7 @@ model Project {
   updatedAt      DateTime     @updatedAt
 
   // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id])
   milestones     Milestone[]
   files          File[]
   approvals      Approval[]
@@ -651,208 +585,146 @@ model Project {
 
 ### Database Indexes
 
-For optimal performance, the following indexes are recommended:
-
 ```sql
--- User indexes
-CREATE INDEX idx_user_email ON "User"(email);
+-- Performance indexes
+CREATE INDEX idx_projects_organization ON projects(organization_id);
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_memberships_user ON memberships(user_id);
+CREATE INDEX idx_memberships_org ON memberships(organization_id);
+CREATE INDEX idx_tickets_status ON tickets(status);
+CREATE INDEX idx_tickets_priority ON tickets(priority);
+CREATE INDEX idx_invoices_status ON invoices(status);
+CREATE INDEX idx_audit_logs_org ON audit_logs(organization_id);
+CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
 
--- Organization indexes
-CREATE INDEX idx_org_billing_email ON "Organization"(billingEmail);
-
--- Membership indexes
-CREATE INDEX idx_membership_user ON "Membership"(userId);
-CREATE INDEX idx_membership_org ON "Membership"(organizationId);
-
--- Project indexes
-CREATE INDEX idx_project_org ON "Project"(organizationId);
-CREATE INDEX idx_project_status ON "Project"(status);
-CREATE INDEX idx_project_dates ON "Project"(startAt, dueAt);
-
--- File indexes
-CREATE INDEX idx_file_project ON "File"(projectId);
-CREATE INDEX idx_file_uploader ON "File"(uploadedById);
-
--- Ticket indexes
-CREATE INDEX idx_ticket_org ON "Ticket"(organizationId);
-CREATE INDEX idx_ticket_project ON "Ticket"(projectId);
-CREATE INDEX idx_ticket_status ON "Ticket"(status);
-CREATE INDEX idx_ticket_priority ON "Ticket"(priority);
-
--- Invoice indexes
-CREATE INDEX idx_invoice_org ON "Invoice"(organizationId);
-CREATE INDEX idx_invoice_project ON "Invoice"(projectId);
-CREATE INDEX idx_invoice_status ON "Invoice"(status);
+-- Composite indexes
+CREATE INDEX idx_projects_org_status ON projects(organization_id, status);
+CREATE INDEX idx_tickets_org_status ON tickets(organization_id, status);
 ```
 
 ---
 
 ## 🔌 API Reference
 
-### Base URL
-```
-Development: http://localhost:3000/api
-Production: https://api.jasaweb.com/api
-```
-
 ### Authentication
-
-All API requests require authentication using JWT tokens.
 
 #### Login
 ```http
-POST /auth/login
+POST /api/auth/login
 Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "securepassword"
+  "password": "securePassword123"
 }
 
-Response:
+Response 200:
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
   "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
   "user": {
-    "id": "user-id",
+    "id": "user-123",
     "email": "user@example.com",
     "name": "John Doe"
   }
 }
 ```
 
+#### Register
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "password": "securePassword123",
+  "name": "Jane Smith"
+}
+
+Response 201:
+{
+  "id": "user-456",
+  "email": "newuser@example.com",
+  "name": "Jane Smith"
+}
+```
+
 #### Refresh Token
 ```http
-POST /auth/refresh
+POST /api/auth/refresh
 Content-Type: application/json
 
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 
-Response:
+Response 200:
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIs...",
   "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
-### Projects API
+### Projects
 
 #### List Projects
 ```http
-GET /projects?view=summary
+GET /api/projects?view=summary&status=progress
 Authorization: Bearer {accessToken}
 
-Query Parameters:
-- view: 'summary' | 'detail' (default: 'summary')
-- status: Filter by status
-- organizationId: Filter by organization
-
-Response:
-{
-  "data": [
-    {
-      "id": "project-id",
-      "name": "Website Redesign",
-      "status": "in-progress",
-      "startAt": "2025-01-01T00:00:00Z",
-      "dueAt": "2025-03-01T00:00:00Z",
-      "_count": {
-        "milestones": 5,
-        "files": 23,
-        "tasks": 15
-      }
+Response 200:
+[
+  {
+    "id": "project-123",
+    "name": "School Website",
+    "status": "progress",
+    "startAt": "2025-01-01T00:00:00Z",
+    "dueAt": "2025-03-01T00:00:00Z",
+    "_count": {
+      "milestones": 5,
+      "files": 24,
+      "approvals": 3,
+      "tasks": 15,
+      "tickets": 2,
+      "invoices": 1
     }
-  ],
-  "total": 1
-}
-```
-
-#### Get Project Details
-```http
-GET /projects/{id}
-Authorization: Bearer {accessToken}
-
-Response:
-{
-  "id": "project-id",
-  "name": "Website Redesign",
-  "status": "in-progress",
-  "startAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-03-01T00:00:00Z",
-  "milestones": [...],
-  "files": [...],
-  "approvals": [...],
-  "tasks": [...]
-}
+  }
+]
 ```
 
 #### Create Project
 ```http
-POST /projects
+POST /api/projects
 Authorization: Bearer {accessToken}
 Content-Type: application/json
 
 {
-  "name": "New Website Project",
+  "name": "News Portal Redesign",
   "status": "draft",
-  "startAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-03-01T00:00:00Z"
+  "startAt": "2025-02-01T00:00:00Z",
+  "dueAt": "2025-04-01T00:00:00Z"
 }
 
-Response:
+Response 201:
 {
-  "id": "new-project-id",
-  "name": "New Website Project",
+  "id": "project-789",
+  "name": "News Portal Redesign",
   "status": "draft",
-  "organizationId": "org-id",
-  "createdAt": "2025-01-01T00:00:00Z"
-}
-```
-
-#### Update Project
-```http
-PUT /projects/{id}
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-
-{
-  "name": "Updated Project Name",
-  "status": "in-progress"
-}
-
-Response:
-{
-  "id": "project-id",
-  "name": "Updated Project Name",
-  "status": "in-progress",
-  "updatedAt": "2025-01-02T00:00:00Z"
-}
-```
-
-#### Delete Project
-```http
-DELETE /projects/{id}
-Authorization: Bearer {accessToken}
-
-Response:
-{
-  "message": "Project deleted successfully",
-  "id": "project-id"
+  "organizationId": "org-123",
+  "createdAt": "2025-01-06T10:00:00Z"
 }
 ```
 
 #### Get Project Statistics
 ```http
-GET /projects/{id}/stats
+GET /api/projects/project-123/stats
 Authorization: Bearer {accessToken}
 
-Response:
+Response 200:
 {
   "milestoneCount": 5,
   "completedMilestones": 3,
-  "fileCount": 23,
+  "fileCount": 24,
   "pendingApprovals": 2,
   "taskCount": 15,
   "completedTasks": 10,
@@ -860,173 +732,45 @@ Response:
 }
 ```
 
-### Files API
-
-#### Upload File
-```http
-POST /files
-Authorization: Bearer {accessToken}
-Content-Type: multipart/form-data
-
-Form Data:
-- file: [binary file data]
-- projectId: "project-id"
-- folder: "designs" (optional)
-
-Response:
-{
-  "id": "file-id",
-  "filename": "design-mockup.png",
-  "size": 1024000,
-  "projectId": "project-id",
-  "uploadedById": "user-id",
-  "createdAt": "2025-01-01T00:00:00Z"
-}
-```
-
-#### Download File
-```http
-GET /files/{id}/download
-Authorization: Bearer {accessToken}
-
-Response: Binary file data
-```
-
-### Approvals API
-
-#### Request Approval
-```http
-POST /approvals
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-
-{
-  "projectId": "project-id",
-  "itemType": "design",
-  "itemId": "design-id",
-  "note": "Please review the homepage design"
-}
-
-Response:
-{
-  "id": "approval-id",
-  "status": "pending",
-  "createdAt": "2025-01-01T00:00:00Z"
-}
-```
-
-#### Approve/Reject
-```http
-PUT /approvals/{id}
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-
-{
-  "status": "approved",
-  "note": "Looks great! Approved."
-}
-
-Response:
-{
-  "id": "approval-id",
-  "status": "approved",
-  "decidedById": "user-id",
-  "decidedAt": "2025-01-01T12:00:00Z",
-  "note": "Looks great! Approved."
-}
-```
-
-### Tickets API
-
-#### Create Ticket
-```http
-POST /tickets
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-
-{
-  "projectId": "project-id",
-  "type": "bug",
-  "priority": "high",
-  "title": "Login button not working",
-  "description": "Users cannot click the login button on mobile"
-}
-
-Response:
-{
-  "id": "ticket-id",
-  "status": "open",
-  "createdAt": "2025-01-01T00:00:00Z"
-}
-```
-
-#### Update Ticket Status
-```http
-PUT /tickets/{id}
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-
-{
-  "status": "resolved",
-  "resolution": "Fixed CSS issue causing button to be unclickable"
-}
-```
-
-### Invoices API
-
-#### Create Invoice
-```http
-POST /invoices
-Authorization: Bearer {accessToken}
-Content-Type: application/json
-
-{
-  "projectId": "project-id",
-  "amount": 5000.00,
-  "currency": "USD",
-  "issuedAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-01-15T00:00:00Z"
-}
-```
-
-#### List Invoices
-```http
-GET /invoices?status=issued
-Authorization: Bearer {accessToken}
-
-Query Parameters:
-- status: Filter by status
-- projectId: Filter by project
-- organizationId: Filter by organization
-```
-
 ### Error Responses
 
-All API errors follow this format:
-
-```json
+```http
+// 400 Bad Request
 {
   "statusCode": 400,
   "message": "Validation failed",
-  "error": "Bad Request",
-  "details": [
+  "errors": [
     {
       "field": "email",
       "message": "Invalid email format"
     }
   ]
 }
-```
 
-Common HTTP Status Codes:
-- `200 OK`: Successful request
-- `201 Created`: Resource created successfully
-- `400 Bad Request`: Invalid request data
-- `401 Unauthorized`: Authentication required
-- `403 Forbidden`: Insufficient permissions
-- `404 Not Found`: Resource not found
-- `409 Conflict`: Resource conflict
-- `500 Internal Server Error`: Server error
+// 401 Unauthorized
+{
+  "statusCode": 401,
+  "message": "Invalid credentials"
+}
+
+// 403 Forbidden
+{
+  "statusCode": 403,
+  "message": "Insufficient permissions"
+}
+
+// 404 Not Found
+{
+  "statusCode": 404,
+  "message": "Project with ID project-999 not found"
+}
+
+// 500 Internal Server Error
+{
+  "statusCode": 500,
+  "message": "Internal server error"
+}
+```
 
 ---
 
@@ -1034,652 +778,742 @@ Common HTTP Status Codes:
 
 ### Dashboard
 
-The client dashboard provides an at-a-glance view of all active projects and important metrics.
+#### Overview Widgets
+- **Project Status**: Current project progress and milestones
+- **Open Tickets**: Recent support tickets requiring attention
+- **Pending Approvals**: Items awaiting review
+- **Invoices**: Outstanding payments and billing status
+- **Quick Links**: Staging, production, documentation
+- **Activity Feed**: Recent project activities
 
-#### Key Widgets
-
-1. **Project Overview**
-   - Active projects count
-   - Project progress indicators
-   - Upcoming milestones
-   - Overdue items alert
-
-2. **Recent Activity**
-   - Latest file uploads
-   - Recent approvals
-   - New tickets
-   - Status updates
-
-3. **Pending Actions**
-   - Approvals awaiting decision
-   - Overdue invoices
-   - Unanswered tickets
-   - Required content submissions
-
-4. **Quick Links**
-   - Staging environment
-   - Production site
-   - Project documentation
-   - Support contact
-
-5. **Financial Summary**
-   - Outstanding invoices
-   - Payment history
-   - Budget utilization
-   - Next payment due
+#### Metrics Display
+```typescript
+interface DashboardMetrics {
+  projects: {
+    total: number;
+    active: number;
+    completed: number;
+  };
+  tickets: {
+    open: number;
+    inProgress: number;
+    resolved: number;
+  };
+  approvals: {
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  invoices: {
+    outstanding: number;
+    overdue: number;
+    paid: number;
+  };
+}
+```
 
 ### Project View
 
-Detailed project interface with multiple tabs:
+#### Project Details
+- Project information and timeline
+- Milestone progress tracker
+- Team members and roles
+- Recent activity log
+- File browser
+- Approval queue
 
-#### Overview Tab
-- Project status and timeline
-- Milestone progress
-- Team members
-- Quick stats
+#### Timeline View
+```typescript
+interface ProjectTimeline {
+  milestones: Array<{
+    id: string;
+    title: string;
+    dueAt: Date;
+    status: 'todo' | 'in-progress' | 'completed' | 'overdue';
+    progress: number;
+  }>;
+  tasks: Array<{
+    id: string;
+    title: string;
+    assignee: string;
+    status: string;
+    dueAt: Date;
+  }>;
+}
+```
 
-#### Files Tab
-- Folder structure
-- File upload/download
-- Version history
+### File Management
+
+#### Features
+- Drag-and-drop upload
+- Folder organization
 - File preview
+- Version history
+- Download/share
+- Search and filter
 
-#### Approvals Tab
-- Pending approvals
+#### File Browser Interface
+```typescript
+interface FileBrowser {
+  currentFolder: string;
+  files: Array<{
+    id: string;
+    name: string;
+    type: string;
+    size: number;
+    version: string;
+    uploadedBy: string;
+    uploadedAt: Date;
+    thumbnail?: string;
+  }>;
+  breadcrumbs: string[];
+  actions: {
+    upload: () => void;
+    createFolder: () => void;
+    download: (fileId: string) => void;
+    delete: (fileId: string) => void;
+  };
+}
+```
+
+### Approval Center
+
+#### Features
+- Pending approvals list
 - Approval history
-- Submit new items
-- Review and comment
+- Comment and feedback
+- Side-by-side comparison
+- Batch approval (future)
 
-#### Tasks Tab
-- Task list
-- Status tracking
-- Assignment view
-- Due dates
+#### Approval Interface
+```typescript
+interface ApprovalItem {
+  id: string;
+  type: 'design' | 'content' | 'feature' | 'page';
+  title: string;
+  description: string;
+  attachments: File[];
+  requestedBy: User;
+  requestedAt: Date;
+  status: 'pending' | 'approved' | 'rejected';
+  comments: Comment[];
+  actions: {
+    approve: (note?: string) => void;
+    reject: (reason: string) => void;
+    comment: (text: string) => void;
+  };
+}
+```
 
-#### Tickets Tab
-- Open tickets
-- Ticket history
-- Create new ticket
-- SLA status
+### Support Center
 
-#### Invoices Tab
-- Invoice list
-- Payment status
-- Download receipts
+#### Features
+- Create support tickets
+- Track ticket status
+- View ticket history
+- Add comments and attachments
+- Rate support quality
+
+#### Ticket Interface
+```typescript
+interface SupportTicket {
+  id: string;
+  type: 'bug' | 'feature' | 'question' | 'task';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  title: string;
+  description: string;
+  attachments: File[];
+  assignee?: User;
+  slaDueAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  comments: Comment[];
+  resolution?: string;
+}
+```
+
+### Billing Center
+
+#### Features
+- View invoices
 - Payment history
+- Download receipts
+- Payment methods
+- Billing information
 
-### Notification System
-
-#### Notification Types
-
-1. **Email Notifications**
-   - Approval requests
-   - Ticket updates
-   - Invoice reminders
-   - Milestone completions
-   - File uploads
-
-2. **In-App Notifications**
-   - Real-time updates
-   - Action required alerts
-   - Status changes
-   - Comments and mentions
-
-3. **Notification Preferences**
-   - Email frequency (immediate, daily digest, weekly)
-   - Notification categories
-   - Quiet hours
-   - Channel preferences
-
-### User Settings
-
-#### Profile Management
-- Update personal information
-- Change password
-- Upload profile picture
-- Set timezone and language
-
-#### Organization Settings
-- Update organization details
-- Manage billing information
-- Configure notification preferences
-- Customize portal appearance
-
-#### Security Settings
-- Two-factor authentication
-- Active sessions
-- Login history
-- API keys (for integrations)
-
----
-
-## 🏢 Multi-Tenancy
-
-### Overview
-
-JasaWeb implements organization-based multi-tenancy, ensuring complete data isolation between different client organizations.
-
-### Implementation
-
-#### Data Isolation
-
-Every data model includes an `organizationId` field that automatically filters queries:
-
+#### Invoice Display
 ```typescript
-// Multi-tenant Prisma service
-@Injectable()
-export class MultiTenantPrismaService extends PrismaClient {
-  constructor() {
-    super();
-
-    // Automatically add organizationId filter
-    this.$use(async (params, next) => {
-      const organizationId = getCurrentOrganizationId();
-
-      if (params.model && organizationId) {
-        if (params.action === 'findMany' || params.action === 'findFirst') {
-          params.args.where = {
-            ...params.args.where,
-            organizationId
-          };
-        }
-      }
-
-      return next(params);
-    });
-  }
+interface Invoice {
+  id: string;
+  number: string;
+  project: Project;
+  amount: number;
+  currency: string;
+  issuedAt: Date;
+  dueAt: Date;
+  status: 'draft' | 'issued' | 'paid' | 'overdue' | 'cancelled';
+  items: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    total: number;
+  }>;
+  payments: Payment[];
+  actions: {
+    download: () => void;
+    pay: () => void;
+  };
 }
 ```
-
-#### Organization Context
-
-The current organization is determined from:
-1. JWT token claims
-2. User's active membership
-3. Request headers (for API calls)
-
-```typescript
-// Extract organization from JWT
-@Injectable()
-export class OrganizationGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
-
-    // Get organization from user's membership
-    const organizationId = user.activeOrganizationId;
-
-    // Attach to request
-    request.organizationId = organizationId;
-
-    return true;
-  }
-}
-```
-
-### Benefits
-
-1. **Data Security**: Complete isolation between organizations
-2. **Performance**: Efficient queries with automatic filtering
-3. **Scalability**: Easy to add new organizations
-4. **Compliance**: Meet data residency requirements
-
-### Best Practices
-
-1. **Always Include Organization ID**: Never query without organization context
-2. **Validate Access**: Check user membership before operations
-3. **Audit Trail**: Log all cross-organization access attempts
-4. **Test Isolation**: Verify data cannot leak between organizations
 
 ---
 
 ## 🔒 Security & Compliance
 
-### Authentication
+### Authentication Security
 
-#### JWT-Based Authentication
+#### Password Requirements
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
 
+#### Password Hashing
 ```typescript
-// Token structure
-{
-  "sub": "user-id",
-  "email": "user@example.com",
-  "organizationId": "org-id",
-  "role": "admin",
-  "iat": 1640000000,
-  "exp": 1640003600
+import * as bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 12;
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 ```
 
-#### Session Management
-
-- Access tokens: 15 minutes expiry
-- Refresh tokens: 7 days expiry
-- Session tracking in database
-- Automatic token rotation
-
-#### Password Security
-
-- Bcrypt hashing (12 rounds)
-- Password strength requirements
-- Password history (prevent reuse)
-- Account lockout after failed attempts
-
-### Authorization
-
-#### Role-Based Access Control
-
+#### JWT Configuration
 ```typescript
-// Guard implementation
-@UseGuards(RolesGuard)
-@Roles('admin', 'owner')
-async deleteProject(@Param('id') id: string) {
-  return this.projectService.remove(id);
-}
-```
-
-#### Resource-Level Permissions
-
-```typescript
-// Check project ownership
-async canAccessProject(userId: string, projectId: string): Promise<boolean> {
-  const project = await this.prisma.project.findUnique({
-    where: { id: projectId },
-    include: {
-      organization: {
-        include: {
-          memberships: {
-            where: { userId }
-          }
-        }
-      }
-    }
-  });
-
-  return project?.organization.memberships.length > 0;
-}
+export const jwtConfig = {
+  accessToken: {
+    secret: process.env.JWT_SECRET,
+    expiresIn: '15m',
+  },
+  refreshToken: {
+    secret: process.env.JWT_REFRESH_SECRET,
+    expiresIn: '7d',
+  },
+};
 ```
 
 ### Data Protection
 
-#### Encryption
+#### Encryption at Rest
+- Database encryption (PostgreSQL)
+- File storage encryption (S3 SSE)
+- Backup encryption
 
-- **At Rest**: Database encryption, encrypted backups
-- **In Transit**: TLS 1.3, HTTPS only
-- **File Storage**: S3 server-side encryption
+#### Encryption in Transit
+- HTTPS/TLS 1.3
+- Certificate pinning
+- Secure WebSocket connections
 
-#### Data Privacy
+### Access Control
 
-- GDPR compliance
+#### Multi-Factor Authentication (Future)
+- TOTP (Time-based One-Time Password)
+- SMS verification
+- Email verification
+- Backup codes
+
+#### Session Management
+```typescript
+interface Session {
+  id: string;
+  userId: string;
+  token: string;
+  expiresAt: Date;
+  userAgent: string;
+  ipAddress: string;
+  revokedAt?: Date;
+}
+```
+
+### Compliance
+
+#### GDPR Compliance
 - Data minimization
+- Right to access
 - Right to erasure
 - Data portability
-- Privacy by design
+- Consent management
+
+#### Indonesian Data Protection (UU PDP)
+- Data localization
+- Consent requirements
+- Data breach notification
+- Privacy policy
 
 ### Security Best Practices
 
 #### Input Validation
-
 ```typescript
-// DTO validation with class-validator
-export class CreateProjectDto {
-  @IsString()
-  @MinLength(3)
-  @MaxLength(100)
-  name: string;
+import { z } from 'zod';
 
-  @IsEnum(ProjectStatus)
-  status: ProjectStatus;
-
-  @IsOptional()
-  @IsDate()
-  startAt?: Date;
-}
+const createProjectSchema = z.object({
+  name: z.string().min(3).max(100),
+  status: z.enum(['draft', 'progress', 'review', 'completed']),
+  startAt: z.date().optional(),
+  dueAt: z.date().optional(),
+});
 ```
 
 #### SQL Injection Prevention
-
-- Prisma ORM with parameterized queries
-- No raw SQL queries without sanitization
-- Input validation on all endpoints
+- Use Prisma ORM (parameterized queries)
+- Input sanitization
+- Prepared statements
 
 #### XSS Prevention
-
-- Content Security Policy headers
+- Content Security Policy (CSP)
 - Output encoding
-- Sanitize user input
-- Use framework protections
+- HTML sanitization
 
 #### CSRF Protection
-
-- CSRF tokens for state-changing operations
-- SameSite cookie attribute
+- CSRF tokens
+- SameSite cookies
 - Origin validation
-
-### Audit & Compliance
-
-#### Audit Logging
-
-All critical actions are logged:
-
-```typescript
-await this.auditLog.create({
-  organizationId,
-  actorId: userId,
-  action: 'project.delete',
-  target: 'Project',
-  meta: {
-    projectId,
-    projectName
-  }
-});
-```
-
-#### Compliance Features
-
-- **GDPR**: Data export, deletion, consent management
-- **SOC 2**: Access controls, audit trails, encryption
-- **ISO 27001**: Security policies, risk management
-- **PCI DSS**: Payment data handling (if applicable)
-
-### Security Monitoring
-
-#### Threat Detection
-
-- Failed login attempts monitoring
-- Unusual access patterns
-- Rate limiting
-- IP blocking
-
-#### Incident Response
-
-1. Detection and analysis
-2. Containment
-3. Eradication
-4. Recovery
-5. Post-incident review
 
 ---
 
-## 🔗 Integration Guide
+## ⚡ Performance Optimization
 
-### Webhook Integration
+### Database Optimization
 
-#### Available Webhooks
-
+#### Query Optimization
 ```typescript
-// Webhook events
-enum WebhookEvent {
-  PROJECT_CREATED = 'project.created',
-  PROJECT_UPDATED = 'project.updated',
-  APPROVAL_REQUESTED = 'approval.requested',
-  APPROVAL_DECIDED = 'approval.decided',
-  TICKET_CREATED = 'ticket.created',
-  TICKET_RESOLVED = 'ticket.resolved',
-  INVOICE_ISSUED = 'invoice.issued',
-  INVOICE_PAID = 'invoice.paid'
-}
-```
+// Use select to fetch only needed fields
+const projects = await prisma.project.findMany({
+  select: {
+    id: true,
+    name: true,
+    status: true,
+    _count: {
+      select: {
+        milestones: true,
+        files: true,
+      },
+    },
+  },
+});
 
-#### Webhook Payload
-
-```json
-{
-  "event": "project.created",
-  "timestamp": "2025-01-01T00:00:00Z",
-  "organizationId": "org-id",
-  "data": {
-    "id": "project-id",
-    "name": "New Project",
-    "status": "draft"
-  }
-}
-```
-
-### API Integration
-
-#### Authentication
-
-```typescript
-// Generate API key
-const apiKey = await generateApiKey(organizationId);
-
-// Use in requests
-fetch('https://api.jasaweb.com/api/projects', {
-  headers: {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json'
-  }
+// Use aggregations for metrics
+const stats = await prisma.project.aggregate({
+  where: { organizationId },
+  _count: true,
+  _avg: { progress: true },
 });
 ```
 
-### Third-Party Integrations
+#### Connection Pooling
+```typescript
+// Prisma connection pool configuration
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 
-#### Email Service
+  // Connection pool settings
+  connection_limit = 10
+  pool_timeout = 20
+}
+```
+
+#### Caching Strategy
+```typescript
+// Redis caching example
+import { Redis } from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
+
+async function getCachedProject(id: string) {
+  const cached = await redis.get(`project:${id}`);
+  if (cached) return JSON.parse(cached);
+
+  const project = await prisma.project.findUnique({ where: { id } });
+  await redis.setex(`project:${id}`, 3600, JSON.stringify(project));
+
+  return project;
+}
+```
+
+### API Performance
+
+#### Response Time Targets
+- **Health Check**: < 50ms
+- **List Endpoints**: < 200ms
+- **Detail Endpoints**: < 150ms
+- **Create/Update**: < 300ms
+- **File Upload**: < 2s (depends on size)
+
+#### Rate Limiting
+```typescript
+import { ThrottlerModule } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 100,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+#### Pagination
+```typescript
+interface PaginationParams {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+async function findPaginated(params: PaginationParams) {
+  const { page, limit, sortBy, sortOrder } = params;
+  const skip = (page - 1) * limit;
+
+  const [items, total] = await Promise.all([
+    prisma.project.findMany({
+      skip,
+      take: limit,
+      orderBy: sortBy ? { [sortBy]: sortOrder } : undefined,
+    }),
+    prisma.project.count(),
+  ]);
+
+  return {
+    items,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+```
+
+### Frontend Performance
+
+#### Asset Optimization
+- Image optimization (WebP, AVIF)
+- Code splitting
+- Lazy loading
+- CDN delivery
+
+#### Performance Metrics
+- **First Contentful Paint (FCP)**: < 1.8s
+- **Largest Contentful Paint (LCP)**: < 2.5s
+- **Time to Interactive (TTI)**: < 3.8s
+- **Cumulative Layout Shift (CLS)**: < 0.1
+
+---
+
+## 🚀 Deployment Guide
+
+### Environment Setup
+
+#### Development
+```bash
+# Install dependencies
+pnpm install
+
+# Setup environment
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+
+# Start database
+docker-compose up -d postgres
+
+# Run migrations
+pnpm db:migrate
+
+# Start development servers
+pnpm dev
+```
+
+#### Staging
+```bash
+# Build applications
+pnpm build
+
+# Run database migrations
+pnpm db:migrate:deploy
+
+# Start applications
+pnpm start
+```
+
+#### Production
+```bash
+# Build for production
+NODE_ENV=production pnpm build
+
+# Run migrations
+NODE_ENV=production pnpm db:migrate:deploy
+
+# Start with PM2
+pm2 start ecosystem.config.js
+```
+
+### Docker Deployment
+
+#### Docker Compose
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: jasaweb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "4321:4321"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+```
+
+### Health Checks
 
 ```typescript
-// Email configuration
-{
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+@Controller('health')
+export class HealthController {
+  @Get()
+  async check() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: await this.checkDatabase(),
+      redis: await this.checkRedis(),
+    };
   }
 }
-```
-
-#### Payment Gateway
-
-```typescript
-// Payment integration
-interface PaymentGateway {
-  createPayment(amount: number, currency: string): Promise<Payment>;
-  verifyPayment(paymentId: string): Promise<boolean>;
-  refundPayment(paymentId: string): Promise<Refund>;
-}
-```
-
-#### Analytics
-
-```typescript
-// Google Analytics 4
-gtag('event', 'project_created', {
-  project_id: projectId,
-  organization_id: organizationId
-});
 ```
 
 ---
 
 ## 📚 Best Practices
 
-### Development
+### Code Organization
 
-1. **Follow TypeScript Best Practices**
-   - Use strict mode
-   - Define interfaces for all data structures
-   - Avoid `any` type
+#### Module Structure
+```
+feature/
+├── dto/
+│   ├── create-feature.dto.ts
+│   ├── update-feature.dto.ts
+│   └── feature-response.dto.ts
+├── entities/
+│   └── feature.entity.ts
+├── feature.controller.ts
+├── feature.service.ts
+├── feature.module.ts
+└── feature.service.spec.ts
+```
 
-2. **Code Organization**
-   - One feature per module
-   - Separate concerns (controller, service, repository)
-   - Use dependency injection
+#### Naming Conventions
+- **Files**: kebab-case (e.g., `project-service.ts`)
+- **Classes**: PascalCase (e.g., `ProjectService`)
+- **Functions**: camelCase (e.g., `createProject`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_FILE_SIZE`)
+- **Interfaces**: PascalCase with 'I' prefix (e.g., `IProject`)
 
-3. **Error Handling**
-   - Use custom exceptions
-   - Provide meaningful error messages
-   - Log errors appropriately
+### Error Handling
 
-4. **Testing**
-   - Write unit tests for business logic
-   - Integration tests for API endpoints
-   - E2E tests for critical workflows
+```typescript
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
 
-### Performance
+    const status = exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
 
-1. **Database Optimization**
-   - Use appropriate indexes
-   - Optimize queries (avoid N+1)
-   - Use pagination for large datasets
-   - Implement caching where appropriate
+    const message = exception instanceof HttpException
+      ? exception.message
+      : 'Internal server error';
 
-2. **API Performance**
-   - Use summary views for list endpoints
-   - Implement rate limiting
-   - Enable compression
-   - Use CDN for static assets
+    response.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      message,
+    });
+  }
+}
+```
 
-3. **Frontend Performance**
-   - Lazy load components
-   - Optimize images
-   - Minimize bundle size
-   - Use server-side rendering
+### Testing Strategy
 
-### Security
+#### Unit Tests
+```typescript
+describe('ProjectService', () => {
+  let service: ProjectService;
+  let prisma: PrismaService;
 
-1. **Authentication**
-   - Use strong password policies
-   - Implement 2FA
-   - Rotate tokens regularly
-   - Monitor suspicious activity
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [ProjectService, PrismaService],
+    }).compile();
 
-2. **Authorization**
-   - Implement RBAC consistently
-   - Validate permissions on every request
-   - Use principle of least privilege
+    service = module.get<ProjectService>(ProjectService);
+    prisma = module.get<PrismaService>(PrismaService);
+  });
 
-3. **Data Protection**
-   - Encrypt sensitive data
-   - Sanitize user input
-   - Use HTTPS everywhere
-   - Regular security audits
+  it('should create project', async () => {
+    const dto = { name: 'Test Project' };
+    const result = await service.create(dto, 'org-123');
+
+    expect(result.name).toBe(dto.name);
+    expect(result.organizationId).toBe('org-123');
+  });
+});
+```
+
+#### Integration Tests
+```typescript
+describe('Projects API', () => {
+  let app: INestApplication;
+  let token: string;
+
+  beforeAll(async () => {
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    await app.init();
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'test@example.com', password: 'password' });
+
+    token = response.body.accessToken;
+  });
+
+  it('should create and retrieve project', async () => {
+    const createResponse = await request(app.getHttpServer())
+      .post('/projects')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Test Project' })
+      .expect(201);
+
+    const projectId = createResponse.body.id;
+
+    const getResponse = await request(app.getHttpServer())
+      .get(`/projects/${projectId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(getResponse.body.name).toBe('Test Project');
+  });
+});
+```
+
+### Documentation
+
+#### API Documentation
+```typescript
+@ApiTags('projects')
+@Controller('projects')
+export class ProjectsController {
+  @Post()
+  @ApiOperation({ summary: 'Create a new project' })
+  @ApiResponse({ status: 201, description: 'Project created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async create(@Body() dto: CreateProjectDto) {
+    return this.projectsService.create(dto);
+  }
+}
+```
+
+### Security Checklist
+
+- [ ] All endpoints require authentication
+- [ ] RBAC implemented for all resources
+- [ ] Input validation on all endpoints
+- [ ] SQL injection prevention (Prisma ORM)
+- [ ] XSS prevention (CSP, sanitization)
+- [ ] CSRF protection enabled
+- [ ] Rate limiting configured
+- [ ] HTTPS enforced
+- [ ] Secrets stored securely
+- [ ] Audit logging enabled
+- [ ] Regular security updates
+- [ ] Dependency scanning
 
 ---
 
-## 🔧 Troubleshooting
+## 📞 Support & Resources
 
-### Common Issues
+### Documentation
+- [API Documentation](http://localhost:3000/api/docs)
+- [Testing Strategy](./testing-strategy.md)
+- [Optimization Plan](./optimization-plan.md)
+- [Project Plan](../plan.md)
 
-#### Authentication Issues
+### Community
+- [GitHub Issues](https://github.com/jasaweb/jasaweb/issues)
+- [GitHub Discussions](https://github.com/jasaweb/jasaweb/discussions)
+- [Email Support](mailto:support@jasaweb.com)
 
-**Problem**: Token expired error
-```
-Solution: Use refresh token to get new access token
-POST /auth/refresh with refreshToken
-```
-
-**Problem**: Unauthorized access
-```
-Solution: Check user role and permissions
-Verify JWT token is valid and not expired
-```
-
-#### Database Issues
-
-**Problem**: Connection timeout
-```
-Solution: Check database connection string
-Verify database is running
-Check network connectivity
-```
-
-**Problem**: Slow queries
-```
-Solution: Add appropriate indexes
-Optimize query structure
-Use pagination for large datasets
-```
-
-#### File Upload Issues
-
-**Problem**: File upload fails
-```
-Solution: Check file size limits
-Verify S3 credentials
-Check network connectivity
-```
-
-**Problem**: File not found
-```
-Solution: Verify file ID is correct
-Check user has access to project
-Verify file exists in storage
-```
-
-### Debug Mode
-
-Enable debug logging:
-
-```bash
-# Set environment variable
-DEBUG=jasaweb:* pnpm dev
-
-# Or in .env file
-LOG_LEVEL=debug
-```
-
-### Support Resources
-
-- **Documentation**: https://docs.jasaweb.com
-- **API Reference**: https://api.jasaweb.com/docs
-- **GitHub Issues**: https://github.com/jasaweb/jasaweb/issues
-- **Email Support**: support@jasaweb.com
-- **Community Forum**: https://community.jasaweb.com
+### Contributing
+- [Contributing Guide](../CONTRIBUTING.md)
+- [Code of Conduct](../CODE_OF_CONDUCT.md)
+- [Security Policy](../SECURITY.md)
 
 ---
 
-## 📝 Changelog
-
-### Version 1.0.0 (2025-01-01)
-
-**Initial Release**
-- Complete client management system
-- Project management with milestones
-- File management with version control
-- Approval workflow system
-- Support ticket system
-- Invoice and billing management
-- Multi-tenancy support
-- Role-based access control
-- Audit logging
-- RESTful API
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](../CONTRIBUTING.md) for details.
-
-### Development Setup
-
-1. Clone the repository
-2. Install dependencies: `pnpm install`
-3. Setup environment: `cp .env.example .env`
-4. Start database: `docker-compose up -d`
-5. Run migrations: `pnpm db:migrate`
-6. Start development: `pnpm dev`
-
-### Reporting Issues
-
-Please use GitHub Issues to report bugs or request features. Include:
-- Clear description
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
-
----
-
-<div align="center">
-
-**Built with ❤️ by the JasaWeb Team**
-
-[🌐 Website](https://jasaweb.com) • [📧 Email](mailto:hello@jasaweb.com) • [💬 Community](https://community.jasaweb.com)
-
-</div>
+**Last Updated**: 2025-01-06
+**Version**: 1.0.0
+**Maintained by**: JasaWeb Team
