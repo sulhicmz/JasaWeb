@@ -21,6 +21,18 @@ export class RequestLoggingMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     const startTime = Date.now();
+<<<<<<< HEAD
+    
+    // Capture the original end method to intercept the response
+    const originalEnd = res.end;
+    res.end = (chunk: any, encoding: any, callback: any) => {
+      const responseTime = Date.now() - startTime;
+      
+      // Log the request/response details
+      const log: RequestLog = {
+        method: req.method,
+        url: req.url,
+=======
 
     res.on('finish', () => {
       const responseTime = Date.now() - startTime;
@@ -28,6 +40,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       const log: RequestLog = {
         method: req.method,
         url: req.originalUrl || req.url,
+>>>>>>> origin/main
         headers: this.getSafeHeaders(req.headers),
         params: req.params,
         query: req.query as Record<string, string>,
@@ -39,22 +52,39 @@ export class RequestLoggingMiddleware implements NestMiddleware {
         timestamp: new Date().toISOString(),
       };
 
+<<<<<<< HEAD
+      // Log in a structured format
+      this.logger.log(JSON.stringify(log));
+      
+      // Call the original end method
+      return originalEnd.call(res, chunk, encoding, callback);
+    };
+=======
       this.logger.log(JSON.stringify(log));
     });
+>>>>>>> origin/main
 
     next();
   }
 
+<<<<<<< HEAD
+  private getSafeHeaders(headers: Record<string, string | string[]>): Record<string, string> {
+=======
   private getSafeHeaders(headers: Request['headers']): Record<string, string> {
+>>>>>>> origin/main
     const safeHeaders: Record<string, string> = {};
     for (const [key, value] of Object.entries(headers)) {
       // Don't log sensitive headers
       if (!['authorization', 'cookie', 'x-api-key', 'x-auth-token'].includes(key.toLowerCase())) {
+<<<<<<< HEAD
+        safeHeaders[key] = Array.isArray(value) ? value.join(', ') : value as string;
+=======
         if (Array.isArray(value)) {
           safeHeaders[key] = value.join(', ');
         } else if (typeof value === 'string') {
           safeHeaders[key] = value;
         }
+>>>>>>> origin/main
       } else {
         safeHeaders[key] = '[REDACTED]';
       }
@@ -82,6 +112,16 @@ export class RequestLoggingMiddleware implements NestMiddleware {
 
   private getClientIP(req: Request): string {
     // Try multiple headers to get the real client IP
+<<<<<<< HEAD
+    return req.headers['x-forwarded-for'] as string ||
+           req.headers['x-real-ip'] as string ||
+           req.connection.remoteAddress ||
+           req.socket.remoteAddress ||
+           (req.connection as any).remoteAddress ||
+           '';
+  }
+}
+=======
     const forwardedFor = req.headers['x-forwarded-for'];
     if (Array.isArray(forwardedFor)) {
       return forwardedFor[0] ?? '';
@@ -105,3 +145,4 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     );
   }
 }
+>>>>>>> origin/main

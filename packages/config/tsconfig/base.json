@@ -12,11 +12,20 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+<<<<<<< HEAD
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+=======
 "sourceMap": true,
     "outDir": "./dist",
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
+>>>>>>> origin/main
     "strictFunctionTypes": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
@@ -64,4 +73,8 @@
     "resolveJsonModule": true,
     "jsx": "react-jsx"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

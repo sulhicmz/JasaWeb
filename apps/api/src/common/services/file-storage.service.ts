@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
+<<<<<<< HEAD
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import * as fs from 'fs';
+import * as path from 'path';
+=======
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+>>>>>>> origin/main
 
 export interface FileUploadOptions {
   bucket: string;
@@ -54,11 +61,21 @@ export class FileStorageService {
    * Generate a presigned URL for downloading a file
    */
   async generateDownloadUrl(options: FileDownloadOptions): Promise<string> {
+<<<<<<< HEAD
+    const command = new GetObjectCommand({
+      Bucket: options.bucket,
+      Key: options.key,
+    });
+
+    const expiresIn = options.expiresIn || 3600; // Default to 1 hour
+    return await getSignedUrl(this.s3Client, command, { expiresIn });
+=======
     const baseEndpoint = process.env.S3_ENDPOINT
       ? process.env.S3_ENDPOINT.replace(/\/$/, '')
       : `https://${options.bucket}.s3.amazonaws.com`;
 
     return `${baseEndpoint}/${options.key}`;
+>>>>>>> origin/main
   }
 
   /**
@@ -85,8 +102,13 @@ export class FileStorageService {
         Key: key,
       });
       
+<<<<<<< HEAD
+      const response = await this.s3Client.send(command);
+      
+=======
       const response = (await this.s3Client.send(command)) as any;
 
+>>>>>>> origin/main
       return {
         contentLength: response.ContentLength,
         contentType: response.ContentType,

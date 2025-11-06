@@ -6,8 +6,12 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
+<<<<<<< HEAD
+    '@typescript-eslint/recommended',
+=======
     'plugin:@typescript-eslint/recommended',
     'plugin:security/recommended',
+>>>>>>> origin/main
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -16,13 +20,20 @@ module.exports = {
   },
   plugins: [
     '@typescript-eslint',
+<<<<<<< HEAD
+=======
     'security',
+>>>>>>> origin/main
   ],
   rules: {
     'indent': ['error', 2],
     'linebreak-style': ['error', 'unix'],
     'quotes': ['error', 'single'],
     'semi': ['error', 'always'],
+<<<<<<< HEAD
+  },
+};
+=======
     // Security rules
     'no-eval': 'error',
     'no-implied-eval': 'error',
@@ -42,3 +53,4 @@ module.exports = {
     'security/detect-pseudoRandomBytes': 'error',
   },
 };
+>>>>>>> origin/main

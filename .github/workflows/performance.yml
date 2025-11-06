@@ -1,14 +1,451 @@
+<<<<<<< HEAD
+name: Performance Monitoring
+
+on:
+  schedule:
+    # Run performance tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+=======
 name: Performance
 
 on:
   schedule:
     # Run performance tests weekly on Sundays at 2 AM UTC
     - cron: '0 2 * * 0'
+>>>>>>> origin/main
   push:
     branches: [main]
     paths:
       - 'apps/web/**'
       - 'apps/api/**'
+<<<<<<< HEAD
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+  workflow_dispatch:
+
+jobs:
+  web-performance:
+    name: Web Performance Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd apps/web
+        npm install
+
+    - name: Build web application
+      run: |
+        cd apps/web
+        npm run build
+
+    - name: Start application for testing
+      run: |
+        cd apps/web
+        npm run preview &
+        sleep 10
+
+    - name: Run Lighthouse CI
+      run: |
+        npm install -g @lhci/cli@0.12.x
+        lhci autorun
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        LHCI_SERVER_URL: https://lhci.herokuapp.com
+
+    - name: Run WebPageTest
+      run: |
+        echo "🚀 Running WebPageTest analysis..."
+        
+        # Test key pages
+        pages=("/" "/about" "/services" "/portfolio" "/contact")
+        
+        for page in "${pages[@]}"; do
+          echo "Testing page: $page"
+          
+          # Run WebPageTest (you'd need to set up your own server or use API)
+          result=$(curl -s "https://www.webpagetest.org/runtest.php?url=https://staging.jasaweb.com$page&f=json&k=WPT_API_KEY" || echo '{"status": "error"}')
+          
+          if echo "$result" | grep -q '"status":"ok"'; then
+            test_id=$(echo "$result" | jq -r '.data.testId')
+            echo "✅ Test started for $page (ID: $test_id)"
+            
+            # Wait for results (simplified)
+            sleep 60
+            
+            # Get results
+            results=$(curl -s "https://www.webpagetest.org/jsonResult.php?test=$test_id" || echo '{"status": "error"}')
+            
+            if echo "$results" | grep -q '"statusCode":200'; then
+              tti=$(echo "$results" | jq -r '.data.average.firstView.TTI')
+              load_time=$(echo "$results" | jq -r '.data.average.firstView.loadTime')
+              speed_index=$(echo "$results" | jq -r '.data.average.firstView.SpeedIndex')
+              
+              echo "📊 Results for $page:"
+              echo "Time to Interactive: ${tti}ms"
+              echo "Load Time: ${load_time}ms"
+              echo "Speed Index: ${speed_index}"
+            fi
+          else
+            echo "❌ Failed to start test for $page"
+          fi
+        done
+
+    - name: Analyze Bundle Size
+      run: |
+        echo "📦 Analyzing bundle sizes..."
+        
+        cd apps/web/dist
+        
+        # Get total bundle size
+        total_size=$(du -sh . | cut -f1)
+        echo "Total bundle size: $total_size"
+        
+        # Analyze individual files
+        find . -name "*.js" -o -name "*.css" | while read file; do
+          size=$(du -h "$file" | cut -f1)
+          echo "$file: $size"
+        done
+        
+        # Check against thresholds
+        total_kb=$(du -sk . | cut -f1)
+        if [ $total_kb -le 1024 ]; then
+          echo "✅ Bundle size within limits (≤1MB)"
+        elif [ $total_kb -le 2048 ]; then
+          echo "⚠️ Bundle size large (≤2MB)"
+          echo "::warning::Consider bundle optimization"
+        else
+          echo "❌ Bundle size too large (>2MB)"
+          echo "::error::Bundle size exceeds recommended limits"
+        fi
+
+    - name: Core Web Vitals Check
+      run: |
+        echo "🎯 Checking Core Web Vitals..."
+        
+        # This would typically use real user data from your analytics
+        # For demonstration, we'll use Lighthouse data
+        if [ -f lighthouse-report.json ]; then
+          LCP=$(cat lighthouse-report.json | jq -r '.audits["largest-contentful-paint"].numericValue / 1000')
+          FID=$(cat lighthouse-report.json | jq -r '.audits["max-potential-fid"].numericValue')
+          CLS=$(cat lighthouse-report.json | jq -r '.audits["cumulative-layout-shift"].numericValue')
+          
+          echo "Core Web Vitals:"
+          echo "Largest Contentful Paint (LCP): ${LCP}s"
+          echo "First Input Delay (FID): ${FID}ms"
+          echo "Cumulative Layout Shift (CLS): ${CLS}"
+          
+          # Check against Google's thresholds
+          if (( $(echo "$LCP <= 2.5" | bc -l) )); then
+            echo "✅ LCP good"
+          else
+            echo "⚠️ LCP needs improvement"
+            echo "::warning::LCP above 2.5s threshold"
+          fi
+          
+          if (( $(echo "$FID <= 100" | bc -l) )); then
+            echo "✅ FID good"
+          else
+            echo "⚠️ FID needs improvement"
+            echo "::warning::FID above 100ms threshold"
+          fi
+          
+          if (( $(echo "$CLS <= 0.1" | bc -l) )); then
+            echo "✅ CLS good"
+          else
+            echo "⚠️ CLS needs improvement"
+            echo "::warning::CLS above 0.1 threshold"
+          fi
+        fi
+
+  api-performance:
+    name: API Performance Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd apps/api
+        npm install
+
+    - name: Build API
+      run: |
+        cd apps/api
+        npm run build
+
+    - name: Start API for testing
+      run: |
+        cd apps/api
+        npm run start:prod &
+        sleep 10
+
+    - name: Install Artillery
+      run: npm install -g artillery
+
+    - name: Run API Load Tests
+      run: |
+        echo "🚀 Running API load tests..."
+        
+        # Create Artillery config
+        cat > artillery-config.yml << 'EOF'
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Load test"
+    - duration: 60
+      arrivalRate: 100
+      name: "Stress test"
+  payload:
+    path: "test-data.csv"
+    fields:
+      - "email"
+      - "password"
+scenarios:
+  - name: "Health Check"
+    weight: 40
+    flow:
+      - get:
+          url: "/health"
+  - name: "API Endpoints"
+    weight: 30
+    flow:
+      - get:
+          url: "/api/projects"
+      - think: 1
+      - get:
+          url: "/api/projects/1"
+  - name: "Authentication Flow"
+    weight: 30
+    flow:
+      - post:
+          url: "/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.access_token"
+              as: "token"
+      - get:
+          url: "/api/profile"
+          headers:
+            Authorization: "Bearer {{ token }}"
+EOF
+
+        # Create test data
+        cat > test-data.csv << 'EOF'
+email,password
+test1@example.com,password123
+test2@example.com,password123
+test3@example.com,password123
+EOF
+
+        # Run load test
+        artillery run artillery-config.yml
+        
+        # Analyze results
+        if [ -f artillery-report.json ]; then
+          echo "📊 Load Test Results:"
+          
+          # Extract key metrics
+          avg_response_time=$(cat artillery-report.json | jq -r '.aggregate.responseTimes.mean')
+          p95_response_time=$(cat artillery-report.json | jq -r '.aggregate.responseTimes.p95')
+          p99_response_time=$(cat artillery-report.json | jq -r '.aggregate.responseTimes.p99')
+          requests_per_second=$(cat artillery-report.json | jq -r '.aggregate.rps.mean')
+          error_rate=$(cat artillery-report.json | jq -r '.aggregate.scenariosCreated')
+          
+          echo "Average Response Time: ${avg_response_time}ms"
+          echo "95th Percentile: ${p95_response_time}ms"
+          echo "99th Percentile: ${p99_response_time}ms"
+          echo "Requests per Second: ${requests_per_second}"
+          
+          # Check performance thresholds
+          if (( $(echo "$avg_response_time <= 200" | bc -l) )); then
+            echo "✅ Average response time acceptable"
+          else
+            echo "⚠️ Average response time high: ${avg_response_time}ms"
+            echo "::warning::API response time above 200ms"
+          fi
+          
+          if (( $(echo "$p95_response_time <= 500" | bc -l) )); then
+            echo "✅ 95th percentile response time acceptable"
+          else
+            echo "⚠️ 95th percentile response time high: ${p95_response_time}ms"
+            echo "::warning::API P95 response time above 500ms"
+          fi
+        fi
+
+    - name: Database Performance Test
+      run: |
+        echo "🗄️ Testing database performance..."
+        
+        # Test database query performance
+        cd apps/api
+        
+        # Run database performance script
+        node -e "
+        const { PrismaClient } = require('@prisma/client');
+        const prisma = new PrismaClient();
+        
+        async function testDbPerformance() {
+          console.log('Testing database queries...');
+          
+          const start = Date.now();
+          await prisma.project.count();
+          const countTime = Date.now() - start;
+          console.log(\`Count query: \${countTime}ms\`);
+          
+          const start2 = Date.now();
+          await prisma.project.findMany({ take: 10 });
+          const selectTime = Date.now() - start2;
+          console.log(\`Select query: \${selectTime}ms\`);
+          
+          const start3 = Date.now();
+          await prisma.project.create({
+            data: {
+              name: 'Performance Test',
+              description: 'Test project for performance'
+            }
+          });
+          const insertTime = Date.now() - start3;
+          console.log(\`Insert query: \${insertTime}ms\`);
+          
+          await prisma.\$disconnect();
+        }
+        
+        testDbPerformance().catch(console.error);
+        "
+
+    - name: Memory Usage Analysis
+      run: |
+        echo "💾 Analyzing memory usage..."
+        
+        # Monitor API memory usage during load
+        cd apps/api
+        
+        # Start memory monitoring
+        node -e "
+        const { exec } = require('child_process');
+        
+        function monitorMemory() {
+          const usage = process.memoryUsage();
+          console.log(\`Memory Usage:
+            RSS: \${Math.round(usage.rss / 1024 / 1024)}MB
+            Heap Used: \${Math.round(usage.heapUsed / 1024 / 1024)}MB
+            Heap Total: \${Math.round(usage.heapTotal / 1024 / 1024)}MB
+            External: \${Math.round(usage.external / 1024 / 1024)}MB\`);
+        }
+        
+        // Monitor every 5 seconds for 1 minute
+        let count = 0;
+        const interval = setInterval(() => {
+          monitorMemory();
+          count++;
+          if (count >= 12) clearInterval(interval);
+        }, 5000);
+        " &
+        
+        # Run some load
+        for i in {1..100}; do
+          curl -s http://localhost:3000/health > /dev/null
+          sleep 0.1
+        done
+
+  performance-report:
+    name: Generate Performance Report
+    runs-on: ubuntu-latest
+    needs: [web-performance, api-performance]
+    if: always()
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Generate Performance Report
+      run: |
+        echo "# 🚀 Performance Report" > performance-report.md
+        echo "" >> performance-report.md
+        echo "## Report Generated: $(date)" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "### Web Performance" >> performance-report.md
+        echo "- Lighthouse Score: $(cat artifacts/lighthouse-report.json 2>/dev/null | jq -r '.categories.performance.score * 100 // "N/A"')" >> performance-report.md
+        echo "- Bundle Size: $(du -sh artifacts/web/dist/ 2>/dev/null | cut -f1 || echo "N/A")" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "### API Performance" >> performance-report.md
+        echo "- Average Response Time: $(cat artifacts/api/artillery-report.json 2>/dev/null | jq -r '.aggregate.responseTimes.mean // "N/A"')ms" >> performance-report.md
+        echo "- Requests per Second: $(cat artifacts/api/artillery-report.json 2>/dev/null | jq -r '.aggregate.rps.mean // "N/A"')" >> performance-report.md
+        echo "" >> performance-report.md
+        echo "### Recommendations" >> performance-report.md
+        echo "- Monitor performance metrics regularly" >> performance-report.md
+        echo "- Optimize bundle sizes for better loading" >> performance-report.md
+        echo "- Implement caching for frequently accessed data" >> performance-report.md
+        echo "- Consider CDN for static assets" >> performance-report.md
+
+    - name: Upload Performance Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-report
+        path: performance-report.md
+        retention-days: 30
+
+    - name: Send Performance Alert
+      if: failure()
+      run: |
+        curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+          -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"⚠️ Performance Test Issues Detected\",
+            \"attachments\": [
+              {
+                \"color\": \"warning\",
+                \"fields\": [
+                  {
+                    \"title\": \"Time\",
+                    \"value\": \"$(date)\",
+                    \"short\": true
+                  },
+                  {
+                    \"title\": \"Repository\",
+                    \"value\": \"jasaweb/jasaweb\",
+                    \"short\": true
+                  },
+                  {
+                    \"title\": \"Action\",
+                    \"value\": \"Review performance test results and optimize as needed\",
+                    \"short\": false
+                  }
+                ]
+              }
+            ]
+          }" || echo "Failed to send performance alert"
+=======
   workflow_dispatch:
 
 concurrency:
@@ -218,3 +655,4 @@ jobs:
           name: performance-report
           path: performance-report.md
           retention-days: 30
+>>>>>>> origin/main

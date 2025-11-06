@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+name: Security Scan
+=======
 name: Security
+>>>>>>> origin/main
 
 on:
   schedule:
@@ -6,6 +10,8 @@ on:
     - cron: '0 2 * * *'
   push:
     branches: [main]
+<<<<<<< HEAD
+=======
     paths:
       - '**.js'
       - '**.ts'
@@ -14,10 +20,13 @@ on:
       - '**.yaml'
       - 'Dockerfile'
       - 'docker-compose.yml'
+>>>>>>> origin/main
   pull_request:
     branches: [main]
   workflow_dispatch:
 
+<<<<<<< HEAD
+=======
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -26,6 +35,7 @@ env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8.15.0'
 
+>>>>>>> origin/main
 jobs:
   codeql:
     name: CodeQL Analysis
@@ -34,10 +44,70 @@ jobs:
       actions: read
       contents: read
       security-events: write
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
     strategy:
       fail-fast: false
       matrix:
         language: ['javascript', 'typescript']
+<<<<<<< HEAD
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: moderate
+
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+=======
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -271,3 +341,4 @@ jobs:
               repo: context.repo.repo,
               body: report
             });
+>>>>>>> origin/main

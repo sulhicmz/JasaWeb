@@ -1,6 +1,10 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
+<<<<<<< HEAD
+import { JwtService } from '@nestjs/jwt';
+=======
+>>>>>>> origin/main
 
 export interface SessionOptions {
   expiresIn?: string; // e.g., '1d', '7d', '30m'
@@ -14,6 +18,10 @@ export class SessionService {
 
   constructor(
     private prisma: PrismaService,
+<<<<<<< HEAD
+    private jwtService: JwtService,
+=======
+>>>>>>> origin/main
   ) {}
 
   /**
@@ -123,7 +131,11 @@ export class SessionService {
       where: {
         OR: [
           { expiresAt: { lt: new Date() } },
+<<<<<<< HEAD
+          { revokedAt: { not: null } },
+=======
           { revokedAt: null },
+>>>>>>> origin/main
         ],
       },
     });
@@ -165,11 +177,16 @@ export class SessionService {
       throw new Error('Invalid expiresIn format');
     }
 
+<<<<<<< HEAD
+    const value = parseInt(matches[1], 10);
+    const unit = matches[2];
+=======
     const [, rawValue, unit] = matches;
     const value = Number.parseInt(rawValue ?? '', 10);
     if (Number.isNaN(value) || !unit) {
       throw new Error('Invalid expiresIn format');
     }
+>>>>>>> origin/main
 
     const now = new Date();
     switch (unit) {

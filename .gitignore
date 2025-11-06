@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+# Node / pnpm
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.turbo/
+coverage/
+
+# Env & local
+.env
+.env.*
+.DS_Store
+
+=======
 # Dependencies
 node_modules/
 .pnpm-store/
@@ -94,3 +110,4 @@ temp/
 # Docker
 .docker/
 docker-compose.override.yml
+>>>>>>> origin/main

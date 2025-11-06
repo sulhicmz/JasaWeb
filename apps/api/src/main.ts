@@ -5,6 +5,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { ErrorHandlingService } from './common/services/error-handling.service';
+<<<<<<< HEAD
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  
+  // Enable CORS if needed
+  app.enableCors();
+  
+=======
 import helmet from 'helmet';
 import compression from 'compression';
 
@@ -59,22 +68,34 @@ async function bootstrap() {
   // Disable X-Powered-By header
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
+>>>>>>> origin/main
   // Use global validation pipe
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
   }));
+<<<<<<< HEAD
+  
+  // Get the error handling service to inject into the filter
+  const errorHandlingService = app.get(ErrorHandlingService);
+  
+=======
 
   // Get the error handling service to inject into the filter
   const errorHandlingService = app.get(ErrorHandlingService);
 
+>>>>>>> origin/main
   // Apply global exception filters
   app.useGlobalFilters(
     new ComprehensiveExceptionFilter(errorHandlingService),
     new ValidationExceptionFilter(),
   );
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> origin/main
   // Setup Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('JasaWeb API')
@@ -82,12 +103,23 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
+<<<<<<< HEAD
+  
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+  
+=======
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+>>>>>>> origin/main
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`Application is running on: http://localhost:${port}`);
 }
+<<<<<<< HEAD
 bootstrap();
+=======
+bootstrap();
+>>>>>>> origin/main

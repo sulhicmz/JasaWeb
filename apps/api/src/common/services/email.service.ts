@@ -28,10 +28,16 @@ export class EmailService {
       });
 
       this.logger.log(`Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+<<<<<<< HEAD
+    } catch (error) {
+      this.logger.error(`Failed to send email: ${error.message}`);
+      throw error;
+=======
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Failed to send email: ${message}`);
       throw error instanceof Error ? error : new Error(message);
+>>>>>>> origin/main
     }
   }
 

@@ -23,7 +23,10 @@ import { LocalFileStorageService } from '../common/services/local-file-storage.s
 import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import * as path from 'path';
+<<<<<<< HEAD
+=======
 import type { UploadedFilePayload } from './file.service';
+>>>>>>> origin/main
 
 // Define file upload validation options
 const VALID_MIME_TYPES = [
@@ -59,6 +62,12 @@ export class FileController {
   @UseInterceptors(FileInterceptor('file'))
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles can upload files
   async uploadFile(
+<<<<<<< HEAD
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentOrganizationId() organizationId: string,
+    @Query('projectId') projectId?: string,
+  ) {
+=======
     @UploadedFile() file: UploadedFilePayload,
     @CurrentOrganizationId() organizationId: string,
     @Query('projectId') projectId?: string,
@@ -67,6 +76,7 @@ export class FileController {
       throw new BadRequestException('Project ID is required for file uploads');
     }
 
+>>>>>>> origin/main
     // Validate file
     if (!file) {
       throw new BadRequestException('File is required');
@@ -125,7 +135,11 @@ export class FileController {
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
+<<<<<<< HEAD
+          projectId: projectId, // Can be null if not associated with a project
+=======
           projectId,
+>>>>>>> origin/main
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
@@ -142,9 +156,14 @@ export class FileController {
         uploadedAt: createdFile.createdAt,
         url: `/files/download/${createdFile.id}`, // Temporary - would generate actual signed URL in real app
       };
+<<<<<<< HEAD
+    } catch (error) {
+      this.logger.error(`Error uploading file: ${error.message}`);
+=======
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error uploading file: ${errorMessage}`);
+>>>>>>> origin/main
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -188,14 +207,23 @@ export class FileController {
         // Set response headers based on file type
         res.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
         res.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
+<<<<<<< HEAD
+        res.setHeader('Content-Length', fileRecord.size);
+=======
         res.setHeader('Content-Length', fileRecord.size || 0);
+>>>>>>> origin/main
         
         // Send the file
         res.send(fileBuffer);
       }
+<<<<<<< HEAD
+    } catch (error) {
+      this.logger.error(`Error downloading file: ${error.message}`);
+=======
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error downloading file: ${errorMessage}`);
+>>>>>>> origin/main
       throw new BadRequestException('Error downloading file');
     }
   }
@@ -240,9 +268,14 @@ export class FileController {
       this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
       
       return { message: 'File deleted successfully' };
+<<<<<<< HEAD
+    } catch (error) {
+      this.logger.error(`Error deleting file: ${error.message}`);
+=======
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error deleting file: ${errorMessage}`);
+>>>>>>> origin/main
       throw new BadRequestException('Error deleting file');
     }
   }
@@ -270,8 +303,11 @@ export class FileController {
     
     return mimeTypes[ext] || 'application/octet-stream';
   }
+<<<<<<< HEAD
+=======
 
   private getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
   }
+>>>>>>> origin/main
 }
