@@ -7,7 +7,7 @@ on:
 jobs:
   fix:
     runs-on: ubuntu-latest
-permissions:
+    permissions:
       id-token: write
       contents: write
       pull-requests: write
@@ -36,7 +36,7 @@ permissions:
 
       - name: AI Fix with Qwen3-Coder
         if: env.BUILD_OK == 'false'
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@v1.0.35
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:
