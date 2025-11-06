@@ -8,11 +8,7 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
     super();
   }
 
-<<<<<<< HEAD
-  canActivate(context: ExecutionContext) {
-=======
   override canActivate(context: ExecutionContext) {
->>>>>>> origin/main
     const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
       context.getHandler(),
       context.getClass(),

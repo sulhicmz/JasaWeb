@@ -67,11 +67,7 @@ export class InvoiceController {
     }
 
     // Create the invoice
-<<<<<<< HEAD
     const invoice = await this.multiTenantPrisma.invoice.create({
-=======
-const invoice = await this.multiTenantPrisma.invoice.create({
->>>>>>> origin/main
       data: {
         ...createInvoiceDto,
         organizationId,
@@ -85,22 +81,6 @@ const invoice = await this.multiTenantPrisma.invoice.create({
             billingEmail: true,
           },
         },
-<<<<<<< HEAD
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        issuedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-=======
->>>>>>> origin/main
       },
     });
 
@@ -245,21 +225,23 @@ const invoice = await this.multiTenantPrisma.invoice.create({
     });
 
     // Send notification email about payment
-<<<<<<< HEAD
-    if (updatedInvoice.organization.billingEmail) {
+    const updatedInvoiceWithOrg = updatedInvoice as any;
+    if (updatedInvoiceWithOrg.organization && updatedInvoiceWithOrg.organization.billingEmail) {
+      let dueDate: string;
+      if (updatedInvoice.dueAt) {
+        dueDate = updatedInvoice.dueAt.toISOString().split('T')[0] || '';
+      } else {
+        dueDate = new Date().toISOString().split('T')[0] || '';
+      }
+      // Ensure we have a valid date string
+      if (!dueDate) {
+        dueDate = new Date().toISOString().split('T')[0] || 'Unknown';
+      }
       await this.emailService.sendInvoiceNotification(
-        updatedInvoice.organization.billingEmail,
-        updatedInvoice.id,
+        updatedInvoiceWithOrg.organization.billingEmail,
+        `INV-${updatedInvoice.id.substring(0, 8).toUpperCase()}`,
         updatedInvoice.amount,
-        updatedInvoice.dueAt.toISOString().split('T')[0],
-=======
-    if ((updatedInvoice as any).organization?.billingEmail) {
-      await this.emailService.sendInvoiceNotification(
-        (updatedInvoice as any).organization.billingEmail,
-        updatedInvoice.id,
-        updatedInvoice.amount,
-        updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
->>>>>>> origin/main
+        dueDate
       );
     }
 
@@ -318,21 +300,23 @@ const invoice = await this.multiTenantPrisma.invoice.create({
 
     // Send notification if status changed to issued
     if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
-<<<<<<< HEAD
-      if (updatedInvoice.organization.billingEmail) {
+      const updatedInvoiceWithOrg = updatedInvoice as any;
+      if (updatedInvoiceWithOrg.organization && updatedInvoiceWithOrg.organization.billingEmail) {
+        let dueDate: string;
+        if (updatedInvoice.dueAt) {
+          dueDate = updatedInvoice.dueAt.toISOString().split('T')[0] || '';
+        } else {
+          dueDate = new Date().toISOString().split('T')[0] || '';
+        }
+        // Ensure we have a valid date string
+        if (!dueDate) {
+          dueDate = new Date().toISOString().split('T')[0] || 'Unknown';
+        }
         await this.emailService.sendInvoiceNotification(
-          updatedInvoice.organization.billingEmail,
-          updatedInvoice.id,
+          updatedInvoiceWithOrg.organization.billingEmail,
+          `INV-${updatedInvoice.id.substring(0, 8).toUpperCase()}`,
           updatedInvoice.amount,
-          updatedInvoice.dueAt.toISOString().split('T')[0],
-=======
-      if ((updatedInvoice as any).organization?.billingEmail) {
-        await this.emailService.sendInvoiceNotification(
-          (updatedInvoice as any).organization?.billingEmail,
-          updatedInvoice.id,
-          updatedInvoice.amount,
-          updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
->>>>>>> origin/main
+          dueDate
         );
       }
     }

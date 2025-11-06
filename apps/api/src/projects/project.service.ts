@@ -20,9 +20,6 @@ const projectSummarySelect = {
   updatedAt: true,
   organizationId: true,
   _count: {
-<<<<<<< HEAD
-    select: projectRelationsInclude,
-=======
     select: {
       milestones: true,
       files: true,
@@ -31,7 +28,6 @@ const projectSummarySelect = {
       tickets: true,
       invoices: true,
     },
->>>>>>> origin/main
   },
 } as const;
 
@@ -165,15 +161,9 @@ export class ProjectService {
       }),
     ]);
 
-<<<<<<< HEAD
-    const milestoneCount = project._count.milestones;
-    const fileCount = project._count.files;
-    const taskCount = project._count.tasks;
-=======
     const milestoneCount = (project as any)._count?.milestones || 0;
     const fileCount = (project as any)._count?.files || 0;
     const taskCount = (project as any)._count?.tasks || 0;
->>>>>>> origin/main
 
     return {
       milestoneCount,

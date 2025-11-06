@@ -25,14 +25,9 @@ export class HealthController {
         // Check database connectivity
         () => this.prismaHealthIndicator.isHealthy('database'),
       ]);
-<<<<<<< HEAD
-    } catch (error) {
-      this.logger.error(`Health check failed: ${error.message}`);
-=======
     } catch (error: unknown) {
       const message = this.getErrorMessage(error);
       this.logger.error(`Health check failed: ${message}`);
->>>>>>> origin/main
       throw error;
     }
   }
@@ -45,14 +40,9 @@ export class HealthController {
       return await this.health.check([
         () => this.prismaHealthIndicator.isHealthy('database'),
       ]);
-<<<<<<< HEAD
-    } catch (error) {
-      this.logger.error(`Database health check failed: ${error.message}`);
-=======
     } catch (error: unknown) {
       const message = this.getErrorMessage(error);
       this.logger.error(`Database health check failed: ${message}`);
->>>>>>> origin/main
       throw error;
     }
   }
@@ -65,13 +55,6 @@ export class HealthController {
       return await this.health.check([
         () => this.http.pingCheck('http', 'https://httpbin.org/get'),
       ]);
-<<<<<<< HEAD
-    } catch (error) {
-      this.logger.error(`HTTP health check failed: ${error.message}`);
-      throw error;
-    }
-  }
-=======
     } catch (error: unknown) {
       const message = this.getErrorMessage(error);
       this.logger.error(`HTTP health check failed: ${message}`);
@@ -82,5 +65,4 @@ export class HealthController {
   private getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
   }
->>>>>>> origin/main
 }

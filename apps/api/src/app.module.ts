@@ -1,9 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-<<<<<<< HEAD
-=======
 import { validateEnv } from './common/config/env.validation';
->>>>>>> origin/main
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
@@ -29,36 +26,21 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 
-<<<<<<< HEAD
-=======
 const parseEnvNumber = (value: string | undefined, fallback: number): number => {
   const parsed = Number.parseInt(value ?? '', 10);
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
->>>>>>> origin/main
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-<<<<<<< HEAD
-=======
       validate: validateEnv,
->>>>>>> origin/main
     }),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
-<<<<<<< HEAD
-        ttl: parseInt(process.env.CACHE_TTL) || 5, // Time to live in seconds
-        max: parseInt(process.env.CACHE_MAX) || 100, // Maximum number of items in cache
-      }),
-    }),
-    ThrottlerModule.forRoot([{
-      ttl: parseInt(process.env.THROTTLE_TTL) || 60, // Time window in seconds
-      limit: parseInt(process.env.THROTTLE_LIMIT) || 10, // Max requests per window
-=======
         ttl: parseEnvNumber(process.env.CACHE_TTL, 5), // Time to live in seconds
         max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
       }),
@@ -66,7 +48,6 @@ const parseEnvNumber = (value: string | undefined, fallback: number): number => 
     ThrottlerModule.forRoot([{
       ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
       limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
->>>>>>> origin/main
     }]),
     AuthModule,
     UserModule,
@@ -100,8 +81,4 @@ export class AppModule implements NestModule {
       .apply(RequestLoggingMiddleware, MultiTenantMiddleware)
       .forRoutes('*'); // Apply to all routes
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/main

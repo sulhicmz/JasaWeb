@@ -14,45 +14,15 @@ export class ValidationExceptionFilter implements ExceptionFilter {
 
     const responseObj = exception.getResponse();
     let message = 'Validation failed';
-<<<<<<< HEAD
-    let errors = [];
-
-    if (typeof responseObj === 'object') {
-      const validationErrors = (responseObj as any).message;
-      
-      if (Array.isArray(validationErrors)) {
-        errors = validationErrors.map((err: any) => {
-          if (typeof err === 'object' && err !== null) {
-            return {
-              field: err.property,
-              message: err.constraints ? Object.values(err.constraints)[0] : 'Validation error',
-              value: err.value,
-            };
-          }
-          return { message: err };
-        });
-      } else {
-=======
-    const errors: Array<Record<string, unknown>> = [];
+    let errors: any[] = [];
 
     if (typeof responseObj === 'object' && responseObj !== null) {
-      const validationErrors = (responseObj as any).message;
-
-      if (Array.isArray(validationErrors)) {
-        validationErrors.forEach((err: any) => {
-          if (typeof err === 'object' && err !== null) {
-            errors.push({
-              field: err.property,
-              message: err.constraints ? Object.values(err.constraints)[0] : 'Validation error',
-              value: err.value,
-            });
-          } else if (typeof err === 'string') {
-            errors.push({ message: err });
-          }
-        });
-      } else if (typeof validationErrors === 'string') {
->>>>>>> origin/main
-        message = validationErrors;
+      const obj = responseObj as any;
+      if (obj.message && Array.isArray(obj.message)) {
+        errors = obj.message;
+        if (errors.length > 0) {
+          message = errors[0];
+        }
       }
     }
 

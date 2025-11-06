@@ -6,17 +6,26 @@ import {
   Param,
   UseGuards,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import type { Request } from 'express';
 
 interface CreateApprovalDto {
   projectId: string;
   itemType: string; // page, content, design, feature, etc.
   itemId: string;
+  requesterId: string; // This would typically come from the JWT token in a real implementation
+}
+
+interface ApproveRejectDto {
+  approverId?: string; // This would typically come from the JWT token in a real implementation
+  rejecterId?: string; // This would typically come from the JWT token in a real implementation
+  note?: string;
 }
 
 @Controller('approvals')
@@ -30,7 +39,6 @@ export class ApprovalController {
   async create(
     @Body() createApprovalDto: CreateApprovalDto,
     @CurrentOrganizationId() organizationId: string,
-    @Body('requesterId') requesterId: string, // This would typically come from the JWT token in a real implementation
   ) {
     // Validate that the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
@@ -52,7 +60,7 @@ export class ApprovalController {
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed to read
   async findAll(
-    @CurrentOrganizationId() organizationId: string = '',
+    @CurrentOrganizationId() organizationId: string,
   ) {
     return await this.multiTenantPrisma.approval.findMany({
       where: {
@@ -94,8 +102,7 @@ export class ApprovalController {
   async approve(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string,
-    @Body('approverId') approverId: string, // This would typically come from the JWT token in a real implementation
-    @Body('note') note?: string,
+    @Body() approveDto: ApproveRejectDto,
   ) {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
@@ -120,9 +127,9 @@ export class ApprovalController {
       where: { id },
       data: {
         status: 'approved',
-        decidedById: approverId,
+        decidedById: approveDto.approverId,
         decidedAt: new Date(),
-        note,
+        note: approveDto.note,
       },
     });
   }
@@ -133,8 +140,7 @@ export class ApprovalController {
   async reject(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string,
-    @Body('rejecterId') rejecterId: string, // This would typically come from the JWT token in a real implementation
-    @Body('note') note?: string,
+    @Body() rejectDto: ApproveRejectDto,
   ) {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
@@ -159,9 +165,9 @@ export class ApprovalController {
       where: { id },
       data: {
         status: 'rejected',
-        decidedById: rejecterId,
+        decidedById: rejectDto.rejecterId,
         decidedAt: new Date(),
-        note,
+        note: rejectDto.note,
       },
     });
   }
