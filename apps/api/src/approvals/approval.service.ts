@@ -21,14 +21,13 @@ export class ApprovalService {
       throw new BadRequestException('Project not found or does not belong to your organization');
     }
 
-    // Create the approval
+// Create the approval
     return await this.multiTenantPrisma.approval.create({
       data: {
         projectId,
         itemType,
         itemId,
         status: 'pending',
-        requestedById: requesterId,
       },
     });
   }

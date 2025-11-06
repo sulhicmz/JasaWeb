@@ -2,9 +2,9 @@
   "name": "@jasaweb/api",
   "version": "1.0.0",
   "description": "NestJS API for JasaWeb Client Portal",
-  "type": "commonjs",
+"type": "commonjs",
   "scripts": {
-    "build": "nest build",
+    "build": "DATABASE_URL=postgresql://user:password@localhost:5432/jasaweb prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

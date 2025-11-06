@@ -188,7 +188,7 @@ export class FileController {
         // Set response headers based on file type
         res.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
         res.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
-        res.setHeader('Content-Length', fileRecord.size);
+        res.setHeader('Content-Length', fileRecord.size || 0);
         
         // Send the file
         res.send(fileBuffer);

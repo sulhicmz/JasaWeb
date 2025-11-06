@@ -1,17 +1,28 @@
-# Node / pnpm
+# Dependencies
 node_modules/
 .pnpm-store/
+jspm_packages/
 
 # Build outputs
 dist/
+build/
 .turbo/
-coverage/
+.next/
+.nuxt/
+.vercel/
 
-# Env & local
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+test-results.xml
+
+# Environment files
 .env
 .env.*
 !.env.example
-.DS_Store
 
 # Logs
 logs/
@@ -21,6 +32,23 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.npm
 
 # Security & Secrets
 *.pem
@@ -47,18 +75,16 @@ secrets/
 Thumbs.db
 Desktop.ini
 
-# Testing
-coverage/
-.nyc_output/
-*.lcov
-
-# Temporary
+# Temporary files
 tmp/
 temp/
 *.tmp
 *.temp
 *.bak
 *.backup
+*.tgz
+.yarn-integrity
+.node_repl_history
 
 # Database
 *.db
@@ -68,10 +94,3 @@ temp/
 # Docker
 .docker/
 docker-compose.override.yml
-
-# Misc
-.cache/
-.parcel-cache/
-.next/
-.nuxt/
-.vercel/
