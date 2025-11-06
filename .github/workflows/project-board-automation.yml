@@ -1,0 +1,548 @@
+name: 🗂️ Project Board Automation
+
+on:
+  issues:
+    types: [opened, closed, edited, labeled, unlabeled, assigned, unassigned]
+  pull_request:
+    types: [opened, closed, merged, ready_for_review]
+  schedule:
+    # Run daily at 9 AM UTC for maintenance tasks
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'sync-issues'
+        type: choice
+        options:
+          - sync-issues
+          - cleanup-stale
+          - generate-report
+
+env:
+  PROJECT_NUMBER: 1 # Will be updated after project creation
+  REPOSITORY: ${{ github.repository }}
+
+jobs:
+  setup-project-board:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'sync-issues'
+    permissions:
+      issues: write
+      pull-requests: write
+      projects: write
+      repository-projects: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install -g @octokit/graphql-schema
+
+      - name: Create/Update Project Board
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            
+            // Project board configuration
+            const projectConfig = {
+              title: "JasaWeb Development Board",
+              body: "Comprehensive issue tracking and workflow management for the JasaWeb project",
+              public: false
+            };
+
+            // Create project if it doesn't exist
+            try {
+              const project = await github.rest.projects.createForRepo({
+                owner,
+                repo,
+                ...projectConfig
+              });
+              
+              console.log('Project created:', project.data.id);
+              
+              // Create columns
+              const columns = [
+                '🆕 Triage',
+                '📋 Backlog', 
+                '🚧 In Progress',
+                '👀 Review',
+                '🧪 Testing',
+                '✅ Done',
+                '🚫 Blocked',
+                '❌ Won\'t Fix'
+              ];
+
+              for (const columnName of columns) {
+                await github.rest.projects.createColumn({
+                  project_id: project.data.id,
+                  name: columnName
+                });
+              }
+
+              // Store project ID for later use
+              await github.rest.repos.createOrUpdateFileContents({
+                owner,
+                repo,
+                path: '.github/project-id.txt',
+                message: 'Store project ID',
+                content: Buffer.from(project.data.id.toString()).toString('base64')
+              });
+
+            } catch (error) {
+              if (error.status !== 422) { // 422 means project already exists
+                throw error;
+              }
+              console.log('Project already exists');
+            }
+
+  issue-triage:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Auto-triage new issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+            
+            // Add triage label
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issue.number,
+              labels: ['triage']
+            });
+
+            // Analyze title and description for automatic categorization
+            const title = issue.title.toLowerCase();
+            const body = issue.body ? issue.body.toLowerCase() : '';
+            const content = `${title} ${body}`;
+
+            // Priority detection
+            let priority = 'medium';
+            if (content.includes('critical') || content.includes('urgent') || content.includes('security')) {
+              priority = 'critical';
+            } else if (content.includes('bug') || content.includes('broken') || content.includes('failure')) {
+              priority = 'high';
+            } else if (content.includes('enhancement') || content.includes('improvement')) {
+              priority = 'medium';
+            } else if (content.includes('documentation') || content.includes('cleanup')) {
+              priority = 'low';
+            }
+
+            // Component detection
+            let component = null;
+            if (content.includes('frontend') || content.includes('web') || content.includes('ui') || content.includes('astro')) {
+              component = 'frontend';
+            } else if (content.includes('api') || content.includes('backend') || content.includes('server') || content.includes('nestjs')) {
+              component = 'backend';
+            } else if (content.includes('database') || content.includes('prisma') || content.includes('sql')) {
+              component = 'database';
+            } else if (content.includes('docker') || content.includes('deploy') || content.includes('ci/cd') || content.includes('cloudflare')) {
+              component = 'infrastructure';
+            } else if (content.includes('security') || content.includes('secret') || content.includes('vulnerability')) {
+              component = 'security';
+            }
+
+            // Type detection
+            let issueType = 'enhancement';
+            if (content.includes('bug') || content.includes('error') || content.includes('broken')) {
+              issueType = 'bug';
+            } else if (content.includes('feature') || content.includes('add')) {
+              issueType = 'feature';
+            } else if (content.includes('documentation') || content.includes('docs')) {
+              issueType = 'documentation';
+            } else if (content.includes('security') || content.includes('vulnerability')) {
+              issueType = 'security';
+            }
+
+            // Apply labels
+            const labelsToAdd = [`priority: ${priority}`, `type: ${issueType}`];
+            if (component) labelsToAdd.push(`component: ${component}`);
+            
+            if (content.includes('security')) {
+              labelsToAdd.push('security');
+              // Auto-assign to maintainers for security issues
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: issue.number,
+                assignees: ['sulhicmz'] // Replace with actual maintainer username
+              });
+            }
+
+            // Check for master issues
+            if ([99, 100, 101, 102].includes(issue.number)) {
+              labelsToAdd.push('master-issue', 'high-priority');
+            }
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issue.number,
+              labels: labelsToAdd
+            });
+
+            // Add to project board
+            try {
+              // Get project ID
+              const { data: projectFile } = await github.rest.repos.getContent({
+                owner,
+                repo,
+                path: '.github/project-id.txt'
+              });
+              
+              const projectId = parseInt(Buffer.from(projectFile.content, 'base64').toString());
+              
+              // Get triage column
+              const { data: columns } = await github.rest.projects.listColumns({
+                project_id: projectId
+              });
+              
+              const triageColumn = columns.find(col => col.name === '🆕 Triage');
+              
+              if (triageColumn) {
+                await github.rest.projects.createCard({
+                  column_id: triageColumn.id,
+                  content_id: issue.id,
+                  content_type: 'Issue'
+                });
+              }
+            } catch (error) {
+              console.log('Could not add to project board:', error.message);
+            }
+
+            // Add comment with triage information
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body: `
+## 🤖 Automatic Triage
+
+This issue has been automatically triaged with the following labels:
+
+- **Priority**: ${priority}
+- **Type**: ${issueType}
+${component ? `- **Component**: ${component}` : ''}
+
+### Next Steps:
+1. Review the automatic categorization
+2. Adjust labels if needed
+3. Assign to appropriate team member
+4. Move to appropriate project column
+
+---
+*This comment was created by the automated triage system.*
+              `
+            });
+
+  pr-linking:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Link PR to issues and update status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pr = context.payload.pull_request;
+            
+            // Extract issue numbers from PR title and body
+            const title = pr.title || '';
+            const body = pr.body || '';
+            const content = `${title} ${body}`;
+            
+            // Find issue numbers (e.g., #123, closes #123, fixes #123)
+            const issueRegex = /(?:closes?|fixes?|resolves?|refs?|#)(\d+)/gi;
+            const matches = [...content.matchAll(issueRegex)];
+            const issueNumbers = [...new Set(matches.map(match => parseInt(match[1])))];
+            
+            for (const issueNumber of issueNumbers) {
+              try {
+                // Get issue details
+                const { data: issue } = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber
+                });
+
+                // Add PR link to issue
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNumber,
+                  body: `## 🔗 Linked Pull Request\n\nThis issue is linked to PR #${pr.number}: ${pr.title}\n\n**Status**: ${pr.state}${pr.merged ? ' (merged)' : ''}\n\n[View Pull Request](${pr.html_url})`
+                });
+
+                // Update issue status based on PR status
+                if (pr.merged) {
+                  // Remove in-progress labels and add completed
+                  const labels = issue.labels.map(l => l.name).filter(name => 
+                    !name.includes('in-progress') && 
+                    !name.includes('review') && 
+                    !name.includes('testing')
+                  );
+                  
+                  await github.rest.issues.setLabels({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    labels: [...labels, 'status: done']
+                  });
+
+                  // Close the issue
+                  await github.rest.issues.update({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    state: 'closed'
+                  });
+                } else if (pr.state === 'open' && pr.draft === false) {
+                  // Move to review status
+                  const labels = issue.labels.map(l => l.name).filter(name => 
+                    name !== 'status: in-progress'
+                  );
+                  
+                  await github.rest.issues.setLabels({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    labels: [...labels, 'status: review']
+                  });
+                }
+
+              } catch (error) {
+                console.log(`Could not process issue ${issueNumber}:`, error.message);
+              }
+            }
+
+  maintenance:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    permissions:
+      issues: write
+    steps:
+      - name: Daily maintenance tasks
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            
+            // Get all open issues
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const now = new Date();
+            
+            for (const issue of issues) {
+              const updatedAt = new Date(issue.updated_at);
+              const daysSinceUpdate = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24));
+              
+              // Check for stale issues
+              if (daysSinceUpdate >= 7) {
+                const hasStaleLabel = issue.labels.some(l => l.name === 'stale');
+                
+                if (!hasStaleLabel) {
+                  await github.rest.issues.addLabels({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    labels: ['stale']
+                  });
+
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    body: `
+## ⚠️ Stale Issue Notification
+
+This issue has been inactive for 7+ days. Please provide an update or it may be closed.
+
+### Options:
+- 🔄 Provide a status update
+- ✅ Mark as complete if resolved
+- 🚫 Close if no longer relevant
+- 📅 Add a timeline for completion
+
+---
+*This is an automated notification. Remove the \`stale\` label to stop further notifications.*
+                    `
+                  });
+                }
+              }
+
+              // Check for issues in review too long
+              const inReviewLabel = issue.labels.find(l => l.name === 'status: review');
+              if (inReviewLabel && daysSinceUpdate >= 3) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: `
+## 👀 Review Reminder
+
+This issue has been in review status for 3+ days. Please follow up on the review process.
+
+---
+*This is an automated reminder for the review team.*
+                  `
+                });
+              }
+
+              // Check for triage issues
+              const triageLabel = issue.labels.find(l => l.name === 'triage');
+              if (triageLabel && daysSinceUpdate >= 2) {
+                // Notify maintainers
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: `
+## 🚨 Triage Escalation
+
+This issue has been in triage for 2+ days and needs attention from maintainers.
+
+@maintainers Please review and categorize this issue.
+
+---
+*This is an automated escalation to maintainers.*
+                  `
+                });
+              }
+            }
+
+  generate-report:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'generate-report'
+    permissions:
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Generate repository health report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            
+            // Get issues statistics
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const { data: closedIssues } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'closed',
+              per_page: 100
+            });
+
+            // Get PR statistics
+            const { data: prs } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'closed',
+              per_page: 100
+            });
+
+            // Calculate metrics
+            const totalIssues = issues.length;
+            const criticalIssues = issues.filter(i => 
+              i.labels.some(l => l.name.includes('critical'))
+            ).length;
+            const securityIssues = issues.filter(i => 
+              i.labels.some(l => l.name.includes('security'))
+            ).length;
+            const masterIssues = issues.filter(i => 
+              [99, 100, 101, 102].includes(i.number)
+            ).length;
+
+            // Average resolution time (last 30 days)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const recentClosed = closedIssues.filter(i => 
+              new Date(i.closed_at) > thirtyDaysAgo
+            );
+            
+            let avgResolutionTime = 0;
+            if (recentClosed.length > 0) {
+              const totalTime = recentClosed.reduce((sum, issue) => {
+                const created = new Date(issue.created_at);
+                const closed = new Date(issue.closed_at);
+                return sum + (closed - created);
+              }, 0);
+              avgResolutionTime = Math.floor(totalTime / recentClosed.length / (1000 * 60 * 60 * 24));
+            }
+
+            // Generate report
+            const report = `
+# 📊 JasaWeb Repository Health Report
+**Generated**: ${new Date().toISOString().split('T')[0]}
+
+## 📈 Overview Metrics
+- **Total Open Issues**: ${totalIssues}
+- **Critical Issues**: ${criticalIssues}
+- **Security Issues**: ${securityIssues}
+- **Master Issues**: ${masterIssues}
+- **Avg Resolution Time**: ${avgResolutionTime} days
+
+## 🎯 Master Issues Status
+${issues.filter(i => [99, 100, 101, 102].includes(i.number)).map(issue => 
+  `- #${issue.number}: ${issue.title} (${issue.labels.map(l => l.name).join(', ')})`
+).join('\n')}
+
+## 🚨 Priority Breakdown
+- **Critical**: ${issues.filter(i => i.labels.some(l => l.name.includes('critical'))).length}
+- **High**: ${issues.filter(i => i.labels.some(l => l.name.includes('high'))).length}
+- **Medium**: ${issues.filter(i => i.labels.some(l => l.name.includes('medium'))).length}
+- **Low**: ${issues.filter(i => i.labels.some(l => l.name.includes('low'))).length}
+
+## 🏷️ Component Breakdown
+${['frontend', 'backend', 'database', 'infrastructure', 'security'].map(component => {
+  const count = issues.filter(i => i.labels.some(l => l.name.includes(component))).length;
+  return `- **${component}**: ${count}`;
+}).join('\n')}
+
+## 📈 Recent Activity
+- **Issues Closed (30 days)**: ${recentClosed.length}
+- **PRs Merged (30 days)**: ${prs.filter(pr => new Date(pr.merged_at) > thirtyDaysAgo).length}
+
+---
+*Report generated by GitHub Actions automation*
+            `;
+
+            // Create issue with report
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: `📊 Repository Health Report - ${new Date().toISOString().split('T')[0]}`,
+              body: report,
+              labels: ['documentation', 'report']
+            });
+
+            console.log('Repository health report generated');

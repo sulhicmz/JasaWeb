@@ -1,0 +1,199 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability or security-related concern
+title: "[SECURITY]: "
+labels: ["security", "triage", "high-priority"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🚨 Security Issue Report
+        
+        **IMPORTANT**: If this is a CRITICAL security vulnerability, please DO NOT file a public issue.
+        Instead, send an email to: security@jasaweb.com
+        
+        For non-critical security issues, please provide as much detail as possible.
+        
+        ## Security Classification
+        
+        Please help us understand the severity and nature of this security issue.
+
+  - type: dropdown
+    id: severity-level
+    attributes:
+      label: Severity Level
+      description: How severe is this security issue?
+      options:
+        - Critical - Immediate danger, data breach, system compromise
+        - High - Significant security risk, potential impact
+        - Medium - Moderate security concern, limited impact
+        - Low - Minor security issue, best practice violation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: vulnerability-type
+    attributes:
+      label: Vulnerability Type
+      description: What type of security issue is this?
+      options:
+        - Authentication/Authorization Bypass
+        - SQL Injection
+        - Cross-Site Scripting (XSS)
+        - Cross-Site Request Forgery (CSRF)
+        - Insecure Direct Object Reference
+        - Sensitive Data Exposure
+        - Security Misconfiguration
+        - Using Components with Known Vulnerabilities
+        - Insufficient Logging/Monitoring
+        - Broken Access Control
+        - Cryptographic Issues
+        - Input Validation
+        - Session Management
+        - Dependency/Supply Chain
+        - Infrastructure/DevOps
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-component
+    attributes:
+      label: Affected Component
+      description: Which part of the system is affected?
+      options:
+        - Web Frontend (Astro)
+        - API Backend (NestJS)
+        - Database (PostgreSQL)
+        - Authentication System
+        - File Management/Storage
+        - Client Portal
+        - Admin Panel
+        - CI/CD Pipeline
+        - Infrastructure/Docker
+        - Third-party Integrations
+        - Multiple Components
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: vulnerability-description
+    attributes:
+      label: Vulnerability Description
+      description: Detailed description of the security vulnerability
+      placeholder: |
+        Provide a clear and detailed description of the security issue:
+        - What is the vulnerability?
+        - How does it manifest?
+        - What is the potential impact?
+        - Who is affected?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Reproduction Steps
+      description: Step-by-step instructions to reproduce the vulnerability
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Enter '....' in the input field
+        4. Observe the vulnerability
+    validations:
+      required: true
+
+  - type: textarea
+    id: proof-of-concept
+    attributes:
+      label: Proof of Concept
+      description: Code snippets, screenshots, or detailed steps demonstrating the vulnerability
+      placeholder: |
+        Include:
+        - HTTP requests/responses
+        - Code examples
+        - Screenshots
+        - Any other evidence
+        Note: Do NOT include actual sensitive data or credentials
+
+  - type: textarea
+    id: impact-assessment
+    attributes:
+      label: Impact Assessment
+      description: What is the potential impact of this vulnerability?
+      placeholder: |
+        Describe the potential impact:
+        - Data exposure (what type of data?)
+        - System compromise
+        - Privilege escalation
+        - Denial of service
+        - Financial impact
+        - Reputational impact
+        - Compliance violations
+
+  - type: textarea
+    id: affected-versions
+    attributes:
+      label: Affected Versions
+      description: Which versions are affected?
+      placeholder: |
+        - Affected version(s): e.g., v1.0.0 - v1.2.3
+        - Unaffected version(s): e.g., v1.2.4+
+        - Environment: Production, Staging, Development
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution (Optional)
+      description: Do you have a suggested fix or mitigation?
+      placeholder: |
+        If you have a suggested fix, please describe:
+        - What changes are needed?
+        - How to implement the fix?
+        - Any potential side effects?
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information
+      placeholder: |
+        Include:
+        - Related issues or PRs
+        - Security references (CVE, OWASP, etc.)
+        - Environment details
+        - Configuration information
+
+  - type: checkboxes
+    id: disclosure-terms
+    attributes:
+      label: Disclosure Agreement
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues for similar security reports
+          required: true
+        - label: This is not a critical vulnerability requiring private disclosure
+          required: true
+        - label: I have not included any sensitive data, credentials, or actual exploits
+          required: true
+        - label: I understand this issue will be publicly visible
+          required: true
+        - label: I will cooperate with the security team during investigation
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 📞 Security Contact
+        
+        For CRITICAL vulnerabilities or urgent security matters:
+        - Email: security@jasaweb.com
+        - PGP Key: [Available on request]
+        
+        ## 🔍 Security Resources
+        
+        - [OWASP Top 10](https://owasp.org/Top10/)
+        - [Security Best Practices](../../docs/SECURITY_BEST_PRACTICES.md)
+        - [Security Policy](../../SECURITY.md)
+        
+        Thank you for helping keep JasaWeb secure! 🛡️

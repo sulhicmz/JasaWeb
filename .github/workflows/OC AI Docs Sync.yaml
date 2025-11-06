@@ -8,7 +8,10 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     permissions:
+      id-token: read
       contents: write
+      pull-requests: read
+      issues: read
     steps:
       - uses: actions/checkout@v4
 
