@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Node / pnpm
 node_modules/
 .pnpm-store/
@@ -12,3 +13,101 @@ coverage/
 .env.*
 .DS_Store
 
+=======
+# Dependencies
+node_modules/
+.pnpm-store/
+jspm_packages/
+
+# Build outputs
+dist/
+build/
+.turbo/
+.next/
+.nuxt/
+.vercel/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+test-results.xml
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+.npm
+
+# Security & Secrets
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.tgz
+.yarn-integrity
+.node_repl_history
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.docker/
+docker-compose.override.yml
+>>>>>>> origin/main

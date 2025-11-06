@@ -1,20 +1,38 @@
 name: Enhanced Testing
 
 on:
+<<<<<<< HEAD
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+=======
+>>>>>>> origin/main
   schedule:
     # Run comprehensive tests daily at 1 AM UTC
     - cron: '0 1 * * *'
   workflow_dispatch:
+<<<<<<< HEAD
+=======
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '**.test.ts'
+      - '**.spec.ts'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+>>>>>>> origin/main
 
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8.15.0'
 
 jobs:
+<<<<<<< HEAD
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -64,6 +82,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: unit-tests
 
+=======
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+>>>>>>> origin/main
     services:
       postgres:
         image: postgres:15
@@ -89,6 +112,7 @@ jobs:
           - 6379:6379
 
     steps:
+<<<<<<< HEAD
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -151,11 +175,44 @@ jobs:
         curl -f http://localhost:4321/ || exit 1
         curl -f http://localhost:4321/about || exit 1
         curl -f http://localhost:4321/services || exit 1
+=======
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test database
+        run: |
+          cd apps/api
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jasaweb_test
+
+      - name: Run API integration tests
+        run: |
+          cd apps/api
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/jasaweb_test" pnpm test:integration || pnpm test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jasaweb_test
+>>>>>>> origin/main
 
   e2e-tests:
     name: End-to-End Tests
     runs-on: ubuntu-latest
     needs: integration-tests
+<<<<<<< HEAD
 
     steps:
     - name: Checkout code
@@ -280,11 +337,63 @@ jobs:
         EOF
         
         artillery run artillery-config.yml
+=======
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        run: |
+          cd apps/web
+          npx playwright install --with-deps
+
+      - name: Build applications
+        run: |
+          pnpm build:api
+          pnpm build:web
+
+      - name: Start applications
+        run: |
+          cd apps/api
+          npm run start:test &
+          sleep 10
+          cd ../web
+          npm run preview &
+          sleep 10
+
+      - name: Run Playwright tests
+        run: |
+          cd apps/web
+          npx playwright test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+>>>>>>> origin/main
 
   accessibility-tests:
     name: Accessibility Tests
     runs-on: ubuntu-latest
     needs: e2e-tests
+<<<<<<< HEAD
 
     steps:
     - name: Checkout code
@@ -436,10 +545,64 @@ jobs:
         for i in {1..20}; do
           curl http://localhost:3001/health || true
         done
+=======
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd apps/web
+          npm install
+
+      - name: Build and start application
+        run: |
+          cd apps/web
+          npm run build
+          npm run preview &
+          sleep 10
+
+      - name: Run accessibility tests
+        run: |
+          npm install -g pa11y-ci
+          cd apps/web
+          cat > .pa11yci << 'EOF'
+          {
+            "defaults": {
+              "timeout": 30000,
+              "wait": 2000,
+              "chromeLaunchConfig": {
+                "headless": true,
+                "args": ["--no-sandbox"]
+              }
+            },
+            "urls": [
+              "http://localhost:4321/",
+              "http://localhost:4321/about",
+              "http://localhost:4321/services"
+            ]
+          }
+          EOF
+          pa11y-ci || true
+
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-report
+          path: apps/web/pa11y-ci-report.json
+          retention-days: 7
+>>>>>>> origin/main
 
   test-reporting:
     name: Test Reporting
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     needs: [unit-tests, integration-tests, e2e-tests, performance-tests, accessibility-tests]
     if: always()
 
@@ -562,3 +725,25 @@ jobs:
               }
             ]
           }" || echo "Failed to send test notification"
+=======
+    needs: [integration-tests, e2e-tests, accessibility-tests]
+    if: always()
+    steps:
+      - name: Generate test report
+        run: |
+          echo "# 🧪 Enhanced Test Report" > test-report.md
+          echo "" >> test-report.md
+          echo "## Report Generated: $(date)" >> test-report.md
+          echo "" >> test-report.md
+          echo "### Test Results" >> test-report.md
+          echo "- Integration Tests: ${{ needs.integration-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> test-report.md
+          echo "- E2E Tests: ${{ needs.e2e-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> test-report.md
+          echo "- Accessibility Tests: ${{ needs.accessibility-tests.result == 'success' && '✅ Passed' || '⚠️ Issues' }}" >> test-report.md
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: enhanced-test-report
+          path: test-report.md
+          retention-days: 30
+>>>>>>> origin/main

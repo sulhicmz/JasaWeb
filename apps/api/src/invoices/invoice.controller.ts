@@ -67,7 +67,11 @@ export class InvoiceController {
     }
 
     // Create the invoice
+<<<<<<< HEAD
     const invoice = await this.multiTenantPrisma.invoice.create({
+=======
+const invoice = await this.multiTenantPrisma.invoice.create({
+>>>>>>> origin/main
       data: {
         ...createInvoiceDto,
         organizationId,
@@ -81,6 +85,7 @@ export class InvoiceController {
             billingEmail: true,
           },
         },
+<<<<<<< HEAD
         project: {
           select: {
             id: true,
@@ -94,6 +99,8 @@ export class InvoiceController {
             email: true,
           },
         },
+=======
+>>>>>>> origin/main
       },
     });
 
@@ -238,12 +245,21 @@ export class InvoiceController {
     });
 
     // Send notification email about payment
+<<<<<<< HEAD
     if (updatedInvoice.organization.billingEmail) {
       await this.emailService.sendInvoiceNotification(
         updatedInvoice.organization.billingEmail,
         updatedInvoice.id,
         updatedInvoice.amount,
         updatedInvoice.dueAt.toISOString().split('T')[0],
+=======
+    if ((updatedInvoice as any).organization?.billingEmail) {
+      await this.emailService.sendInvoiceNotification(
+        (updatedInvoice as any).organization.billingEmail,
+        updatedInvoice.id,
+        updatedInvoice.amount,
+        updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
+>>>>>>> origin/main
       );
     }
 
@@ -302,12 +318,21 @@ export class InvoiceController {
 
     // Send notification if status changed to issued
     if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
+<<<<<<< HEAD
       if (updatedInvoice.organization.billingEmail) {
         await this.emailService.sendInvoiceNotification(
           updatedInvoice.organization.billingEmail,
           updatedInvoice.id,
           updatedInvoice.amount,
           updatedInvoice.dueAt.toISOString().split('T')[0],
+=======
+      if ((updatedInvoice as any).organization?.billingEmail) {
+        await this.emailService.sendInvoiceNotification(
+          (updatedInvoice as any).organization?.billingEmail,
+          updatedInvoice.id,
+          updatedInvoice.amount,
+          updatedInvoice.dueAt?.toISOString().split('T')[0] || '',
+>>>>>>> origin/main
         );
       }
     }
