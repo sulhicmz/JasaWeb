@@ -2,8 +2,8 @@
   "name": "@jasaweb/api",
   "version": "1.0.0",
   "description": "NestJS API for JasaWeb Client Portal",
-  "type": "commonjs",
-"scripts": {
+"type": "commonjs",
+  "scripts": {
     "build": "prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
