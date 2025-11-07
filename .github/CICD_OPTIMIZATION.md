@@ -209,6 +209,10 @@ All workflows use consistent environment variables:
 - `LHCI_GITHUB_APP_TOKEN`: Lighthouse CI
 - `IFLOW_API_KEY`: OpenCode AI assistant
 
+## GitHub App Permissions
+
+- [GitAuto Permissions Configuration](./GITAUTO_PERMISSIONS.md): Required permissions for GitAuto to access check run logs for enhanced code review insights
+
 ## Best Practices
 
 1. **Use Concurrency Control**: Prevent duplicate runs

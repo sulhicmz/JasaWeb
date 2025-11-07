@@ -12,6 +12,7 @@ jobs:
       contents: write
       pull-requests: read
       issues: read
+      checks: read
     steps:
       - uses: actions/checkout@v4
 

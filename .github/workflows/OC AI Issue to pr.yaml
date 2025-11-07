@@ -11,6 +11,7 @@ jobs:
       contents: write        # untuk push branch
       pull-requests: write   # untuk buat PR
       issues: write          # opsional: komentar di issue
+      checks: read           # untuk akses check run logs
 
     steps:
       - name: Checkout default branch
