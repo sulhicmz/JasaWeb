@@ -7,7 +7,7 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
 1. **Fork the repository**
 2. **Clone your fork**
    ```bash
-   git clone https://github.com/your-username/jasaweb.git
+   git clone https://github.com/your-username/JasaWeb.git
    cd jasaweb
    ```
 3. **Set up development environment**
@@ -43,7 +43,7 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/jasaweb.git
+git clone https://github.com/your-username/JasaWeb.git
 cd jasaweb
 
 # Add upstream remote
