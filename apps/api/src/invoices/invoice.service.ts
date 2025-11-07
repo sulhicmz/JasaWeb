@@ -314,15 +314,15 @@ export class InvoiceService {
     });
 
     const total = invoices.length;
-    const draft = invoices.filter(inv => inv.status === 'draft').length;
-    const issued = invoices.filter(inv => inv.status === 'issued').length;
-    const paid = invoices.filter(inv => inv.status === 'paid').length;
-    const overdue = invoices.filter(inv => inv.status === 'overdue').length;
+    const draft = invoices.filter((inv: any) => inv.status === 'draft').length;
+    const issued = invoices.filter((inv: any) => inv.status === 'issued').length;
+    const paid = invoices.filter((inv: any) => inv.status === 'paid').length;
+    const overdue = invoices.filter((inv: any) => inv.status === 'overdue').length;
 
-    const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+    const totalAmount = invoices.reduce((sum: number, inv: any) => sum + inv.amount, 0);
     const paidAmount = invoices
-      .filter(inv => inv.status === 'paid')
-      .reduce((sum, inv) => sum + inv.amount, 0);
+      .filter((inv: any) => inv.status === 'paid')
+      .reduce((sum: number, inv: any) => sum + inv.amount, 0);
 
     return {
       total,
