@@ -323,7 +323,7 @@ pnpm test:e2e
    - Build output directory: `apps/web/dist`
    - Custom domains can be configured in Cloudflare dashboard
 
-2. **Manual Deployment** (if needed)
+3. **Manual Deployment** (if needed)
 ```bash
 # Build for production
 pnpm build
