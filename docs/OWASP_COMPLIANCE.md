@@ -379,7 +379,7 @@ See `SECURITY.md` for detailed incident response procedures.
 For security concerns or to report vulnerabilities:
 
 - **Email**: security@jasaweb.com
-- **GitHub**: [Security Advisories](https://github.com/jasaweb/jasaweb/security/advisories)
+- **GitHub**: [Security Advisories](https://github.com/sulhicmz/JasaWeb/security/advisories)
 - **Response Time**: Within 48 hours
 
 ---
