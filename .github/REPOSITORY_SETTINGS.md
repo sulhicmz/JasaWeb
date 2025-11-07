@@ -40,6 +40,7 @@
 - **GitHub Copilot**: Enabled for team
 - **GitHub Advanced Security**: Enabled
 - **CodeQL**: Enabled for security scanning
+- **GitAuto**: Enabled for automated code review (see [GitAuto Permissions Configuration](./GITAUTO_PERMISSIONS.md))
 
 ### Third-party Integrations
 - **Slack**: Notifications for PRs and issues
