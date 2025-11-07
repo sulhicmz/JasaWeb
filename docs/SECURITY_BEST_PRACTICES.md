@@ -388,6 +388,17 @@ async login(@Body() dto: LoginDto, @Request() req) {
 - [Node.js Security Best Practices](https://nodejs.org/en/docs/guides/security/)
 - [TypeScript Security](https://www.typescriptlang.org/docs/handbook/security.html)
 
+## ⚠️ TypeScript Configuration Security
+
+### skipLibCheck Setting
+
+The `skipLibCheck` option in `tsconfig.json` can improve compilation speed by skipping type checking of declaration files. However, it may mask potential type conflicts between your application code and third-party dependencies, which could lead to unexpected runtime issues.
+
+**Recommendation**: 
+- Set `skipLibCheck: false` for full type safety across the entire dependency tree
+- Only set `skipLibCheck: true` when there are specific, well-understood compatibility issues with certain libraries
+- Document any decision to use `skipLibCheck: true` with the trade-offs involved
+
 ## 🔄 Regular Security Tasks
 
 ### Daily

@@ -95,6 +95,7 @@ This comprehensive security checklist ensures that all security measures are pro
 - [ ] Automated dependency updates are configured
 - [ ] Lock files are committed (pnpm-lock.yaml)
 - [ ] Deprecated packages are removed
+- [ ] TypeScript `skipLibCheck` is set to `false` for full type safety (except when necessary for compatibility)
 
 ### Docker & Container Security
 
