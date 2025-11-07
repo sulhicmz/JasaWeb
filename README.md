@@ -8,7 +8,7 @@
 
 [![CI/CD Pipeline](https://github.com/sulhicmz/JasaWeb/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/sulhicmz/JasaWeb/actions)
 [![Security Scan](https://github.com/sulhicmz/JasaWeb/workflows/Security%20Scan/badge.svg)](https://github.com/sulhicmz/JasaWeb/actions)
-[![codecov](https://codecov.io/gh/jasaweb/jasaweb/branch/main/graph/badge.svg)](https://codecov.io/gh/jasaweb/jasaweb)
+[![codecov](https://codecov.io/gh/sulhicmz/JasaWeb/branch/main/graph/badge.svg)](https://codecov.io/gh/sulhicmz/JasaWeb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=white)](https://astro.build/)
@@ -75,7 +75,7 @@ jasaweb/
 1. **Clone the repository**
    ```bash
    git clone https://github.com/sulhicmz/JasaWeb.git
-   cd jasaweb
+   cd JasaWeb
    ```
 
 2. **Setup Node.js and pnpm**

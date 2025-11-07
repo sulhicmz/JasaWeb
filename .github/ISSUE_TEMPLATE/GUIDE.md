@@ -135,4 +135,4 @@ Thank you for helping improve JasaWeb! Your detailed issue reports help us:
 - Prevent duplicate issues
 - Improve the overall quality of the project
 
-For questions about issue templates or reporting, start a [Discussion](https://github.com/jasaweb/jasaweb/discussions).
+For questions about issue templates or reporting, start a [Discussion](https://github.com/sulhicmz/JasaWeb/discussions).

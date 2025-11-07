@@ -35,9 +35,9 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
 
 ### 1. Before You Start
 
-- Check existing [issues](https://github.com/jasaweb/jasaweb/issues) and [pull requests](https://github.com/jasaweb/jasaweb/pulls)
+- Check existing [issues](https://github.com/sulhicmz/JasaWeb/issues) and [pull requests](https://github.com/sulhicmz/JasaWeb/pulls)
 - Read our [Code of Conduct](./CODE_OF_CONDUCT.md)
-- Join our [Discussions](https://github.com/jasaweb/jasaweb/discussions) to ask questions
+- Join our [Discussions](https://github.com/sulhicmz/JasaWeb/discussions) to ask questions
 
 ### 2. Setting Up
 
@@ -47,7 +47,7 @@ git clone https://github.com/your-username/jasaweb.git
 cd jasaweb
 
 # Add upstream remote
-git remote add upstream https://github.com/jasaweb/jasaweb.git
+git remote add upstream https://github.com/sulhicmz/JasaWeb.git
 
 # Set up development environment
 ./scripts/setup.sh
@@ -606,8 +606,8 @@ Use our [feature request template](../.github/ISSUE_TEMPLATE/feature_request.yml
 
 ### Getting Help
 
-- **Discussions**: [GitHub Discussions](https://github.com/jasaweb/jasaweb/discussions)
-- **Issues**: [GitHub Issues](https://github.com/jasaweb/jasaweb/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/sulhicmz/JasaWeb/discussions)
+- **Issues**: [GitHub Issues](https://github.com/sulhicmz/JasaWeb/issues)
 - **Discord**: [Join our Discord](https://discord.gg/jasaweb)
 - **Email**: hello@jasaweb.com
 
