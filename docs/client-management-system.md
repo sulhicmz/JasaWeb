@@ -1503,8 +1503,8 @@ export class ProjectsController {
 - [Project Plan](../plan.md)
 
 ### Community
-- [GitHub Issues](https://github.com/jasaweb/jasaweb/issues)
-- [GitHub Discussions](https://github.com/jasaweb/jasaweb/discussions)
+- [GitHub Issues](https://github.com/sulhicmz/JasaWeb/issues)
+- [GitHub Discussions](https://github.com/sulhicmz/JasaWeb/discussions)
 - [Email Support](mailto:support@jasaweb.com)
 
 ### Contributing
