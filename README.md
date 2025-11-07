@@ -318,15 +318,19 @@ pnpm test:e2e
    - Push to `main` → Deploy to Staging
    - Create release tag → Deploy to Production
 
-2. **Manual Deployment** (if needed)
-   ```bash
-   # Build for production
-   pnpm build
+2. **Cloudflare Pages Deployment**
+   - Build command: `pnpm build:web`
+   - Build output directory: `apps/web/dist`
+   - Custom domains can be configured in Cloudflare dashboard
 
-   # Deploy to specific environment
-   pnpm deploy:staging
-   pnpm deploy:production
-   ```
+2. **Manual Deployment** (if needed)
+```bash
+# Build for production
+pnpm build
+
+# Build for Cloudflare Pages
+cd apps/web && pnpm cf-build
+```
 
 ### Infrastructure Requirements
 
@@ -410,6 +414,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 - [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [🛡️ Security Policy](./SECURITY.md) - Security guidelines
 - [📄 Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
+- [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
 
 ## 🐛 Troubleshooting
 
