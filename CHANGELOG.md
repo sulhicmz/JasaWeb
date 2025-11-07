@@ -231,6 +231,6 @@ When contributing to the project:
 ### Getting Help
 
 - 📖 [Documentation](./docs/)
-- 🐛 [Issue Tracker](https://github.com/jasaweb/jasaweb/issues)
-- 💬 [Discussions](https://github.com/jasaweb/jasaweb/discussions)
+- 🐛 [Issue Tracker](https://github.com/sulhicmz/JasaWeb/issues)
+- 💬 [Discussions](https://github.com/sulhicmz/JasaWeb/discussions)
 - 📧 [Support](mailto:support@jasaweb.com)

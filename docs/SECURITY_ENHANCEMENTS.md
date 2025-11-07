@@ -532,7 +532,7 @@ docker-compose exec api pnpm security:scan
 For security questions or concerns:
 
 - **Email**: security@jasaweb.com
-- **GitHub**: [Security Advisories](https://github.com/jasaweb/jasaweb/security/advisories)
+- **GitHub**: [Security Advisories](https://github.com/sulhicmz/JasaWeb/security/advisories)
 - **Documentation**: See `SECURITY.md`
 
 ---

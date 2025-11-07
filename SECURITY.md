@@ -15,7 +15,7 @@
 If you discover a security vulnerability, please report it privately before disclosing it publicly.
 
 #### **Primary Method: GitHub Security Advisory**
-1. Go to [Security Advisories](https://github.com/jasaweb/jasaweb/security/advisories)
+1. Go to [Security Advisories](https://github.com/sulhicmz/JasaWeb/security/advisories)
 2. Click "Report a vulnerability"
 3. Fill out the form with detailed information
 4. We'll respond within 48 hours

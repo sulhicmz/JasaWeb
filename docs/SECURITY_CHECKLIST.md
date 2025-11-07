@@ -303,7 +303,7 @@ This comprehensive security checklist ensures that all security measures are pro
 
 ### External
 
-- **Security Advisories**: https://github.com/jasaweb/jasaweb/security/advisories
+- **Security Advisories**: https://github.com/sulhicmz/JasaWeb/security/advisories
 - **Bug Bounty**: https://jasaweb.com/security/bounty
 - **Emergency Contact**: +1-XXX-XXX-XXXX
 
