@@ -33,6 +33,7 @@ act -j security -s GITHUB_TOKEN=your_token
 # Test specific jobs
 act -j codeql
 act -j dependency-security
+act -j secret-scan
 ```
 
 ## Workflow Validation Script
