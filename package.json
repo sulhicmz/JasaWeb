@@ -52,7 +52,9 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
+    "@types/html-escaper": "^3.0.4",
     "@types/node": "^24.10.0",
+    "@types/nodemailer": "^7.0.3",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitest/coverage-v8": "^4.0.7",
@@ -61,6 +63,7 @@
     "eslint-plugin-security": "^3.0.1",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3",
     "vitest": "^4.0.7"
   },
   "engines": {

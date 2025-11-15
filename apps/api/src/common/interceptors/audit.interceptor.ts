@@ -84,14 +84,14 @@ export class AuditInterceptor implements NestInterceptor {
 
     // For specific cases, we can customize further
     switch(targetType) {
-      case 'File':
-        return request.params.fileId || request.body.fileId;
-      case 'Project':
-        return request.params.projectId || request.body.projectId;
-      case 'Ticket':
-        return request.params.ticketId || request.body.ticketId;
-      default:
-        return undefined;
+    case 'File':
+      return request.params.fileId || request.body.fileId;
+    case 'Project':
+      return request.params.projectId || request.body.projectId;
+    case 'Ticket':
+      return request.params.ticketId || request.body.ticketId;
+    default:
+      return undefined;
     }
   }
 }
