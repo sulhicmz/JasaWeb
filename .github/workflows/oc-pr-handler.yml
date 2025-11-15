@@ -1,5 +1,5 @@
 name: oc - pr handler
-runs-on: self-hosted
+
 on:
   schedule:
     - cron: '0 */3 * * *'
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   opencode:
     name: opencode - issue solver
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 40
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
