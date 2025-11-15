@@ -15,7 +15,7 @@ const pageTitle = 'Login ke Portal Klien - JasaWeb';
             <p class="text-gray-600">Masuk ke akun Anda untuk mengelola proyek Anda</p>
           </div>
           
-          <form class="space-y-6">
+          <form id="loginForm" class="space-y-6">
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input 
@@ -63,6 +63,7 @@ const pageTitle = 'Login ke Portal Klien - JasaWeb';
             <div>
               <button 
                 type="submit" 
+                id="loginButton"
                 class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300"
               >
                 Masuk
@@ -93,4 +94,135 @@ const pageTitle = 'Login ke Portal Klien - JasaWeb';
       </div>
     </div>
   </section>
+
+  <!-- Error/Success Messages -->
+  <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
+
+  <script client:load>
+    // API configuration
+    const API_BASE_URL = 'http://localhost:3001';
+
+    // Check if user is already logged in
+    document.addEventListener('DOMContentLoaded', function() {
+      const token = localStorage.getItem('authToken');
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect') || '/portal';
+      
+      if (token) {
+        // Verify token is still valid
+        verifyToken(token, redirect);
+      }
+    });
+
+    // Verify token validity
+    async function verifyToken(token, redirect) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          window.location.href = redirect;
+        } else {
+          localStorage.removeItem('authToken');
+        }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('authToken');
+      }
+    }
+
+    // Handle login form submission
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const loginButton = document.getElementById('loginButton');
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect') || '/portal';
+
+      // Show loading state
+      loginButton.disabled = true;
+      loginButton.textContent = 'Masuk...';
+      hideMessage();
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Store authentication token
+          localStorage.setItem('authToken', data.access_token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          // Show success message
+          showMessage('Login successful! Redirecting...', 'success');
+          
+          // Redirect to portal or requested page
+          setTimeout(() => {
+            window.location.href = redirect;
+          }, 1000);
+          
+        } else {
+          // Show error message
+          showMessage(data.message || 'Login failed. Please check your credentials.', 'error');
+          loginButton.disabled = false;
+          loginButton.textContent = 'Masuk';
+        }
+        
+      } catch (error) {
+        console.error('Login error:', error);
+        showMessage('Network error. Please try again.', 'error');
+        loginButton.disabled = false;
+        loginButton.textContent = 'Masuk';
+      }
+    });
+
+    // Show message function
+    function showMessage(message, type) {
+      const container = document.getElementById('messageContainer');
+      const messageEl = document.createElement('div');
+      
+      messageEl.className = `p-4 rounded-md shadow-lg ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      messageEl.textContent = message;
+      
+      container.appendChild(messageEl);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        messageEl.remove();
+      }, 5000);
+    }
+
+    // Hide message function
+    function hideMessage() {
+      const container = document.getElementById('messageContainer');
+      container.innerHTML = '';
+    }
+
+    // Demo login for testing (remove in production)
+    document.addEventListener('keydown', function(event) {
+      // Ctrl+Shift+D for demo login
+      if (event.ctrlKey && event.shiftKey && event.key === 'D') {
+        event.preventDefault();
+        document.getElementById('email').value = 'demo@example.com';
+        document.getElementById('password').value = 'demo123';
+        showMessage('Demo credentials filled. Click Masuk to continue.', 'info');
+      }
+    });
+  </script>
 </Layout>
