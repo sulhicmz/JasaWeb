@@ -10,7 +10,7 @@ import { PrismaService } from './prisma.service';
 export class MultiTenantPrismaService {
   constructor(
     private prisma: PrismaService,
-    @Inject(REQUEST) private request: any,
+    @Inject(REQUEST) private request: any
   ) {}
 
   /**
@@ -19,7 +19,9 @@ export class MultiTenantPrismaService {
   private get organizationId(): string {
     const orgId = (this.request as any).organizationId;
     if (!orgId) {
-      throw new BadRequestException('Organization context not found. Please ensure multi-tenant middleware is applied.');
+      throw new BadRequestException(
+        'Organization context not found. Please ensure multi-tenant middleware is applied.'
+      );
     }
     return orgId;
   }
@@ -614,5 +616,236 @@ export class MultiTenantPrismaService {
         },
       });
     },
+  };
+
+  /**
+   * Notifications service methods
+   */
+  notification = {
+    findMany: (args?: any) => {
+      return this.prisma.notification.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.notification.findUnique({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    create: (args: any) => {
+      return this.prisma.notification.create({
+        ...args,
+        data: {
+          ...args.data,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    update: (args: any) => {
+      return this.prisma.notification.update({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+        data: args.data,
+      });
+    },
+
+    updateMany: (args: any) => {
+      return this.prisma.notification.updateMany({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+        data: args.data,
+      });
+    },
+
+    deleteMany: (args: any) => {
+      return this.prisma.notification.deleteMany({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    count: (args?: any) => {
+      return this.prisma.notification.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+  };
+
+  /**
+   * Notification Preferences service methods
+   */
+  notificationPreference = {
+    findMany: (args?: any) => {
+      return this.prisma.notificationPreference.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.notificationPreference.findUnique({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    create: (args: any) => {
+      return this.prisma.notificationPreference.create({
+        ...args,
+        data: {
+          ...args.data,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    upsert: (args: any) => {
+      return this.prisma.notificationPreference.upsert({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+        update: args.update,
+        create: {
+          ...args.create,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    update: (args: any) => {
+      return this.prisma.notificationPreference.update({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+        data: args.data,
+      });
+    },
+
+    delete: (args: any) => {
+      return this.prisma.notificationPreference.delete({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    count: (args?: any) => {
+      return this.prisma.notificationPreference.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+  };
+
+  /**
+   * Memberships service methods
+   */
+  membership = {
+    findMany: (args?: any) => {
+      return this.prisma.membership.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.membership.findUnique({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    create: (args: any) => {
+      return this.prisma.membership.create({
+        ...args,
+        data: {
+          ...args.data,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    update: (args: any) => {
+      return this.prisma.membership.update({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+        data: args.data,
+      });
+    },
+
+    delete: (args: any) => {
+      return this.prisma.membership.delete({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    count: (args?: any) => {
+      return this.prisma.membership.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+  };
+
+  /**
+   * Transaction support
+   */
+  $transaction = (callback: any) => {
+    return this.prisma.$transaction(callback);
   };
 }

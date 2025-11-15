@@ -11,37 +11,41 @@ datasource db {
 }
 
 model User {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  name           String?
-  password       String
-  profilePicture String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  memberships    Membership[]
-  approvals      Approval[]
-  tickets        Ticket[]
-  invoices       Invoice[]
-  auditLogs      AuditLog[]
-  File           File[]
-  Task           Task[]
-  refreshTokens  RefreshToken[]
-  sessions       Session[]
+  id                     String         @id @default(cuid())
+  email                  String         @unique
+  name                   String?
+  password               String
+  profilePicture         String?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  memberships            Membership[]
+  approvals              Approval[]
+  tickets                Ticket[]
+  invoices               Invoice[]
+  auditLogs              AuditLog[]
+  File                   File[]
+  Task                   Task[]
+  refreshTokens          RefreshToken[]
+  sessions               Session[]
+  notifications          Notification[]
+  notificationPreferences NotificationPreference[]
 }
 
 model Organization {
-  id           String       @id @default(cuid())
-  name         String
-  billingEmail String
-  plan         String?
-  settings     Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  memberships  Membership[]
-  projects     Project[]
-  tickets      Ticket[]
-  invoices     Invoice[]
-  AuditLog     AuditLog[]
+  id                     String       @id @default(cuid())
+  name                   String
+  billingEmail           String
+  plan                   String?
+  settings               Json?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  memberships            Membership[]
+  projects               Project[]
+  tickets                Ticket[]
+  invoices               Invoice[]
+  AuditLog               AuditLog[]
+  notifications          Notification[]
+  notificationPreferences NotificationPreference[]
 }
 
 model Membership {
@@ -201,4 +205,39 @@ model AuditLog {
   target         String // User, Project, File, etc.
   meta           Json?
   createdAt      DateTime     @default(now())
+}
+
+model Notification {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           String // project_update, task_assigned, approval_request, ticket_created, invoice_issued, file_uploaded, team_invitation
+  title          String
+  message        String
+  data           Json?        // Additional data related to the notification
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  @@index([userId, isRead])
+  @@index([organizationId])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           String       // project_update, task_assigned, approval_request, etc.
+  inAppEnabled   Boolean      @default(true)
+  emailEnabled   Boolean      @default(true)
+  browserEnabled Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  @@unique([userId, organizationId, type])
 }

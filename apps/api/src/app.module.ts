@@ -12,6 +12,7 @@ import { TicketModule } from './tickets/ticket.module';
 import { InvoiceModule } from './invoices/invoice.module';
 import { FileModule } from './files/file.module';
 import { ApprovalModule } from './approvals/approval.module';
+import { NotificationModule } from './notifications/notification.module';
 import { EmailModule } from './common/services/email.module';
 import { AuditModule } from './common/services/audit.module';
 import { ErrorHandlingModule } from './common/services/error-handling.module';
@@ -26,7 +27,10 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 
-const parseEnvNumber = (value: string | undefined, fallback: number): number => {
+const parseEnvNumber = (
+  value: string | undefined,
+  fallback: number
+): number => {
   const parsed = Number.parseInt(value ?? '', 10);
   return Number.isNaN(parsed) ? fallback : parsed;
 };
@@ -45,10 +49,12 @@ const parseEnvNumber = (value: string | undefined, fallback: number): number => 
         max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
       }),
     }),
-    ThrottlerModule.forRoot([{
-      ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
-      limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
+        limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
+      },
+    ]),
     AuthModule,
     UserModule,
     ProjectModule,
@@ -57,6 +63,7 @@ const parseEnvNumber = (value: string | undefined, fallback: number): number => 
     InvoiceModule,
     FileModule,
     ApprovalModule,
+    NotificationModule,
     EmailModule,
     AuditModule,
     ErrorHandlingModule,

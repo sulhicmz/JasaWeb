@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import { NotificationService } from '../notifications/notification.service';
 
 const projectRelationsInclude = {
   milestones: true,
@@ -58,7 +59,10 @@ export interface UpdateProjectDto {
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
+  constructor(
+    private readonly multiTenantPrisma: MultiTenantPrismaService,
+    private readonly notificationService: NotificationService
+  ) {}
 
   async create(createProjectDto: CreateProjectDto, organizationId: string) {
     return this.multiTenantPrisma.project.create({
@@ -87,14 +91,46 @@ export class ProjectService {
     return project;
   }
 
-  async update(id: string, updateProjectDto: UpdateProjectDto) {
+  async update(
+    id: string,
+    updateProjectDto: UpdateProjectDto,
+    userId?: string,
+    organizationId?: string
+  ) {
     // First check if project exists
-    await this.findOne(id);
+    const existingProject = await this.findOne(id);
 
-    return this.multiTenantPrisma.project.update({
+    const updatedProject = await this.multiTenantPrisma.project.update({
       where: { id },
       data: updateProjectDto,
     });
+
+    // Send notifications if user and organization are provided
+    if (userId && organizationId) {
+      // Get all organization members to notify
+      const members = await this.multiTenantPrisma.membership.findMany({
+        where: { organizationId },
+      });
+
+      // Get current user's name
+      const currentUser = members.find((m) => m.userId === userId);
+      const actorName = 'Someone'; // TODO: Get user name from user service
+
+      // Notify all members except the current user
+      for (const member of members) {
+        if (member.userId !== userId) {
+          await this.notificationService.notifyProjectUpdate(
+            member.userId,
+            organizationId,
+            id,
+            existingProject.name,
+            actorName
+          );
+        }
+      }
+    }
+
+    return updatedProject;
   }
 
   async remove(id: string) {
@@ -107,7 +143,10 @@ export class ProjectService {
   }
 
   // Business logic methods
-  async findByOrganization(organizationId: string, view: ProjectViewMode = 'summary') {
+  async findByOrganization(
+    organizationId: string,
+    view: ProjectViewMode = 'summary'
+  ) {
     return this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       ...buildProjectQuery(view),
@@ -140,26 +179,27 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    const [completedMilestones, pendingApprovals, completedTasks] = await Promise.all([
-      this.multiTenantPrisma.milestone.count({
-        where: {
-          projectId: id,
-          status: 'completed',
-        },
-      }),
-      this.multiTenantPrisma.approval.count({
-        where: {
-          projectId: id,
-          status: 'pending',
-        },
-      }),
-      this.multiTenantPrisma.task.count({
-        where: {
-          projectId: id,
-          status: 'completed',
-        },
-      }),
-    ]);
+    const [completedMilestones, pendingApprovals, completedTasks] =
+      await Promise.all([
+        this.multiTenantPrisma.milestone.count({
+          where: {
+            projectId: id,
+            status: 'completed',
+          },
+        }),
+        this.multiTenantPrisma.approval.count({
+          where: {
+            projectId: id,
+            status: 'pending',
+          },
+        }),
+        this.multiTenantPrisma.task.count({
+          where: {
+            projectId: id,
+            status: 'completed',
+          },
+        }),
+      ]);
 
     const milestoneCount = (project as any)._count?.milestones || 0;
     const fileCount = (project as any)._count?.files || 0;
@@ -172,7 +212,10 @@ export class ProjectService {
       pendingApprovals,
       taskCount,
       completedTasks,
-      progress: milestoneCount > 0 ? Math.round((completedMilestones / milestoneCount) * 100) : 0,
+      progress:
+        milestoneCount > 0
+          ? Math.round((completedMilestones / milestoneCount) * 100)
+          : 0,
     };
   }
 }
