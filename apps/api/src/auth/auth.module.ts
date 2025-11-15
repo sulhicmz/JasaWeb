@@ -14,7 +14,9 @@ import { RefreshTokenService } from './refresh-token.service';
     PrismaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'default_secret',
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '60m' },
+      signOptions: {
+        expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
+      },
     }),
   ],
   controllers: [AuthController],
