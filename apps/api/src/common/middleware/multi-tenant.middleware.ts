@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaService } from '../database/prisma.service';
 
@@ -9,6 +9,8 @@ import { PrismaService } from '../database/prisma.service';
  */
 @Injectable()
 export class MultiTenantMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(MultiTenantMiddleware.name);
+
   constructor(private prisma: PrismaService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -42,7 +44,7 @@ export class MultiTenantMiddleware implements NestMiddleware {
         }
       } catch (error) {
         // If there's an error finding the organization, continue without organization context
-        console.error('Error finding organization for user:', error);
+        this.logger.error('Error finding organization for user', error);
       }
     }
 

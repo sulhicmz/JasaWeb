@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
@@ -9,39 +9,45 @@ import helmet from 'helmet';
 import compression from 'compression';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
   // Security: Apply Helmet middleware for HTTP security headers
-  app.use(helmet({
-    contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
-      directives: {
-        defaultSrc: ['\'self\''],
-        styleSrc: ['\'self\'', '\'unsafe-inline\''],
-        scriptSrc: ['\'self\''],
-        imgSrc: ['\'self\'', 'data:', 'https:'],
-        connectSrc: ['\'self\''],
-        fontSrc: ['\'self\''],
-        objectSrc: ['\'none\''],
-        mediaSrc: ['\'self\''],
-        frameSrc: ['\'none\''],
+  app.use(
+    helmet({
+      contentSecurityPolicy:
+        process.env.NODE_ENV === 'production'
+          ? {
+              directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                scriptSrc: ["'self'"],
+                imgSrc: ["'self'", 'data:', 'https:'],
+                connectSrc: ["'self'"],
+                fontSrc: ["'self'"],
+                objectSrc: ["'none'"],
+                mediaSrc: ["'self'"],
+                frameSrc: ["'none'"],
+              },
+            }
+          : false,
+      crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production',
+      crossOriginOpenerPolicy: { policy: 'same-origin' },
+      crossOriginResourcePolicy: { policy: 'same-origin' },
+      dnsPrefetchControl: { allow: false },
+      frameguard: { action: 'deny' },
+      hidePoweredBy: true,
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
       },
-    } : false,
-    crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production',
-    crossOriginOpenerPolicy: { policy: 'same-origin' },
-    crossOriginResourcePolicy: { policy: 'same-origin' },
-    dnsPrefetchControl: { allow: false },
-    frameguard: { action: 'deny' },
-    hidePoweredBy: true,
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true,
-    },
-    ieNoOpen: true,
-    noSniff: true,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    xssFilter: true,
-  }));
+      ieNoOpen: true,
+      noSniff: true,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      xssFilter: true,
+    })
+  );
 
   // Enable compression
   app.use(compression());
@@ -60,11 +66,13 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
   // Use global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    })
+  );
 
   // Get the error handling service to inject into the filter
   const errorHandlingService = app.get(ErrorHandlingService);
@@ -72,7 +80,7 @@ async function bootstrap() {
   // Apply global exception filters
   app.useGlobalFilters(
     new ComprehensiveExceptionFilter(errorHandlingService),
-    new ValidationExceptionFilter(),
+    new ValidationExceptionFilter()
   );
 
   // Setup Swagger documentation
@@ -88,6 +96,6 @@ async function bootstrap() {
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   await app.listen(port, '0.0.0.0');
-  console.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();

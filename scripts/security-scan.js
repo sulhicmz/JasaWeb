@@ -73,11 +73,7 @@ checkFilePatterns(
 );
 
 // 2. Check for eval() usage
-checkFilePatterns(
-  'eval\\(',
-  'Checking for eval() usage',
-  'error'
-);
+checkFilePatterns('eval\\(', 'Checking for eval() usage', 'error');
 
 // 3. Check for console.log in production code
 checkFilePatterns(
@@ -94,12 +90,12 @@ checkFilePatterns(
 );
 
 // 5. Run npm audit
-runCommand('pnpm audit --audit-level moderate', 'Running npm audit');
+runCommand('npm audit --audit-level moderate', 'Running npm audit');
 
 // 6. Check for outdated dependencies
 console.log('🔍 Checking for outdated dependencies...');
 try {
-  execSync('pnpm outdated', { encoding: 'utf-8', stdio: 'pipe' });
+  execSync('npm outdated', { encoding: 'utf-8', stdio: 'pipe' });
   results.passed.push('Checking for outdated dependencies');
   console.log('✅ All dependencies are up to date\n');
 } catch (error) {
@@ -112,7 +108,9 @@ try {
 // 7. Check for .env files in git
 console.log('🔍 Checking for .env files in git...');
 try {
-  const output = execSync('git ls-files | grep -E "^\\.env$" || true', { encoding: 'utf-8' });
+  const output = execSync('git ls-files | grep -E "^\\.env$" || true', {
+    encoding: 'utf-8',
+  });
   if (output.trim()) {
     results.failed.push('Checking for .env files in git');
     console.log('❌ .env files found in git - SECURITY RISK\n');
@@ -127,7 +125,10 @@ try {
 // 8. Check TypeScript strict mode
 console.log('🔍 Checking TypeScript configuration...');
 try {
-  const tsconfigPath = path.join(process.cwd(), 'packages/config/tsconfig/base.json');
+  const tsconfigPath = path.join(
+    process.cwd(),
+    'packages/config/tsconfig/base.json'
+  );
   const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf-8'));
 
   if (tsconfig.compilerOptions.strict) {
@@ -186,7 +187,9 @@ console.log('='.repeat(60) + '\n');
 
 if (results.failed.length > 0) {
   console.log('❌ Security scan completed with failures');
-  console.log('Please address the failed checks before deploying to production.\n');
+  console.log(
+    'Please address the failed checks before deploying to production.\n'
+  );
   process.exit(1);
 } else if (results.warnings.length > 0) {
   console.log('⚠️  Security scan completed with warnings');
