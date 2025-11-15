@@ -1,0 +1,259 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Development (Full Stack)",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "Start both API and Web development servers"
+    },
+    {
+      "label": "Start API Development",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:api"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": ["$tsc-watch"],
+      "detail": "Start NestJS API in development mode"
+    },
+    {
+      "label": "Start Web Development",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["dev:web"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "detail": "Start Astro web server in development mode"
+    },
+    {
+      "label": "Build All Applications",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Build both API and Web applications"
+    },
+    {
+      "label": "Build API Only",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build:api"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Build NestJS API application"
+    },
+    {
+      "label": "Build Web Only",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["build:web"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Build Astro web application"
+    },
+    {
+      "label": "Run All Tests",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["test:run"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run all test suites"
+    },
+    {
+      "label": "Run API Tests",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["test:api"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/apps/api"
+      },
+      "problemMatcher": [],
+      "detail": "Run API test suite"
+    },
+    {
+      "label": "Run E2E Tests",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["test:e2e"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run end-to-end tests"
+    },
+    {
+      "label": "Lint and Format Code",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["lint:fix", "format"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run ESLint fix and Prettier formatting"
+    },
+    {
+      "label": "Type Check All",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["typecheck"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"],
+      "detail": "Run TypeScript type checking"
+    },
+    {
+      "label": "Database: Generate Prisma Client",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:generate"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Generate Prisma client from schema"
+    },
+    {
+      "label": "Database: Run Migrations",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:migrate"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run database migrations"
+    },
+    {
+      "label": "Database: Open Prisma Studio",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["db:studio"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "problemMatcher": [],
+      "detail": "Open Prisma Studio database browser"
+    },
+    {
+      "label": "Security: Audit Dependencies",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["security:audit"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Run security audit on dependencies"
+    },
+    {
+      "label": "Clean All",
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["clean"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Clean all build artifacts and node_modules"
+    }
+  ]
+}

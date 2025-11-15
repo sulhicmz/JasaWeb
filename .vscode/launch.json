@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug NestJS API",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/api/src/main.ts",
+      "outFiles": ["${workspaceFolder}/apps/api/dist/**/*.js"],
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "cwd": "${workspaceFolder}/apps/api",
+      "restart": true,
+      "protocol": "inspector"
+    },
+    {
+      "name": "Debug NestJS Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/api/node_modules/.bin/jest",
+      "args": ["--runInBand", "--no-cache"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "cwd": "${workspaceFolder}/apps/api",
+      "runtimeArgs": ["--inspect-brk"]
+    },
+    {
+      "name": "Debug Astro Web",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/web/node_modules/.bin/astro",
+      "args": ["dev"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "cwd": "${workspaceFolder}/apps/web",
+      "protocol": "inspector"
+    },
+    {
+      "name": "Debug Vitest Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/vitest",
+      "args": ["run", "--no-coverage"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug Current TypeScript File",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/.bin/ts-node",
+      "args": ["${file}"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack",
+      "configurations": ["Debug NestJS API", "Debug Astro Web"],
+      "stopAll": true
+    }
+  ]
+}
