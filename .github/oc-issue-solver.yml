@@ -1,5 +1,5 @@
 name: oc - issue solver
-
+runs-on: self-hosted
 on:
   schedule:
     - cron: '0/30 * * * *'
