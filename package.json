@@ -49,7 +49,9 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
+    "@types/html-escaper": "^3.0.4",
     "@types/node": "^24.10.0",
+    "@types/nodemailer": "^7.0.3",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitest/coverage-v8": "^4.0.7",

@@ -124,7 +124,7 @@ export class RefreshTokenService {
     
     const [tokenIdentifier, actualToken] = refreshToken.split('.');
     if (!tokenIdentifier || !actualToken) {
-      this.logger.warn(`Invalid refresh token format provided`);
+      this.logger.warn('Invalid refresh token format provided');
       throw new UnauthorizedException('Invalid refresh token format');
     }
     
@@ -134,13 +134,13 @@ export class RefreshTokenService {
     });
 
     if (!storedToken) {
-      this.logger.warn(`Invalid refresh token identifier provided`);
+      this.logger.warn('Invalid refresh token identifier provided');
       throw new UnauthorizedException('Invalid refresh token');
     }
 
     // Check if the token is expired
     if (storedToken.expiresAt < new Date()) {
-      this.logger.warn(`Expired refresh token provided`);
+      this.logger.warn('Expired refresh token provided');
       await this.prisma.refreshToken.update({
         where: { id: storedToken.id },
         data: { revokedAt: new Date() },
@@ -150,14 +150,14 @@ export class RefreshTokenService {
 
     // Check if the token has been revoked
     if (storedToken.revokedAt) {
-      this.logger.warn(`Revoked refresh token provided`);
+      this.logger.warn('Revoked refresh token provided');
       throw new UnauthorizedException('Revoked refresh token');
     }
 
     // Compare the provided token with the stored hash
     const tokenMatches = await bcrypt.compare(actualToken, storedToken.tokenHash);
     if (!tokenMatches) {
-      this.logger.warn(`Refresh token hash mismatch`);
+      this.logger.warn('Refresh token hash mismatch');
       // For security, revoke this token if the hash doesn't match
       await this.prisma.refreshToken.update({
         where: { id: storedToken.id },
@@ -199,7 +199,7 @@ export class RefreshTokenService {
     });
 
     if (!token) {
-      this.logger.warn(`Attempt to revoke non-existent refresh token`);
+      this.logger.warn('Attempt to revoke non-existent refresh token');
       throw new UnauthorizedException('Invalid refresh token');
     }
 
@@ -245,16 +245,16 @@ export class RefreshTokenService {
 
     const now = new Date();
     switch (unit) {
-      case 's': // seconds
-        return new Date(now.getTime() + value * 1000);
-      case 'm': // minutes
-        return new Date(now.getTime() + value * 60 * 1000);
-      case 'h': // hours
-        return new Date(now.getTime() + value * 60 * 60 * 1000);
-      case 'd': // days
-        return new Date(now.getTime() + value * 24 * 60 * 60 * 1000);
-      default:
-        throw new Error('Invalid expiresIn unit');
+    case 's': // seconds
+      return new Date(now.getTime() + value * 1000);
+    case 'm': // minutes
+      return new Date(now.getTime() + value * 60 * 1000);
+    case 'h': // hours
+      return new Date(now.getTime() + value * 60 * 60 * 1000);
+    case 'd': // days
+      return new Date(now.getTime() + value * 24 * 60 * 60 * 1000);
+    default:
+      throw new Error('Invalid expiresIn unit');
     }
   }
 }

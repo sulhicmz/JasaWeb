@@ -63,7 +63,7 @@ export class SessionService {
 
     // Check if session exists and is not expired or revoked
     if (!session || session.expiresAt < new Date() || session.revokedAt) {
-      this.logger.warn(`Invalid session token provided`);
+      this.logger.warn('Invalid session token provided');
       return null;
     }
 
@@ -86,7 +86,7 @@ export class SessionService {
     });
 
     if (!session) {
-      this.logger.warn(`Attempt to revoke non-existent session`);
+      this.logger.warn('Attempt to revoke non-existent session');
       throw new UnauthorizedException('Invalid session');
     }
 
@@ -169,16 +169,16 @@ export class SessionService {
 
     const now = new Date();
     switch (unit) {
-      case 's': // seconds
-        return new Date(now.getTime() + value * 1000);
-      case 'm': // minutes
-        return new Date(now.getTime() + value * 60 * 1000);
-      case 'h': // hours
-        return new Date(now.getTime() + value * 60 * 60 * 1000);
-      case 'd': // days
-        return new Date(now.getTime() + value * 24 * 60 * 60 * 1000);
-      default:
-        throw new Error('Invalid expiresIn unit');
+    case 's': // seconds
+      return new Date(now.getTime() + value * 1000);
+    case 'm': // minutes
+      return new Date(now.getTime() + value * 60 * 1000);
+    case 'h': // hours
+      return new Date(now.getTime() + value * 60 * 60 * 1000);
+    case 'd': // days
+      return new Date(now.getTime() + value * 24 * 60 * 60 * 1000);
+    default:
+      throw new Error('Invalid expiresIn unit');
     }
   }
 }
