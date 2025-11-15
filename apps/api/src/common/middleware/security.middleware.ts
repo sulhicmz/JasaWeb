@@ -19,7 +19,7 @@ export class SecurityMiddleware implements NestMiddleware {
     res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
     // Prevent clickjacking
-    res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+    res.setHeader('Content-Security-Policy', 'frame-ancestors \'none\'');
 
     // Check for suspicious patterns in request
     this.checkSuspiciousPatterns(req);
