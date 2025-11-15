@@ -10,5 +10,8 @@
     "test",
     "node_modules",
     "dist"
+    // IMPORTANT: Only exclude test files and build artifacts
+    // All source code must be included in compilation for type safety
+    // See issue #79 and verify-typescript-config.js for validation
   ]
 }
