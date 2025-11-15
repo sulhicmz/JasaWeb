@@ -6,44 +6,60 @@ export const prerender = false;
 export const POST: APIRoute = async ({ request }) => {
   try {
     const formData = await request.formData();
-    
+
     // Extract form data
     const name = formData.get('name')?.toString() || '';
     const email = formData.get('email')?.toString() || '';
     const service = formData.get('service')?.toString() || '';
     const message = formData.get('message')?.toString() || '';
-    
+
     // Validate required fields
     if (!name || !email || !service || !message) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Semua field harus diisi'
-      }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json'
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Semua field harus diisi',
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
-      });
+      );
     }
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Format email tidak valid'
-      }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json'
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Format email tidak valid',
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          },
         }
+      );
+    }
+
+    // Here you would typically send the email using a service like Nodemailer, SendGrid, etc.
+    // NOTE: Email service integration should be implemented based on requirements
+    // Options: Nodemailer, SendGrid, AWS SES, or other email service
+    // For debugging purposes, you might want to log this in development only
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log('Contact form submission:', {
+        name,
+        email,
+        service,
+        message,
       });
     }
-    
-    // Here you would typically send the email using a service like Nodemailer, SendGrid, etc.
-    // For now, we'll just log to console
-    console.log('Contact form submission:', { name, email, service, message });
-    
+
     // Simulate email sending
     // In a real implementation, you would use an email service here
     // Example with nodemailer:
@@ -78,29 +94,40 @@ export const POST: APIRoute = async ({ request }) => {
       `
     });
     */
-    
+
     // Return success response
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'Pesan Anda telah berhasil dikirim. Kami akan segera menghubungi Anda.'
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message:
+          'Pesan Anda telah berhasil dikirim. Kami akan segera menghubungi Anda.',
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
-    
+    );
   } catch (error) {
-    console.error('Error processing contact form:', error);
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Terjadi kesalahan saat memproses pesan Anda. Silakan coba lagi.'
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json'
+    // Log error in development for debugging
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.error('Error processing contact form:', error);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error:
+          'Terjadi kesalahan saat memproses pesan Anda. Silakan coba lagi.',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
+    );
   }
 };
