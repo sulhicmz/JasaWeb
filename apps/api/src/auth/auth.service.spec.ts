@@ -26,7 +26,7 @@ describe('AuthService', () => {
     id: '1',
     email: 'test@example.com',
     name: 'Test User',
-    password: 'hashedPassword',
+    password: 'test-hash-pass',
     profilePicture: null,
   };
 
@@ -80,7 +80,7 @@ describe('AuthService', () => {
   describe('register', () => {
     const createUserDto = {
       email: 'test@example.com',
-      password: 'password123',
+      password: 'test-pass-123',
       name: 'Test User',
     };
 
@@ -88,13 +88,13 @@ describe('AuthService', () => {
       mockUsersService.findByEmail.mockResolvedValue(null);
       mockUsersService.create.mockResolvedValue(mockUser);
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
-        token: 'access-token',
-        refreshToken: 'refresh-token',
+        token: 'test-access-token',
+        refreshToken: 'test-refresh-token',
         expiresAt: new Date(),
       });
 
       const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('hashedPassword');
+      bcrypt.hash.mockResolvedValue('test-hash-pass');
 
       const result = await service.register(createUserDto);
 
@@ -116,14 +116,14 @@ describe('AuthService', () => {
   describe('login', () => {
     const loginUserDto = {
       email: 'test@example.com',
-      password: 'password123',
+      password: 'test-pass-123',
     };
 
     it('should successfully login user', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
-        token: 'access-token',
-        refreshToken: 'refresh-token',
+        token: 'test-access-token',
+        refreshToken: 'test-refresh-token',
         expiresAt: new Date(),
       });
 
@@ -192,7 +192,7 @@ describe('AuthService', () => {
 
       const result = await service.validateUser(
         'test@example.com',
-        'wrongpassword'
+        'wrong-test-pass'
       );
 
       expect(result).toBeNull();

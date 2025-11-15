@@ -17,7 +17,7 @@ describe('UsersService', () => {
     id: '1',
     email: 'test@example.com',
     name: 'Test User',
-    password: 'hashedPassword',
+    password: 'test-hash-pass',
     profilePicture: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -59,13 +59,13 @@ describe('UsersService', () => {
   describe('create', () => {
     const createUserDto: CreateUserDto = {
       email: 'test@example.com',
-      password: 'password123',
+      password: 'test-pass-123',
       name: 'Test User',
     };
 
     it('should create a new user with hashed password', async () => {
       const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('hashedPassword');
+      bcrypt.hash.mockResolvedValue('test-hash-pass');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       const result = await service.create(createUserDto);
@@ -75,7 +75,7 @@ describe('UsersService', () => {
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'hashedPassword',
+          password: 'test-hash-pass',
         },
       });
       expect(result).toEqual(mockUser);
@@ -97,7 +97,7 @@ describe('UsersService', () => {
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'hashedPassword',
+          password: 'test-hash-pass',
           profilePicture: 'profile.jpg',
         },
       });
@@ -178,19 +178,19 @@ describe('UsersService', () => {
 
     it('should update user password with hashing', async () => {
       const updatePasswordDto: UpdateUserDto = {
-        password: 'newpassword123',
+        password: 'new-test-pass',
       };
 
       const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('newHashedPassword');
+      bcrypt.hash.mockResolvedValue('new-test-hash');
       mockPrismaService.user.update.mockResolvedValue(mockUser);
 
       await service.update('1', updatePasswordDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('newpassword123', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('new-test-pass', 10);
       expect(mockPrismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { password: 'newHashedPassword' },
+        data: { password: 'new-test-hash' },
       });
     });
 
