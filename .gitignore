@@ -61,7 +61,6 @@ secrets/
 .secrets
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
