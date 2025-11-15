@@ -1,5 +1,5 @@
 name: oc - pr handler
-
+runs-on: self-hosted
 on:
   schedule:
     - cron: '0 */3 * * *'
