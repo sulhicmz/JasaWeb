@@ -3,12 +3,11 @@ import { UsersService } from './users.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as bcrypt from 'bcrypt';
 
 // Mock bcrypt
-jest.mock('bcrypt');
-
-const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
+jest.mock('bcrypt', () => ({
+  hash: jest.fn(),
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -65,7 +64,8 @@ describe('UsersService', () => {
     };
 
     it('should create a new user with hashed password', async () => {
-      (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      const bcrypt = require('bcrypt');
+      bcrypt.hash.mockResolvedValue('hashedPassword');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       const result = await service.create(createUserDto);
@@ -87,7 +87,8 @@ describe('UsersService', () => {
         profilePicture: 'profile.jpg',
       };
 
-      (mockedBcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      const bcrypt = require('bcrypt');
+      bcrypt.hash.mockResolvedValue('hashedPassword');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       await service.create(createUserDtoWithPicture);
@@ -180,7 +181,8 @@ describe('UsersService', () => {
         password: 'newpassword123',
       };
 
-      (mockedBcrypt.hash as jest.Mock).mockResolvedValue('newHashedPassword');
+      const bcrypt = require('bcrypt');
+      bcrypt.hash.mockResolvedValue('newHashedPassword');
       mockPrismaService.user.update.mockResolvedValue(mockUser);
 
       await service.update('1', updatePasswordDto);
