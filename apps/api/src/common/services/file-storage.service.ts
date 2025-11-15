@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { 
-  S3Client, 
-  PutObjectCommand, 
-  DeleteObjectCommand, 
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
-  HeadObjectCommand
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -31,6 +31,7 @@ export interface FileMetadata {
 
 @Injectable()
 export class FileStorageService {
+  private readonly logger = new Logger(FileStorageService.name);
   private s3Client: S3Client;
 
   constructor() {
@@ -50,7 +51,10 @@ export class FileStorageService {
   /**
    * Upload a file to S3
    */
-  async uploadFile(fileBuffer: Buffer, options: FileUploadOptions): Promise<string> {
+  async uploadFile(
+    fileBuffer: Buffer,
+    options: FileUploadOptions
+  ): Promise<string> {
     const command = new PutObjectCommand({
       Bucket: options.bucket,
       Key: options.key,
@@ -60,7 +64,7 @@ export class FileStorageService {
     });
 
     await this.s3Client.send(command);
-    
+
     // Return the S3 key as the file identifier
     return options.key;
   }
@@ -74,8 +78,8 @@ export class FileStorageService {
       Key: options.key,
     });
 
-    return await getSignedUrl(this.s3Client, command, { 
-      expiresIn: options.expiresIn || 3600 
+    return await getSignedUrl(this.s3Client, command, {
+      expiresIn: options.expiresIn || 3600,
     });
   }
 
@@ -100,9 +104,9 @@ export class FileStorageService {
         Bucket: bucket,
         Key: key,
       });
-      
+
       const response = await this.s3Client.send(command);
-      
+
       return {
         contentLength: response.ContentLength,
         contentType: response.ContentType,
@@ -111,7 +115,7 @@ export class FileStorageService {
         metadata: response.Metadata,
       };
     } catch (error) {
-      console.error('Error getting file metadata:', error);
+      this.logger.error('Error getting file metadata', error);
       throw error;
     }
   }
