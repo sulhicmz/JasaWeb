@@ -1,0 +1,65 @@
+name: 'JasaWeb CodeQL Configuration'
+
+# Paths to exclude from analysis
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/build/**'
+  - '**/.git/**'
+  - '**/.github/**'
+  - '**/coverage/**'
+  - '**/logs/**'
+  - '**/tmp/**'
+  - '**/*.min.js'
+  - '**/*.bundle.js'
+
+# Query packs to use
+packs:
+  - codeql/javascript-queries
+  - codeql/typescript-queries
+
+# Additional query suites
+queries:
+  - name: Security and Quality
+    uses: codeql-suites
+    with:
+      suite: security-and-quality
+
+# Extraction settings
+extractor:
+  javascript:
+    extraction:
+      javascript:
+        include:
+          - '**/*.js'
+          - '**/*.jsx'
+          - '**/*.ts'
+          - '**/*.tsx'
+          - '**/*.mjs'
+          - '**/*.cjs'
+        exclude:
+          - '**/node_modules/**'
+          - '**/dist/**'
+          - '**/build/**'
+          - '**/*.test.js'
+          - '**/*.test.ts'
+          - '**/*.spec.js'
+          - '**/*.spec.ts'
+
+# Problem-specific configurations
+problem-severity:
+  - error
+  - warning
+  - note
+
+# Code scanning settings
+code-scanning:
+  # Maximum number of problems to report
+  max-problems: 1000
+
+  # Categories to include
+  categories:
+    - security
+    - correctness
+    - maintainability
+    - performance
