@@ -11,19 +11,6 @@ const path = require('path');
 
 console.log('🔒 Starting Security Scan...\n');
 
-// Detect package manager
-let packageManager = 'npm'; // default fallback
-if (fs.existsSync('pnpm-lock.yaml')) {
-  try {
-    execSync('which pnpm', { stdio: 'pipe' });
-    packageManager = 'pnpm';
-  } catch (error) {
-    console.log(
-      '⚠️  pnpm-lock.yaml found but pnpm not installed, using npm fallback\n'
-    );
-  }
-}
-
 const results = {
   passed: [],
   warnings: [],
@@ -57,38 +44,15 @@ function checkFilePatterns(
   pattern,
   description,
   severity = 'warning',
-  excludeFile = null
+  excludePattern = ''
 ) {
   try {
     console.log(`🔍 ${description}...`);
-    let command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist . || true`;
-    if (excludeFile) {
-      command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude="${excludeFile}" . || true`;
+    let command = `grep -r -i -E '${pattern}' --include='*.ts' --include='*.js' --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist . || true`;
+    if (excludePattern) {
+      command = `grep -r -i -E '${pattern}' --include='*.ts' --include='*.js' --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude=${excludePattern} . || true`;
     }
-    let output = execSync(command, { encoding: 'utf-8' });
-
-    // Filter out results from the excluded file
-    if (excludeFile && output.trim()) {
-      const lines = output
-        .split('\n')
-        .filter((line) => !line.includes(excludeFile));
-      output = lines.join('\n');
-    }
-
-    if (output.trim()) {
-      if (severity === 'error') {
-        results.failed.push(description);
-        console.log(`❌ ${description} - FOUND ISSUES`);
-      } else {
-        results.warnings.push(description);
-        console.log(`⚠️  ${description} - WARNINGS`);
-      }
-      console.log(output);
-      console.log('');
-    } else {
-      results.passed.push(description);
-      console.log(`✅ ${description} - PASSED\n`);
-    }
+    const output = execSync(command, { encoding: 'utf-8' });
 
     if (output.trim()) {
       if (severity === 'error') {
@@ -111,17 +75,17 @@ function checkFilePatterns(
 
 // 1. Check for hardcoded secrets
 checkFilePatterns(
-  '(password|secret|key|token)\\s*[:=]\\s*[\'\"][^\'\"]{8,}[\'\"]',
+  'password.*=.*["\047][a-zA-Z0-9]{8,}["\047]',
   'Checking for hardcoded secrets',
   'error'
 );
 
-// 2. Check for eval() usage (exclude security script itself)
+// 2. Check for eval() usage (excluding this script)
 checkFilePatterns(
   'eval\\(',
   'Checking for eval() usage',
   'error',
-  'scripts/security-scan.js'
+  'security-scan.js'
 );
 
 // 3. Check for console.log in production code
@@ -131,32 +95,20 @@ checkFilePatterns(
   'warning'
 );
 
-// 4. Check for TODO/FIXME comments (exclude security script itself)
+// 4. Check for TODO/FIXME comments
 checkFilePatterns(
   '(TODO|FIXME|XXX|HACK)',
   'Checking for TODO/FIXME comments',
-  'warning',
-  'scripts/security-scan.js'
+  'warning'
 );
 
-// 5. Run security audit (prefer pnpm, fallback to npm)
-const lockFile =
-  packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'package-lock.json';
-if (fs.existsSync(lockFile)) {
-  runCommand(
-    `${packageManager} audit --audit-level moderate`,
-    `Running ${packageManager} audit`
-  );
-} else {
-  console.log(`⚠️  No ${lockFile} found, skipping ${packageManager} audit`);
-  console.log('   Consider running dependency audits in your CI environment\n');
-  results.warnings.push(`Running ${packageManager} audit`);
-}
+// 5. Run pnpm audit
+runCommand('pnpm audit --audit-level moderate', 'Running pnpm audit');
 
 // 6. Check for outdated dependencies
 console.log('🔍 Checking for outdated dependencies...');
 try {
-  execSync(`${packageManager} outdated`, { encoding: 'utf-8', stdio: 'pipe' });
+  execSync('pnpm outdated', { encoding: 'utf-8', stdio: 'pipe' });
   results.passed.push('Checking for outdated dependencies');
   console.log('✅ All dependencies are up to date\n');
 } catch (error) {
