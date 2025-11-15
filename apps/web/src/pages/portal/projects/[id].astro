@@ -1,0 +1,686 @@
+---
+// src/pages/portal/projects/[id].astro
+import Layout from '../../../layouts/Layout.astro';
+import DashboardHeader from '../../../components/portal/DashboardHeader.astro';
+
+export interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Layout title="Project Details - Client Portal">
+  <div class="min-h-screen bg-gray-50">
+    <DashboardHeader />
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Project Header -->
+      <div id="project-header" class="mb-8">
+        <!-- Loading State -->
+        <div id="header-loading" class="animate-pulse">
+          <div class="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div class="flex space-x-4">
+            <div class="h-10 bg-gray-200 rounded w-32"></div>
+            <div class="h-10 bg-gray-200 rounded w-24"></div>
+          </div>
+        </div>
+
+        <!-- Header Content (hidden initially) -->
+        <div id="header-content" class="hidden">
+          <div class="flex justify-between items-start mb-6">
+            <div class="flex-1">
+              <div class="flex items-center space-x-4 mb-2">
+                <button onclick="window.location.href='/portal/projects'" class="text-gray-500 hover:text-gray-700">
+                  ← Back to Projects
+                </button>
+              </div>
+              <h1 id="project-name" class="text-3xl font-bold text-gray-900 mb-2"></h1>
+              <p id="project-description" class="text-gray-600 mb-4"></p>
+              <div class="flex items-center space-x-6 text-sm text-gray-500">
+                <span>Created: <span id="project-created" class="text-gray-900"></span></span>
+                <span>Last Updated: <span id="project-updated" class="text-gray-900"></span></span>
+                <span>Status: <span id="project-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"></span></span>
+              </div>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="editProject()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                Edit Project
+              </button>
+              <button onclick="openProjectSettings()" class="border border-gray-300 rounded-md px-4 py-2 hover:bg-gray-50">
+                Settings
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Overview -->
+          <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-lg font-medium text-gray-900">Overall Progress</h2>
+              <span id="progress-percentage" class="text-2xl font-bold text-indigo-600">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+              <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <div id="milestones-count" class="text-2xl font-bold text-gray-900">0</div>
+                <div class="text-sm text-gray-500">Milestones</div>
+              </div>
+              <div>
+                <div id="tasks-count" class="text-2xl font-bold text-gray-900">0</div>
+                <div class="text-sm text-gray-500">Tasks</div>
+              </div>
+              <div>
+                <div id="files-count" class="text-2xl font-bold text-gray-900">0</div>
+                <div class="text-sm text-gray-500">Files</div>
+              </div>
+              <div>
+                <div id="approvals-count" class="text-2xl font-bold text-gray-900">0</div>
+                <div class="text-sm text-gray-500">Approvals</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="border-b border-gray-200 mb-8">
+        <nav class="-mb-px flex space-x-8">
+          <button onclick="switchTab('overview')" id="tab-overview" class="tab-button active py-2 px-1 border-b-2 border-indigo-500 font-medium text-sm text-indigo-600">
+            Overview
+          </button>
+          <button onclick="switchTab('milestones')" id="tab-milestones" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Milestones
+          </button>
+          <button onclick="switchTab('tasks')" id="tab-tasks" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Tasks
+          </button>
+          <button onclick="switchTab('files')" id="tab-files" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Files
+          </button>
+          <button onclick="switchTab('approvals')" id="tab-approvals" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Approvals
+          </button>
+          <button onclick="switchTab('team')" id="tab-team" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Team
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="tab-content">
+        <!-- Overview Tab -->
+        <div id="content-overview" class="tab-content">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Recent Milestones -->
+            <div class="bg-white rounded-lg shadow">
+              <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Recent Milestones</h3>
+              </div>
+              <div id="recent-milestones" class="p-6">
+                <div class="text-center py-8 text-gray-500">
+                  Loading milestones...
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-lg shadow">
+              <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+              </div>
+              <div id="recent-activity" class="p-6">
+                <div class="text-center py-8 text-gray-500">
+                  Loading activity...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Other tabs will be loaded dynamically -->
+        <div id="content-milestones" class="tab-content hidden">
+          <div class="text-center py-12 text-gray-500">
+            Loading milestones...
+          </div>
+        </div>
+
+        <div id="content-tasks" class="tab-content hidden">
+          <div class="text-center py-12 text-gray-500">
+            Loading tasks...
+          </div>
+        </div>
+
+        <div id="content-files" class="tab-content hidden">
+          <div class="text-center py-12 text-gray-500">
+            Loading files...
+          </div>
+        </div>
+
+        <div id="content-approvals" class="tab-content hidden">
+          <div class="text-center py-12 text-gray-500">
+            Loading approvals...
+          </div>
+        </div>
+
+        <div id="content-team" class="tab-content hidden">
+          <div class="text-center py-12 text-gray-500">
+            Loading team information...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals (will be dynamically created) -->
+  <div id="modal-container"></div>
+
+  <script client:load>
+    // API configuration
+    const API_BASE_URL = 'http://localhost:3001';
+    let currentProject = null;
+    let currentTab = 'overview';
+
+    // Get project ID from URL
+    const projectId = window.location.pathname.split('/').pop();
+
+    // Check authentication
+    const isAuthenticated = localStorage.getItem('authToken');
+    if (!isAuthenticated) {
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProject();
+      
+      // Initialize React components if available
+      setTimeout(() => {
+        try {
+          // Dynamic import of React components
+          import('../../../components/portal/ProjectManagementHub.tsx').then(module => {
+            if (module.initializeProjectManagement) {
+              module.initializeProjectManagement(projectId);
+            }
+          }).catch(error => {
+            console.log('React components not available, using fallback mode');
+          });
+        } catch (error) {
+          console.log('React components not available, using fallback mode');
+        }
+      }, 500);
+    });
+
+    // Listen for project stats updates
+    document.addEventListener('projectStatsUpdate', () => {
+      if (currentProject) {
+        loadProjectStats();
+      }
+    });
+
+    // Load project details
+    async function loadProject() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load project');
+        }
+
+        currentProject = await response.json();
+        displayProject();
+        loadTabContent(currentTab);
+
+      } catch (error) {
+        console.error('Error loading project:', error);
+        showError('Failed to load project details');
+      }
+    }
+
+    // Display project information
+    function displayProject() {
+      document.getElementById('header-loading').classList.add('hidden');
+      document.getElementById('header-content').classList.remove('hidden');
+
+      document.getElementById('project-name').textContent = currentProject.name;
+      document.getElementById('project-description').textContent = currentProject.description || 'No description';
+      document.getElementById('project-created').textContent = formatDate(currentProject.createdAt);
+      document.getElementById('project-updated').textContent = formatDate(currentProject.updatedAt);
+      
+      // Set status badge
+      const statusEl = document.getElementById('project-status');
+      statusEl.textContent = currentProject.status || 'Active';
+      statusEl.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(currentProject.status)}`;
+
+      // Update progress (mock calculation for now)
+      const progress = calculateProjectProgress(currentProject);
+      document.getElementById('progress-percentage').textContent = `${progress}%`;
+      document.getElementById('progress-bar').style.width = `${progress}%`;
+
+      // Load statistics
+      loadProjectStats();
+    }
+
+    // Load project statistics
+    async function loadProjectStats() {
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        // Load milestones
+        const milestonesResponse = await fetch(`${API_BASE_URL}/milestones?projectId=${projectId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const milestones = milestonesResponse.ok ? await milestonesResponse.json() : [];
+        document.getElementById('milestones-count').textContent = milestones.length;
+
+        // Load other stats (mock for now)
+        document.getElementById('tasks-count').textContent = '0';
+        document.getElementById('files-count').textContent = '0';
+        document.getElementById('approvals-count').textContent = '0';
+
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    // Tab switching
+    function switchTab(tabName) {
+      currentTab = tabName;
+
+      // Update tab buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+      });
+
+      const activeTab = document.getElementById(`tab-${tabName}`);
+      activeTab.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+      activeTab.classList.remove('border-transparent', 'text-gray-500');
+
+      // Update content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+      loadTabContent(tabName);
+    }
+
+    // Load tab content
+    async function loadTabContent(tabName) {
+      switch (tabName) {
+        case 'overview':
+          await loadOverviewContent();
+          break;
+        case 'milestones':
+          await loadMilestonesContent();
+          break;
+        case 'tasks':
+          await loadTasksContent();
+          break;
+        case 'files':
+          await loadFilesContent();
+          break;
+        case 'approvals':
+          await loadApprovalsContent();
+          break;
+        case 'team':
+          await loadTeamContent();
+          break;
+      }
+    }
+
+    // Load overview content
+    async function loadOverviewContent() {
+      await loadRecentMilestones();
+      await loadRecentActivity();
+    }
+
+    // Load recent milestones
+    async function loadRecentMilestones() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/milestones?projectId=${projectId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const milestones = await response.json();
+          displayRecentMilestones(milestones.slice(0, 5)); // Show only 5 most recent
+        } else {
+          document.getElementById('recent-milestones').innerHTML = '<p class="text-gray-500">No milestones found</p>';
+        }
+      } catch (error) {
+        console.error('Error loading milestones:', error);
+        document.getElementById('recent-milestones').innerHTML = '<p class="text-red-500">Failed to load milestones</p>';
+      }
+    }
+
+    // Display recent milestones
+    function displayRecentMilestones(milestones) {
+      const container = document.getElementById('recent-milestones');
+      
+      if (milestones.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">No milestones found</p>';
+        return;
+      }
+
+      container.innerHTML = milestones.map(milestone => `
+        <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+          <div class="flex-1">
+            <h4 class="text-sm font-medium text-gray-900">${milestone.title}</h4>
+            <p class="text-sm text-gray-500">${milestone.description || 'No description'}</p>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMilestoneStatusColor(milestone.status)}">
+            ${milestone.status || 'todo'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    // Load recent activity (mock for now)
+    async function loadRecentActivity() {
+      const activities = [
+        { type: 'milestone', message: 'Milestone "Design Phase" completed', time: '2 hours ago' },
+        { type: 'file', message: 'New file uploaded: logo-final.png', time: '5 hours ago' },
+        { type: 'approval', message: 'Approval requested for homepage design', time: '1 day ago' },
+      ];
+
+      const container = document.getElementById('recent-activity');
+      container.innerHTML = activities.map(activity => `
+        <div class="flex items-start space-x-3 py-3 border-b border-gray-100 last:border-0">
+          <div class="flex-shrink-0">
+            <div class="w-2 h-2 bg-indigo-600 rounded-full mt-2"></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm text-gray-900">${activity.message}</p>
+            <p class="text-xs text-gray-500">${activity.time}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load milestones content with vanilla JS
+    async function loadMilestonesContent() {
+      const container = document.getElementById('content-milestones');
+      container.innerHTML = `
+        <div id="milestones-container">
+          <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading milestones...</p>
+          </div>
+        </div>
+      `;
+      
+      // Load and initialize milestone manager
+      try {
+        // Load the milestone manager script
+        const script = document.createElement('script');
+        script.src = '/src/components/portal/milestone-manager.js';
+        script.onload = () => {
+          // Initialize the milestone manager
+          if (window.MilestoneManager) {
+            window.milestoneManager = new window.MilestoneManager(projectId, 'milestones-container');
+            window.milestoneManager.init();
+          }
+        };
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('Error loading milestone manager:', error);
+        container.innerHTML = `
+          <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500">Failed to load milestone management.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadTasksContent() {
+      const container = document.getElementById('content-tasks');
+      container.innerHTML = `
+        <div id="tasks-container">
+          <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading tasks...</p>
+          </div>
+        </div>
+      `;
+      
+      // Load and initialize task manager
+      try {
+        // Load the task manager script
+        const script = document.createElement('script');
+        script.src = '/src/components/portal/task-manager.js';
+        script.onload = () => {
+          // Initialize the task manager
+          if (window.TaskManager) {
+            window.taskManager = new window.TaskManager(projectId, 'tasks-container');
+            window.taskManager.init();
+          }
+        };
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('Error loading task manager:', error);
+        container.innerHTML = `
+          <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500">Failed to load task management.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadFilesContent() {
+      const container = document.getElementById('content-files');
+      container.innerHTML = `
+        <div id="files-container">
+          <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading files...</p>
+          </div>
+        </div>
+      `;
+      
+      // Load and initialize file manager
+      try {
+        // Load the file manager script
+        const script = document.createElement('script');
+        script.src = '/src/components/portal/file-manager.js';
+        script.onload = () => {
+          // Initialize the file manager
+          if (window.FileManager) {
+            window.fileManager = new window.FileManager(projectId, 'files-container');
+            window.fileManager.init();
+          }
+        };
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('Error loading file manager:', error);
+        container.innerHTML = `
+          <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500">Failed to load file management.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadApprovalsContent() {
+      const container = document.getElementById('content-approvals');
+      container.innerHTML = `
+        <div id="approvals-container">
+          <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading approvals...</p>
+          </div>
+        </div>
+      `;
+      
+      // Load and initialize approval manager
+      try {
+        // Load the approval manager script
+        const script = document.createElement('script');
+        script.src = '/src/components/portal/approval-manager.js';
+        script.onload = () => {
+          // Initialize the approval manager
+          if (window.ApprovalManager) {
+            window.approvalManager = new window.ApprovalManager(projectId, 'approvals-container');
+            window.approvalManager.init();
+          }
+        };
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('Error loading approval manager:', error);
+        container.innerHTML = `
+          <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500">Failed to load approval workflow.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadTeamContent() {
+      const container = document.getElementById('content-team');
+      container.innerHTML = `
+        <div class="bg-white rounded-lg shadow">
+          <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-medium text-gray-900">Team Members</h3>
+            <button onclick="inviteTeamMember()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+              Invite Member
+            </button>
+          </div>
+          <div id="team-list" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Mock team members -->
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
+                  <span class="text-white font-medium">JD</span>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900">John Doe</div>
+                  <div class="text-sm text-gray-500">Project Manager</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <span class="text-white font-medium">JS</span>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900">Jane Smith</div>
+                  <div class="text-sm text-gray-500">UI/UX Designer</div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span class="text-white font-medium">MJ</span>
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900">Mike Johnson</div>
+                  <div class="text-sm text-gray-500">Developer</div>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 text-center">
+              <p class="text-gray-500 text-sm">Team management features coming soon...</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Action functions (placeholders for now)
+    function editProject() {
+      alert('Edit project functionality coming soon!');
+    }
+
+    function openProjectSettings() {
+      alert('Project settings coming soon!');
+    }
+
+    function createMilestone() {
+      alert('Create milestone functionality coming soon!');
+    }
+
+    function createTask() {
+      alert('Create task functionality coming soon!');
+    }
+
+    function uploadFile() {
+      alert('File upload functionality coming soon!');
+    }
+
+    function requestApproval() {
+      alert('Request approval functionality coming soon!');
+    }
+
+    function inviteTeamMember() {
+      alert('Invite team member functionality coming soon!');
+    }
+
+    // Utility functions
+    function getStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'completed':
+          return 'bg-green-100 text-green-800';
+        case 'in-progress':
+          return 'bg-blue-100 text-blue-800';
+        case 'on-hold':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'cancelled':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    function getMilestoneStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'completed':
+          return 'bg-green-100 text-green-800';
+        case 'in-progress':
+          return 'bg-blue-100 text-blue-800';
+        case 'todo':
+          return 'bg-gray-100 text-gray-800';
+        case 'overdue':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    function calculateProjectProgress(project) {
+      // Mock calculation - in real implementation this would be based on milestones/tasks
+      return Math.floor(Math.random() * 100);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+
+    function showError(message) {
+      document.getElementById('header-loading').innerHTML = `
+        <div class="text-center py-12">
+          <svg class="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="mt-2 text-red-500">${message}</p>
+          <button onclick="loadProject()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+            Try Again
+          </button>
+        </div>
+      `;
+    }
+  </script>
+</Layout>

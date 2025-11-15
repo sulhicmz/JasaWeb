@@ -206,8 +206,8 @@ const { title } = Astro.props;
 
     // View project details
     function viewProject(projectId) {
-      // This would navigate to project details page
-      alert(`Viewing project ${projectId} - Details page coming soon!`);
+      // Navigate to project details page
+      window.location.href = `/portal/projects/${projectId}`;
     }
 
     // Edit project
