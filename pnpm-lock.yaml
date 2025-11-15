@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  js-yaml: 4.1.1
+  js-yaml: ^4.1.1
 
 importers:
 
@@ -187,8 +187,8 @@ importers:
         specifier: ^6.16.3
         version: 6.16.3(typescript@5.9.3)
       supertest:
-        specifier: ^7.0.0
-        version: 7.1.4
+        specifier: ^6.3.0
+        version: 6.3.4
       ts-jest:
         specifier: ^29.1.0
         version: 29.4.4(@babel/core@7.28.5)(jest@29.7.0)(typescript@5.9.3)
@@ -8811,13 +8811,13 @@ packages:
       mime-types: 2.1.35
     dev: true
 
-  /formidable@3.5.4:
-    resolution: {integrity: sha512-YikH+7CUTOtP44ZTnUhR7Ic2UASBPOqmaRkRKxRbywPTe5VxF7RRCck4af9wutiZ/QKM5nME9Bie2fFaPz5Gug==}
-    engines: {node: '>=14.0.0'}
+  /formidable@2.1.5:
+    resolution: {integrity: sha512-Oz5Hwvwak/DCaXVVUtPn4oLMLLy1CdclLKO1LFgU7XzDpVMUU5UjlSLpGMocyQNNk8F6IJW9M/YdooSn2MRI+Q==}
     dependencies:
       '@paralleldrive/cuid2': 2.3.1
       dezalgo: 1.0.4
       once: 1.4.0
+      qs: 6.13.0
     dev: true
 
   /forwarded@0.2.0:
@@ -13499,29 +13499,32 @@ packages:
       pirates: 4.0.7
       ts-interface-checker: 0.1.13
 
-  /superagent@10.2.3:
-    resolution: {integrity: sha512-y/hkYGeXAj7wUMjxRbB21g/l6aAEituGXM9Rwl4o20+SX3e8YOSV6BxFXl+dL3Uk0mjSL3kCbNkwURm8/gEDig==}
-    engines: {node: '>=14.18.0'}
+  /superagent@8.1.2:
+    resolution: {integrity: sha512-6WTxW1EB6yCxV5VFOIPQruWGHqc3yI7hEmZK6h+pyk69Lk/Ut7rLUY6W/ONF2MjBuGjvmMiIpsrVJ2vjrHlslA==}
+    engines: {node: '>=6.4.0 <13 || >=14'}
+    deprecated: Please upgrade to superagent v10.2.2+, see release notes at https://github.com/forwardemail/superagent/releases/tag/v10.2.2 - maintenance is supported by Forward Email @ https://forwardemail.net
     dependencies:
       component-emitter: 1.3.1
       cookiejar: 2.1.4
       debug: 4.4.3
       fast-safe-stringify: 2.1.1
       form-data: 4.0.4
-      formidable: 3.5.4
+      formidable: 2.1.5
       methods: 1.1.2
       mime: 2.6.0
       qs: 6.13.0
+      semver: 7.7.3
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /supertest@7.1.4:
-    resolution: {integrity: sha512-tjLPs7dVyqgItVFirHYqe2T+MfWc2VOBQ8QFKKbWTA3PU7liZR8zoSpAi/C1k1ilm9RsXIKYf197oap9wXGVYg==}
-    engines: {node: '>=14.18.0'}
+  /supertest@6.3.4:
+    resolution: {integrity: sha512-erY3HFDG0dPnhw4U+udPfrzXa4xhSG+n4rxfRuZWCUvjFWwKl+OxWf/7zk50s84/fAAs7vf5QAb9uRa0cCykxw==}
+    engines: {node: '>=6.4.0'}
+    deprecated: Please upgrade to supertest v7.1.3+, see release notes at https://github.com/forwardemail/supertest/releases/tag/v7.1.3 - maintenance is supported by Forward Email @ https://forwardemail.net
     dependencies:
       methods: 1.1.2
-      superagent: 10.2.3
+      superagent: 8.1.2
     transitivePeerDependencies:
       - supports-color
     dev: true
