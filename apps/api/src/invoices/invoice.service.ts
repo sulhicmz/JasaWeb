@@ -26,7 +26,7 @@ export class InvoiceService {
 
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
-    private readonly emailService: EmailService,
+    private readonly emailService: EmailService
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto, organizationId: string) {
@@ -37,7 +37,9 @@ export class InvoiceService {
       });
 
       if (!project) {
-        throw new BadRequestException('Project does not exist or does not belong to your organization');
+        throw new BadRequestException(
+          'Project does not exist or does not belong to your organization'
+        );
       }
     }
 
@@ -59,7 +61,9 @@ export class InvoiceService {
       },
     });
 
-    this.logger.log(`Invoice created: ${invoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice created: ${invoice.id} for organization ${organizationId}`
+    );
 
     return invoice;
   }
@@ -67,7 +71,7 @@ export class InvoiceService {
   async findAll(
     projectId?: string,
     status?: string,
-    organizationId: string = '',
+    organizationId: string = ''
   ) {
     // Build query based on filters
     const whereClause: any = { organizationId }; // Ensure multi-tenant isolation
@@ -132,16 +136,20 @@ export class InvoiceService {
             email: true,
           },
         },
-      }
+      },
     });
 
     if (!invoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     // Verify that the invoice belongs to the current organization
     if (invoice.organizationId !== organizationId) {
-      throw new BadRequestException('Invoice does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice does not belong to your organization'
+      );
     }
 
     return invoice;
@@ -153,7 +161,9 @@ export class InvoiceService {
     });
 
     if (!invoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     const updatedInvoice = await this.multiTenantPrisma.invoice.update({
@@ -188,7 +198,10 @@ export class InvoiceService {
 
     // Send notification email about payment
     const updatedInvoiceWithOrg = updatedInvoice as any;
-    if (updatedInvoiceWithOrg.organization && updatedInvoiceWithOrg.organization.billingEmail) {
+    if (
+      updatedInvoiceWithOrg.organization &&
+      updatedInvoiceWithOrg.organization.billingEmail
+    ) {
       let dueDate: string;
       if (updatedInvoice.dueAt) {
         dueDate = updatedInvoice.dueAt.toISOString().split('T')[0] || '';
@@ -207,19 +220,27 @@ export class InvoiceService {
       );
     }
 
-    this.logger.log(`Invoice marked as paid: ${updatedInvoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice marked as paid: ${updatedInvoice.id} for organization ${organizationId}`
+    );
 
     return updatedInvoice;
   }
 
-  async update(id: string, updateInvoiceDto: UpdateInvoiceDto, organizationId: string) {
+  async update(
+    id: string,
+    updateInvoiceDto: UpdateInvoiceDto,
+    organizationId: string
+  ) {
     // Check if invoice exists and belongs to the organization
     const existingInvoice = await this.multiTenantPrisma.invoice.findUnique({
       where: { id },
     });
 
     if (!existingInvoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     // Update the invoice
@@ -254,9 +275,15 @@ export class InvoiceService {
     });
 
     // Send notification if status changed to issued
-    if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
+    if (
+      updateInvoiceDto.status === 'issued' &&
+      existingInvoice.status !== 'issued'
+    ) {
       const updatedInvoiceWithOrg = updatedInvoice as any;
-      if (updatedInvoiceWithOrg.organization && updatedInvoiceWithOrg.organization.billingEmail) {
+      if (
+        updatedInvoiceWithOrg.organization &&
+        updatedInvoiceWithOrg.organization.billingEmail
+      ) {
         let dueDate: string;
         if (updatedInvoice.dueAt) {
           dueDate = updatedInvoice.dueAt.toISOString().split('T')[0] || '';
@@ -276,7 +303,9 @@ export class InvoiceService {
       }
     }
 
-    this.logger.log(`Invoice updated: ${updatedInvoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice updated: ${updatedInvoice.id} for organization ${organizationId}`
+    );
 
     return updatedInvoice;
   }
@@ -287,14 +316,18 @@ export class InvoiceService {
     });
 
     if (!invoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     const deletedInvoice = await this.multiTenantPrisma.invoice.delete({
       where: { id },
     });
 
-    this.logger.log(`Invoice deleted: ${deletedInvoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice deleted: ${deletedInvoice.id} for organization ${organizationId}`
+    );
 
     return { message: 'Invoice deleted successfully' };
   }
@@ -314,15 +347,22 @@ export class InvoiceService {
     });
 
     const total = invoices.length;
-    const draft = invoices.filter(inv => inv.status === 'draft').length;
-    const issued = invoices.filter(inv => inv.status === 'issued').length;
-    const paid = invoices.filter(inv => inv.status === 'paid').length;
-    const overdue = invoices.filter(inv => inv.status === 'overdue').length;
+    const draft = invoices.filter((inv: any) => inv.status === 'draft').length;
+    const issued = invoices.filter(
+      (inv: any) => inv.status === 'issued'
+    ).length;
+    const paid = invoices.filter((inv: any) => inv.status === 'paid').length;
+    const overdue = invoices.filter(
+      (inv: any) => inv.status === 'overdue'
+    ).length;
 
-    const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0);
+    const totalAmount = invoices.reduce(
+      (sum: number, inv: any) => sum + inv.amount,
+      0
+    );
     const paidAmount = invoices
-      .filter(inv => inv.status === 'paid')
-      .reduce((sum, inv) => sum + inv.amount, 0);
+      .filter((inv: any) => inv.status === 'paid')
+      .reduce((sum: number, inv: any) => sum + inv.amount, 0);
 
     return {
       total,
