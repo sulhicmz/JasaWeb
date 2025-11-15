@@ -52,7 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
     // For debugging purposes, you might want to log this in development only
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
-      console.log('Contact form submission:', {
+      console.debug('Contact form submission:', {
         name,
         email,
         service,
@@ -113,7 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Log error in development for debugging
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
-      console.error('Error processing contact form:', error);
+      console.debug('Error processing contact form:', error);
     }
 
     return new Response(
