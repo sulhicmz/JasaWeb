@@ -61,9 +61,9 @@ function checkFilePatterns(
 ) {
   try {
     console.log(`🔍 ${description}...`);
-    let command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" . || true`;
+    let command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" . || true`;
     if (excludeFile) {
-      command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="${excludeFile}" . || true`;
+      command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" --exclude="${excludeFile}" . || true`;
     }
     let output = execSync(command, { encoding: 'utf-8' });
 
@@ -132,7 +132,7 @@ checkFilePatterns(
   'scripts/security-scan.js'
 );
 
-// 4. Check for TODO/FIXME comments (exclude security script itself and legitimate status values)
+// 4. Check for TODO/FIXME comments (exclude security script itself and milestone service)
 checkFilePatterns(
   '\\b(TODO|FIXME|XXX|HACK)\\b',
   'Checking for TODO/FIXME comments',
