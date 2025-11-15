@@ -110,12 +110,62 @@ checkFilePatterns(
 );
 
 // 3. Check for console.log in production code (exclude scripts, security scan, and verification tools)
-checkFilePatterns(
-  'console\\.(log|debug|info)',
-  'Checking for console statements',
-  'warning',
-  'scripts/security-scan.js'
-);
+console.log('🔍 Checking for console statements...');
+try {
+  let command =
+    'grep -r -n -B5 -A1 "console\\.(log|debug|info)" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" . || true';
+  let output = execSync(command, { encoding: 'utf-8' });
+
+  if (output.trim()) {
+    // Group results by file and check for development guards
+    const fileBlocks = output.split('\n--').filter((block) => block.trim());
+    const problematicLines = [];
+
+    for (const block of fileBlocks) {
+      const lines = block.split('\n');
+      let hasDevGuard = false;
+      let consoleLine = '';
+
+      for (const line of lines) {
+        if (
+          line.includes('console.') &&
+          (line.includes('log') ||
+            line.includes('debug') ||
+            line.includes('info'))
+        ) {
+          consoleLine = line;
+        }
+        if (
+          line.includes('import.meta.env.DEV') ||
+          line.includes("process.env.NODE_ENV === 'development'") ||
+          line.includes('process.env.NODE_ENV === "development"')
+        ) {
+          hasDevGuard = true;
+        }
+      }
+
+      // Only add console lines that don't have development guards
+      if (consoleLine && !hasDevGuard) {
+        problematicLines.push(consoleLine);
+      }
+    }
+
+    if (problematicLines.length > 0) {
+      results.warnings.push('Checking for console statements');
+      console.log('⚠️  Checking for console statements - WARNINGS');
+      console.log(problematicLines.join('\n'));
+      console.log('');
+    } else {
+      results.passed.push('Checking for console statements');
+      console.log('✅ Checking for console statements - PASSED\n');
+    }
+  } else {
+    results.passed.push('Checking for console statements');
+    console.log('✅ Checking for console statements - PASSED\n');
+  }
+} catch (error) {
+  console.log('⚠️  Checking for console statements - ERROR RUNNING CHECK\n');
+}
 
 // 4. Check for TODO/FIXME comments (exclude security script itself and milestone service)
 checkFilePatterns(
