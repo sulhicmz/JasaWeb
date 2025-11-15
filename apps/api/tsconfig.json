@@ -16,12 +16,5 @@
     "moduleResolution": "bundler"
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist"
-    // IMPORTANT: Do NOT exclude any source directories from compilation
-    // All critical application directories (approvals, files, tickets, invoices, milestones, projects, common/database)
-    // must be included in TypeScript compilation for type safety and error detection
-    // See issue #79 and verify-typescript-config.js for validation
-  ]
+  "exclude": ["node_modules", "dist"]
 }
