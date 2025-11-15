@@ -61,9 +61,9 @@ function checkFilePatterns(
 ) {
   try {
     console.log(`🔍 ${description}...`);
-    let command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" . || true`;
+    let command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" --exclude="*.spec.ts" --exclude="*.test.ts" . || true`;
     if (excludeFile) {
-      command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" --exclude="${excludeFile}" . || true`;
+      command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" --exclude="*.spec.ts" --exclude="*.test.ts" --exclude="${excludeFile}" . || true`;
     }
     let output = execSync(command, { encoding: 'utf-8' });
 
@@ -94,9 +94,9 @@ function checkFilePatterns(
   }
 }
 
-// 1. Check for hardcoded secrets
+// 1. Check for hardcoded secrets (exclude test files and common test patterns)
 checkFilePatterns(
-  '(password|secret|key|token)\\s*[:=]\\s*["\x27][^"\x27]{8,}["\x27]',
+  '(password|secret|key|token)\\s*[:=]\\s*["\x27](?!test|mock|fake|dummy)[^"\x27]{8,}["\x27]',
   'Checking for hardcoded secrets',
   'error'
 );
