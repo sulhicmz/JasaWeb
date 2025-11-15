@@ -324,5 +324,5 @@ jobs:
             Your run is considered successful only if all the steps above are followed and the pull request or branch is left in a high-quality, healthy state aligned with GitHub best practices, and merge is performed automatically when a PR has clearly satisfied all merge criteria.
           PROMPT
           )" \
-            --model iflowcn/deepseek-v3.1 \
+            --model iflowcn/qwen3-coder-plus \
             --share false \
