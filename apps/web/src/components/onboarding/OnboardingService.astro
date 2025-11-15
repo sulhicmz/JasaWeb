@@ -1,0 +1,175 @@
+---
+// src/components/onboarding/OnboardingService.astro
+export interface Props {
+  user?: any;
+  organization?: any;
+}
+
+const { user, organization } = Astro.props;
+---
+
+<!-- Onboarding Service - Manages onboarding state and triggers -->
+<script client:load>
+  class OnboardingService {
+    constructor() {
+      this.user = null;
+      this.organization = null;
+      this.init();
+    }
+    
+    async init() {
+      // Check if user is authenticated
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      
+      // Load user data
+      await this.loadUserData();
+      
+      // Check if onboarding should be shown
+      if (this.shouldShowOnboarding()) {
+        this.showOnboarding();
+      }
+    }
+    
+    async loadUserData() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const userStr = localStorage.getItem('user');
+        
+        if (userStr) {
+          this.user = JSON.parse(userStr);
+        }
+        
+        // Fetch organization data
+        const response = await fetch('/api/organizations/current', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          this.organization = data.organization;
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      }
+    }
+    
+    shouldShowOnboarding() {
+      // Don't show onboarding if:
+      // 1. User has already completed onboarding
+      // 2. User is not an organization owner/admin
+      // 3. Organization already has projects setup
+      
+      const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted') === 'true';
+      const hasProjects = this.organization?.projectCount > 0;
+      const canManageOrg = this.user?.role === 'owner' || this.user?.role === 'admin';
+      
+      return !hasCompletedOnboarding && !hasProjects && canManageOrg;
+    }
+    
+    showOnboarding() {
+      // Create and show onboarding wizard
+      const wizard = document.createElement('div');
+      wizard.innerHTML = `
+        <div id="onboardingOverlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Selamat Datang di JasaWeb! 🎉</h3>
+            <p class="text-gray-600 mb-6">
+              Mari kami pandu Anda menyiapkan organisasi dan proyek pertama Anda. 
+              Proses ini hanya memakan waktu 5 menit.
+            </p>
+            <div class="flex space-x-3">
+              <button 
+                id="startOnboarding"
+                class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Mulai Onboarding
+              </button>
+              <button 
+                id="skipOnboarding"
+                class="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Lewati
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(wizard);
+      
+      // Bind events
+      document.getElementById('startOnboarding')?.addEventListener('click', () => {
+        this.startOnboardingWizard();
+      });
+      
+      document.getElementById('skipOnboarding')?.addEventListener('click', () => {
+        this.skipOnboarding();
+      });
+    }
+    
+    startOnboardingWizard() {
+      // Remove overlay
+      const overlay = document.getElementById('onboardingOverlay');
+      if (overlay) {
+        overlay.remove();
+      }
+      
+      // Load and show onboarding wizard
+      this.loadOnboardingWizard();
+    }
+    
+    async loadOnboardingWizard() {
+      try {
+        const response = await fetch('/components/onboarding/OnboardingWizard.astro');
+        const html = await response.text();
+        
+        // Create a temporary container to parse the Astro component
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Extract the wizard HTML
+        const wizardHTML = tempDiv.querySelector('#onboardingWizard')?.outerHTML;
+        if (wizardHTML) {
+          document.body.insertAdjacentHTML('beforeend', wizardHTML);
+        }
+      } catch (error) {
+        console.error('Failed to load onboarding wizard:', error);
+        this.showMessage('Gagal memuat onboarding wizard. Silakan refresh halaman.', 'error');
+      }
+    }
+    
+    skipOnboarding() {
+      if (confirm('Apakah Anda yakin ingin melewati onboarding? Anda dapat mengaksesnya kapan saja melalui Settings.')) {
+        localStorage.setItem('onboardingCompleted', 'true');
+        const overlay = document.getElementById('onboardingOverlay');
+        if (overlay) {
+          overlay.remove();
+        }
+      }
+    }
+    
+    showMessage(message, type = 'info') {
+      const messageEl = document.createElement('div');
+      messageEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      messageEl.textContent = message;
+      
+      document.body.appendChild(messageEl);
+      
+      setTimeout(() => {
+        messageEl.remove();
+      }, 3000);
+    }
+  }
+  
+  // Initialize onboarding service
+  document.addEventListener('DOMContentLoaded', () => {
+    new OnboardingService();
+  });
+</script>

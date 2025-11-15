@@ -1,0 +1,441 @@
+---
+// src/components/onboarding/ProgressTracker.astro
+export interface Props {
+  isCompleted?: boolean;
+  currentProgress?: number;
+  achievements?: any[];
+}
+
+const { isCompleted = false, currentProgress = 0, achievements = [] } = Astro.props;
+---
+
+<!-- Progress Tracker Widget -->
+<div class="progress-tracker bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900">Progress Onboarding</h3>
+      <p class="text-sm text-gray-600">Lacak perjalanan Anda di JasaWeb</p>
+    </div>
+    
+    {isCompleted ? (
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">🎉</span>
+        <span class="text-sm font-medium text-green-600">Selesai!</span>
+      </div>
+    ) : (
+      <div class="text-right">
+        <div class="text-2xl font-bold text-blue-600">{currentProgress}%</div>
+        <div class="text-xs text-gray-500">Complete</div>
+      </div>
+    )}
+  </div>
+  
+  <!-- Progress Bar -->
+  <div class="mb-6">
+    <div class="w-full bg-gray-200 rounded-full h-3">
+      <div 
+        class={`h-3 rounded-full transition-all duration-500 ${
+          isCompleted ? 'bg-green-500' : 'bg-blue-600'
+        }`}
+        style={`width: ${currentProgress}%`}
+      ></div>
+    </div>
+  </div>
+  
+  <!-- Progress Steps -->
+  <div class="space-y-4 mb-6">
+    <div class="progress-step flex items-center space-x-3">
+      <div class={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+        currentProgress >= 20 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+      }`}>
+        {currentProgress >= 20 ? '✓' : '1'}
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">Profil Organisasi</div>
+        <div class="text-sm text-gray-600">Konfigurasi informasi dasar organisasi</div>
+      </div>
+    </div>
+    
+    <div class="progress-step flex items-center space-x-3">
+      <div class={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+        currentProgress >= 40 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+      }`}>
+        {currentProgress >= 40 ? '✓' : '2'}
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">Tim Setup</div>
+        <div class="text-sm text-gray-600">Undang anggota tim dan atur role</div>
+      </div>
+    </div>
+    
+    <div class="progress-step flex items-center space-x-3">
+      <div class={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+        currentProgress >= 60 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+      }`}>
+        {currentProgress >= 60 ? '✓' : '3'}
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">Proyek Pertama</div>
+        <div class="text-sm text-gray-600">Buat proyek dengan template</div>
+      </div>
+    </div>
+    
+    <div class="progress-step flex items-center space-x-3">
+      <div class={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+        currentProgress >= 80 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+      }`}>
+        {currentProgress >= 80 ? '✓' : '4'}
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">Integrasi</div>
+        <div class="text-sm text-gray-600">Sambungkan alat dan preferensi</div>
+      </div>
+    </div>
+    
+    <div class="progress-step flex items-center space-x-3">
+      <div class={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+        currentProgress >= 100 ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+      }`}>
+        {currentProgress >= 100 ? '✓' : '5'}
+      </div>
+      <div class="flex-1">
+        <div class="font-medium text-gray-900">Finalisasi</div>
+        <div class="text-sm text-gray-600">Review dan mulai menggunakan platform</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Achievements -->
+  {achievements.length > 0 && (
+    <div class="border-t border-gray-200 pt-4">
+      <h4 class="font-medium text-gray-900 mb-3">Pencapaian</h4>
+      <div class="grid grid-cols-4 gap-3">
+        {achievements.map((achievement) => (
+          <div class="text-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-1">
+              <span class="text-xl">{achievement.icon}</span>
+            </div>
+            <p class="text-xs text-gray-600">{achievement.name}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+  
+  <!-- Actions -->
+  <div class="border-t border-gray-200 pt-4 mt-6">
+    {!isCompleted ? (
+      <div class="flex space-x-3">
+        <button 
+          onclick="continueOnboarding()"
+          class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+        >
+          Lanjutkan Onboarding
+        </button>
+        <button 
+          onclick="resetOnboarding()"
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          Reset
+        </button>
+      </div>
+    ) : (
+      <div class="text-center">
+        <button 
+          onclick="viewCertificate()"
+          class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+        >
+          Lihat Sertifikat
+        </button>
+      </div>
+    )}
+  </div>
+</div>
+
+<!-- Achievement Modal -->
+<div id="achievementModal" class="fixed inset-0 z-50 hidden">
+  <div class="fixed inset-0 bg-black bg-opacity-50"></div>
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-md bg-white rounded-lg shadow-xl">
+        <div class="p-6 text-center">
+          <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-4xl" id="achievementIcon">🏆</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2" id="achievementTitle">Achievement Unlocked!</h3>
+          <p class="text-gray-600 mb-6" id="achievementDescription">You've completed a major milestone!</p>
+          <button 
+            onclick="closeAchievementModal()"
+            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Awesome!
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script client:load>
+  class ProgressTracker {
+    constructor() {
+      this.progress = 0;
+      this.achievements = [];
+      this.isCompleted = false;
+      this.init();
+    }
+    
+    init() {
+      this.loadProgress();
+      this.updateUI();
+      this.checkForNewAchievements();
+    }
+    
+    loadProgress() {
+      const savedProgress = localStorage.getItem('onboardingProgress');
+      const savedAchievements = localStorage.getItem('onboardingAchievements');
+      const completed = localStorage.getItem('onboardingCompleted') === 'true';
+      
+      this.progress = savedProgress ? parseInt(savedProgress) : 0;
+      this.achievements = savedAchievements ? JSON.parse(savedAchievements) : [];
+      this.isCompleted = completed;
+    }
+    
+    saveProgress() {
+      localStorage.setItem('onboardingProgress', this.progress.toString());
+      localStorage.setItem('onboardingAchievements', JSON.stringify(this.achievements));
+    }
+    
+    updateProgress(stepProgress) {
+      const oldProgress = this.progress;
+      this.progress = Math.min(100, Math.max(0, stepProgress));
+      
+      // Check for milestone achievements
+      if (oldProgress < 20 && this.progress >= 20) {
+        this.unlockAchievement('first_steps', 'Langkah Pertama', '🎯', 'Menyelesaikan langkah pertama onboarding');
+      }
+      
+      if (oldProgress < 50 && this.progress >= 50) {
+        this.unlockAchievement('halfway', 'Setengah Jalan', '⭐', 'Menyelesaikan 50% onboarding');
+      }
+      
+      if (oldProgress < 100 && this.progress >= 100) {
+        this.unlockAchievement('completion', 'Onboarding Master', '🏆', 'Menyelesaikan seluruh onboarding');
+        this.isCompleted = true;
+        localStorage.setItem('onboardingCompleted', 'true');
+      }
+      
+      this.saveProgress();
+      this.updateUI();
+    }
+    
+    unlockAchievement(id, name, icon, description) {
+      // Check if achievement already exists
+      if (this.achievements.find(a => a.id === id)) return;
+      
+      const achievement = { id, name, icon, description, unlockedAt: new Date().toISOString() };
+      this.achievements.push(achievement);
+      
+      this.saveProgress();
+      this.showAchievementModal(achievement);
+      this.updateUI();
+    }
+    
+    showAchievementModal(achievement) {
+      const modal = document.getElementById('achievementModal');
+      const iconEl = document.getElementById('achievementIcon');
+      const titleEl = document.getElementById('achievementTitle');
+      const descriptionEl = document.getElementById('achievementDescription');
+      
+      if (modal && iconEl && titleEl && descriptionEl) {
+        iconEl.textContent = achievement.icon;
+        titleEl.textContent = achievement.name + ' Unlocked!';
+        descriptionEl.textContent = achievement.description;
+        
+        modal.classList.remove('hidden');
+        
+        // Auto-close after 3 seconds
+        setTimeout(() => {
+          this.closeAchievementModal();
+        }, 3000);
+      }
+    }
+    
+    closeAchievementModal() {
+      const modal = document.getElementById('achievementModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    }
+    
+    updateUI() {
+      // Update progress bar
+      const progressBar = document.querySelector('.progress-tracker .bg-blue-600, .progress-tracker .bg-green-500');
+      if (progressBar) {
+        progressBar.style.width = `${this.progress}%`;
+        progressBar.className = `h-3 rounded-full transition-all duration-500 ${
+          this.isCompleted ? 'bg-green-500' : 'bg-blue-600'
+        }`;
+      }
+      
+      // Update progress text
+      const progressText = document.querySelector('.progress-tracker .text-2xl');
+      if (progressText) {
+        progressText.textContent = this.isCompleted ? '100%' : `${this.progress}%`;
+      }
+      
+      // Update step indicators
+      const steps = [
+        { threshold: 20, index: 0 },
+        { threshold: 40, index: 1 },
+        { threshold: 60, index: 2 },
+        { threshold: 80, index: 3 },
+        { threshold: 100, index: 4 }
+      ];
+      
+      steps.forEach(step => {
+        const stepElement = document.querySelectorAll('.progress-step')[step.index];
+        if (stepElement) {
+          const indicator = stepElement.querySelector('.w-8');
+          if (indicator) {
+            if (this.progress >= step.threshold) {
+              indicator.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-green-500 text-white';
+              indicator.textContent = '✓';
+            } else {
+              indicator.className = 'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-gray-200 text-gray-600';
+              indicator.textContent = (step.index + 1).toString();
+            }
+          }
+        }
+      });
+      
+      // Update achievements display
+      const achievementsContainer = document.querySelector('.progress-tracker .grid.grid-cols-4');
+      if (achievementsContainer && this.achievements.length > 0) {
+        achievementsContainer.innerHTML = this.achievements.map(achievement => `
+          <div class="text-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-1">
+              <span class="text-xl">${achievement.icon}</span>
+            </div>
+            <p class="text-xs text-gray-600">${achievement.name}</p>
+          </div>
+        `).join('');
+      }
+      
+      // Update action buttons
+      const actionsContainer = document.querySelector('.progress-tracker .border-t .flex, .progress-tracker .border-t .text-center');
+      if (actionsContainer) {
+        if (this.isCompleted) {
+          actionsContainer.innerHTML = `
+            <div class="text-center">
+              <button 
+                onclick="viewCertificate()"
+                class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Lihat Sertifikat
+              </button>
+            </div>
+          `;
+        } else {
+          actionsContainer.innerHTML = `
+            <div class="flex space-x-3">
+              <button 
+                onclick="continueOnboarding()"
+                class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Lanjutkan Onboarding
+              </button>
+              <button 
+                onclick="resetOnboarding()"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          `;
+        }
+      }
+    }
+    
+    checkForNewAchievements() {
+      // Check for special achievements
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const organization = JSON.parse(localStorage.getItem('organization') || '{}');
+      
+      // Quick starter achievement - complete onboarding in one session
+      const sessionStart = sessionStorage.getItem('onboardingSessionStart');
+      if (sessionStart) {
+        const sessionDuration = Date.now() - parseInt(sessionStart);
+        if (sessionDuration < 10 * 60 * 1000 && this.progress >= 100) { // Less than 10 minutes
+          this.unlockAchievement('quick_starter', 'Quick Starter', '⚡', 'Menyelesaikan onboarding dalam 10 menit');
+        }
+      }
+    }
+    
+    reset() {
+      if (confirm('Apakah Anda yakin ingin mereset progress onboarding? Semua pencapaian akan hilang.')) {
+        this.progress = 0;
+        this.achievements = [];
+        this.isCompleted = false;
+        
+        localStorage.removeItem('onboardingProgress');
+        localStorage.removeItem('onboardingAchievements');
+        localStorage.removeItem('onboardingCompleted');
+        localStorage.removeItem('onboardingData');
+        localStorage.removeItem('onboardingStep');
+        
+        this.updateUI();
+        this.showMessage('Progress onboarding telah direset', 'info');
+      }
+    }
+    
+    showMessage(message, type = 'info') {
+      const messageEl = document.createElement('div');
+      messageEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      messageEl.textContent = message;
+      
+      document.body.appendChild(messageEl);
+      
+      setTimeout(() => {
+        messageEl.remove();
+      }, 3000);
+    }
+  }
+  
+  // Global functions
+  window.continueOnboarding = function() {
+    // Restart onboarding wizard
+    const event = new CustomEvent('startOnboarding');
+    document.dispatchEvent(event);
+  };
+  
+  window.resetOnboarding = function() {
+    const tracker = new ProgressTracker();
+    tracker.reset();
+  };
+  
+  window.viewCertificate = function() {
+    // Show certificate modal or redirect
+    alert('Sertifikat akan segera tersedia!');
+  };
+  
+  window.closeAchievementModal = function() {
+    const tracker = new ProgressTracker();
+    tracker.closeAchievementModal();
+  };
+  
+  // Initialize progress tracker
+  document.addEventListener('DOMContentLoaded', () => {
+    // Track session start for quick starter achievement
+    if (!sessionStorage.getItem('onboardingSessionStart')) {
+      sessionStorage.setItem('onboardingSessionStart', Date.now().toString());
+    }
+    
+    new ProgressTracker();
+  });
+</script>

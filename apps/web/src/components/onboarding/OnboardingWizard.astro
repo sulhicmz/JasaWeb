@@ -1,0 +1,938 @@
+---
+// src/components/onboarding/OnboardingWizard.astro
+import { type } from 'astro/runtime/client';
+
+export interface Props {
+  isOpen: boolean;
+  currentStep: number;
+  onComplete?: () => void;
+}
+
+const { isOpen, currentStep, onComplete } = Astro.props;
+
+// Onboarding steps configuration
+const steps = [
+  {
+    id: 'welcome',
+    title: 'Selamat Datang di JasaWeb!',
+    description: 'Mari kita mulai perjalanan Anda dengan platform manajemen proyek kami.',
+    icon: '🎉'
+  },
+  {
+    id: 'organization',
+    title: 'Siapkan Organisasi Anda',
+    description: 'Konfigurasi profil organisasi dan preferensi dasar.',
+    icon: '🏢'
+  },
+  {
+    id: 'team',
+    title: 'Undang Tim Anda',
+    description: 'Tambahkan anggota tim untuk kolaborasi yang lebih baik.',
+    icon: '👥'
+  },
+  {
+    id: 'project',
+    title: 'Buat Proyek Pertama',
+    description: 'Mulai proyek pertama Anda dengan template yang tersedia.',
+    icon: '📋'
+  },
+  {
+    id: 'integrations',
+    title: 'Integrasi & Alat',
+    description: 'Sambungkan alat favorit Anda untuk alur kerja yang lebih baik.',
+    icon: '🔗'
+  },
+  {
+    id: 'complete',
+    title: 'Anda Siap!',
+    description: 'Selamat! Anda siap menggunakan semua fitur JasaWeb.',
+    icon: '🚀'
+  }
+];
+---
+
+<!-- Onboarding Wizard Modal -->
+<div id="onboardingWizard" class={`fixed inset-0 z-50 ${isOpen ? 'block' : 'hidden'}`}>
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+  
+  <!-- Modal Container -->
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-2xl bg-white rounded-lg shadow-xl">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-2xl">{steps[currentStep]?.icon}</span>
+              <div>
+                <h2 class="text-xl font-semibold text-gray-900">{steps[currentStep]?.title}</h2>
+                <p class="text-sm text-gray-600">{steps[currentStep]?.description}</p>
+              </div>
+            </div>
+            
+            <!-- Skip Button -->
+            <button 
+              id="skipOnboarding"
+              class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Lewati
+            </button>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="mt-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs text-gray-500">Langkah {currentStep + 1} dari {steps.length}</span>
+              <span class="text-xs text-gray-500">{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={`width: ${((currentStep + 1) / steps.length) * 100}%`}
+              ></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="px-6 py-6">
+          <div id="onboardingContent">
+            <!-- Dynamic content will be loaded here -->
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div class="flex justify-between">
+            <button 
+              id="prevStep"
+              class={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors ${
+                currentStep === 0 ? 'invisible' : ''
+              }`}
+            >
+              ← Sebelumnya
+            </button>
+            
+            <div class="flex space-x-3">
+              <button 
+                id="saveProgress"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Simpan Progress
+              </button>
+              
+              <button 
+                id="nextStep"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                {currentStep === steps.length - 1 ? 'Selesai' : 'Selanjutnya →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script client:load>
+  // Onboarding Wizard Controller
+  class OnboardingWizard {
+    constructor() {
+      this.currentStep = 0;
+      this.steps = [
+        {
+          id: 'welcome',
+          title: 'Selamat Datang di JasaWeb!',
+          description: 'Mari kita mulai perjalanan Anda dengan platform manajemen proyek kami.',
+          icon: '🎉'
+        },
+        {
+          id: 'organization',
+          title: 'Siapkan Organisasi Anda',
+          description: 'Konfigurasi profil organisasi dan preferensi dasar.',
+          icon: '🏢'
+        },
+        {
+          id: 'team',
+          title: 'Undang Tim Anda',
+          description: 'Tambahkan anggota tim untuk kolaborasi yang lebih baik.',
+          icon: '👥'
+        },
+        {
+          id: 'project',
+          title: 'Buat Proyek Pertama',
+          description: 'Mulai proyek pertama Anda dengan template yang tersedia.',
+          icon: '📋'
+        },
+        {
+          id: 'integrations',
+          title: 'Integrasi & Alat',
+          description: 'Sambungkan alat favorit Anda untuk alur kerja yang lebih baik.',
+          icon: '🔗'
+        },
+        {
+          id: 'complete',
+          title: 'Anda Siap!',
+          description: 'Selamat! Anda siap menggunakan semua fitur JasaWeb.',
+          icon: '🚀'
+        }
+      ];
+      
+      this.onboardingData = this.loadOnboardingData();
+      this.init();
+    }
+    
+    init() {
+      this.bindEvents();
+      this.loadStepContent(this.currentStep);
+      this.updateProgress();
+    }
+    
+    bindEvents() {
+      document.getElementById('nextStep')?.addEventListener('click', () => this.nextStep());
+      document.getElementById('prevStep')?.addEventListener('click', () => this.prevStep());
+      document.getElementById('skipOnboarding')?.addEventListener('click', () => this.skipOnboarding());
+      document.getElementById('saveProgress')?.addEventListener('click', () => this.saveProgress());
+    }
+    
+    loadStepContent(stepIndex) {
+      const step = this.steps[stepIndex];
+      const contentContainer = document.getElementById('onboardingContent');
+      
+      if (!contentContainer) return;
+      
+      let content = '';
+      
+      switch (step.id) {
+        case 'welcome':
+          content = this.getWelcomeContent();
+          break;
+        case 'organization':
+          content = this.getOrganizationContent();
+          break;
+        case 'team':
+          content = this.getTeamContent();
+          break;
+        case 'project':
+          content = this.getProjectContent();
+          break;
+        case 'integrations':
+          content = this.getIntegrationsContent();
+          break;
+        case 'complete':
+          content = this.getCompleteContent();
+          break;
+      }
+      
+      contentContainer.innerHTML = content;
+      this.bindStepEvents(step.id);
+    }
+    
+    getWelcomeContent() {
+      return `
+        <div class="text-center py-8">
+          <div class="mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
+              <span class="text-4xl">🎉</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Selamat Datang di JasaWeb!</h3>
+            <p class="text-gray-600 max-w-md mx-auto">
+              Platform manajemen proyek yang dirancang khusus untuk layanan pengembangan website. 
+              Mari kita mulai dengan pengaturan cepat agar Anda dapat segera menggunakan semua fitur.
+            </p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+            <div class="p-4 bg-blue-50 rounded-lg">
+              <div class="text-2xl mb-2">📊</div>
+              <h4 class="font-semibold text-gray-900">Dashboard Komprehensif</h4>
+              <p class="text-sm text-gray-600 mt-1">Monitor semua proyek dalam satu tampilan</p>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg">
+              <div class="text-2xl mb-2">🤝</div>
+              <h4 class="font-semibold text-gray-900">Kolaborasi Tim</h4>
+              <p class="text-sm text-gray-600 mt-1">Kerja sama yang efisien dengan anggota tim</p>
+            </div>
+            <div class="p-4 bg-purple-50 rounded-lg">
+              <div class="text-2xl mb-2">✅</div>
+              <h4 class="font-semibold text-gray-900">Approval Workflow</h4>
+              <p class="text-sm text-gray-600 mt-1">Proses approval yang terstruktur dan transparan</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    getOrganizationContent() {
+      return `
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Informasi Organisasi</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Organisasi</label>
+                <input 
+                  type="text" 
+                  id="orgName" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Masukkan nama organisasi"
+                  value="${this.onboardingData.organization?.name || ''}"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Billing</label>
+                <input 
+                  type="email" 
+                  id="orgEmail" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="billing@organisasi.com"
+                  value="${this.onboardingData.organization?.email || ''}"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Preferensi Proyek</h3>
+            <div class="space-y-3">
+              <label class="flex items-center">
+                <input type="checkbox" id="autoMilestones" class="mr-2" ${this.onboardingData.organization?.autoMilestones ? 'checked' : ''}>
+                <span class="text-sm text-gray-700">Buat milestone otomatis untuk proyek baru</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="weeklyReports" class="mr-2" ${this.onboardingData.organization?.weeklyReports ? 'checked' : ''}>
+                <span class="text-sm text-gray-700">Kirim laporan progress mingguan</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" id="slackNotifications" class="mr-2" ${this.onboardingData.organization?.slackNotifications ? 'checked' : ''}>
+                <span class="text-sm text-gray-700">Aktifkan notifikasi Slack</span>
+              </label>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Zona Waktu</h3>
+            <select 
+              id="timezone" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="Asia/Jakarta" ${this.onboardingData.organization?.timezone === 'Asia/Jakarta' ? 'selected' : ''}>WIB (GMT+7)</option>
+              <option value="Asia/Makassar" ${this.onboardingData.organization?.timezone === 'Asia/Makassar' ? 'selected' : ''}>WITA (GMT+8)</option>
+              <option value="Asia/Jayapura" ${this.onboardingData.organization?.timezone === 'Asia/Jayapura' ? 'selected' : ''}>WIT (GMT+9)</option>
+              <option value="Asia/Singapore" ${this.onboardingData.organization?.timezone === 'Asia/Singapore' ? 'selected' : ''}>Singapore (GMT+8)</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }
+    
+    getTeamContent() {
+      return `
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Undang Anggota Tim</h3>
+            <p class="text-sm text-gray-600 mb-4">Tambahkan email anggota tim untuk mengundang mereka bergabung.</p>
+            
+            <div id="teamInvites" class="space-y-3">
+              ${this.onboardingData.team?.map((member, index) => `
+                <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                  <input 
+                    type="email" 
+                    placeholder="email@example.com" 
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value="${member.email}"
+                    data-index="${index}"
+                  />
+                  <select class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500" data-index="${index}">
+                    <option value="member" ${member.role === 'member' ? 'selected' : ''}>Member</option>
+                    <option value="reviewer" ${member.role === 'reviewer' ? 'selected' : ''}>Reviewer</option>
+                    <option value="finance" ${member.role === 'finance' ? 'selected' : ''}>Finance</option>
+                    <option value="admin" ${member.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  </select>
+                  <button 
+                    type="button" 
+                    onclick="this.parentElement.remove()"
+                    class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              `).join('') || ''}
+            </div>
+            
+            <button 
+              type="button"
+              id="addTeamMember"
+              class="mt-3 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+            >
+              + Tambah Anggota
+            </button>
+          </div>
+          
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-blue-900 mb-2">📋 Role Permissions</h4>
+            <div class="text-sm text-blue-800 space-y-1">
+              <p><strong>Admin:</strong> Akses penuh ke semua fitur</p>
+              <p><strong>Reviewer:</strong> Review dan approve tasks</p>
+              <p><strong>Finance:</strong> Kelola invoice dan billing</p>
+              <p><strong>Member:</strong> Akses ke proyek yang ditugaskan</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    getProjectContent() {
+      return `
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Pilih Template Proyek</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="project-template border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors" data-template="school">
+                <div class="text-2xl mb-2">🏫</div>
+                <h4 class="font-semibold text-gray-900">Website Sekolah</h4>
+                <p class="text-sm text-gray-600 mt-1">Template lengkap untuk website institusi pendidikan</p>
+                <div class="mt-3 text-xs text-gray-500">
+                  <span class="bg-gray-100 px-2 py-1 rounded">2-3 bulan</span>
+                  <span class="bg-gray-100 px-2 py-1 rounded ml-1">15+ milestone</span>
+                </div>
+              </div>
+              
+              <div class="project-template border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors" data-template="portal">
+                <div class="text-2xl mb-2">📰</div>
+                <h4 class="font-semibold text-gray-900">Portal Berita</h4>
+                <p class="text-sm text-gray-600 mt-1">Template untuk portal berita dan konten</p>
+                <div class="mt-3 text-xs text-gray-500">
+                  <span class="bg-gray-100 px-2 py-1 rounded">1-2 bulan</span>
+                  <span class="bg-gray-100 px-2 py-1 rounded ml-1">10+ milestone</span>
+                </div>
+              </div>
+              
+              <div class="project-template border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors" data-template="company">
+                <div class="text-2xl mb-2">🏢</div>
+                <h4 class="font-semibold text-gray-900">Company Profile</h4>
+                <p class="text-sm text-gray-600 mt-1">Template profesional untuk website perusahaan</p>
+                <div class="mt-3 text-xs text-gray-500">
+                  <span class="bg-gray-100 px-2 py-1 rounded">1-2 bulan</span>
+                  <span class="bg-gray-100 px-2 py-1 rounded ml-1">8+ milestone</span>
+                </div>
+              </div>
+              
+              <div class="project-template border border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-500 transition-colors" data-template="custom">
+                <div class="text-2xl mb-2">🎨</div>
+                <h4 class="font-semibold text-gray-900">Custom Project</h4>
+                <p class="text-sm text-gray-600 mt-1">Mulai dari awal dengan konfigurasi kustom</p>
+                <div class="mt-3 text-xs text-gray-500">
+                  <span class="bg-gray-100 px-2 py-1 rounded">Flexible</span>
+                  <span class="bg-gray-100 px-2 py-1 rounded ml-1">Kustomizable</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Detail Proyek</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Proyek</label>
+                <input 
+                  type="text" 
+                  id="projectName" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Masukkan nama proyek"
+                  value="${this.onboardingData.project?.name || ''}"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea 
+                  id="projectDescription" 
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Deskripsikan proyek Anda"
+                >${this.onboardingData.project?.description || ''}</textarea>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                  <input 
+                    type="date" 
+                    id="projectStartDate" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value="${this.onboardingData.project?.startDate || ''}"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Target Selesai</label>
+                  <input 
+                    type="date" 
+                    id="projectEndDate" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value="${this.onboardingData.project?.endDate || ''}"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    getIntegrationsContent() {
+      return `
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Integrasi yang Tersedia</h3>
+            <p class="text-sm text-gray-600 mb-4">Sambungkan alat favorit Anda untuk alur kerja yang lebih baik.</p>
+            
+            <div class="space-y-4">
+              <div class="integration-item border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <span class="text-xl">💬</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Slack</h4>
+                      <p class="text-sm text-gray-600">Notifikasi real-time dan update proyek</p>
+                    </div>
+                  </div>
+                  <button class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
+                    Hubungkan
+                  </button>
+                </div>
+              </div>
+              
+              <div class="integration-item border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                      <span class="text-xl">📅</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Google Calendar</h4>
+                      <p class="text-sm text-gray-600">Sinkronisasi milestone dan deadline</p>
+                    </div>
+                  </div>
+                  <button class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
+                    Hubungkan
+                  </button>
+                </div>
+              </div>
+              
+              <div class="integration-item border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <span class="text-xl">📁</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Google Drive</h4>
+                      <p class="text-sm text-gray-600">Manajemen file dan dokumen terpusat</p>
+                    </div>
+                  </div>
+                  <button class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
+                    Hubungkan
+                  </button>
+                </div>
+              </div>
+              
+              <div class="integration-item border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <span class="text-xl">📧</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Email Notifications</h4>
+                      <p class="text-sm text-gray-600">Update proyek via email</p>
+                    </div>
+                  </div>
+                  <label class="flex items-center">
+                    <input type="checkbox" class="mr-2" ${this.onboardingData.integrations?.email ? 'checked' : ''}>
+                    <span class="text-sm text-gray-700">Aktifkan</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-yellow-900 mb-2">💡 Tips Integrasi</h4>
+            <div class="text-sm text-yellow-800">
+              <p>Anda dapat mengatur integrasi kapan saja melalui Settings → Integrations. Integrasi membantu tim Anda bekerja lebih efisien dengan alat yang sudah digunakan sehari-hari.</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    getCompleteContent() {
+      return `
+        <div class="text-center py-8">
+          <div class="mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
+              <span class="text-4xl">🚀</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Selamat! Anda Siap</h3>
+            <p class="text-gray-600 max-w-md mx-auto">
+              Organisasi dan proyek pertama Anda telah disiapkan. Mari mulai manajemen proyek yang lebih baik dengan JasaWeb!
+            </p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 mb-8">
+            <div class="p-4 bg-green-50 rounded-lg">
+              <h4 class="font-semibold text-green-900 mb-2">✅ Yang Telah Anda Selesaikan:</h4>
+              <ul class="text-sm text-green-800 text-left space-y-1">
+                <li>• Profil organisasi dikonfigurasi</li>
+                <li>• ${this.onboardingData.team?.length || 0} anggota tim diundang</li>
+                <li>• Proyek pertama dibuat</li>
+                <li>• Preferensi integrasi diatur</li>
+              </ul>
+            </div>
+            
+            <div class="p-4 bg-blue-50 rounded-lg">
+              <h4 class="font-semibold text-blue-900 mb-2">🎯 Langkah Selanjutnya:</h4>
+              <ul class="text-sm text-blue-800 text-left space-y-1">
+                <li>• Mulai menambahkan milestone</li>
+                <li>• Upload file dan dokumen</li>
+                <li>• Ajak tim untuk kolaborasi</li>
+                <li>• Monitor progress di dashboard</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="flex justify-center space-x-4">
+            <button 
+              id="goToDashboard"
+              class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Menuju Dashboard
+            </button>
+            <button 
+              id="viewTutorial"
+              class="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Lihat Tutorial
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    bindStepEvents(stepId) {
+      switch (stepId) {
+        case 'organization':
+          this.bindOrganizationEvents();
+          break;
+        case 'team':
+          this.bindTeamEvents();
+          break;
+        case 'project':
+          this.bindProjectEvents();
+          break;
+        case 'integrations':
+          this.bindIntegrationEvents();
+          break;
+        case 'complete':
+          this.bindCompleteEvents();
+          break;
+      }
+    }
+    
+    bindOrganizationEvents() {
+      // Save organization data when inputs change
+      const orgInputs = ['orgName', 'orgEmail', 'timezone', 'autoMilestones', 'weeklyReports', 'slackNotifications'];
+      orgInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', () => this.saveOrganizationData());
+        }
+      });
+    }
+    
+    bindTeamEvents() {
+      const addBtn = document.getElementById('addTeamMember');
+      if (addBtn) {
+        addBtn.addEventListener('click', () => this.addTeamMember());
+      }
+    }
+    
+    bindProjectEvents() {
+      // Template selection
+      const templates = document.querySelectorAll('.project-template');
+      templates.forEach(template => {
+        template.addEventListener('click', () => {
+          templates.forEach(t => t.classList.remove('border-blue-500', 'bg-blue-50'));
+          template.classList.add('border-blue-500', 'bg-blue-50');
+          this.onboardingData.project.template = template.dataset.template;
+        });
+      });
+      
+      // Save project data
+      const projectInputs = ['projectName', 'projectDescription', 'projectStartDate', 'projectEndDate'];
+      projectInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', () => this.saveProjectData());
+        }
+      });
+    }
+    
+    bindIntegrationEvents() {
+      const emailCheckbox = document.querySelector('input[type="checkbox"][id*="email"]');
+      if (emailCheckbox) {
+        emailCheckbox.addEventListener('change', () => this.saveIntegrationData());
+      }
+    }
+    
+    bindCompleteEvents() {
+      const dashboardBtn = document.getElementById('goToDashboard');
+      const tutorialBtn = document.getElementById('viewTutorial');
+      
+      if (dashboardBtn) {
+        dashboardBtn.addEventListener('click', () => this.goToDashboard());
+      }
+      
+      if (tutorialBtn) {
+        tutorialBtn.addEventListener('click', () => this.viewTutorial());
+      }
+    }
+    
+    addTeamMember() {
+      const container = document.getElementById('teamInvites');
+      if (!container) return;
+      
+      const memberDiv = document.createElement('div');
+      memberDiv.className = 'flex items-center space-x-3 p-3 border border-gray-200 rounded-lg';
+      memberDiv.innerHTML = `
+        <input 
+          type="email" 
+          placeholder="email@example.com" 
+          class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+        <select class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="member">Member</option>
+          <option value="reviewer">Reviewer</option>
+          <option value="finance">Finance</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button 
+          type="button" 
+          onclick="this.parentElement.remove()"
+          class="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+        >
+          ✕
+        </button>
+      `;
+      
+      container.appendChild(memberDiv);
+    }
+    
+    saveOrganizationData() {
+      this.onboardingData.organization = {
+        name: document.getElementById('orgName')?.value || '',
+        email: document.getElementById('orgEmail')?.value || '',
+        timezone: document.getElementById('timezone')?.value || 'Asia/Jakarta',
+        autoMilestones: document.getElementById('autoMilestones')?.checked || false,
+        weeklyReports: document.getElementById('weeklyReports')?.checked || false,
+        slackNotifications: document.getElementById('slackNotifications')?.checked || false
+      };
+    }
+    
+    saveTeamData() {
+      const teamInvites = document.querySelectorAll('#teamInvites > div');
+      this.onboardingData.team = Array.from(teamInvites).map(div => ({
+        email: div.querySelector('input[type="email"]')?.value || '',
+        role: div.querySelector('select')?.value || 'member'
+      })).filter(member => member.email);
+    }
+    
+    saveProjectData() {
+      this.onboardingData.project = {
+        ...this.onboardingData.project,
+        name: document.getElementById('projectName')?.value || '',
+        description: document.getElementById('projectDescription')?.value || '',
+        startDate: document.getElementById('projectStartDate')?.value || '',
+        endDate: document.getElementById('projectEndDate')?.value || ''
+      };
+    }
+    
+    saveIntegrationData() {
+      this.onboardingData.integrations = {
+        email: document.querySelector('input[type="checkbox"][id*="email"]')?.checked || false
+      };
+    }
+    
+    nextStep() {
+      // Save current step data
+      this.saveCurrentStepData();
+      
+      if (this.currentStep < this.steps.length - 1) {
+        this.currentStep++;
+        this.loadStepContent(this.currentStep);
+        this.updateProgress();
+      } else {
+        this.completeOnboarding();
+      }
+    }
+    
+    prevStep() {
+      if (this.currentStep > 0) {
+        this.saveCurrentStepData();
+        this.currentStep--;
+        this.loadStepContent(this.currentStep);
+        this.updateProgress();
+      }
+    }
+    
+    saveCurrentStepData() {
+      const stepId = this.steps[this.currentStep].id;
+      switch (stepId) {
+        case 'organization':
+          this.saveOrganizationData();
+          break;
+        case 'team':
+          this.saveTeamData();
+          break;
+        case 'project':
+          this.saveProjectData();
+          break;
+        case 'integrations':
+          this.saveIntegrationData();
+          break;
+      }
+    }
+    
+    updateProgress() {
+      const progressBar = document.querySelector('.bg-blue-600');
+      const progressText = document.querySelector('.text-xs.text-gray-500:last-child');
+      const stepText = document.querySelector('.text-xs.text-gray-500:first-child');
+      
+      if (progressBar) {
+        progressBar.style.width = `${((this.currentStep + 1) / this.steps.length) * 100}%`;
+      }
+      
+      if (progressText) {
+        progressText.textContent = `${Math.round(((this.currentStep + 1) / this.steps.length) * 100)}%`;
+      }
+      
+      if (stepText) {
+        stepText.textContent = `Langkah ${this.currentStep + 1} dari ${this.steps.length}`;
+      }
+      
+      // Update prev button visibility
+      const prevBtn = document.getElementById('prevStep');
+      if (prevBtn) {
+        prevBtn.style.visibility = this.currentStep === 0 ? 'hidden' : 'visible';
+      }
+      
+      // Update next button text
+      const nextBtn = document.getElementById('nextStep');
+      if (nextBtn) {
+        nextBtn.textContent = this.currentStep === this.steps.length - 1 ? 'Selesai' : 'Selanjutnya →';
+      }
+    }
+    
+    skipOnboarding() {
+      if (confirm('Apakah Anda yakin ingin melewati onboarding? Anda dapat mengaksesnya kapan saja melalui Settings.')) {
+        this.completeOnboarding();
+      }
+    }
+    
+    saveProgress() {
+      localStorage.setItem('onboardingData', JSON.stringify(this.onboardingData));
+      localStorage.setItem('onboardingStep', this.currentStep.toString());
+      
+      // Show success message
+      this.showMessage('Progress onboarding disimpan!', 'success');
+    }
+    
+    loadOnboardingData() {
+      const saved = localStorage.getItem('onboardingData');
+      return saved ? JSON.parse(saved) : {
+        organization: {},
+        team: [],
+        project: {},
+        integrations: {}
+      };
+    }
+    
+    completeOnboarding() {
+      // Mark onboarding as completed
+      localStorage.setItem('onboardingCompleted', 'true');
+      localStorage.removeItem('onboardingData');
+      localStorage.removeItem('onboardingStep');
+      
+      // Send completion data to backend
+      this.sendOnboardingCompletion();
+      
+      // Close wizard and redirect
+      this.closeWizard();
+      window.location.href = '/portal';
+    }
+    
+    async sendOnboardingCompletion() {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+        
+        const response = await fetch('/api/onboarding/complete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(this.onboardingData)
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to save onboarding data');
+        }
+      } catch (error) {
+        console.error('Error saving onboarding data:', error);
+      }
+    }
+    
+    goToDashboard() {
+      this.completeOnboarding();
+    }
+    
+    viewTutorial() {
+      // Open tutorial modal or redirect to tutorial page
+      window.open('/docs/tutorial', '_blank');
+    }
+    
+    closeWizard() {
+      const wizard = document.getElementById('onboardingWizard');
+      if (wizard) {
+        wizard.classList.add('hidden');
+      }
+    }
+    
+    showMessage(message, type = 'info') {
+      // Create and show a temporary message
+      const messageEl = document.createElement('div');
+      messageEl.className = `fixed top-4 right-4 z-50 p-4 rounded-md shadow-lg ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+      }`;
+      messageEl.textContent = message;
+      
+      document.body.appendChild(messageEl);
+      
+      setTimeout(() => {
+        messageEl.remove();
+      }, 3000);
+    }
+  }
+  
+  // Initialize wizard when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    new OnboardingWizard();
+  });
+</script>

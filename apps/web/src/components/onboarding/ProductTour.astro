@@ -1,0 +1,371 @@
+---
+// src/components/onboarding/ProductTour.astro
+export interface Props {
+  isActive: boolean;
+  currentStep?: number;
+  onComplete?: () => void;
+}
+
+const { isActive, currentStep = 0, onComplete } = Astro.props;
+
+// Tour steps configuration
+const tourSteps = [
+  {
+    id: 'dashboard',
+    title: 'Dashboard Overview',
+    description: 'Monitor semua proyek dan aktivitas tim Anda dalam satu tampilan.',
+    element: '#dashboard-overview',
+    position: 'bottom'
+  },
+  {
+    id: 'quick-actions',
+    title: 'Quick Actions',
+    description: 'Akses cepat ke tindakan yang sering digunakan.',
+    element: '#quick-actions',
+    position: 'bottom'
+  },
+  {
+    id: 'status-widgets',
+    title: 'Status Widgets',
+    description: 'Lihat statistik penting tentang proyek Anda.',
+    element: '#status-widgets',
+    position: 'right'
+  },
+  {
+    id: 'project-overview',
+    title: 'Project Overview',
+    description: 'Kelola semua proyek Anda dari sini.',
+    element: '#project-overview',
+    position: 'left'
+  },
+  {
+    id: 'activity-feed',
+    title: 'Activity Feed',
+    description: 'Ikuti update terbaru dari tim Anda.',
+    element: '#activity-feed',
+    position: 'left'
+  }
+];
+---
+
+<!-- Product Tour Overlay -->
+<div id="productTour" class={`fixed inset-0 z-50 ${isActive ? 'block' : 'hidden'}`}>
+  <!-- Tour Backdrop -->
+  <div class="fixed inset-0 bg-black bg-opacity-75 transition-opacity"></div>
+  
+  <!-- Tour Highlight -->
+  <div id="tourHighlight" class="absolute border-4 border-blue-500 rounded-lg pointer-events-none transition-all duration-300"></div>
+  
+  <!-- Tour Tooltip -->
+  <div id="tourTooltip" class="absolute bg-white rounded-lg shadow-xl p-6 max-w-sm pointer-events-auto transition-all duration-300">
+    <!-- Tooltip Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900" id="tourTitle">Tour Title</h3>
+      <button 
+        id="closeTour"
+        class="text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Tooltip Content -->
+    <p class="text-gray-600 mb-6" id="tourDescription">Tour description goes here.</p>
+    
+    <!-- Tooltip Actions -->
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-gray-500">
+        <span id="tourProgress">1 / 5</span>
+      </div>
+      
+      <div class="flex space-x-3">
+        <button 
+          id="prevTourStep"
+          class="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          ← Previous
+        </button>
+        
+        <button 
+          id="nextTourStep"
+          class="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Next →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script client:load>
+  class ProductTour {
+    constructor() {
+      this.currentStep = 0;
+      this.isActive = false;
+      this.steps = [
+        {
+          id: 'dashboard',
+          title: 'Dashboard Overview',
+          description: 'Monitor semua proyek dan aktivitas tim Anda dalam satu tampilan.',
+          element: '#dashboard-overview',
+          position: 'bottom'
+        },
+        {
+          id: 'quick-actions',
+          title: 'Quick Actions',
+          description: 'Akses cepat ke tindakan yang sering digunakan.',
+          element: '#quick-actions',
+          position: 'bottom'
+        },
+        {
+          id: 'status-widgets',
+          title: 'Status Widgets',
+          description: 'Lihat statistik penting tentang proyek Anda.',
+          element: '#status-widgets',
+          position: 'right'
+        },
+        {
+          id: 'project-overview',
+          title: 'Project Overview',
+          description: 'Kelola semua proyek Anda dari sini.',
+          element: '#project-overview',
+          position: 'left'
+        },
+        {
+          id: 'activity-feed',
+          title: 'Activity Feed',
+          description: 'Ikuti update terbaru dari tim Anda.',
+          element: '#activity-feed',
+          position: 'left'
+        }
+      ];
+      
+      this.init();
+    }
+    
+    init() {
+      this.bindEvents();
+    }
+    
+    bindEvents() {
+      document.getElementById('closeTour')?.addEventListener('click', () => this.closeTour());
+      document.getElementById('prevTourStep')?.addEventListener('click', () => this.previousStep());
+      document.getElementById('nextTourStep')?.addEventListener('click', () => this.nextStep());
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (!this.isActive) return;
+        
+        switch (e.key) {
+          case 'ArrowRight':
+            this.nextStep();
+            break;
+          case 'ArrowLeft':
+            this.previousStep();
+            break;
+          case 'Escape':
+            this.closeTour();
+            break;
+        }
+      });
+    }
+    
+    startTour(startStep = 0) {
+      this.currentStep = startStep;
+      this.isActive = true;
+      
+      const tour = document.getElementById('productTour');
+      if (tour) {
+        tour.classList.remove('hidden');
+      }
+      
+      this.showStep(this.currentStep);
+    }
+    
+    showStep(stepIndex) {
+      if (stepIndex < 0 || stepIndex >= this.steps.length) {
+        this.closeTour();
+        return;
+      }
+      
+      const step = this.steps[stepIndex];
+      const element = document.querySelector(step.element);
+      
+      if (!element) {
+        console.warn(`Tour element not found: ${step.element}`);
+        this.nextStep();
+        return;
+      }
+      
+      // Update tooltip content
+      document.getElementById('tourTitle').textContent = step.title;
+      document.getElementById('tourDescription').textContent = step.description;
+      document.getElementById('tourProgress').textContent = `${stepIndex + 1} / ${this.steps.length}`;
+      
+      // Position highlight and tooltip
+      this.positionHighlight(element);
+      this.positionTooltip(element, step.position);
+      
+      // Update buttons
+      this.updateButtons();
+      
+      // Scroll element into view if needed
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    positionHighlight(element) {
+      const highlight = document.getElementById('tourHighlight');
+      if (!highlight) return;
+      
+      const rect = element.getBoundingClientRect();
+      const offset = 8; // Highlight border offset
+      
+      highlight.style.top = `${rect.top - offset}px`;
+      highlight.style.left = `${rect.left - offset}px`;
+      highlight.style.width = `${rect.width + offset * 2}px`;
+      highlight.style.height = `${rect.height + offset * 2}px`;
+    }
+    
+    positionTooltip(element, position) {
+      const tooltip = document.getElementById('tourTooltip');
+      if (!tooltip) return;
+      
+      const rect = element.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const offset = 16; // Distance from element
+      
+      let top, left;
+      
+      switch (position) {
+        case 'top':
+          top = rect.top - tooltipRect.height - offset;
+          left = rect.left + (rect.width - tooltipRect.width) / 2;
+          break;
+        case 'bottom':
+          top = rect.bottom + offset;
+          left = rect.left + (rect.width - tooltipRect.width) / 2;
+          break;
+        case 'left':
+          top = rect.top + (rect.height - tooltipRect.height) / 2;
+          left = rect.left - tooltipRect.width - offset;
+          break;
+        case 'right':
+          top = rect.top + (rect.height - tooltipRect.height) / 2;
+          left = rect.right + offset;
+          break;
+        default:
+          top = rect.bottom + offset;
+          left = rect.left + (rect.width - tooltipRect.width) / 2;
+      }
+      
+      // Ensure tooltip stays within viewport
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      if (left < 16) left = 16;
+      if (left + tooltipRect.width > viewportWidth - 16) {
+        left = viewportWidth - tooltipRect.width - 16;
+      }
+      
+      if (top < 16) top = 16;
+      if (top + tooltipRect.height > viewportHeight - 16) {
+        top = viewportHeight - tooltipRect.height - 16;
+      }
+      
+      tooltip.style.top = `${top}px`;
+      tooltip.style.left = `${left}px`;
+    }
+    
+    updateButtons() {
+      const prevBtn = document.getElementById('prevTourStep');
+      const nextBtn = document.getElementById('nextTourStep');
+      
+      if (prevBtn) {
+        prevBtn.style.visibility = this.currentStep === 0 ? 'hidden' : 'visible';
+      }
+      
+      if (nextBtn) {
+        nextBtn.textContent = this.currentStep === this.steps.length - 1 ? 'Finish' : 'Next →';
+      }
+    }
+    
+    nextStep() {
+      if (this.currentStep < this.steps.length - 1) {
+        this.currentStep++;
+        this.showStep(this.currentStep);
+      } else {
+        this.completeTour();
+      }
+    }
+    
+    previousStep() {
+      if (this.currentStep > 0) {
+        this.currentStep--;
+        this.showStep(this.currentStep);
+      }
+    }
+    
+    closeTour() {
+      this.isActive = false;
+      const tour = document.getElementById('productTour');
+      if (tour) {
+        tour.classList.add('hidden');
+      }
+    }
+    
+    completeTour() {
+      this.closeTour();
+      
+      // Mark tour as completed
+      localStorage.setItem('productTourCompleted', 'true');
+      
+      // Show completion message
+      this.showCompletionMessage();
+    }
+    
+    showCompletionMessage() {
+      const message = document.createElement('div');
+      message.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      message.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">🎉</span>
+          <div>
+            <p class="font-semibold">Tour Selesai!</p>
+            <p class="text-sm">Anda sekarang familiar dengan fitur-fitur utama JasaWeb.</p>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(message);
+      
+      setTimeout(() => {
+        message.remove();
+      }, 5000);
+    }
+    
+    // Public method to start tour from outside
+    static start() {
+      const tour = new ProductTour();
+      tour.startTour();
+    }
+  }
+  
+  // Make tour available globally
+  window.ProductTour = ProductTour;
+  
+  // Auto-start tour if it's the user's first visit
+  document.addEventListener('DOMContentLoaded', () => {
+    const hasCompletedTour = localStorage.getItem('productTourCompleted') === 'true';
+    const hasCompletedOnboarding = localStorage.getItem('onboardingCompleted') === 'true';
+    
+    // Show tour 5 seconds after page load if onboarding is complete but tour hasn't been done
+    if (hasCompletedOnboarding && !hasCompletedTour) {
+      setTimeout(() => {
+        const tour = new ProductTour();
+        tour.startTour();
+      }, 5000);
+    }
+  });
+</script>
