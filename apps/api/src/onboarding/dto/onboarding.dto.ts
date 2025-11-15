@@ -9,7 +9,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CompleteOnboardingDto {
   @ApiProperty({ description: 'Organization information' })
-  organization: {
+  organization!: {
     name: string;
     email: string;
     timezone: string;
@@ -19,13 +19,13 @@ export class CompleteOnboardingDto {
   };
 
   @ApiProperty({ description: 'Team members to invite' })
-  team: Array<{
+  team!: Array<{
     email: string;
     role: string;
   }>;
 
   @ApiProperty({ description: 'First project information' })
-  project: {
+  project!: {
     name: string;
     description: string;
     template: string;
@@ -34,7 +34,7 @@ export class CompleteOnboardingDto {
   };
 
   @ApiProperty({ description: 'Integration preferences' })
-  integrations: {
+  integrations!: {
     email: boolean;
     slack: boolean;
     googleCalendar: boolean;
@@ -45,7 +45,7 @@ export class CompleteOnboardingDto {
 export class UpdateProgressDto {
   @ApiProperty({ description: 'Current onboarding step' })
   @IsString()
-  step: string;
+  step!: string;
 
   @ApiProperty({ description: 'Step data' })
   data: any;
@@ -54,15 +54,15 @@ export class UpdateProgressDto {
 export class UpdateOrganizationDto {
   @ApiProperty({ description: 'Organization name' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'Billing email' })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({ description: 'Timezone' })
   @IsString()
-  timezone: string;
+  timezone!: string;
 
   @ApiPropertyOptional({ description: 'Auto-create milestones' })
   @IsBoolean()
@@ -83,23 +83,23 @@ export class UpdateOrganizationDto {
 export class TeamMemberDto {
   @ApiProperty({ description: 'Member email' })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({ description: 'Member role' })
   @IsString()
-  role: string;
+  role!: string;
 }
 
 export class InviteTeamDto {
   @ApiProperty({ description: 'Team members to invite', type: [TeamMemberDto] })
   @IsArray()
-  members: TeamMemberDto[];
+  members!: TeamMemberDto[];
 }
 
 export class CreateFirstProjectDto {
   @ApiProperty({ description: 'Project name' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({ description: 'Project description' })
   @IsString()
@@ -125,5 +125,5 @@ export class CreateFirstProjectDto {
 export class UnlockAchievementDto {
   @ApiProperty({ description: 'Achievement ID' })
   @IsString()
-  achievementId: string;
+  achievementId!: string;
 }

@@ -11,7 +11,7 @@ import {
 import { OnboardingService } from './onboarding.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { Roles, Role } from '../common/decorators/roles.decorator';
 import {
   ApiTags,
   ApiOperation,
@@ -28,7 +28,7 @@ export class OnboardingController {
 
   @Post('start')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Start onboarding process' })
   @ApiResponse({ status: 200, description: 'Onboarding started successfully' })
   @ApiResponse({
@@ -44,7 +44,7 @@ export class OnboardingController {
 
   @Post('complete')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Complete onboarding process' })
   @ApiResponse({
     status: 200,
@@ -63,7 +63,7 @@ export class OnboardingController {
 
   @Post('progress')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Update onboarding progress' })
   @ApiResponse({ status: 200, description: 'Progress updated successfully' })
   async updateProgress(
@@ -93,7 +93,7 @@ export class OnboardingController {
 
   @Post('organization')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Update organization during onboarding' })
   @ApiResponse({
     status: 200,
@@ -109,7 +109,7 @@ export class OnboardingController {
 
   @Post('invite-team')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Invite team members during onboarding' })
   @ApiResponse({
     status: 200,
@@ -128,7 +128,7 @@ export class OnboardingController {
 
   @Post('create-project')
   @HttpCode(HttpStatus.CREATED)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Create first project during onboarding' })
   @ApiResponse({ status: 201, description: 'Project created successfully' })
   async createFirstProject(@Request() req: any, @Body() projectDto: any) {
@@ -151,7 +151,7 @@ export class OnboardingController {
 
   @Post('template/:templateId')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Get details for a specific template' })
   @ApiResponse({
     status: 200,
@@ -163,7 +163,7 @@ export class OnboardingController {
 
   @Post('achievements')
   @HttpCode(HttpStatus.OK)
-  @Roles('owner', 'admin')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   @ApiOperation({ summary: 'Unlock achievement during onboarding' })
   @ApiResponse({
     status: 200,

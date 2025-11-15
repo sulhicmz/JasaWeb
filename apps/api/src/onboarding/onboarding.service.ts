@@ -72,7 +72,7 @@ export class OnboardingService {
       where: { id: organizationId },
       data: {
         settings: {
-          ...organization.settings,
+          ...(organization.settings as any),
           onboardingCompleted: true,
           onboardingCompletedAt: new Date().toISOString(),
           onboardingData: completeOnboardingDto,
@@ -151,7 +151,8 @@ export class OnboardingService {
       throw new NotFoundException('Organization not found');
     }
 
-    const isCompleted = organization.settings?.onboardingCompleted || false;
+    const isCompleted =
+      (organization.settings as any)?.onboardingCompleted || false;
     const projectCount = organization.projects.length;
 
     // Get onboarding progress from audit logs
@@ -172,7 +173,7 @@ export class OnboardingService {
       progress,
       projectCount,
       hasProjects: projectCount > 0,
-      completedAt: organization.settings?.onboardingCompletedAt,
+      completedAt: (organization.settings as any)?.onboardingCompletedAt,
       settings: organization.settings,
     };
   }
@@ -190,7 +191,7 @@ export class OnboardingService {
         name: organizationDto.name,
         billingEmail: organizationDto.email,
         settings: {
-          ...(await this.getOrganizationSettings(organizationId)),
+          ...((await this.getOrganizationSettings(organizationId)) as any),
           timezone: organizationDto.timezone,
           autoMilestones: organizationDto.autoMilestones,
           weeklyReports: organizationDto.weeklyReports,
@@ -263,11 +264,11 @@ export class OnboardingService {
         });
 
         // Send invitation email
-        await this.emailService.sendInvitationEmail(
-          member.email,
-          organizationId,
-          member.role
-        );
+        await this.emailService.sendEmail({
+          to: member.email,
+          subject: 'Invitation to join organization',
+          html: `<p>You've been invited to join an organization with role: ${member.role}</p>`,
+        });
       }
     }
 
@@ -456,10 +457,10 @@ export class OnboardingService {
 
     return {
       achievements: achievements.map((log) => ({
-        id: log.meta?.achievementId,
-        name: log.meta?.name,
-        icon: log.meta?.icon,
-        description: log.meta?.description,
+        id: (log.meta as any)?.achievementId,
+        name: (log.meta as any)?.name,
+        icon: (log.meta as any)?.icon,
+        description: (log.meta as any)?.description,
         unlockedAt: log.createdAt,
       })),
     };
@@ -473,7 +474,10 @@ export class OnboardingService {
       },
     });
 
-    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+    if (
+      !membership ||
+      !['org-owner', 'org-admin', 'owner', 'admin'].includes(membership.role)
+    ) {
       throw new BadRequestException('Insufficient permissions');
     }
   }
@@ -521,7 +525,7 @@ export class OnboardingService {
       complete: 100,
     };
 
-    return stepProgress[currentStep] || 0;
+    return (stepProgress as any)[currentStep] || 0;
   }
 
   private async getProjectTemplateDetails(templateId: string) {
@@ -619,7 +623,7 @@ export class OnboardingService {
       },
     };
 
-    return templates[templateId] || templates.custom;
+    return (templates as any)[templateId] || templates.custom;
   }
 
   private calculateMilestoneDueDate(
@@ -644,7 +648,7 @@ export class OnboardingService {
       integrations: 'integrator',
     };
 
-    const achievementId = achievements[step];
+    const achievementId = (achievements as any)[step];
     if (achievementId) {
       await this.unlockAchievementInternal(
         userId,
@@ -662,14 +666,17 @@ export class OnboardingService {
     const achievementData = this.getAchievementData(achievementId);
 
     // Check if already unlocked
-    const existing = await this.prisma.auditLog.findFirst({
+    const existingLogs = await this.prisma.auditLog.findMany({
       where: {
         organizationId,
         actorId: userId,
         action: 'achievement_unlocked',
-        meta: { achievementId },
       },
     });
+
+    const existing = existingLogs.find(
+      (log) => (log.meta as any)?.achievementId === achievementId
+    );
 
     if (existing) {
       return existing.meta;
@@ -733,7 +740,7 @@ export class OnboardingService {
       },
     };
 
-    return achievements[achievementId] || achievements.first_steps;
+    return (achievements as any)[achievementId] || achievements.first_steps;
   }
 
   private calculateOnboardingDuration(
@@ -759,7 +766,7 @@ export class OnboardingService {
         to: user.email,
         subject: 'Selamat! Onboarding JasaWeb Selesai',
         template: 'onboarding-completed',
-        data: {
+        context: {
           userName: user.name,
           organizationName: organization.name,
         },
