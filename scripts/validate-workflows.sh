@@ -30,9 +30,14 @@ grep -r "secrets\." .github/workflows/ | sort | uniq
 # Test security workflow
 act -j security -s GITHUB_TOKEN=your_token
 
-# Test specific jobs
-act -j codeql
-act -j dependency-security
+# Test CodeQL analysis workflow
+act -j analyze -s GITHUB_TOKEN=your_token
+
+# Test comprehensive security analysis workflow
+act -j codeql -s GITHUB_TOKEN=your_token
+act -j dependency-security -s GITHUB_TOKEN=your_token
+act -j secret-scan -s GITHUB_TOKEN=your_token
+act -j code-quality-security -s GITHUB_TOKEN=your_token
 ```
 
 ## Workflow Validation Script
