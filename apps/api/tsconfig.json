@@ -15,7 +15,10 @@
   },
   "include": ["src/**/*"],
   "exclude": [
-    "node_modules", 
+    "node_modules",
     "dist"
+    // Note: Core application directories (approvals, files, tickets, invoices, milestones, projects, common/database)
+    // should NEVER be excluded from TypeScript compilation to ensure type safety and catch errors early.
+    // Only exclude build artifacts and external dependencies.
   ]
 }

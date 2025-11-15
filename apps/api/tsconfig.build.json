@@ -10,5 +10,7 @@
     "test",
     "node_modules",
     "dist"
+    // Note: Only exclude test files and build artifacts from production build.
+    // All source code including core modules must be included for proper compilation.
   ]
 }
