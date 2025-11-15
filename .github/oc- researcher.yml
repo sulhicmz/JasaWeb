@@ -1,5 +1,5 @@
 name: oc - researcher
-
+runs-on: self-hosted
 on:
   schedule:
     - cron: '0 1 * * *'
