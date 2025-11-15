@@ -89,21 +89,6 @@ function checkFilePatterns(
       results.passed.push(description);
       console.log(`✅ ${description} - PASSED\n`);
     }
-
-    if (output.trim()) {
-      if (severity === 'error') {
-        results.failed.push(description);
-        console.log(`❌ ${description} - FOUND ISSUES`);
-      } else {
-        results.warnings.push(description);
-        console.log(`⚠️  ${description} - WARNINGS`);
-      }
-      console.log(output);
-      console.log('');
-    } else {
-      results.passed.push(description);
-      console.log(`✅ ${description} - PASSED\n`);
-    }
   } catch (error) {
     console.log(`⚠️  ${description} - ERROR RUNNING CHECK\n`);
   }
@@ -111,7 +96,7 @@ function checkFilePatterns(
 
 // 1. Check for hardcoded secrets
 checkFilePatterns(
-  '(password|secret|key|token)\\s*[:=]\\s*[\'\"][^\'\"]{8,}[\'\"]',
+  '(password|secret|key|token)\\s*[:=]\\s*["\'][^"\']{8,}["\']',
   'Checking for hardcoded secrets',
   'error'
 );
