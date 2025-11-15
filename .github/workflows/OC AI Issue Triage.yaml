@@ -9,9 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      checks: read
     steps:
       - name: AI Response with Qwen3-Max
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@v1.0.35
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:

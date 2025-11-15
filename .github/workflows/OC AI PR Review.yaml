@@ -12,11 +12,12 @@ permissions:
       contents: write
       pull-requests: write
       issues: write
+      checks: read
     steps:
       - uses: actions/checkout@v4
 
       - name: Deep Review with DeepSeek-R1
-        uses: sst/opencode/github@latest
+        uses: sst/opencode/github@v1.0.35
         env:
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
         with:
@@ -27,3 +28,32 @@ permissions:
             - Algorithm efficiency
             - Code clarity and maintainability
             Be precise and constructive.
+            
+            Save your review comments to ./opencode-comment.md in GitHub PR review format with specific file paths and line numbers.
+            
+      - name: Post Review Comments
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const commentPath = path.join(process.cwd(), 'opencode-comment.md');
+            if (!fs.existsSync(commentPath)) {
+              console.log('No review comments found');
+              return;
+            }
+            
+            const comment = fs.readFileSync(commentPath, 'utf8');
+            if (!comment.trim()) {
+              console.log('Review comment is empty');
+              return;
+            }
+            
+            github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              body: comment,
+              event: 'COMMENT'
+            });
