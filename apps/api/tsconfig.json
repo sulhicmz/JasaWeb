@@ -16,5 +16,12 @@
     "moduleResolution": "bundler"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+    // IMPORTANT: All application source code should be included in compilation.
+    // Only exclude external dependencies and build artifacts.
+    // Critical directories like approvals, files, tickets, invoices, milestones,
+    // projects, and common/database MUST remain included for type safety.
+  ]
 }
