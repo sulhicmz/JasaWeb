@@ -40,10 +40,19 @@ function runCommand(command, description) {
 }
 
 // Helper function to check file patterns
-function checkFilePatterns(pattern, description, severity = 'warning') {
+function checkFilePatterns(
+  pattern,
+  description,
+  severity = 'warning',
+  excludeScript = false
+) {
   try {
     console.log(`🔍 ${description}...`);
-    const command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist . || true`;
+    let command = `grep -r -i -E "${pattern}" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist .`;
+    if (excludeScript) {
+      command += ' --exclude="security-scan.js"';
+    }
+    command += ' || true';
     const output = execSync(command, { encoding: 'utf-8' });
 
     if (output.trim()) {
@@ -67,13 +76,13 @@ function checkFilePatterns(pattern, description, severity = 'warning') {
 
 // 1. Check for hardcoded secrets
 checkFilePatterns(
-  '(password|secret|key|token)\\s*[:=]\\s*[\'"][^\'"]{8,}[\'"]',
+  '(password|secret|key|token)\\s*[:=]\\s*[\'\"][^\'\"]{8,}[\'\"]',
   'Checking for hardcoded secrets',
   'error'
 );
 
-// 2. Check for eval() usage
-checkFilePatterns('eval\\(', 'Checking for eval() usage', 'error');
+// 2. Check for eval() usage (exclude this script)
+checkFilePatterns('eval\\(', 'Checking for eval() usage', 'error', true);
 
 // 3. Check for console.log in production code
 checkFilePatterns(
@@ -82,20 +91,43 @@ checkFilePatterns(
   'warning'
 );
 
-// 4. Check for TODO/FIXME comments
+// 4. Check for TODO/FIXME comments (exclude this script)
 checkFilePatterns(
   '(TODO|FIXME|XXX|HACK)',
   'Checking for TODO/FIXME comments',
-  'warning'
+  'warning',
+  true
 );
 
-// 5. Run npm audit
-runCommand('npm audit --audit-level moderate', 'Running npm audit');
+// 5. Run security audit (try pnpm first, fallback to npm)
+console.log('🔍 Running security audit...');
+let auditPassed = false;
+try {
+  execSync('which pnpm', { stdio: 'pipe' });
+  runCommand('pnpm audit --audit-level moderate', 'Running pnpm audit');
+  auditPassed = true;
+} catch (error) {
+  console.log('⚠️  pnpm not available, trying npm audit...');
+  try {
+    runCommand('npm audit --audit-level moderate', 'Running npm audit');
+    auditPassed = true;
+  } catch (npmError) {
+    console.log('❌ Both pnpm and npm audit failed');
+    results.failed.push('Running security audit');
+  }
+}
 
 // 6. Check for outdated dependencies
 console.log('🔍 Checking for outdated dependencies...');
 try {
-  execSync('npm outdated', { encoding: 'utf-8', stdio: 'pipe' });
+  let outdatedCommand = 'pnpm outdated';
+  try {
+    execSync('which pnpm', { stdio: 'pipe' });
+  } catch (error) {
+    outdatedCommand = 'npm outdated';
+  }
+
+  execSync(outdatedCommand, { encoding: 'utf-8', stdio: 'pipe' });
   results.passed.push('Checking for outdated dependencies');
   console.log('✅ All dependencies are up to date\n');
 } catch (error) {
@@ -125,18 +157,36 @@ try {
 // 8. Check TypeScript strict mode
 console.log('🔍 Checking TypeScript configuration...');
 try {
-  const tsconfigPath = path.join(
-    process.cwd(),
-    'packages/config/tsconfig/base.json'
-  );
-  const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf-8'));
+  // Check root tsconfig first
+  const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
+  if (fs.existsSync(tsconfigPath)) {
+    const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf-8'));
 
-  if (tsconfig.compilerOptions.strict) {
-    results.passed.push('TypeScript strict mode');
-    console.log('✅ TypeScript strict mode is enabled\n');
+    if (tsconfig.compilerOptions && tsconfig.compilerOptions.strict) {
+      results.passed.push('TypeScript strict mode');
+      console.log('✅ TypeScript strict mode is enabled\n');
+    } else {
+      results.warnings.push('TypeScript strict mode');
+      console.log('⚠️  TypeScript strict mode is not fully enabled\n');
+    }
   } else {
-    results.warnings.push('TypeScript strict mode');
-    console.log('⚠️  TypeScript strict mode is not fully enabled\n');
+    // Try packages/config path as fallback
+    const fallbackPath = path.join(
+      process.cwd(),
+      'packages/config/tsconfig/base.json'
+    );
+    if (fs.existsSync(fallbackPath)) {
+      const tsconfig = JSON.parse(fs.readFileSync(fallbackPath, 'utf-8'));
+      if (tsconfig.compilerOptions && tsconfig.compilerOptions.strict) {
+        results.passed.push('TypeScript strict mode');
+        console.log('✅ TypeScript strict mode is enabled\n');
+      } else {
+        results.warnings.push('TypeScript strict mode');
+        console.log('⚠️  TypeScript strict mode is not fully enabled\n');
+      }
+    } else {
+      console.log('⚠️  TypeScript configuration not found\n');
+    }
   }
 } catch (error) {
   console.log('⚠️  Error checking TypeScript configuration\n');
