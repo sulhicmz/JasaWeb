@@ -9,37 +9,37 @@ This document provides guidelines for testing the JasaWeb API application.
 #### Run all API tests
 
 ```bash
-npm run test:api
+pnpm test:api
 ```
 
 #### Run tests from API directory
 
 ```bash
-cd apps/api && npm test
+cd apps/api && pnpm test
 ```
 
 #### Run tests in watch mode
 
 ```bash
-cd apps/api && npm run test:watch
+cd apps/api && pnpm test:watch
 ```
 
 #### Run tests with coverage
 
 ```bash
-cd apps/api && npm run test:cov
+cd apps/api && pnpm test:cov
 ```
 
 #### Run only unit tests
 
 ```bash
-cd apps/api && npm run test:unit
+cd apps/api && pnpm test:unit
 ```
 
 #### Run integration tests
 
 ```bash
-cd apps/api && npm run test:integration
+cd apps/api && pnpm test:integration
 ```
 
 ### Test Structure
@@ -78,4 +78,4 @@ The security vulnerability for js-yaml has been resolved:
 
 - js-yaml updated to version ≥4.1.1
 - No prototype pollution vulnerability remains
-- Verified with `npm audit` showing 0 vulnerabilities
+- Verified with `pnpm audit` showing 0 vulnerabilities
