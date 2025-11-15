@@ -89,21 +89,6 @@ function checkFilePatterns(
       results.passed.push(description);
       console.log(`✅ ${description} - PASSED\n`);
     }
-
-    if (output.trim()) {
-      if (severity === 'error') {
-        results.failed.push(description);
-        console.log(`❌ ${description} - FOUND ISSUES`);
-      } else {
-        results.warnings.push(description);
-        console.log(`⚠️  ${description} - WARNINGS`);
-      }
-      console.log(output);
-      console.log('');
-    } else {
-      results.passed.push(description);
-      console.log(`✅ ${description} - PASSED\n`);
-    }
   } catch (error) {
     console.log(`⚠️  ${description} - ERROR RUNNING CHECK\n`);
   }
@@ -111,7 +96,7 @@ function checkFilePatterns(
 
 // 1. Check for hardcoded secrets
 checkFilePatterns(
-  '(password|secret|key|token)\\s*[:=]\\s*[\'\"][^\'\"]{8,}[\'\"]',
+  '(password|secret|key|token)\\s*[:=]\\s*["\'][^"\']{8,}["\']',
   'Checking for hardcoded secrets',
   'error'
 );
@@ -132,6 +117,69 @@ checkFilePatterns(
   'scripts/security-scan.js'
 );
 
+// Additional check for unguarded console statements (more strict)
+function checkUnguardedConsoleStatements() {
+  try {
+    console.log(
+      '🔍 Checking for unguarded console statements in production...'
+    );
+    const command = `grep -r -n -E "console\\.(log|debug|info)" --include="*.ts" --include="*.js" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=scripts --exclude-dir=.github --exclude="verify-typescript-config.js" --exclude="milestone.service.ts" . || true`;
+    let output = execSync(command, { encoding: 'utf-8' });
+
+    if (output.trim()) {
+      const lines = output.split('\n').filter((line) => line.trim());
+      let unguardedFound = false;
+
+      for (const line of lines) {
+        // Check if the console statement is properly guarded with development check
+        const filePath = line.split(':')[0];
+        if (filePath && fs.existsSync(filePath)) {
+          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          const lineNumber = parseInt(line.split(':')[1]);
+          const fileLines = fileContent.split('\n');
+
+          // Look for development guard in the same or preceding lines
+          let hasDevGuard = false;
+          for (
+            let i = Math.max(0, lineNumber - 5);
+            i <= Math.min(fileLines.length - 1, lineNumber + 2);
+            i++
+          ) {
+            if (
+              fileLines[i].includes('import.meta.env.DEV') ||
+              fileLines[i].includes("process.env.NODE_ENV === 'development'") ||
+              fileLines[i].includes('process.env.NODE_ENV === "development"')
+            ) {
+              hasDevGuard = true;
+              break;
+            }
+          }
+
+          if (!hasDevGuard) {
+            console.log(`⚠️  Unguarded console statement found: ${line}`);
+            unguardedFound = true;
+          }
+        }
+      }
+
+      if (unguardedFound) {
+        results.warnings.push('Checking for unguarded console statements');
+        console.log('⚠️  Unguarded console statements - WARNINGS\n');
+      } else {
+        results.passed.push('Checking for unguarded console statements');
+        console.log('✅ No unguarded console statements found\n');
+      }
+    } else {
+      results.passed.push('Checking for unguarded console statements');
+      console.log('✅ No console statements found\n');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking unguarded console statements\n');
+  }
+}
+
+checkUnguardedConsoleStatements();
+
 // 4. Check for TODO/FIXME comments (exclude security script itself and milestone service)
 checkFilePatterns(
   '\\b(TODO|FIXME|XXX|HACK)\\b',
@@ -144,10 +192,35 @@ checkFilePatterns(
 const lockFile =
   packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'package-lock.json';
 if (fs.existsSync(lockFile)) {
-  runCommand(
-    `${packageManager} audit --audit-level moderate`,
-    `Running ${packageManager} audit`
-  );
+  if (packageManager === 'pnpm') {
+    // Try pnpm audit first, fallback to npm if pnpm is not available
+    try {
+      execSync('which pnpm', { stdio: 'pipe' });
+      runCommand(
+        `${packageManager} audit --audit-level moderate`,
+        `Running ${packageManager} audit`
+      );
+    } catch (error) {
+      console.log('⚠️  pnpm not available, falling back to npm audit');
+      if (fs.existsSync('package-lock.json')) {
+        runCommand(
+          'npm audit --audit-level moderate',
+          'Running npm audit (fallback)'
+        );
+      } else {
+        console.log('⚠️  No package-lock.json found, skipping audit');
+        console.log(
+          '   Consider running dependency audits in your CI environment\n'
+        );
+        results.warnings.push('Running security audit');
+      }
+    }
+  } else {
+    runCommand(
+      `${packageManager} audit --audit-level moderate`,
+      `Running ${packageManager} audit`
+    );
+  }
 } else {
   console.log(`⚠️  No ${lockFile} found, skipping ${packageManager} audit`);
   console.log('   Consider running dependency audits in your CI environment\n');
