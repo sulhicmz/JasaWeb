@@ -240,8 +240,8 @@ export class TicketController {
         // Update SLA due date if priority changed
         ...(updateTicketDto.priority && 
           existingTicket.priority !== updateTicketDto.priority && {
-            slaDueAt: this.calculateSlaDueDate(updateTicketDto.priority),
-          }),
+          slaDueAt: this.calculateSlaDueDate(updateTicketDto.priority),
+        }),
       },
       include: {
         organization: {

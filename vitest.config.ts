@@ -9,23 +9,16 @@ export default defineConfig({
       'dist',
       '**/*.d.ts',
       '**/*.config.*',
-      '**/coverage/**'
+      '**/coverage/**',
     ],
-    
+
     // Run tests in single thread for faster execution
-    threads: false,
-    
+    pool: 'threads',
+
     // Reduce timeout for faster feedback
     testTimeout: 5000,
     hookTimeout: 5000,
-    
-    // Only run relevant tests on file changes
-    watchExclude: [
-      'node_modules/**',
-      'dist/**',
-      'coverage/**'
-    ],
-    
+
     // Simple coverage for critical paths only
     coverage: {
       provider: 'v8',
@@ -36,23 +29,23 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.*',
         '**/test/**',
-        '**/tests/**'
+        '**/tests/**',
       ],
       thresholds: {
         global: {
           branches: 60,
           functions: 60,
           lines: 60,
-          statements: 60
-        }
-      }
+          statements: 60,
+        },
+      },
     },
-    
+
     // Environment setup
     environment: 'node',
     globals: true,
-    
+
     // Minimal reporting for CI
-    reporter: process.env.CI ? 'verbose' : 'default'
-  }
+    reporters: process.env.CI ? ['verbose'] : ['default'],
+  },
 });

@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ES2021",
     "module": "commonjs",
-    "lib": [
-      "ES2021",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -30,33 +26,15 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@jasaweb/*": [
-        "packages/*"
-      ],
-      "@jasaweb/ui": [
-        "packages/ui/src"
-      ],
-      "@jasaweb/ui/*": [
-        "packages/ui/src/*"
-      ],
-      "@jasaweb/config": [
-        "packages/config/src"
-      ],
-      "@jasaweb/config/*": [
-        "packages/config/src/*"
-      ],
-      "@jasaweb/testing": [
-        "packages/testing/src"
-      ],
-      "@jasaweb/testing/*": [
-        "packages/testing/src/*"
-      ],
-      "@jasaweb/api/*": [
-        "apps/api/src/*"
-      ],
-      "@jasaweb/web/*": [
-        "apps/web/src/*"
-      ]
+      "@jasaweb/*": ["packages/*"],
+      "@jasaweb/ui": ["packages/ui/src"],
+      "@jasaweb/ui/*": ["packages/ui/src/*"],
+      "@jasaweb/config": ["packages/config/src"],
+      "@jasaweb/config/*": ["packages/config/src/*"],
+      "@jasaweb/testing": ["packages/testing/src"],
+      "@jasaweb/testing/*": ["packages/testing/src/*"],
+      "@jasaweb/api/*": ["apps/api/src/*"],
+      "@jasaweb/web/*": ["apps/web/src/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,
