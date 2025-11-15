@@ -1,3 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+pnpm:
+  overrides:
+    js-yaml: 4.1.1

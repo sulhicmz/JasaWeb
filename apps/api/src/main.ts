@@ -18,18 +18,18 @@ async function bootstrap() {
       contentSecurityPolicy:
         process.env.NODE_ENV === 'production'
           ? {
-              directives: {
-                defaultSrc: ["'self'"],
-                styleSrc: ["'self'", "'unsafe-inline'"],
-                scriptSrc: ["'self'"],
-                imgSrc: ["'self'", 'data:', 'https:'],
-                connectSrc: ["'self'"],
-                fontSrc: ["'self'"],
-                objectSrc: ["'none'"],
-                mediaSrc: ["'self'"],
-                frameSrc: ["'none'"],
-              },
-            }
+            directives: {
+              defaultSrc: ['\'self\''],
+              styleSrc: ['\'self\'', '\'unsafe-inline\''],
+              scriptSrc: ['\'self\''],
+              imgSrc: ['\'self\'', 'data:', 'https:'],
+              connectSrc: ['\'self\''],
+              fontSrc: ['\'self\''],
+              objectSrc: ['\'none\''],
+              mediaSrc: ['\'self\''],
+              frameSrc: ['\'none\''],
+            },
+          }
           : false,
       crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production',
       crossOriginOpenerPolicy: { policy: 'same-origin' },
