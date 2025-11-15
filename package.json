@@ -42,7 +42,8 @@
     "security:audit:fix": "pnpm audit --fix",
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
-    "security:scan": "node scripts/security-scan.js"
+    "security:scan": "node scripts/security-scan.js",
+    "postinstall": "node scripts/js-yaml-compat.js"
   },
   "keywords": [
     "astro",
@@ -69,5 +70,10 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@8.15.0"
+  "packageManager": "pnpm@8.15.0",
+  "pnpm": {
+    "overrides": {
+      "js-yaml": "4.1.1"
+    }
+  }
 }
