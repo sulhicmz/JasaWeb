@@ -69,6 +69,7 @@ jasaweb/
 - **pnpm** package manager (enable with `corepack enable`)
 - **Docker** and Docker Compose for local development
 - **PostgreSQL** 15+ (handled by Docker Compose)
+- **VS Code** (recommended IDE with provided configuration)
 
 ### Installation
 
@@ -125,6 +126,29 @@ jasaweb/
    pnpm dev:web    # Marketing site at http://localhost:4321
    pnpm dev:api    # API at http://localhost:3000
    ```
+
+### IDE Setup (VS Code)
+
+JasaWeb provides pre-configured VS Code settings for an optimal development experience:
+
+1. **Recommended Extensions**: Install the recommended extensions by opening the command palette (Ctrl+Shift+P) and running "Extensions: Show Recommended Extensions"
+
+2. **Settings**: The project includes pre-configured settings for:
+   - Auto-formatting on save
+   - ESLint integration
+   - TypeScript auto-imports
+   - Prisma syntax highlighting
+   - Debug configurations for both API and Web applications
+
+3. **Debugging**: Use the pre-configured debug configurations:
+   - "Debug API" - Debug the NestJS API application
+   - "Debug Web" - Debug the Astro web application
+
+4. **Tasks**: Run common development tasks directly from VS Code:
+   - "dev-api" - Start API in development mode
+   - "dev-web" - Start Web application in development mode
+   - "build-api" - Build API application
+   - "build-web" - Build Web application
 
 ### Verify Installation
 
@@ -234,7 +258,58 @@ pnpm db:reset         # Reset database
 pnpm docker:up        # Start Docker services
 pnpm docker:down      # Stop Docker services
 pnpm docker:logs      # View Docker logs
+
+# Development Tools
+pnpm dev-tools:watch  # Watch for file changes and reload
+pnpm dev-tools:db     # Database management tools
+pnpm dev-tools:quality # Code quality tools
 ```
+
+### Development Tools
+
+JasaWeb includes several development tools to improve productivity:
+
+1. **File Watcher**: Automatically rebuild and reload applications when files change
+   ```bash
+   # Watch all applications
+   ./scripts/dev-tools/watch-and-reload.sh all
+   
+   # Watch API only
+   ./scripts/dev-tools/watch-and-reload.sh api
+   
+   # Watch Web only
+   ./scripts/dev-tools/watch-and-reload.sh web
+   ```
+
+2. **Database Tools**: Simplify database operations
+   ```bash
+   # Reset database (WARNING: Deletes all data)
+   ./scripts/dev-tools/database-tools.sh reset
+   
+   # Create new migration
+   ./scripts/dev-tools/database-tools.sh migrate "migration-name"
+   
+   # Run pending migrations
+   ./scripts/dev-tools/database-tools.sh up
+   
+   # Open Prisma Studio
+   ./scripts/dev-tools/database-tools.sh studio
+   
+   # Generate Prisma client
+   ./scripts/dev-tools/database-tools.sh generate
+   ```
+
+3. **Code Quality Tools**: Run checks and fix issues
+   ```bash
+   # Run all code quality checks
+   ./scripts/dev-tools/code-quality.sh all
+   
+   # Fix code issues
+   ./scripts/dev-tools/code-quality.sh fix
+   
+   # Run specific check (lint, types, test, security, format)
+   ./scripts/dev-tools/code-quality.sh check lint
+   ```
 
 ## 🧪 Testing
 
