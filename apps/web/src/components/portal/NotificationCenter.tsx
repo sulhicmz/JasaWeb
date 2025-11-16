@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import {
-  notificationService,
+import { notificationService } from '../../services/notificationService';
+import type {
   Notification,
   NotificationUpdate,
-} from '../../services/notificationService';
+} from '../../services/notificationTypes';
 
 interface NotificationCenterProps {
   className?: string;
