@@ -90,7 +90,7 @@ export const NotificationPreferences: React.FC<
   const fetchPreferences = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:3000';
 
       const response = await fetch(`${apiUrl}/notifications/preferences`, {
         headers: {
@@ -113,7 +113,9 @@ export const NotificationPreferences: React.FC<
         setPreferences(defaultPrefs);
       }
     } catch (error) {
-      console.error('Failed to fetch notification preferences:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to fetch notification preferences:', error);
+      }
       // Initialize with default preferences
       const defaultPrefs = notificationTypes.map((type) => ({
         type: type.key,
@@ -132,7 +134,7 @@ export const NotificationPreferences: React.FC<
     try {
       setSaving(true);
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:3000';
 
       const response = await fetch(`${apiUrl}/notifications/preferences`, {
         method: 'PUT',
@@ -150,7 +152,9 @@ export const NotificationPreferences: React.FC<
         throw new Error('Failed to save preferences');
       }
     } catch (error) {
-      console.error('Failed to save notification preferences:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to save notification preferences:', error);
+      }
       alert('Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);

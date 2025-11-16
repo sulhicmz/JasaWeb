@@ -77,7 +77,9 @@ const ActivityFeed: React.FC = () => {
 
       setActivities(mockActivities);
     } catch (error) {
-      console.error('Error loading activities:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Error loading activities:', error);
+      }
       setError('Failed to load activity');
     } finally {
       setLoading(false);

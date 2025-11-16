@@ -22,7 +22,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     try {
       setLoading(true);
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:3000';
 
       const response = await fetch(`${apiUrl}/notifications?limit=20`, {
         headers: {
@@ -37,7 +37,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         setUnreadCount(data.unread || 0);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to fetch notifications:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -47,7 +49,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const markAsRead = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:3000';
 
       await fetch(`${apiUrl}/notifications/${notificationId}/read`, {
         method: 'POST',
@@ -66,7 +68,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       // Also send via WebSocket for real-time update
       notificationService.markAsRead(notificationId);
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to mark notification as read:', error);
+      }
     }
   };
 
@@ -74,7 +78,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:3000';
 
       await fetch(`${apiUrl}/notifications/read-all`, {
         method: 'POST',
@@ -91,7 +95,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       // Also send via WebSocket for real-time update
       notificationService.markAllAsRead();
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to mark all notifications as read:', error);
+      }
     }
   };
 
@@ -99,7 +105,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const deleteNotification = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.PUBLIC_API_URL || 'http://localhost:3000';
 
       await fetch(`${apiUrl}/notifications/${notificationId}`, {
         method: 'DELETE',
@@ -116,7 +122,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('Failed to delete notification:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to delete notification:', error);
+      }
     }
   };
 
@@ -137,34 +145,34 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   // Get notification icon based on type
   const getNotificationIcon = (type: string) => {
     switch (type) {
-    case 'project_update':
-      return '📊';
-    case 'task_assigned':
-      return '✅';
-    case 'task_completed':
-      return '✨';
-    case 'approval_request':
-      return '👀';
-    case 'approval_approved':
-      return '✅';
-    case 'approval_rejected':
-      return '❌';
-    case 'ticket_created':
-      return '🎫';
-    case 'ticket_updated':
-      return '🔄';
-    case 'invoice_issued':
-      return '💰';
-    case 'invoice_paid':
-      return '💳';
-    case 'file_uploaded':
-      return '📁';
-    case 'milestone_completed':
-      return '🎯';
-    case 'team_invitation':
-      return '👥';
-    default:
-      return '🔔';
+      case 'project_update':
+        return '📊';
+      case 'task_assigned':
+        return '✅';
+      case 'task_completed':
+        return '✨';
+      case 'approval_request':
+        return '👀';
+      case 'approval_approved':
+        return '✅';
+      case 'approval_rejected':
+        return '❌';
+      case 'ticket_created':
+        return '🎫';
+      case 'ticket_updated':
+        return '🔄';
+      case 'invoice_issued':
+        return '💰';
+      case 'invoice_paid':
+        return '💳';
+      case 'file_uploaded':
+        return '📁';
+      case 'milestone_completed':
+        return '🎯';
+      case 'team_invitation':
+        return '👥';
+      default:
+        return '🔔';
     }
   };
 
@@ -357,7 +365,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <button
               onClick={() => {
                 // TODO: Navigate to full notifications page
-                console.log('Navigate to full notifications page');
+                if (process.env.NODE_ENV === 'development') {
+                  console.debug('Navigate to full notifications page');
+                }
               }}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
             >

@@ -48,7 +48,9 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     try {
       await analyticsService.exportData(type, analytics);
     } catch (err) {
-      console.error('Export failed:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Export failed:', err);
+      }
     }
   };
 
