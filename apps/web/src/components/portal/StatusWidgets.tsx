@@ -4,7 +4,7 @@ interface Project {
   id: string;
   status: string;
   name?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Ticket {
@@ -12,14 +12,14 @@ interface Ticket {
   status: string;
   priority: string;
   title?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Invoice {
   id: string;
   status: string;
   amount: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface StatusData {

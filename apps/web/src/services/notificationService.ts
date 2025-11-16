@@ -6,7 +6,7 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
-  data: any;
+  data: Record<string, unknown>;
   isRead: boolean;
   createdAt: Date;
 }
@@ -23,11 +23,11 @@ export interface NotificationServiceCallbacks {
   onUnreadCount?: (count: number) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
 }
 
 class NotificationService {
-  private socket: any | null = null;
+  private socket: Socket | null = null;
   private callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -77,12 +77,12 @@ class NotificationService {
       this.callbacks.onConnect?.();
     });
 
-    this.socket.on('disconnect', (reason: any) => {
+    this.socket.on('disconnect', (reason: string) => {
       console.log('Disconnected from notification service:', reason);
       this.callbacks.onDisconnect?.();
     });
 
-    this.socket.on('connect_error', (error: any) => {
+    this.socket.on('connect_error', (error: Error) => {
       console.error('Notification connection error:', error);
       this.reconnectAttempts++;
 
@@ -112,7 +112,7 @@ class NotificationService {
       this.callbacks.onUnreadCount?.(data.count);
     });
 
-    this.socket.on('error', (error: any) => {
+    this.socket.on('error', (error: Error) => {
       console.error('Socket error:', error);
       this.callbacks.onError?.(error);
     });
