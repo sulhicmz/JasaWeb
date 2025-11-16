@@ -2,13 +2,7 @@
 // src/pages/portal/settings.astro
 import Layout from '../../layouts/Layout.astro';
 import DashboardHeader from '../../components/portal/DashboardHeader.astro';
-import { NotificationPreferences } from '../../components/portal/NotificationPreferences.tsx';
-
-export interface Props {
-  title?: string;
-}
-
-const { title } = Astro.props;
+import NotificationPreferences from '../../components/portal/NotificationPreferences.astro';
 ---
 
 <Layout title="Client Portal Settings">
@@ -24,18 +18,8 @@ const { title } = Astro.props;
 
       <!-- Notification Preferences -->
       <div class="space-y-6">
-        <NotificationPreferences client:load {...Astro.props} />
+        <NotificationPreferences />
       </div>
     </div>
   </div>
-
-  <!-- Authentication Check Script -->
-  <script client:load>
-    // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem('authToken');
-    if (!isAuthenticated) {
-      // Redirect to login page if not authenticated
-      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
-    }
-  </script>
 </Layout>
