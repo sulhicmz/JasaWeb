@@ -97,7 +97,7 @@ describe('UsersService', () => {
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'test-hash-pass',
+          password: 'hashedPassword',
           profilePicture: 'profile.jpg',
         },
       });
