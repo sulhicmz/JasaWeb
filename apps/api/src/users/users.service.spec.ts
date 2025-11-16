@@ -17,7 +17,7 @@ describe('UsersService', () => {
     id: '1',
     email: 'test@example.com',
     name: 'Test User',
-    password: 'test-hash-pass',
+    password: 'hashedPassword',
     profilePicture: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -65,7 +65,7 @@ describe('UsersService', () => {
 
     it('should create a new user with hashed password', async () => {
       const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('test-hash-pass');
+      bcrypt.hash.mockResolvedValue('hashedPassword');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       const result = await service.create(createUserDto);
@@ -75,7 +75,7 @@ describe('UsersService', () => {
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'test-hash-pass',
+          password: 'hashedPassword',
         },
       });
       expect(result).toEqual(mockUser);
@@ -97,7 +97,7 @@ describe('UsersService', () => {
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'test-hash-pass',
+          password: 'hashedPassword',
           profilePicture: 'profile.jpg',
         },
       });
