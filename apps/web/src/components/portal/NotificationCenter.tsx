@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  notificationService,
+import { notificationService } from '../../services/notificationService';
+import type {
   Notification,
   NotificationUpdate,
 } from '../../services/notificationService';
@@ -137,34 +137,34 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   // Get notification icon based on type
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'project_update':
-        return '📊';
-      case 'task_assigned':
-        return '✅';
-      case 'task_completed':
-        return '✨';
-      case 'approval_request':
-        return '👀';
-      case 'approval_approved':
-        return '✅';
-      case 'approval_rejected':
-        return '❌';
-      case 'ticket_created':
-        return '🎫';
-      case 'ticket_updated':
-        return '🔄';
-      case 'invoice_issued':
-        return '💰';
-      case 'invoice_paid':
-        return '💳';
-      case 'file_uploaded':
-        return '📁';
-      case 'milestone_completed':
-        return '🎯';
-      case 'team_invitation':
-        return '👥';
-      default:
-        return '🔔';
+    case 'project_update':
+      return '📊';
+    case 'task_assigned':
+      return '✅';
+    case 'task_completed':
+      return '✨';
+    case 'approval_request':
+      return '👀';
+    case 'approval_approved':
+      return '✅';
+    case 'approval_rejected':
+      return '❌';
+    case 'ticket_created':
+      return '🎫';
+    case 'ticket_updated':
+      return '🔄';
+    case 'invoice_issued':
+      return '💰';
+    case 'invoice_paid':
+      return '💳';
+    case 'file_uploaded':
+      return '📁';
+    case 'milestone_completed':
+      return '🎯';
+    case 'team_invitation':
+      return '👥';
+    default:
+      return '🔔';
     }
   };
 
