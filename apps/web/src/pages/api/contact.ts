@@ -50,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
     // NOTE: Email service integration should be implemented based on requirements
     // Options: Nodemailer, SendGrid, AWS SES, or other email service
     // For debugging purposes, you might want to log this in development only
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
       console.debug('Contact form submission:', {
         name,
@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
     );
   } catch (error) {
     // Log error in development for debugging
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === "development") {
       // eslint-disable-next-line no-console
       console.debug('Error processing contact form:', error);
     }
