@@ -1,0 +1,199 @@
+import React, { useState, useEffect } from 'react';
+import { knowledgeBaseService, KbCategory, KbArticle } from '../../../services/knowledgeBaseService';
+
+interface CategoryViewProps {}
+
+const CategoryView: React.FC<CategoryViewProps> = () => {
+  const [category, setCategory] = useState<KbCategory | null>(null);
+  const [articles, setArticles] = useState<KbArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get category ID from URL
+    const pathParts = window.location.pathname.split('/');
+    const categoryId = pathParts[pathParts.length - 1];
+    
+    if (categoryId) {
+      loadCategory(categoryId);
+    }
+  }, []);
+
+  const loadCategory = async (categoryId: string) => {
+    try {
+      setLoading(true);
+      const categoryData = await knowledgeBaseService.getCategory(categoryId);
+      setCategory(categoryData);
+      setArticles(categoryData.articles || []);
+    } catch (error) {
+      console.error('Error loading category:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!category) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Category not found</h1>
+          <a href="/knowledge-base" className="text-blue-600 hover:text-blue-800">
+            Back to Knowledge Base
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Category Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center space-x-4 mb-4">
+            <a href="/knowledge-base" className="text-blue-200 hover:text-white">
+              ← Back to Knowledge Base
+            </a>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            {category.icon && (
+              <span className="text-5xl">{category.icon}</span>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
+              {category.description && (
+                <p className="text-blue-100 text-lg">{category.description}</p>
+              )}
+              <p className="text-blue-200 mt-2">
+                {category._count?.articles || 0} articles in this category
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Subcategories */}
+        {category.children && category.children.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Subcategories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {category.children.map((subcategory) => (
+                <a
+                  key={subcategory.id}
+                  href={`/knowledge-base/category/${subcategory.id}`}
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+                >
+                  <div className="flex items-center mb-4">
+                    {subcategory.icon && (
+                      <span className="text-3xl mr-3">{subcategory.icon}</span>
+                    )}
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">{subcategory.name}</h3>
+                      {subcategory.description && (
+                        <p className="text-gray-600 text-sm mt-1">{subcategory.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">
+                      {subcategory._count?.articles || 0} articles
+                    </span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Articles */}
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Articles in {category.name}
+          </h2>
+          
+          {articles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {articles.map((article) => (
+                <a
+                  key={article.id}
+                  href={`/knowledge-base/article/${article.slug}`}
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+                >
+                  <div className="flex items-center mb-3">
+                    {article.featured && (
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
+                        Featured
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      {new Date(article.publishedAt || article.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {article.title}
+                  </h3>
+                  
+                  {article.excerpt && (
+                    <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
+                  )}
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>By {article.author.name}</span>
+                    <span>{article.viewCount} views</span>
+                  </div>
+                  
+                  {/* Tags */}
+                  {article.tags.length > 0 && (
+                    <div className="flex items-center space-x-2 mt-3">
+                      {article.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded"
+                          style={{ backgroundColor: tag.color ? `${tag.color}20` : undefined }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                      {article.tags.length > 3 && (
+                        <span className="text-xs text-gray-500">
+                          +{article.tags.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No articles yet</h3>
+              <p className="text-gray-600">
+                There are no articles in this category yet. Check back later or browse other categories.
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+};
+
+export default CategoryView;
