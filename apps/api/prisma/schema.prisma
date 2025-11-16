@@ -11,37 +11,39 @@ datasource db {
 }
 
 model User {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  name           String?
-  password       String
-  profilePicture String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  memberships    Membership[]
-  approvals      Approval[]
-  tickets        Ticket[]
-  invoices       Invoice[]
-  auditLogs      AuditLog[]
-  File           File[]
-  Task           Task[]
-  refreshTokens  RefreshToken[]
-  sessions       Session[]
+  id               String         @id @default(cuid())
+  email            String         @unique
+  name             String?
+  password         String
+  profilePicture   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  memberships      Membership[]
+  approvals        Approval[]
+  tickets          Ticket[]
+  invoices         Invoice[]
+  auditLogs        AuditLog[]
+  File             File[]
+  Task             Task[]
+  refreshTokens    RefreshToken[]
+  sessions         Session[]
+  onboardingState  OnboardingState?
 }
 
 model Organization {
-  id           String       @id @default(cuid())
-  name         String
-  billingEmail String
-  plan         String?
-  settings     Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  memberships  Membership[]
-  projects     Project[]
-  tickets      Ticket[]
-  invoices     Invoice[]
-  AuditLog     AuditLog[]
+  id                String       @id @default(cuid())
+  name              String
+  billingEmail      String
+  plan              String?
+  settings          Json?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  memberships       Membership[]
+  projects          Project[]
+  tickets           Ticket[]
+  invoices          Invoice[]
+  AuditLog          AuditLog[]
+  onboardingStates  OnboardingState[]
 }
 
 model Membership {
@@ -201,4 +203,35 @@ model AuditLog {
   target         String // User, Project, File, etc.
   meta           Json?
   createdAt      DateTime     @default(now())
+}
+
+model OnboardingState {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  currentStep    String   @default("welcome") // welcome, org-setup, team-invite, project-create, tour, complete
+  completedSteps String[] @default([])
+  isCompleted    Boolean  @default(false)
+  skippedSteps   String[] @default([])
+  preferences    Json?    // User preferences during onboarding
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model OnboardingStep {
+  id          String   @id @default(cuid())
+  stepKey     String   @unique // welcome, org-setup, team-invite, etc.
+  title       String
+  description String
+  order       Int
+  isRequired  Boolean  @default(true)
+  dependsOn   String[] @default([]) // Steps that must be completed first
+  config      Json?    // Step-specific configuration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
