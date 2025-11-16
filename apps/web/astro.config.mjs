@@ -7,6 +7,9 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   output: 'static',
   adapter: cloudflare(),
+  image: {
+    service: 'compile',
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {
