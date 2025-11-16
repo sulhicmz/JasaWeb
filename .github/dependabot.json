@@ -10,8 +10,6 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 10,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "deps",
         "include": "scope"
@@ -35,8 +33,6 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "deps(api)",
         "include": "scope"
@@ -52,8 +48,6 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "deps(web)",
         "include": "scope"
@@ -69,8 +63,6 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "deps(ui)",
         "include": "scope"
@@ -86,31 +78,13 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "deps(config)",
         "include": "scope"
       },
       "labels": ["dependencies", "npm", "config"]
     },
-    {
-      "package-ecosystem": "npm",
-      "directory": "/packages/testing",
-      "schedule": {
-        "interval": "weekly",
-        "day": "monday",
-        "time": "09:00"
-      },
-      "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
-      "commit-message": {
-        "prefix": "deps(testing)",
-        "include": "scope"
-      },
-      "labels": ["dependencies", "npm", "testing"]
-    },
+
     {
       "package-ecosystem": "github-actions",
       "directory": "/",
@@ -120,8 +94,6 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "ci",
         "include": "scope"
@@ -137,8 +109,6 @@
         "time": "09:00"
       },
       "open-pull-requests-limit": 5,
-      "reviewers": ["jasaweb-team"],
-      "assignees": ["jasaweb-maintainer"],
       "commit-message": {
         "prefix": "docker",
         "include": "scope"

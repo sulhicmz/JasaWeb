@@ -1,0 +1,32 @@
+{
+  "name": "@jasaweb/testing",
+  "version": "1.0.0",
+  "description": "Shared testing utilities and configurations for JasaWeb",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:run": "vitest run"
+  },
+  "keywords": [
+    "testing",
+    "utilities",
+    "jasaweb"
+  ],
+  "author": "JasaWeb",
+  "license": "MIT",
+  "dependencies": {
+    "@vitest/coverage-v8": "^4.0.7",
+    "@vitest/ui": "^4.0.7",
+    "vitest": "^4.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  }
+}
