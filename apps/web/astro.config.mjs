@@ -8,7 +8,9 @@ export default defineConfig({
   output: 'static',
   adapter: cloudflare(),
   image: {
-    service: 'compile',
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+    },
   },
   vite: {
     plugins: [tailwindcss()],
