@@ -54,6 +54,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/html-escaper": "^3.0.4",
+    "@types/luxon": "^3.7.1",
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^7.0.3",
     "@types/react": "^18.0.21",
