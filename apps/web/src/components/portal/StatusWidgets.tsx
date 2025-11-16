@@ -1,9 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
+interface Project {
+  id: string;
+  status: string;
+  name?: string;
+  [key: string]: any;
+}
+
+interface Ticket {
+  id: string;
+  status: string;
+  priority: string;
+  title?: string;
+  [key: string]: any;
+}
+
+interface Invoice {
+  id: string;
+  status: string;
+  amount: number;
+  [key: string]: any;
+}
+
 interface StatusData {
-  projects: unknown[];
-  tickets: unknown[];
-  invoices: unknown[];
+  projects: Project[];
+  tickets: Ticket[];
+  invoices: Invoice[];
 }
 
 const StatusWidgets: React.FC = () => {
@@ -50,7 +72,7 @@ const StatusWidgets: React.FC = () => {
   const getProjectsStats = () => {
     const total = statusData.projects.length;
     const active = statusData.projects.filter(
-      (p) =>
+      (p: Project) =>
         p.status &&
         (p.status.toLowerCase() === 'active' ||
           p.status.toLowerCase() === 'in-progress')
@@ -60,14 +82,14 @@ const StatusWidgets: React.FC = () => {
 
   const getTicketsStats = () => {
     const openTickets = statusData.tickets.filter(
-      (t) =>
+      (t: Ticket) =>
         t.status &&
         (t.status.toLowerCase() === 'open' ||
           t.status.toLowerCase() === 'in-progress')
     );
     const total = openTickets.length;
     const highPriority = openTickets.filter(
-      (t) =>
+      (t: Ticket) =>
         t.priority &&
         (t.priority.toLowerCase() === 'high' ||
           t.priority.toLowerCase() === 'critical')
@@ -77,14 +99,14 @@ const StatusWidgets: React.FC = () => {
 
   const getInvoicesStats = () => {
     const pendingInvoices = statusData.invoices.filter(
-      (i) =>
+      (i: Invoice) =>
         i.status &&
         (i.status.toLowerCase() === 'draft' ||
           i.status.toLowerCase() === 'issued')
     );
     const total = pendingInvoices.length;
     const amount = pendingInvoices.reduce(
-      (sum, invoice) => sum + (invoice.amount || 0),
+      (sum: number, invoice: Invoice) => sum + (invoice.amount || 0),
       0
     );
     return { total, amount };

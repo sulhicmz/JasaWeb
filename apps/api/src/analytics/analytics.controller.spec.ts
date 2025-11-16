@@ -97,7 +97,12 @@ describe('AnalyticsController', () => {
           byMonth: {},
         },
         clientInsights: {
-          summary: { totalTickets: 15, resolutionRate: 80 },
+          summary: {
+            totalTickets: 15,
+            resolvedTickets: 12,
+            resolutionRate: 80,
+            slaComplianceRate: 75,
+          },
           byType: {},
           byPriority: {
             critical: { total: 2, resolved: 1 },
