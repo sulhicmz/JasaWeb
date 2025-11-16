@@ -215,7 +215,7 @@ importers:
     dependencies:
       '@astrojs/cloudflare':
         specifier: ^12.6.10
-        version: 12.6.10(@types/node@24.10.1)(astro@5.15.7)
+        version: 12.6.10(@types/node@24.10.1)(astro@5.15.8)
       '@astrojs/react':
         specifier: ^4.4.2
         version: 4.4.2(@types/node@24.10.1)(@types/react-dom@18.3.7)(@types/react@18.3.25)(react-dom@18.3.1)(react@18.3.1)
@@ -223,8 +223,8 @@ importers:
         specifier: ^4.1.17
         version: 4.1.17(vite@7.2.2)
       astro:
-        specifier: ^5.15.7
-        version: 5.15.7(@types/node@24.10.1)(typescript@5.9.3)
+        specifier: ^5.15.8
+        version: 5.15.8(@types/node@24.10.1)(typescript@5.9.3)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -353,7 +353,7 @@ packages:
       - chokidar
     dev: true
 
-  /@astrojs/cloudflare@12.6.10(@types/node@24.10.1)(astro@5.15.7):
+  /@astrojs/cloudflare@12.6.10(@types/node@24.10.1)(astro@5.15.8):
     resolution: {integrity: sha512-qUtGwlGDzwYd0DJCZRkWZsB9vvO14arZkv7TG3OF5aEFIrj9bztXZQA1d9Z3DDRoZYUcdfATLWKQyvGEdMSuPg==}
     peerDependencies:
       astro: ^5.7.0
@@ -361,7 +361,7 @@ packages:
       '@astrojs/internal-helpers': 0.7.4
       '@astrojs/underscore-redirects': 1.0.0
       '@cloudflare/workers-types': 4.20251115.0
-      astro: 5.15.7(@types/node@24.10.1)(typescript@5.9.3)
+      astro: 5.15.8(@types/node@24.10.1)(typescript@5.9.3)
       tinyglobby: 0.2.15
       vite: 6.4.1(@types/node@24.10.1)
       wrangler: 4.41.0(@cloudflare/workers-types@4.20251115.0)
@@ -7634,8 +7634,8 @@ packages:
       js-tokens: 9.0.1
     dev: true
 
-  /astro@5.15.7(@types/node@24.10.1)(typescript@5.9.3):
-    resolution: {integrity: sha512-Zmw6otInhxcjoGcEyEN+wxgdiQERQOS3VzOmAKsDdKK8Fb4x1656r+9NtaTXCRZ0/fGtHjkSvkGUhZUJLXKfxQ==}
+  /astro@5.15.8(@types/node@24.10.1)(typescript@5.9.3):
+    resolution: {integrity: sha512-QiiRnNPdxCcAGO2UlO07o+QeGgRfEC5Dlm0x35WPB/ixFK1T2bsNB6KaXri70cVkYY1GYgoRtrWv3HCR26o9aw==}
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
     dependencies:
