@@ -3,6 +3,11 @@ node_modules/
 .pnpm-store/
 jspm_packages/
 
+# Lock files (use pnpm-lock.yaml only)
+package-lock.json
+yarn.lock
+!pnpm-lock.yaml
+
 # Build outputs
 dist/
 build/
