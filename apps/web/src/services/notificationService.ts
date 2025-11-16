@@ -190,6 +190,9 @@ class NotificationService {
 // Create singleton instance
 export const notificationService = new NotificationService();
 
+// Re-export types for explicit module resolution
+export type { Notification, NotificationUpdate, NotificationServiceCallbacks };
+
 // Request browser notification permission on load
 if (
   typeof window !== 'undefined' &&
