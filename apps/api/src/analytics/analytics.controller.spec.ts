@@ -72,13 +72,27 @@ describe('AnalyticsController', () => {
     it('should return overview analytics', async () => {
       const mockOverview = {
         projects: {
-          summary: { totalProjects: 10, completionRate: 50 },
-          milestones: { total: 20, completionRate: 75 },
-          tasks: { total: 50, completionRate: 60 },
+          summary: {
+            totalProjects: 10,
+            completedProjects: 5,
+            inProgressProjects: 3,
+            overdueProjects: 2,
+            completionRate: 50,
+            onTimeDeliveryRate: 80,
+          },
+          milestones: { total: 20, completed: 15, completionRate: 75 },
+          tasks: { total: 50, completed: 30, completionRate: 60 },
         },
         teamPerformance: [],
         financial: {
-          summary: { totalInvoices: 5, totalAmount: 10000 },
+          summary: {
+            totalInvoices: 5,
+            totalAmount: 10000,
+            paidAmount: 8000,
+            outstandingAmount: 2000,
+            paymentRate: 80,
+            overdueCount: 1,
+          },
           byCurrency: {},
           byMonth: {},
         },

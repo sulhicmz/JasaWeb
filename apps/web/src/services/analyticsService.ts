@@ -98,16 +98,15 @@ export interface OverviewAnalytics {
 class AnalyticsService {
   private baseUrl = '/api/analytics';
 
-  private async fetchWithAuth(
-    endpoint: string,
-    params?: Record<string, string>
-  ) {
+  private async fetchWithAuth(endpoint: string, params?: AnalyticsFilters) {
     const token = localStorage.getItem('authToken');
     const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value) url.searchParams.append(key, value);
+        if (value !== undefined && value !== null) {
+          url.searchParams.append(key, String(value));
+        }
       });
     }
 
