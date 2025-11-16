@@ -33,10 +33,18 @@ class NotificationService {
   private reconnectDelay = 1000;
 
   constructor() {
-    this.connect();
+    // Only connect on client-side
+    if (typeof window !== 'undefined') {
+      this.connect();
+    }
   }
 
   private connect() {
+    // Only connect on client-side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const token = localStorage.getItem('auth_token');
     if (!token) {
       console.warn('No auth token found, skipping notification connection');
@@ -110,6 +118,11 @@ class NotificationService {
   }
 
   private showBrowserNotification(notification: Notification) {
+    // Only show notifications on client-side
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     if (!('Notification' in window)) {
       return;
     }
@@ -142,17 +155,17 @@ class NotificationService {
   }
 
   markAsRead(notificationId: string) {
-    if (!this.socket) return;
+    if (typeof window === 'undefined' || !this.socket) return;
     this.socket.emit('mark-read', { notificationId });
   }
 
   markAllAsRead() {
-    if (!this.socket) return;
+    if (typeof window === 'undefined' || !this.socket) return;
     this.socket.emit('mark-all-read');
   }
 
   getUnreadCount() {
-    if (!this.socket) return;
+    if (typeof window === 'undefined' || !this.socket) return;
     this.socket.emit('get-unread-count');
   }
 
@@ -177,6 +190,10 @@ class NotificationService {
 export const notificationService = new NotificationService();
 
 // Request browser notification permission on load
-if ('Notification' in window && Notification.permission === 'default') {
+if (
+  typeof window !== 'undefined' &&
+  'Notification' in window &&
+  Notification.permission === 'default'
+) {
   Notification.requestPermission();
 }

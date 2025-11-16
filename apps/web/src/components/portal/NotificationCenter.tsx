@@ -3,7 +3,7 @@ import {
   notificationService,
   Notification,
   NotificationUpdate,
-} from '../services/notificationService';
+} from '../../services/notificationService';
 
 interface NotificationCenterProps {
   className?: string;
