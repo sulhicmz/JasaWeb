@@ -9,6 +9,14 @@ export default defineConfig({
   adapter: cloudflare(),
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.astro'],
+    },
+    esbuild: {
+      loader: 'tsx',
+      include: /\.tsx?$/,
+      exclude: /node_modules/,
+    },
   },
   integrations: [react()],
 });
