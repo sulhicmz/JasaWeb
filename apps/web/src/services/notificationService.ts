@@ -1,4 +1,5 @@
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 
 export interface Notification {
   id: string;
@@ -26,7 +27,7 @@ export interface NotificationServiceCallbacks {
 }
 
 class NotificationService {
-  private socket: Socket | null = null;
+  private socket: any | null = null;
   private callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -76,12 +77,12 @@ class NotificationService {
       this.callbacks.onConnect?.();
     });
 
-    this.socket.on('disconnect', (reason) => {
+    this.socket.on('disconnect', (reason: any) => {
       console.log('Disconnected from notification service:', reason);
       this.callbacks.onDisconnect?.();
     });
 
-    this.socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', (error: any) => {
       console.error('Notification connection error:', error);
       this.reconnectAttempts++;
 
