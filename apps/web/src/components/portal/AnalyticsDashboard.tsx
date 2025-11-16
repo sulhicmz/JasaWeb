@@ -1,34 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  LineElement,
-  PointElement,
-} from 'chart.js';
-import { Bar, Pie, Line } from 'react-chartjs-2';
+import DynamicChart from './DynamicChart';
 import {
   analyticsService,
   AnalyticsFilters,
   OverviewAnalytics,
 } from '../../services/analyticsService';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  LineElement,
-  PointElement
-);
 
 interface AnalyticsDashboardProps {
   className?: string;
@@ -354,7 +330,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             Project Status
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={projectStatusData}
               options={{ responsive: true, maintainAspectRatio: false }}
             />
@@ -367,7 +344,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             Completion Rates
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={completionRatesData}
               options={{ responsive: true, maintainAspectRatio: false }}
             />
@@ -380,7 +358,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             Financial Overview
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={financialData}
               options={{ responsive: true, maintainAspectRatio: false }}
             />
@@ -393,7 +372,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             Tickets by Priority
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={ticketPriorityData}
               options={{ responsive: true, maintainAspectRatio: false }}
             />

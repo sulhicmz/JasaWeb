@@ -1,28 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import DynamicChart from './DynamicChart';
 import {
   analyticsService,
   AnalyticsFilters,
   TeamPerformanceAnalytics,
 } from '../../services/analyticsService';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 interface TeamPerformanceProps {
   className?: string;
@@ -202,7 +184,8 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({
             Task Completion Rates
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={taskCompletionData}
               options={{
                 responsive: true,
@@ -223,7 +206,8 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({
             Approval Completion Rates
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={approvalCompletionData}
               options={{
                 responsive: true,
@@ -244,7 +228,8 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({
             Ticket Resolution Rates
           </h3>
           <div className="h-64">
-            <Bar
+            <DynamicChart
+              type="bar"
               data={ticketResolutionData}
               options={{
                 responsive: true,
