@@ -10,7 +10,7 @@
     "dev-tools:watch": "./scripts/dev-tools/watch-and-reload.sh all",
     "dev-tools:db": "./scripts/dev-tools/database-tools.sh",
     "dev-tools:quality": "./scripts/dev-tools/code-quality.sh all",
-    "build": "pnpm build:api && pnpm build:web",
+    "build": "pnpm db:generate && pnpm build:api && pnpm build:web",
     "build:web": "cd apps/web && pnpm build",
     "build:api": "cd apps/api && pnpm build",
     "start": "pnpm start:api",
