@@ -94,7 +94,7 @@ importers:
         version: 11.2.1(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)
       '@nestjs/terminus':
         specifier: ^11.0.0
-        version: 11.0.0(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(@prisma/client@6.16.3)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+        version: 11.0.0(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(@prisma/client@6.19.0)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@nestjs/throttler':
         specifier: ^6.4.0
         version: 6.4.0(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(reflect-metadata@0.1.14)
@@ -160,8 +160,8 @@ importers:
         specifier: ^11.0.0
         version: 11.1.9(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(@nestjs/platform-express@11.1.9)
       '@prisma/client':
-        specifier: ^6.16.3
-        version: 6.16.3(prisma@6.16.3)(typescript@5.9.3)
+        specifier: ^6.19.0
+        version: 6.19.0(prisma@6.16.3)(typescript@5.9.3)
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
@@ -5123,7 +5123,7 @@ packages:
       swagger-ui-dist: 5.29.4
     dev: false
 
-  /@nestjs/terminus@11.0.0(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(@prisma/client@6.16.3)(reflect-metadata@0.1.14)(rxjs@7.8.2):
+  /@nestjs/terminus@11.0.0(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(@prisma/client@6.19.0)(reflect-metadata@0.1.14)(rxjs@7.8.2):
     resolution: {integrity: sha512-c55LOo9YGovmQHtFUMa/vDaxGZ2cglMTZejqgHREaApt/GArTfgYYGwhRXPLq8ZwiQQlLuYB+79e9iA8mlDSLA==}
     peerDependencies:
       '@grpc/grpc-js': '*'
@@ -5173,7 +5173,7 @@ packages:
     dependencies:
       '@nestjs/common': 11.1.9(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@nestjs/core': 11.1.9(@nestjs/common@11.1.9)(@nestjs/platform-express@11.1.9)(reflect-metadata@0.1.14)(rxjs@7.8.2)
-      '@prisma/client': 6.16.3(prisma@6.16.3)(typescript@5.9.3)
+      '@prisma/client': 6.19.0(prisma@6.16.3)(typescript@5.9.3)
       boxen: 5.1.2
       check-disk-space: 3.4.0
       reflect-metadata: 0.1.14
@@ -5285,8 +5285,8 @@ packages:
   /@poppinss/exception@1.2.2:
     resolution: {integrity: sha512-m7bpKCD4QMlFCjA/nKTs23fuvoVFoA83brRKmObCUNmi/9tVu8Ve3w4YQAnJu4q3Tjf5fr685HYIC/IA2zHRSg==}
 
-  /@prisma/client@6.16.3(prisma@6.16.3)(typescript@5.9.3):
-    resolution: {integrity: sha512-JfNfAtXG+/lIopsvoZlZiH2k5yNx87mcTS4t9/S5oufM1nKdXYxOvpDC1XoTCFBa5cQh7uXnbMPsmZrwZY80xw==}
+  /@prisma/client@6.19.0(prisma@6.16.3)(typescript@5.9.3):
+    resolution: {integrity: sha512-QXFT+N/bva/QI2qoXmjBzL7D6aliPffIwP+81AdTGq0FXDoLxLkWivGMawG8iM5B9BKfxLIXxfWWAF6wbuJU6g==}
     engines: {node: '>=18.18'}
     requiresBuild: true
     peerDependencies:
