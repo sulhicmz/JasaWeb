@@ -44,7 +44,9 @@ const ProjectOverview: React.FC = () => {
       const projectsData = await response.json();
       setProjects(projectsData);
     } catch (error) {
-      console.error('Error loading projects:', error);
+      if (import.meta.env.DEV) {
+        console.debug('Error loading projects:', error);
+      }
       setError('Failed to load projects');
     } finally {
       setLoading(false);
@@ -53,16 +55,16 @@ const ProjectOverview: React.FC = () => {
 
   const getStatusColor = (status?: string) => {
     switch (status?.toLowerCase()) {
-    case 'completed':
-      return 'bg-green-100 text-green-800';
-    case 'in-progress':
-      return 'bg-blue-100 text-blue-800';
-    case 'on-hold':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'on-hold':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
