@@ -2,6 +2,9 @@
   "extends": "./packages/config/tsconfig/base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "module": "ES2022",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
       "@jasaweb/*": ["apps/*", "packages/*"],
       "@jasaweb/ui": ["packages/ui/src"],
@@ -15,13 +18,6 @@
     },
     "jsx": "preserve"
   },
-  "include": [
-    "apps/**/*",
-    "packages/**/*",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx"
-  ],
-  "exclude": ["node_modules", "dist", "**/node_modules/**"]
+  "include": ["apps/api/**/*", "packages/**/*", "**/*.ts", "**/*.js"],
+  "exclude": ["node_modules", "dist", "**/node_modules/**", "apps/web/**/*"]
 }
