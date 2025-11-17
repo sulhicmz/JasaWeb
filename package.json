@@ -16,12 +16,12 @@
     "start": "pnpm start:api",
     "start:web": "cd apps/web && pnpm start",
     "start:api": "cd apps/api && pnpm start:prod",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
+    "test": "cd apps/api && npx jest",
+    "test:run": "cd apps/api && npx jest --runInBand",
+    "test:watch": "cd apps/api && npx jest --watch",
+    "test:coverage": "cd apps/api && npx jest --coverage",
     "test:e2e": "playwright test",
-    "test:api": "cd apps/api && pnpm test",
+    "test:api": "cd apps/api && npx jest",
     "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
@@ -86,8 +86,6 @@
     "@types/react-dom": "^18.3.7",
     "@types/socket.io-client": "^1.4.36",
     "@types/supertest": "^6.0.3",
-    "@vitest/coverage-v8": "^4.0.7",
-    "@vitest/ui": "^4.0.7",
     "astro": "^5.15.8",
     "bcrypt": "^6.0.0",
     "braces": "^3.0.3",
@@ -114,8 +112,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
     "uuid": "^13.0.0",
-    "vite": "^7.2.2",
-    "vitest": "^4.0.7"
+    "vite": "^7.2.2"
   },
   "engines": {
     "node": ">=20.0.0"
