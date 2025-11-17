@@ -45,12 +45,48 @@ export class EmailService {
           ? options.template.substring(2)
           : options.template;
 
-        const templatePath = path.join(
-          process.cwd(),
-          'templates',
-          `${templateName}.hbs`
-        );
-        const templateSource = fs.readFileSync(templatePath, 'utf8');
+        // Try multiple possible template paths to handle different environments
+        const possiblePaths = [
+          path.join(
+            process.cwd(),
+            'apps',
+            'api',
+            'templates',
+            `${templateName}.hbs`
+          ),
+          path.join(process.cwd(), 'templates', `${templateName}.hbs`),
+          path.join(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            'templates',
+            `${templateName}.hbs`
+          ),
+          path.join(__dirname, '..', 'templates', `${templateName}.hbs`),
+        ];
+
+        let templateSource: string | undefined;
+        let templatePath: string | undefined;
+
+        for (const possiblePath of possiblePaths) {
+          try {
+            if (fs.existsSync(possiblePath)) {
+              templatePath = possiblePath;
+              templateSource = fs.readFileSync(possiblePath, 'utf8');
+              break;
+            }
+          } catch (err) {
+            // Continue to next path
+          }
+        }
+
+        if (!templateSource) {
+          throw new Error(
+            `Template file not found for ${templateName}.hbs in any of the expected locations: ${possiblePaths.join(', ')}`
+          );
+        }
+
         const template = handlebars.compile(templateSource);
         html = template(options.context || {});
       }
