@@ -40,10 +40,15 @@ export class EmailService {
 
       // Process template if provided
       if (options.template) {
+        // Remove leading './' if present in template name
+        const templateName = options.template.startsWith('./')
+          ? options.template.substring(2)
+          : options.template;
+
         const templatePath = path.join(
           process.cwd(),
           'templates',
-          `${options.template}.hbs`
+          `${templateName}.hbs`
         );
         const templateSource = fs.readFileSync(templatePath, 'utf8');
         const template = handlebars.compile(templateSource);
