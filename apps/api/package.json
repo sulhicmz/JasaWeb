@@ -4,7 +4,7 @@
   "description": "NestJS API for JasaWeb Client Portal",
   "type": "commonjs",
   "scripts": {
-    "build": "if [ \"$CF_PAGES\" = \"1\" ]; then echo \"Skipping Prisma generation for Cloudflare Pages\" && nest build; else prisma generate && nest build; fi",
+    "build": "if [ -x \"node_modules/.bin/prisma\" ]; then echo \"Prisma available, generating client\" && ./node_modules/.bin/prisma generate; else echo \"Prisma not available, skipping generation\"; fi && if [ -x \"node_modules/.bin/nest\" ]; then ./node_modules/.bin/nest build; elif command -v nest >/dev/null 2>&1; then nest build; else echo \"Error: NestJS CLI not found\" && exit 1; fi",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
