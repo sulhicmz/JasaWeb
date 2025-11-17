@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as handlebars from 'handlebars';
 
 export interface EmailOptions {
   to: string | string[];
@@ -13,23 +17,91 @@ export interface EmailOptions {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
+  private readonly transporter: nodemailer.Transporter;
+  private readonly templatesDir: string;
 
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(private readonly configService: ConfigService) {
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.get<string>('EMAIL_SERVER_HOST', 'localhost'),
+      port: this.configService.get<number>('EMAIL_SERVER_PORT', 587),
+      secure:
+        this.configService.get<string>('EMAIL_SERVER_SECURE', 'false') ===
+        'true',
+      auth: {
+        user: this.configService.get<string>('EMAIL_SERVER_USER'),
+        pass: this.configService.get<string>('EMAIL_SERVER_PASSWORD'),
+      },
+    });
+
+    this.templatesDir = path.join(process.cwd(), 'templates');
+
+    // Register handlebars helpers
+    this.registerHandlebarsHelpers();
+  }
+
+  private registerHandlebarsHelpers(): void {
+    // Add any custom handlebars helpers here
+    handlebars.registerHelper('eq', function (a: any, b: any) {
+      return a === b;
+    });
+
+    handlebars.registerHelper('formatDate', function (date: Date) {
+      return new Date(date).toLocaleDateString();
+    });
+  }
+
+  private renderTemplate(
+    templateName: string,
+    context: Record<string, unknown>
+  ): string {
+    try {
+      const templatePath = path.join(this.templatesDir, `${templateName}.hbs`);
+      const templateSource = fs.readFileSync(templatePath, 'utf8');
+      const template = handlebars.compile(templateSource);
+      return template(context);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to render template ${templateName}: ${error.message}`
+      );
+      throw error;
+    }
+  }
 
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
-      await this.mailerService.sendMail({
-        to: options.to,
-        subject: options.subject,
-        template: options.template,
-        context: options.context,
-        html: options.html,
-        text: options.text,
-      });
+      let html: string | undefined;
+      let text: string | undefined;
 
-      this.logger.log(`Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+      if (options.template) {
+        html = this.renderTemplate(options.template, options.context || {});
+        // Generate plain text from HTML (basic version)
+        text = html
+          .replace(/<[^>]*>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      } else {
+        html = options.html;
+        text = options.text;
+      }
+
+      const mailOptions = {
+        from: this.configService.get<string>(
+          'EMAIL_FROM',
+          '"JasaWeb" <noreply@jasaweb.com>'
+        ),
+        to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
+        subject: options.subject,
+        html,
+        text,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(
+        `Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`
+      );
     } catch (error: any) {
       this.logger.error(`Failed to send email: ${error.message}`, error.stack);
+      throw error;
     }
   }
 
@@ -40,9 +112,9 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: 'Welcome to JasaWeb Client Portal',
-      template: './welcome', // Use template
+      template: 'welcome',
       context: {
-        name: name || 'there', // Use provided name or default
+        name: name || 'there',
       },
     });
   }
@@ -58,7 +130,7 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: `Approval Request for ${projectName}`,
-      template: './approval-request',
+      template: 'approval-request',
       context: {
         projectName,
         approvalDetails,
@@ -78,7 +150,7 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: `Approval ${status.toUpperCase()} for ${projectName}`,
-      template: './approval-completed',
+      template: 'approval-completed',
       context: {
         projectName,
         status,
@@ -99,7 +171,7 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: `New Ticket Created: ${ticketTitle}`,
-      template: './ticket-created',
+      template: 'ticket-created',
       context: {
         ticketTitle,
         projectName,
@@ -120,7 +192,7 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: `Ticket #${ticketId} Status Updated: ${newStatus}`,
-      template: './ticket-status-changed',
+      template: 'ticket-status-changed',
       context: {
         ticketId,
         ticketTitle,
@@ -141,12 +213,28 @@ export class EmailService {
     await this.sendEmail({
       to: email,
       subject: `New Invoice: ${invoiceNumber}`,
-      template: './invoice',
+      template: 'invoice',
       context: {
         invoiceNumber,
         amount,
         dueDate,
       },
     });
+  }
+
+  /**
+   * Verify email configuration
+   */
+  async verifyConnection(): Promise<boolean> {
+    try {
+      await this.transporter.verify();
+      this.logger.log('Email transporter configuration verified successfully');
+      return true;
+    } catch (error: any) {
+      this.logger.error(
+        `Email transporter verification failed: ${error.message}`
+      );
+      return false;
+    }
   }
 }
