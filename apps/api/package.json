@@ -4,7 +4,7 @@
   "description": "NestJS API for JasaWeb Client Portal",
   "type": "commonjs",
   "scripts": {
-    "build": "DATABASE_URL=postgresql://user:password@localhost:5432/jasaweb prisma generate && nest build",
+    "build": "pnpm prisma:generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -18,7 +18,12 @@
     "test:integration": "jest --config ./test/jest-e2e.json --testPathPattern=integration",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:run": "jest --runInBand"
+    "test:run": "jest --runInBand",
+    "prisma:generate": "npx --yes prisma@6.16.3 generate",
+    "prisma:push": "npx --yes prisma@6.16.3 db push",
+    "prisma:studio": "npx --yes prisma@6.16.3 studio",
+    "prisma:migrate": "npx --yes prisma@6.16.3 migrate dev",
+    "prisma:reset": "npx --yes prisma@6.16.3 migrate reset"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.699.0",
