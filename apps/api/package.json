@@ -4,7 +4,7 @@
   "description": "NestJS API for JasaWeb Client Portal",
   "type": "commonjs",
   "scripts": {
-    "build": "DATABASE_URL=\"file:./dev.db\" npx prisma generate && npx nest build",
+"build": "prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -22,7 +22,9 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
-    "prisma:migrate": "prisma migrate dev"
+<<<<<<< HEAD
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.699.0",
