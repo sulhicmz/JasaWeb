@@ -1,27 +1,4 @@
 {
-  "extends": "./packages/config/tsconfig/base.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@jasaweb/*": ["apps/*", "packages/*"],
-      "@jasaweb/ui": ["packages/ui/src"],
-      "@jasaweb/ui/*": ["packages/ui/src/*"],
-      "@jasaweb/config": ["packages/config/src"],
-      "@jasaweb/config/*": ["packages/config/src/*"],
-      "@jasaweb/testing": ["packages/testing/src"],
-      "@jasaweb/testing/*": ["packages/testing/src/*"],
-      "@jasaweb/api/*": ["apps/api/src/*"],
-      "@jasaweb/web/*": ["apps/web/src/*"]
-    },
-    "jsx": "preserve"
-  },
-  "include": [
-    "apps/**/*",
-    "packages/**/*",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx"
-  ],
-  "exclude": ["node_modules", "dist", "**/node_modules/**"]
+  "files": [],
+  "references": [{ "path": "./apps/api" }, { "path": "./apps/web" }]
 }
