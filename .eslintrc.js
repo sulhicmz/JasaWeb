@@ -3,6 +3,7 @@ module.exports = {
     browser: true,
     es2021: true,
     node: true,
+    commonjs: true,
   },
   extends: [
     'eslint:recommended',
@@ -14,15 +15,13 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: [
-    '@typescript-eslint',
-    'security',
-  ],
+  plugins: ['@typescript-eslint', 'security'],
   rules: {
-    'indent': ['error', 2],
+    indent: ['error', 2],
     'linebreak-style': ['error', 'unix'],
-    'quotes': ['error', 'single'],
-    'semi': ['error', 'always'],
+    quotes: ['error', 'single'],
+    semi: ['error', 'always'],
+    'no-console': 'off',
     // Security rules
     'no-eval': 'error',
     'no-implied-eval': 'error',

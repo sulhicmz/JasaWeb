@@ -41,7 +41,9 @@
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
     "security:scan": "node scripts/security-scan.js",
-    "postinstall": "node scripts/js-yaml-compat.js"
+    "postinstall": "node scripts/js-yaml-compat.js",
+    "prepare": "husky install",
+    "prepare": "husky"
   },
   "keywords": [
     "astro",
@@ -57,10 +59,21 @@
     "concurrently": "^8.2.2",
     "eslint": "^9.39.1",
     "eslint-plugin-security": "^3.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
     "vite": "^7.2.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": ">=20.0.0"

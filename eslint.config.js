@@ -10,10 +10,11 @@ module.exports = tseslint.config(
       security: security,
     },
     rules: {
-      'indent': ['error', 2],
+      indent: ['error', 2],
       'linebreak-style': ['error', 'unix'],
-      'quotes': ['error', 'single'],
-      'semi': ['error', 'always'],
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
+      'no-console': 'off',
       // Security rules
       'no-eval': 'error',
       'no-implied-eval': 'error',
