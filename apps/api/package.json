@@ -4,7 +4,7 @@
   "description": "NestJS API for JasaWeb Client Portal",
   "type": "commonjs",
   "scripts": {
-    "build": "DATABASE_URL=postgresql://user:password@localhost:5432/jasaweb prisma generate && nest build",
+    "build": "DATABASE_URL=postgresql://user:password@localhost:5432/jasaweb npx prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -23,7 +23,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.699.0",
     "@aws-sdk/s3-request-presigner": "^3.699.0",
-    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.0.0",
     "@nestjs/config": "^4.0.0",
@@ -62,6 +61,7 @@
     "@types/compression": "^1.7.5",
     "@types/express": "^4.17.25",
     "@types/jest": "^29.5.0",
+    "@types/luxon": "^3.7.1",
     "@types/multer": "^1.4.13",
     "@types/node": "^20.19.25",
     "@types/nodemailer": "^7.0.3",

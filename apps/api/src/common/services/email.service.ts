@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import * as nodemailer from 'nodemailer';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as handlebars from 'handlebars';
 
 export interface EmailOptions {
   to: string | string[];
@@ -13,23 +16,58 @@ export interface EmailOptions {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
+  private transporter: nodemailer.Transporter;
 
-  constructor(private readonly mailerService: MailerService) {}
+  constructor() {
+    // Initialize the transporter with environment configuration
+    this.transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_SERVER_HOST || 'localhost',
+      port: parseInt(process.env.EMAIL_SERVER_PORT || '587', 10),
+      secure: process.env.EMAIL_SERVER_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_SERVER_USER,
+        pass: process.env.EMAIL_SERVER_PASSWORD,
+      },
+    });
+  }
 
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
-      await this.mailerService.sendMail({
+      // Prepare email content
+      let htmlContent = options.html;
+      let textContent = options.text;
+
+      // If template is provided, render it with context
+      if (options.template && options.context) {
+        const templatePath = path.join(
+          process.cwd(),
+          'templates',
+          `${options.template}.hbs`
+        );
+        if (fs.existsSync(templatePath)) {
+          const templateSource = fs.readFileSync(templatePath, 'utf8');
+          const template = handlebars.compile(templateSource);
+          htmlContent = template(options.context);
+        }
+      }
+
+      // Send email using nodemailer
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || '"JasaWeb" <noreply@jasaweb.com>',
         to: options.to,
         subject: options.subject,
-        template: options.template,
-        context: options.context,
-        html: options.html,
-        text: options.text,
-      });
+        html: htmlContent,
+        text: textContent,
+      };
 
-      this.logger.log(`Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+      await this.transporter.sendMail(mailOptions);
+
+      this.logger.log(
+        `Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`
+      );
     } catch (error: any) {
       this.logger.error(`Failed to send email: ${error.message}`, error.stack);
+      throw error; // Re-throw the error to be handled by calling functions
     }
   }
 
