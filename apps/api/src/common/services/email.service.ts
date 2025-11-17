@@ -82,9 +82,13 @@ export class EmailService {
         }
 
         if (!templateSource) {
-          throw new Error(
+          this.logger.warn(
             `Template file not found for ${templateName}.hbs in any of the expected locations: ${possiblePaths.join(', ')}`
           );
+          // Fallback to simple text email if template is not found
+          if (!html && !text) {
+            text = `This is an automated email from JasaWeb.\n\nSubject: ${options.subject}\n\nTemplate "${templateName}" could not be loaded.`;
+          }
         }
 
         const template = handlebars.compile(templateSource);
