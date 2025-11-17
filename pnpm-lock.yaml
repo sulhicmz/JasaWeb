@@ -6,7 +6,7 @@ settings:
 
 overrides:
   js-yaml: 4.1.1
-  nodemailer: 7.0.7
+  nodemailer: 7.0.10
   validator: 13.15.20
   html-minifier: npm:html-minifier-terser@7.2.0
 
@@ -28,7 +28,7 @@ importers:
         version: 7.28.5(@babel/core@7.28.5)
       '@nestjs-modules/mailer':
         specifier: ^2.0.2
-        version: 2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.7)
+        version: 2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.10)
       '@nestjs/cache-manager':
         specifier: ^3.0.1
         version: 3.0.1(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(cache-manager@7.2.3)(keyv@5.5.4)(rxjs@7.8.2)
@@ -199,7 +199,7 @@ importers:
         version: 3.699.0
       '@nestjs-modules/mailer':
         specifier: ^2.0.2
-        version: 2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.7)
+        version: 2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.10)
       '@nestjs/cache-manager':
         specifier: ^3.0.1
         version: 3.0.1(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(cache-manager@7.2.3)(keyv@5.5.4)(rxjs@7.8.2)
@@ -258,8 +258,8 @@ importers:
         specifier: ^3.7.2
         version: 3.7.2
       nodemailer:
-        specifier: 7.0.7
-        version: 7.0.7
+        specifier: 7.0.10
+        version: 7.0.10
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -5384,18 +5384,18 @@ packages:
     dev: true
     optional: true
 
-  /@nestjs-modules/mailer@2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.7):
+  /@nestjs-modules/mailer@2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.10):
     resolution: {integrity: sha512-+z4mADQasg0H1ZaGu4zZTuKv2pu+XdErqx99PLFPzCDNTN/q9U59WPgkxVaHnsvKHNopLj5Xap7G4ZpptduoYw==}
     peerDependencies:
       '@nestjs/common': '>=7.0.9'
       '@nestjs/core': '>=7.0.9'
-      nodemailer: 7.0.7
+      nodemailer: 7.0.10
     dependencies:
       '@css-inline/css-inline': 0.14.1
       '@nestjs/common': 11.1.9(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       '@nestjs/core': 11.1.9(@nestjs/common@11.1.9)(@nestjs/platform-express@11.1.9)(reflect-metadata@0.1.14)(rxjs@7.8.2)
       glob: 10.3.12
-      nodemailer: 7.0.7
+      nodemailer: 7.0.10
     optionalDependencies:
       '@types/ejs': 3.1.5
       '@types/mjml': 4.7.4
@@ -12756,7 +12756,7 @@ packages:
       iconv-lite: 0.7.0
       libmime: 5.3.7
       linkify-it: 5.0.0
-      nodemailer: 7.0.7
+      nodemailer: 7.0.10
       punycode.js: 2.3.1
       tlds: 1.261.0
     optional: true
@@ -13882,8 +13882,8 @@ packages:
   /node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
-  /nodemailer@7.0.7:
-    resolution: {integrity: sha512-jGOaRznodf62TVzdyhKt/f1Q/c3kYynk8629sgJHpRzGZj01ezbgMMWJSAjHADcwTKxco3B68/R+KHJY2T5BaA==}
+  /nodemailer@7.0.10:
+    resolution: {integrity: sha512-Us/Se1WtT0ylXgNFfyFSx4LElllVLJXQjWi2Xz17xWw7amDKO2MLtFnVp1WACy7GkVGs+oBlRopVNUzlrGSw1w==}
     engines: {node: '>=6.0.0'}
 
   /nopt@5.0.0:
@@ -14480,7 +14480,7 @@ packages:
       fixpack: 4.0.0
       get-port: 5.1.1
       mailparser: 3.9.0
-      nodemailer: 7.0.7
+      nodemailer: 7.0.10
       open: 7.4.2
       p-event: 4.2.0
       p-wait-for: 3.2.0

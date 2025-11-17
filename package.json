@@ -120,7 +120,7 @@
   "pnpm": {
     "overrides": {
       "js-yaml": "4.1.1",
-      "nodemailer": "7.0.7",
+      "nodemailer": "7.0.10",
       "validator": "13.15.20",
       "html-minifier": "npm:html-minifier-terser@7.2.0"
     }
