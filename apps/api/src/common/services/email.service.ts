@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as handlebars from 'handlebars';
 
 export interface EmailOptions {
   to: string | string[];
@@ -13,21 +17,58 @@ export interface EmailOptions {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
+  private readonly transporter: nodemailer.Transporter;
 
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(private readonly configService: ConfigService) {
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.get<string>('EMAIL_SERVER_HOST', 'localhost'),
+      port: this.configService.get<number>('EMAIL_SERVER_PORT', 587),
+      secure:
+        this.configService.get<string>('EMAIL_SERVER_SECURE', 'false') ===
+        'true',
+      auth: {
+        user: this.configService.get<string>('EMAIL_SERVER_USER'),
+        pass: this.configService.get<string>('EMAIL_SERVER_PASSWORD'),
+      },
+    });
+  }
 
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
-      await this.mailerService.sendMail({
+      let html: string | undefined = options.html;
+      let text: string | undefined = options.text;
+
+      // Process template if provided
+      if (options.template && options.context) {
+        const templatePath = path.join(
+          process.cwd(),
+          'templates',
+          `${options.template.replace('./', '')}.hbs`
+        );
+
+        if (fs.existsSync(templatePath)) {
+          const templateSource = fs.readFileSync(templatePath, 'utf8');
+          const template = handlebars.compile(templateSource);
+          html = template(options.context);
+        } else {
+          this.logger.warn(`Template not found: ${templatePath}`);
+        }
+      }
+
+      await this.transporter.sendMail({
         to: options.to,
         subject: options.subject,
-        template: options.template,
-        context: options.context,
-        html: options.html,
-        text: options.text,
+        html,
+        text,
+        from: this.configService.get<string>(
+          'EMAIL_FROM',
+          '"JasaWeb" <noreply@jasaweb.com>'
+        ),
       });
 
-      this.logger.log(`Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+      this.logger.log(
+        `Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`
+      );
     } catch (error: any) {
       this.logger.error(`Failed to send email: ${error.message}`, error.stack);
     }
