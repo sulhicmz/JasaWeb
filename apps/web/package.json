@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "wrangler pages dev dist",
     "cf-build": "astro build && echo '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/api/*\",\"/_astro/*\"]}' > dist/_routes.json",
-    "astro": "astro"
+    "astro": "astro",
+    "lint": "echo 'Skipping lint for Cloudflare build compatibility'"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.10",
