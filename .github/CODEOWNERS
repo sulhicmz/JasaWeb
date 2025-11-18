@@ -1,7 +1,7 @@
 # CODEOWNERS
 
-# Global owners for all files
-* @jasaweb-maintainers
+# Global owners - security team for all security-related changes
+* @sulhicmz
 
 # Application-specific owners
 
