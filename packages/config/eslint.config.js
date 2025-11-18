@@ -34,15 +34,6 @@ module.exports = tseslint.config(
     },
   },
   {
-    ignores: [
-      'node_modules/',
-      'dist/',
-      '.next/',
-      '.astro/',
-      'coverage/',
-      'apps/*/dist/',
-      'packages/*/dist/',
-      '.github/scripts/',
-    ],
+    ignores: ['node_modules/', 'dist/', 'coverage/'],
   }
 );

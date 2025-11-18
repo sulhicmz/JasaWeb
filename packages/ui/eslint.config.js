@@ -1,6 +1,8 @@
 const eslint = require('@eslint/js');
 const tseslint = require('typescript-eslint');
 const security = require('eslint-plugin-security');
+const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
 
 module.exports = tseslint.config(
   eslint.configs.recommended,
@@ -8,12 +10,24 @@ module.exports = tseslint.config(
   {
     plugins: {
       security: security,
+      react: react,
+      'react-hooks': reactHooks,
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
     },
     rules: {
       indent: ['error', 2],
       'linebreak-style': ['error', 'unix'],
       quotes: ['error', 'single'],
       semi: ['error', 'always'],
+      // React rules
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       // Security rules
       'no-eval': 'error',
       'no-implied-eval': 'error',
@@ -34,15 +48,6 @@ module.exports = tseslint.config(
     },
   },
   {
-    ignores: [
-      'node_modules/',
-      'dist/',
-      '.next/',
-      '.astro/',
-      'coverage/',
-      'apps/*/dist/',
-      'packages/*/dist/',
-      '.github/scripts/',
-    ],
+    ignores: ['node_modules/', 'dist/', 'coverage/'],
   }
 );
