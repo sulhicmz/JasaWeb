@@ -11,34 +11,36 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔒 Security Vulnerability Verification');
-console.log('=====================================\n');
+process.stderr.write('🔒 Security Vulnerability Verification\n');
+process.stderr.write('=====================================\n');
 
 // 1. Check pnpm audit results
-console.log('1. Running pnpm audit...');
+process.stderr.write('1. Running pnpm audit...\n');
 try {
   const auditResult = execSync('pnpm audit --json', { encoding: 'utf8' });
   const auditData = JSON.parse(auditResult);
 
   const vulnerabilities = auditData.metadata.vulnerabilities;
-  console.log(`   Critical: ${vulnerabilities.critical}`);
-  console.log(`   High: ${vulnerabilities.high}`);
-  console.log(`   Moderate: ${vulnerabilities.moderate}`);
-  console.log(`   Low: ${vulnerabilities.low}`);
+  process.stderr.write(`   Critical: ${vulnerabilities.critical}\n`);
+  process.stderr.write(`   High: ${vulnerabilities.high}\n`);
+  process.stderr.write(`   Moderate: ${vulnerabilities.moderate}\n`);
+  process.stderr.write(`   Low: ${vulnerabilities.low}\n`);
 
   if (vulnerabilities.critical === 0 && vulnerabilities.high === 0) {
-    console.log('   ✅ No critical or high vulnerabilities found');
+    process.stderr.write('   ✅ No critical or high vulnerabilities found\n');
   } else {
-    console.log('   ❌ Critical or high vulnerabilities still present');
+    process.stderr.write(
+      '   ❌ Critical or high vulnerabilities still present\n'
+    );
     process.exit(1);
   }
 } catch (error) {
-  console.log('   ❌ Audit failed:', error.message);
+  process.stderr.write(`   ❌ Audit failed: ${error.message}\n`);
   process.exit(1);
 }
 
 // 2. Verify security overrides in package.json
-console.log('\n2. Verifying security overrides...');
+process.stderr.write('\n2. Verifying security overrides...\n');
 const packageJsonPath = path.join(__dirname, '../package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
@@ -60,37 +62,39 @@ let allOverridesPresent = true;
 
 for (const [pkg, version] of Object.entries(expectedOverrides)) {
   if (overrides[pkg] === version) {
-    console.log(`   ✅ ${pkg}@${version}`);
+    process.stderr.write(`   ✅ ${pkg}@${version}\n`);
   } else {
-    console.log(
-      `   ❌ ${pkg}: expected ${version}, found ${overrides[pkg] || 'missing'}`
+    process.stderr.write(
+      `   ❌ ${pkg}: expected ${version}, found ${overrides[pkg] || 'missing'}\n`
     );
     allOverridesPresent = false;
   }
 }
 
 if (!allOverridesPresent) {
-  console.log('   ❌ Some security overrides are missing or incorrect');
+  process.stderr.write(
+    '   ❌ Some security overrides are missing or incorrect\n'
+  );
   process.exit(1);
 }
 
 // 3. Test build processes
-console.log('\n3. Testing build processes...');
+process.stderr.write('\n3. Testing build processes...\n');
 try {
-  console.log('   Building API...');
+  process.stderr.write('   Building API...\n');
   execSync('cd apps/api && pnpm build', { stdio: 'pipe' });
-  console.log('   ✅ API build successful');
+  process.stderr.write('   ✅ API build successful\n');
 
-  console.log('   Building Web...');
+  process.stderr.write('   Building Web...\n');
   execSync('cd apps/web && pnpm build', { stdio: 'pipe' });
-  console.log('   ✅ Web build successful');
+  process.stderr.write('   ✅ Web build successful\n');
 } catch (error) {
-  console.log('   ❌ Build failed:', error.message);
+  process.stderr.write(`   ❌ Build failed: ${error.message}\n`);
   process.exit(1);
 }
 
 // 4. Verify email templates are accessible
-console.log('\n4. Verifying email templates...');
+process.stderr.write('\n4. Verifying email templates...\n');
 const templatesDir = path.join(__dirname, '../apps/api/templates');
 const expectedTemplates = [
   'welcome.hbs',
@@ -105,24 +109,24 @@ let allTemplatesPresent = true;
 for (const template of expectedTemplates) {
   const templatePath = path.join(templatesDir, template);
   if (fs.existsSync(templatePath)) {
-    console.log(`   ✅ ${template}`);
+    process.stderr.write(`   ✅ ${template}\n`);
   } else {
-    console.log(`   ❌ ${template} missing`);
+    process.stderr.write(`   ❌ ${template} missing\n`);
     allTemplatesPresent = false;
   }
 }
 
 if (!allTemplatesPresent) {
-  console.log('   ❌ Some email templates are missing');
+  process.stderr.write('   ❌ Some email templates are missing\n');
   process.exit(1);
 }
 
-console.log('\n✅ All security vulnerability verifications passed!');
-console.log('\nSummary:');
-console.log('- No critical or high security vulnerabilities found');
-console.log('- All security overrides are properly configured');
-console.log('- Build processes work correctly');
-console.log('- Email templates are accessible');
-console.log(
-  '\nThe security vulnerabilities mentioned in issue #303 have been successfully addressed.'
+process.stderr.write('\n✅ All security vulnerability verifications passed!\n');
+process.stderr.write('\nSummary:\n');
+process.stderr.write('- No critical or high security vulnerabilities found\n');
+process.stderr.write('- All security overrides are properly configured\n');
+process.stderr.write('- Build processes work correctly\n');
+process.stderr.write('- Email templates are accessible\n');
+process.stderr.write(
+  '\nThe security vulnerabilities mentioned in issue #303 have been successfully addressed.\n'
 );

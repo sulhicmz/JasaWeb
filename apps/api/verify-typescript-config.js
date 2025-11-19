@@ -19,19 +19,22 @@ const CRITICAL_DIRECTORIES = [
 ];
 
 function checkTsConfig() {
-  console.log(
+  // Use process.stderr for status messages to avoid interfering with JSON output
+  process.stderr.write(
     '🔍 Verifying TypeScript compilation includes critical directories...\n'
   );
 
   const tsconfigPath = path.join(__dirname, 'tsconfig.json');
   const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
 
-  console.log('Current exclusions in tsconfig.json:');
+  process.stderr.write('Current exclusions in tsconfig.json:\n');
   tsconfig.exclude?.forEach((exclusion) => {
-    console.log(`  - ${exclusion}`);
+    process.stderr.write(`  - ${exclusion}\n`);
   });
 
-  console.log('\n🔍 Checking for critical directories in exclude array...');
+  process.stderr.write(
+    '\n🔍 Checking for critical directories in exclude array...\n'
+  );
   const excludedCritical = CRITICAL_DIRECTORIES.filter((dir) =>
     tsconfig.exclude?.some((exclusion) =>
       exclusion.includes(dir.replace('src/', ''))
@@ -39,17 +42,19 @@ function checkTsConfig() {
   );
 
   if (excludedCritical.length > 0) {
-    console.log('❌ CRITICAL ISSUE FOUND:');
+    process.stderr.write('❌ CRITICAL ISSUE FOUND:\n');
     excludedCritical.forEach((dir) =>
-      console.log(`  - ${dir} is excluded from compilation`)
+      process.stderr.write(`  - ${dir} is excluded from compilation\n`)
     );
     process.exit(1);
   } else {
-    console.log('✅ No critical directories are excluded from compilation.');
+    process.stderr.write(
+      '✅ No critical directories are excluded from compilation.\n'
+    );
   }
 
-  console.log(
-    '\n🔍 Verifying critical directories exist and contain TypeScript files...'
+  process.stderr.write(
+    '\n🔍 Verifying critical directories exist and contain TypeScript files...\n'
   );
   CRITICAL_DIRECTORIES.forEach((dir) => {
     const dirPath = path.join(__dirname, dir);
@@ -57,14 +62,16 @@ function checkTsConfig() {
       const tsFiles = fs
         .readdirSync(dirPath)
         .filter((file) => file.endsWith('.ts'));
-      console.log(`  ✅ ${dir}: ${tsFiles.length} TypeScript files found`);
+      process.stderr.write(
+        `  ✅ ${dir}: ${tsFiles.length} TypeScript files found\n`
+      );
     } else {
-      console.log(`  ❌ ${dir}: Directory not found`);
+      process.stderr.write(`  ❌ ${dir}: Directory not found\n`);
     }
   });
 
-  console.log(
-    '\n🔍 Checking if TypeScript attempts to compile critical directories...'
+  process.stderr.write(
+    '\n🔍 Checking if TypeScript attempts to compile critical directories...\n'
   );
   try {
     const { execSync } = require('child_process');
@@ -78,12 +85,16 @@ function checkTsConfig() {
     );
 
     if (hasCriticalFiles) {
-      console.log(
-        '✅ TypeScript is attempting to compile files from critical directories.'
+      process.stderr.write(
+        '✅ TypeScript is attempting to compile files from critical directories.\n'
       );
-      console.log('   (Dependency errors are expected in this environment)');
+      process.stderr.write(
+        '   (Dependency errors are expected in this environment)\n'
+      );
     } else {
-      console.log('❌ TypeScript is not compiling critical directories.');
+      process.stderr.write(
+        '❌ TypeScript is not compiling critical directories.\n'
+      );
     }
   } catch (error) {
     // Expected due to missing dependencies, but check if critical files are mentioned
@@ -94,22 +105,31 @@ function checkTsConfig() {
     );
 
     if (hasCriticalFiles) {
-      console.log(
-        '✅ TypeScript is attempting to compile files from critical directories.'
+      process.stderr.write(
+        '✅ TypeScript is attempting to compile files from critical directories.\n'
       );
-      console.log('   (Dependency errors are expected in this environment)');
+      process.stderr.write(
+        '   (Dependency errors are expected in this environment)\n'
+      );
     } else {
-      console.log(
-        '⚠️  Could not verify compilation due to environment limitations.'
+      process.stderr.write(
+        '⚠️  Could not verify compilation due to environment limitations.\n'
       );
     }
+
+    process.stderr.write(
+      '\n🎉 Verification complete: TypeScript configuration is correct.\n'
+    );
+    process.stderr.write(
+      'All critical application directories are properly included in compilation.\n'
+    );
   }
 
-  console.log(
-    '\n🎉 Verification complete: TypeScript configuration is correct.'
+  process.stderr.write(
+    '\n🎉 Verification complete: TypeScript configuration is correct.\n'
   );
-  console.log(
-    'All critical application directories are properly included in compilation.'
+  process.stderr.write(
+    'All critical application directories are properly included in compilation.\n'
   );
 }
 

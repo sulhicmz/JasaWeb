@@ -297,10 +297,24 @@ if (require.main === module) {
   const validation = validator.validateIssue(exampleIssue);
   const searchTerms = validator.generateSearchTerms(exampleIssue);
 
-  console.log('Validation Results:');
-  console.log('Valid:', validation.isValid);
-  console.log('Duplicate Risk:', validation.duplicateRisk);
-  console.log('Warnings:', validation.warnings);
-  console.log('Suggestions:', validation.suggestions);
-  console.log('Search Terms:', searchTerms);
+  // Output validation results for GitHub Actions or CLI usage
+  if (process.env.GITHUB_ACTIONS) {
+    console.log('::notice::Validation Results:');
+    console.log(`::notice::Valid: ${validation.isValid}`);
+    console.log(`::notice::Duplicate Risk: ${validation.duplicateRisk}`);
+    if (validation.warnings.length > 0) {
+      console.log(`::warning::Warnings: ${validation.warnings.join(', ')}`);
+    }
+    if (validation.suggestions.length > 0) {
+      console.log(`::notice::Suggestions: ${validation.suggestions.join(', ')}`);
+    }
+    console.log(`::notice::Search Terms: ${searchTerms.join(', ')}`);
+  } else {
+    console.log('Validation Results:');
+    console.log('Valid:', validation.isValid);
+    console.log('Duplicate Risk:', validation.duplicateRisk);
+    console.log('Warnings:', validation.warnings);
+    console.log('Suggestions:', validation.suggestions);
+    console.log('Search Terms:', searchTerms);
+  }
 }
