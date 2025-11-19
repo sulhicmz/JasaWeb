@@ -20,16 +20,28 @@ if (fs.existsSync('pnpm-lock.yaml')) {
     console.log('✅ Using pnpm for security scanning\n');
   } catch (error) {
     console.log(
-      '⚠️  pnpm-lock.yaml found but pnpm not available, using npm fallback\n'
+      '⚠️  pnpm-lock.yaml found but pnpm not available, attempting to install pnpm...\n'
     );
-    // Try to use npm if pnpm is not available
     try {
-      execSync('npm --version', { stdio: 'pipe' });
-      packageManager = 'npm';
-      console.log('✅ Using npm as fallback for security scanning\n');
-    } catch (npmError) {
-      console.log('❌ Neither pnpm nor npm available for security scanning\n');
-      process.exit(1);
+      // Try to install pnpm using corepack
+      execSync('corepack enable && corepack prepare pnpm@latest --activate', {
+        stdio: 'pipe',
+      });
+      execSync('pnpm --version', { stdio: 'pipe' });
+      packageManager = 'pnpm';
+      console.log('✅ pnpm installed and activated for security scanning\n');
+    } catch (pnpmError) {
+      console.log('⚠️  Failed to install pnpm, using npm fallback\n');
+      try {
+        execSync('npm --version', { stdio: 'pipe' });
+        packageManager = 'npm';
+        console.log('✅ Using npm as fallback for security scanning\n');
+      } catch (npmError) {
+        console.log(
+          '❌ Neither pnpm nor npm available for security scanning\n'
+        );
+        process.exit(1);
+      }
     }
   }
 } else if (fs.existsSync('package-lock.json')) {
