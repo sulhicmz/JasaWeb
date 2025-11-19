@@ -3,8 +3,10 @@ queue_rules:
     merge_method: rebase
     update_method: rebase
     autoqueue: true
+
+# Priority rules to ensure important PRs are processed quickly
 priority_rules:
-  - name: old
+  - name: main-branch-high-priority
     priority: high
     conditions:
       - and:
