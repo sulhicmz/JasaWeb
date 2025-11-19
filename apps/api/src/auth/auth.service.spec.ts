@@ -67,6 +67,11 @@ describe('AuthService', () => {
     usersService = module.get<UsersService>(UsersService);
     jwtService = module.get<JwtService>(JwtService);
     refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
+
+    // Manually assign the mocked services to fix injection issue
+    (service as any).usersService = mockUsersService;
+    (service as any).jwtService = mockJwtService;
+    (service as any).refreshTokenService = mockRefreshTokenService;
   });
 
   afterEach(() => {

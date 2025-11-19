@@ -24,6 +24,9 @@ describe('AppController', () => {
 
     appController = module.get<AppController>(AppController);
     appService = module.get<AppService>(AppService);
+
+    // Manually assign the mocked service to fix injection issue
+    (appController as any).appService = mockAppService;
   });
 
   afterEach(() => {

@@ -46,10 +46,16 @@ describe('UsersService', () => {
 
     service = module.get<UsersService>(UsersService);
     prismaService = module.get<PrismaService>(PrismaService);
+
+    // Manually assign the mocked prisma service to fix injection issue
+    (service as any).prisma = mockPrismaService;
+
+    // Reset all mocks before each test
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {

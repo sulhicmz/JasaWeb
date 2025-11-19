@@ -66,6 +66,9 @@ describe('ProjectService', () => {
     multiTenantPrisma = module.get<MultiTenantPrismaService>(
       MultiTenantPrismaService
     );
+
+    // Manually assign the mocked prisma service to fix injection issue
+    (service as any).multiTenantPrisma = mockMultiTenantPrismaService;
   });
 
   afterEach(() => {

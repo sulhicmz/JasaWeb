@@ -14,8 +14,16 @@ module.exports = {
     '!../src/**/*.entity.ts',
     '!../src/**/*.interface.ts',
     '!../src/main.ts',
+    '!../src/**/*.decorator.ts',
+    '!../src/**/*.guard.ts',
   ],
   coverageDirectory: '../coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   testTimeout: 10000,
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/../src/$1',
+  },
+  clearMocks: true,
+  restoreMocks: true,
 };

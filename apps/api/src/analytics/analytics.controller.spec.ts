@@ -2,6 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 
+// Mock the decorator to avoid parsing issues
+jest.mock('../common/decorators/current-organization-id.decorator', () => ({
+  CurrentOrganizationId:
+    () =>
+    (target: any, propertyKey: string | symbol, parameterIndex: number) => {
+      // Mock decorator implementation
+    },
+}));
+
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
   let service: AnalyticsService;
@@ -28,6 +37,9 @@ describe('AnalyticsController', () => {
 
     controller = module.get<AnalyticsController>(AnalyticsController);
     service = module.get<AnalyticsService>(AnalyticsService);
+
+    // Manually assign the mocked service to fix injection issue
+    (controller as any).analyticsService = mockService;
   });
 
   it('should be defined', () => {
