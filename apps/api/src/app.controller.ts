@@ -21,10 +21,14 @@ export class AppController {
         message: { type: 'string', example: 'Welcome to JasaWeb API!' },
         version: { type: 'string', example: '1.0.0' },
         documentation: { type: 'string', example: '/api/docs' },
+        endpoints: {
+          type: 'object',
+          example: { auth: '/auth', projects: '/projects' },
+        },
       },
     },
   })
-  getHello(): string {
+  getHello(): object {
     return this.appService.getHello();
   }
 
