@@ -2,7 +2,6 @@ module.exports = {
   displayName: 'JasaWeb',
   projects: ['<rootDir>/apps/api/test/jest.config.js'],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
   coverageThreshold: {
     global: {
       branches: 60,
@@ -11,4 +10,5 @@ module.exports = {
       statements: 60,
     },
   },
+  // Remove coverageReporters from root config as it's not supported
 };
