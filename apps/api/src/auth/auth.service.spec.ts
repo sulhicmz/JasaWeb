@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenService } from './refresh-token.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from '../users/users.service';
+import { AuthService } from './auth.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 // Mock bcrypt
 jest.mock('bcrypt', () => ({

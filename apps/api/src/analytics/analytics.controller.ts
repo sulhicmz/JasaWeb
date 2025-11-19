@@ -1,8 +1,8 @@
 import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
-import { AnalyticsService } from './analytics.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { MultiTenantGuard } from '../common/guards/multi-tenant.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { MultiTenantGuard } from '../common/guards/multi-tenant.guard';
+import { AnalyticsService } from './analytics.service';
 
 @UseGuards(AuthGuard, MultiTenantGuard)
 @Controller('analytics')

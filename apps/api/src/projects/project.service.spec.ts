@@ -1,11 +1,11 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import {
   ProjectService,
   CreateProjectDto,
   UpdateProjectDto,
 } from './project.service';
-import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { NotFoundException } from '@nestjs/common';
 
 describe('ProjectService', () => {
   let service: ProjectService;

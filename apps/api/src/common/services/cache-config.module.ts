@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -7,8 +7,7 @@ import { ConfigModule } from '@nestjs/config';
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
-      useFactory: async () => ({
-      }),
+      useFactory: async () => ({}),
     }),
   ],
   exports: [CacheModule],

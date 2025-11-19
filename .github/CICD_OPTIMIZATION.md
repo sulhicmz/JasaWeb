@@ -9,9 +9,11 @@ The CI/CD workflows have been streamlined from 10 separate workflows to 6 consol
 ## Workflow Structure
 
 ### 1. CI Pipeline (`ci.yml`)
+
 **Trigger:** Push/PR to main/develop branches
 **Purpose:** Main continuous integration pipeline
 **Jobs:**
+
 - **Setup**: Caches dependencies for reuse across jobs
 - **Quality Checks**: Linting, formatting, type checking
 - **Test**: Unit tests with coverage reporting
@@ -20,29 +22,35 @@ The CI/CD workflows have been streamlined from 10 separate workflows to 6 consol
 - **Status Check**: Final CI status verification
 
 **Optimizations:**
+
 - Dependency caching reduces install time by ~70%
 - Parallel job execution (quality, test, security run simultaneously)
 - Concurrency control prevents duplicate runs
 - Matrix strategy for building multiple apps
 
 ### 2. Enhanced Testing (`enhanced-testing.yml`)
+
 **Trigger:** Daily schedule (1 AM UTC), push to main, manual
 **Purpose:** Comprehensive testing beyond CI
 **Jobs:**
+
 - **Integration Tests**: API integration tests with database
 - **E2E Tests**: Playwright end-to-end tests
 - **Accessibility Tests**: pa11y accessibility audits
 - **Test Reporting**: Consolidated test results
 
 **Optimizations:**
+
 - Runs only on schedule or main branch to save resources
 - Sequential execution with dependencies
 - Comprehensive reporting in single artifact
 
 ### 3. Security (`security.yml`)
+
 **Trigger:** Daily schedule (2 AM UTC), push to main, PR, manual
 **Purpose:** Comprehensive security scanning
 **Jobs:**
+
 - **CodeQL Analysis**: Static code analysis
 - **Dependency Security**: npm audit, Snyk, dependency review
 - **Secret Scan**: TruffleHog, Gitleaks, pattern matching
@@ -51,43 +59,52 @@ The CI/CD workflows have been streamlined from 10 separate workflows to 6 consol
 - **Security Report**: Consolidated security findings
 
 **Optimizations:**
+
 - Consolidated from 3 separate security workflows
 - Parallel execution of independent scans
 - Container scanning only on main branch
 - Single comprehensive report
 
 ### 4. Performance (`performance.yml`)
+
 **Trigger:** Weekly schedule (Sunday 2 AM UTC), push to main, manual
 **Purpose:** Performance testing and monitoring
 **Jobs:**
+
 - **Web Performance**: Lighthouse CI, bundle size analysis
 - **API Performance**: Artillery load testing
 - **Performance Report**: Consolidated metrics
 
 **Optimizations:**
+
 - Weekly schedule instead of every push
 - Parallel web and API testing
 - Automated threshold checking
 - Bundle size validation
 
 ### 5. Monitoring (`monitoring.yml`)
+
 **Trigger:** Every 15 minutes (health), every 6 hours (comprehensive)
 **Purpose:** Production monitoring and alerting
 **Jobs:**
+
 - **Health Check**: Quick service availability checks (15 min)
 - **Comprehensive Monitoring**: Lighthouse, SSL checks (6 hours)
 - **Uptime Check**: Service uptime verification (15 min)
 
 **Optimizations:**
+
 - Reduced health check frequency from 5 to 15 minutes
 - Reduced comprehensive monitoring from hourly to 6 hours
 - Immediate Slack alerts on failures
 - Separate jobs for different monitoring types
 
 ### 6. Release (`release.yml`)
-**Trigger:** Tag push (v*), manual
+
+**Trigger:** Tag push (v\*), manual
 **Purpose:** Release management and deployment
 **Jobs:**
+
 - **Create Release**: Version bumping, changelog generation
 - **Build and Upload**: Build artifacts for release
 - **Publish Packages**: npm package publishing
@@ -96,35 +113,43 @@ The CI/CD workflows have been streamlined from 10 separate workflows to 6 consol
 - **Notify Release**: Slack notifications and status updates
 
 **Optimizations:**
+
 - Matrix strategy for building multiple apps
 - Conditional deployment based on version tags
 - Automated changelog generation
 - Integrated notification system
 
 ### 7. Version Bump (`version-bump.yml`)
+
 **Trigger:** PR merge with version-bump label
 **Purpose:** Automated version management
 **Jobs:**
+
 - **Version Bump**: Automatic version bumping based on labels
 
 **Optimizations:**
+
 - Label-based version type detection (major/minor/patch)
 - Automated tag creation
 - Integrated with release workflow
 
 ### 8. OpenCode (`opencode.yml`)
+
 **Trigger:** Issue comment with /oc or /opencode
 **Purpose:** AI-assisted code generation
 **Jobs:**
+
 - **OpenCode**: Runs OpenCode AI assistant
 
 **Optimizations:**
+
 - Minimal permissions for security
 - Efficient trigger conditions
 
 ## Key Improvements
 
 ### Performance Gains
+
 1. **Dependency Caching**: ~70% faster dependency installation
 2. **Parallel Execution**: Jobs run simultaneously where possible
 3. **Concurrency Control**: Prevents duplicate workflow runs
@@ -132,6 +157,7 @@ The CI/CD workflows have been streamlined from 10 separate workflows to 6 consol
 5. **Conditional Execution**: Jobs run only when necessary
 
 ### Maintainability
+
 1. **Consolidated Workflows**: Reduced from 10 to 6 main workflows
 2. **Consistent Structure**: All workflows follow same patterns
 3. **Reusable Steps**: Common setup steps standardized
@@ -139,12 +165,14 @@ The CI/CD workflows have been streamlined from 10 separate workflows to 6 consol
 5. **Comprehensive Documentation**: This file and inline comments
 
 ### Resource Optimization
+
 1. **Reduced GitHub Actions Minutes**: ~40% reduction in usage
 2. **Smart Scheduling**: Appropriate frequencies for different checks
 3. **Artifact Management**: 7-30 day retention based on importance
 4. **Matrix Strategies**: Efficient parallel builds
 
 ### Security Enhancements
+
 1. **Consolidated Security Scans**: All security checks in one workflow
 2. **Multiple Scan Types**: CodeQL, Snyk, Semgrep, Trivy, etc.
 3. **Secret Detection**: Multiple tools for comprehensive coverage
@@ -196,6 +224,7 @@ Release (tags)
 ## Environment Variables
 
 All workflows use consistent environment variables:
+
 - `NODE_VERSION: '20'`
 - `PNPM_VERSION: '8.15.0'`
 
@@ -226,10 +255,12 @@ All workflows use consistent environment variables:
 ## Migration Notes
 
 ### Removed Workflows
+
 - `test-coverage.yml` → Merged into `ci.yml`
 - `advanced-security.yml` → Merged into `security.yml`
 
 ### Modified Workflows
+
 - `ci.yml`: Complete rewrite with caching and parallel execution
 - `enhanced-testing.yml`: Consolidated testing with reporting
 - `security.yml`: Merged multiple security workflows
@@ -239,6 +270,7 @@ All workflows use consistent environment variables:
 ## Monitoring and Alerts
 
 ### Slack Notifications
+
 - Health check failures (immediate)
 - Security scan results (daily)
 - Performance degradation (weekly)
@@ -246,6 +278,7 @@ All workflows use consistent environment variables:
 - Monitoring reports (every 6 hours)
 
 ### GitHub Notifications
+
 - PR comments with test coverage
 - PR comments with security findings
 - Status checks on commits
@@ -273,12 +306,14 @@ All workflows use consistent environment variables:
 ### Debug Mode
 
 Enable debug logging by setting repository secrets:
+
 - `ACTIONS_STEP_DEBUG: true`
 - `ACTIONS_RUNNER_DEBUG: true`
 
 ## Support
 
 For issues or questions about the CI/CD workflows:
+
 1. Check this documentation
 2. Review workflow logs in GitHub Actions
 3. Open an issue with the `ci/cd` label

@@ -58,7 +58,7 @@ class NotificationService {
 
     this.socket = io(`${apiUrl}/notifications`, {
       auth: {
-        token: token,
+        token,
       },
       transports: ['websocket', 'polling'],
       timeout: 20000,

@@ -224,13 +224,13 @@ try {
 }
 
 // Print summary
-console.log('\n' + '='.repeat(60));
+console.log(`\n${'='.repeat(60)}`);
 console.log('📊 SECURITY SCAN SUMMARY');
 console.log('='.repeat(60));
 console.log(`✅ Passed: ${results.passed.length}`);
 console.log(`⚠️  Warnings: ${results.warnings.length}`);
 console.log(`❌ Failed: ${results.failed.length}`);
-console.log('='.repeat(60) + '\n');
+console.log(`${'='.repeat(60)}\n`);
 
 if (results.failed.length > 0) {
   console.log('❌ Security scan completed with failures');

@@ -5,14 +5,16 @@
  * It can be used by maintainers to triage new issues effectively.
  */
 
-interface IssueValidation {
-  isValid: boolean;
-  warnings: string[];
-  suggestions: string[];
-  duplicateRisk: 'low' | 'medium' | 'high';
-}
+/**
+ * @typedef {Object} IssueValidation
+ * @property {boolean} isValid
+ * @property {string[]} warnings
+ * @property {string[]} suggestions
+ * @property {'low'|'medium'|'high'} duplicateRisk
+ */
 
-interface IssueData {
+/**
+ * @typedef {Object} IssueData
   title: string;
   body: string;
   labels: string[];
@@ -135,7 +137,7 @@ class IssueValidator {
     ];
 
     const hasGenericTitle = genericTitles.some(generic => 
-      title === generic || title.startsWith(generic + ' ') || title.endsWith(' ' + generic)
+      title === generic || title.startsWith(`${generic  } `) || title.endsWith(` ${  generic}`)
     );
 
     if (hasHighRiskPattern || hasGenericTitle) {
@@ -186,51 +188,51 @@ class IssueValidator {
     const body = issue.body.toLowerCase();
 
     switch (issue.type) {
-      case 'security':
-        // Check for sensitive data warnings
-        if (body.includes('password') || body.includes('secret') || body.includes('key')) {
-          validation.warnings.push('Please ensure no sensitive data is included in the issue');
-        }
+    case 'security':
+      // Check for sensitive data warnings
+      if (body.includes('password') || body.includes('secret') || body.includes('key')) {
+        validation.warnings.push('Please ensure no sensitive data is included in the issue');
+      }
         
-        // Check for severity assessment
-        if (!body.includes('severity') && !body.includes('impact')) {
-          validation.warnings.push('Security issues should include severity/impact assessment');
-        }
-        break;
+      // Check for severity assessment
+      if (!body.includes('severity') && !body.includes('impact')) {
+        validation.warnings.push('Security issues should include severity/impact assessment');
+      }
+      break;
 
-      case 'build':
-        // Check for CI/CD context
-        if (!body.includes('workflow') && !body.includes('pipeline') && !body.includes('ci')) {
-          validation.suggestions.push('Consider mentioning the specific workflow or CI context');
-        }
+    case 'build':
+      // Check for CI/CD context
+      if (!body.includes('workflow') && !body.includes('pipeline') && !body.includes('ci')) {
+        validation.suggestions.push('Consider mentioning the specific workflow or CI context');
+      }
         
-        // Check for workflow run URL
-        if (!body.includes('github.com') && !body.includes('actions/runs')) {
-          validation.suggestions.push('Consider adding a link to the failing workflow run');
-        }
-        break;
+      // Check for workflow run URL
+      if (!body.includes('github.com') && !body.includes('actions/runs')) {
+        validation.suggestions.push('Consider adding a link to the failing workflow run');
+      }
+      break;
 
-      case 'config':
-        // Check for environment details
-        if (!body.includes('environment') && !body.includes('env')) {
-          validation.warnings.push('Configuration issues should specify the affected environment');
-        }
+    case 'config':
+      // Check for environment details
+      if (!body.includes('environment') && !body.includes('env')) {
+        validation.warnings.push('Configuration issues should specify the affected environment');
+      }
         
-        // Check for security warning
-        validation.suggestions.push('Remember to sanitize any sensitive configuration data');
-        break;
+      // Check for security warning
+      validation.suggestions.push('Remember to sanitize any sensitive configuration data');
+      break;
 
-      case 'feature':
-        // Check for problem statement
-        if (!body.includes('problem') && !body.includes('why')) {
-          validation.suggestions.push('Feature requests benefit from explaining the problem they solve');
-        }
+    case 'feature':
+      // Check for problem statement
+      if (!body.includes('problem') && !body.includes('why')) {
+        validation.suggestions.push('Feature requests benefit from explaining the problem they solve');
+      }
         
-        // Check for acceptance criteria
-        if (!body.includes('acceptance') && !body.includes('criteria')) {
-          validation.suggestions.push('Consider adding acceptance criteria for clarity');
-        }
-        break;
+      // Check for acceptance criteria
+      if (!body.includes('acceptance') && !body.includes('criteria')) {
+        validation.suggestions.push('Consider adding acceptance criteria for clarity');
+      }
+      break;
     }
   }
 

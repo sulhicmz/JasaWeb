@@ -1,14 +1,14 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '../decorators/roles.decorator';
 import { Request } from 'express';
 import { PrismaService } from '../database/prisma.service';
+import { Role } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private prisma: PrismaService,
+    private prisma: PrismaService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -17,7 +17,7 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    
+
     if (!requiredRoles) {
       return true; // If no roles required, allow access
     }
@@ -25,14 +25,14 @@ export class RolesGuard implements CanActivate {
     // Get the request object
     const request = context.switchToHttp().getRequest<Request>();
     const user = (request as any).user; // This would come from JWT strategy after auth
-    
+
     if (!user) {
       return false; // No authenticated user
     }
 
     // Extract organizationId from the request (set by our multi-tenant middleware)
     const organizationId = (request as any).organizationId;
-    
+
     if (!organizationId) {
       return false; // No organization context
     }
@@ -41,7 +41,7 @@ export class RolesGuard implements CanActivate {
     const membership = await this.prisma.membership.findFirst({
       where: {
         userId: user.id,
-        organizationId: organizationId,
+        organizationId,
       },
     });
 
@@ -50,6 +50,6 @@ export class RolesGuard implements CanActivate {
     }
 
     // Check if user's role is in the required roles
-    return requiredRoles.some(role => role === membership.role);
+    return requiredRoles.some((role) => role === membership.role);
   }
 }

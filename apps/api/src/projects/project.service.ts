@@ -107,7 +107,10 @@ export class ProjectService {
   }
 
   // Business logic methods
-  async findByOrganization(organizationId: string, view: ProjectViewMode = 'summary') {
+  async findByOrganization(
+    organizationId: string,
+    view: ProjectViewMode = 'summary'
+  ) {
     return this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       ...buildProjectQuery(view),
@@ -140,26 +143,27 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    const [completedMilestones, pendingApprovals, completedTasks] = await Promise.all([
-      this.multiTenantPrisma.milestone.count({
-        where: {
-          projectId: id,
-          status: 'completed',
-        },
-      }),
-      this.multiTenantPrisma.approval.count({
-        where: {
-          projectId: id,
-          status: 'pending',
-        },
-      }),
-      this.multiTenantPrisma.task.count({
-        where: {
-          projectId: id,
-          status: 'completed',
-        },
-      }),
-    ]);
+    const [completedMilestones, pendingApprovals, completedTasks] =
+      await Promise.all([
+        this.multiTenantPrisma.milestone.count({
+          where: {
+            projectId: id,
+            status: 'completed',
+          },
+        }),
+        this.multiTenantPrisma.approval.count({
+          where: {
+            projectId: id,
+            status: 'pending',
+          },
+        }),
+        this.multiTenantPrisma.task.count({
+          where: {
+            projectId: id,
+            status: 'completed',
+          },
+        }),
+      ]);
 
     const milestoneCount = (project as any)._count?.milestones || 0;
     const fileCount = (project as any)._count?.files || 0;
@@ -172,7 +176,10 @@ export class ProjectService {
       pendingApprovals,
       taskCount,
       completedTasks,
-      progress: milestoneCount > 0 ? Math.round((completedMilestones / milestoneCount) * 100) : 0,
+      progress:
+        milestoneCount > 0
+          ? Math.round((completedMilestones / milestoneCount) * 100)
+          : 0,
     };
   }
 }

@@ -16,10 +16,13 @@ export class SecurityMiddleware implements NestMiddleware {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    res.setHeader(
+      'Permissions-Policy',
+      'geolocation=(), microphone=(), camera=()'
+    );
 
     // Prevent clickjacking
-    res.setHeader('Content-Security-Policy', 'frame-ancestors \'none\'');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
 
     // Check for suspicious patterns in request
     this.checkSuspiciousPatterns(req);
@@ -44,7 +47,7 @@ export class SecurityMiddleware implements NestMiddleware {
     ];
 
     const checkString = (str: string): boolean => {
-      return suspiciousPatterns.some(pattern => pattern.test(str));
+      return suspiciousPatterns.some((pattern) => pattern.test(str));
     };
 
     // Check URL
@@ -53,7 +56,7 @@ export class SecurityMiddleware implements NestMiddleware {
     }
 
     // Check query parameters
-    Object.values(req.query).forEach(value => {
+    Object.values(req.query).forEach((value) => {
       if (typeof value === 'string' && checkString(value)) {
         throw new Error('Suspicious pattern detected in query parameters');
       }
@@ -73,13 +76,11 @@ export class SecurityMiddleware implements NestMiddleware {
    */
   private sanitizeQueryParams(req: Request): void {
     if (req.query) {
-      Object.keys(req.query).forEach(key => {
+      Object.keys(req.query).forEach((key) => {
         const value = req.query[key];
         if (typeof value === 'string') {
           // Remove potentially dangerous characters
-          req.query[key] = value
-            .replace(/[<>]/g, '')
-            .trim();
+          req.query[key] = value.replace(/[<>]/g, '').trim();
         }
       });
     }

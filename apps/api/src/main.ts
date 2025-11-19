@@ -1,12 +1,12 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import compression from 'compression';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
 import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { ErrorHandlingService } from './common/services/error-handling.service';
-import helmet from 'helmet';
-import compression from 'compression';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');

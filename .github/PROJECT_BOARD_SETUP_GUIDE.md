@@ -1,16 +1,19 @@
 # 🚀 JasaWeb Project Board Setup Guide
 
 ## 📋 Overview
+
 This guide provides step-by-step instructions to set up a comprehensive GitHub Project board for the JasaWeb repository with automation, custom views, and dashboard configuration.
 
 ## 🔧 Prerequisites
 
 ### Required Tools
+
 1. **GitHub CLI (gh)** - Install from https://cli.github.com/
 2. **Repository Admin Access** - To create projects and configure workflows
 3. **Project Scopes** - Ensure your GitHub token has project permissions
 
 ### Authentication Setup
+
 ```bash
 # Install GitHub CLI (if not already installed)
 # Windows: winget install GitHub.cli
@@ -26,6 +29,7 @@ gh auth refresh -s project,read:project --hostname github.com
 ## 🎯 Step 1: Create Project Board
 
 ### Option A: Using GitHub CLI
+
 ```bash
 # Navigate to repository
 cd "D:\06. repo sulhicmz\JasaWeb"
@@ -37,6 +41,7 @@ gh project create --owner "sulhicmz" --title "JasaWeb Development Board" --forma
 ```
 
 ### Option B: Using GitHub Web UI
+
 1. Go to https://github.com/sulhicmz/JasaWeb
 2. Click **Projects** tab
 3. Click **New project**
@@ -48,6 +53,7 @@ gh project create --owner "sulhicmz" --title "JasaWeb Development Board" --forma
 ## 📊 Step 2: Configure Project Structure
 
 ### Create Workflow Columns
+
 Using GitHub Web UI, add these columns in order:
 
 1. **🆕 Triage** - New issues awaiting categorization
@@ -60,9 +66,11 @@ Using GitHub Web UI, add these columns in order:
 8. **❌ Won't Fix** - Not applicable or out of scope
 
 ### Create Custom Fields
+
 In the project board, add these custom fields:
 
 #### Priority Field
+
 - **Name**: Priority
 - **Type**: Single select
 - **Options**:
@@ -72,6 +80,7 @@ In the project board, add these custom fields:
   - 🔵 Low (P3)
 
 #### Severity Field
+
 - **Name**: Severity
 - **Type**: Single select
 - **Options**:
@@ -81,6 +90,7 @@ In the project board, add these custom fields:
   - 💡 Low
 
 #### Issue Type Field
+
 - **Name**: Issue Type
 - **Type**: Single select
 - **Options**:
@@ -94,6 +104,7 @@ In the project board, add these custom fields:
   - 🎨 UI/UX
 
 #### Component Field
+
 - **Name**: Component
 - **Type**: Single select
 - **Options**:
@@ -107,6 +118,7 @@ In the project board, add these custom fields:
   - 📖 Documentation
 
 #### Additional Fields
+
 - **PR Link** (Text) - Link to associated pull request
 - **Story Points** (Number) - Effort estimation (1, 2, 3, 5, 8, 13)
 - **Target Release** (Single select) - v1.0.0, v1.1.0, v1.2.0, v2.0.0
@@ -114,6 +126,7 @@ In the project board, add these custom fields:
 ## 👁️ Step 3: Create Specialized Views
 
 ### 1. Main Board View
+
 - **Name**: Main Board
 - **Layout**: Table
 - **Group by**: Status
@@ -121,6 +134,7 @@ In the project board, add these custom fields:
 - **Visible fields**: Status, Priority, Type, Assignee, Component, Updated
 
 ### 2. Security Issues View
+
 - **Name**: Security Issues
 - **Layout**: Table
 - **Filters**: Label contains "security"
@@ -128,6 +142,7 @@ In the project board, add these custom fields:
 - **Visible fields**: Status, Severity, Type, Assignee, Days Open
 
 ### 3. Build & CI/CD View
+
 - **Name**: Build & CI/CD
 - **Layout**: Board
 - **Filters**: Labels contain "CI/CD" OR "build" OR "deployment"
@@ -135,6 +150,7 @@ In the project board, add these custom fields:
 - **Visible fields**: Status, Priority, Environment, Assignee
 
 ### 4. Dependencies View
+
 - **Name**: Dependencies
 - **Layout**: List
 - **Filters**: Label contains "dependencies"
@@ -142,6 +158,7 @@ In the project board, add these custom fields:
 - **Visible fields**: Package, Version, Severity, Status
 
 ### 5. Sprint Planning View
+
 - **Name**: Sprint Planning
 - **Layout**: Board
 - **Filters**: Milestone = current sprint
@@ -151,6 +168,7 @@ In the project board, add these custom fields:
 ## 🤖 Step 4: Set Up Automation
 
 ### Enable GitHub Actions Workflow
+
 The automation workflow is already configured in `.github/workflows/project-board-automation.yml`. To enable it:
 
 1. Go to **Settings** → **Actions** → **General**
@@ -159,6 +177,7 @@ The automation workflow is already configured in `.github/workflows/project-boar
 4. Click **I understand my workflows, go ahead and enable them**
 
 ### Manual Workflow Trigger
+
 To manually trigger the project setup:
 
 1. Go to **Actions** tab
@@ -170,6 +189,7 @@ To manually trigger the project setup:
 ## 📥 Step 5: Import Existing Issues
 
 ### Using GitHub CLI
+
 ```bash
 # Get all open issues
 gh issue list --repo "sulhicmz/JasaWeb" --limit 100 --json number,title,labels
@@ -182,6 +202,7 @@ done
 ```
 
 ### Using Web UI
+
 1. Open each issue (#99, #100, #101, #102, #106)
 2. Click **Projects** in the right sidebar
 3. Select **JasaWeb Development Board**
@@ -189,7 +210,9 @@ done
 5. Add appropriate labels and custom field values
 
 ### Special Labels for Master Issues
+
 Add these labels to the master issues:
+
 - **#99** (Secret Detection): `master-issue`, `high-priority`, `security`
 - **#100** (Dependencies): `master-issue`, `high-priority`, `dependencies`
 - **#101** (CodeQL): `master-issue`, `high-priority`, `security`, `code-quality`
@@ -198,12 +221,14 @@ Add these labels to the master issues:
 ## 📊 Step 6: Configure Dashboard
 
 ### Repository Health Metrics
+
 Create a new issue titled "📊 Repository Health Dashboard" with these sections:
 
 ```markdown
 # 📊 JasaWeb Repository Health Dashboard
 
 ## 🎯 Key Metrics
+
 - **Repository Health Score**: 85%
 - **Open Issues**: 25 (4 Critical)
 - **Security Issues**: 4 (0 Critical)
@@ -211,18 +236,21 @@ Create a new issue titled "📊 Repository Health Dashboard" with these sections
 - **Average Resolution Time**: 5.2 days
 
 ## 🎯 Master Issues Progress
+
 - #99 - Secret Detection: 🚧 In Progress (60%)
 - #100 - Dependencies: 🚧 In Progress (75%)
 - #101 - CodeQL Analysis: 🚧 In Progress (40%)
 - #102 - Build Failure: 🚧 In Progress (80%)
 
 ## 📈 Priority Distribution
+
 - 🔴 Critical: 2 (8%)
 - 🟠 High: 3 (12%)
 - 🟡 Medium: 15 (60%)
 - 🔵 Low: 5 (20%)
 
 ## 🔒 Security Posture
+
 - 🚨 Critical Vulnerabilities: 0 ✅
 - ⚠️ High Severity Issues: 2
 - 📝 Medium Severity Issues: 1
@@ -234,11 +262,13 @@ Pin this issue to the repository for easy access.
 ## 🔔 Step 7: Set Up Notifications
 
 ### Slack Integration (Optional)
+
 1. Create a Slack webhook URL
 2. Add to repository secrets as `SLACK_WEBHOOK_URL`
 3. Update workflow to include Slack notifications
 
 ### Email Notifications
+
 1. Go to **Settings** → **Notifications**
 2. Configure **Watching**, **Participating**, and **Custom** settings
 3. Set up **Custom events** for:
@@ -249,6 +279,7 @@ Pin this issue to the repository for easy access.
 ## 📚 Step 8: Team Training
 
 ### Training Topics
+
 1. **Project Board Navigation**
    - How to access different views
    - Understanding workflow stages
@@ -270,6 +301,7 @@ Pin this issue to the repository for easy access.
    - Sprint planning workflow
 
 ### Documentation Links
+
 - [Project Board Guide](.github/PROJECT_BOARD_GUIDE.md)
 - [Configuration Details](.github/PROJECT_BOARD_CONFIG.md)
 - [Team Collaboration](.github/TEAM_COLLABORATION.md)
@@ -278,6 +310,7 @@ Pin this issue to the repository for easy access.
 ## ✅ Step 9: Verification Checklist
 
 ### Project Board Setup
+
 - [ ] Project board created with correct name
 - [ ] All 8 workflow columns created
 - [ ] Custom fields configured
@@ -285,12 +318,14 @@ Pin this issue to the repository for easy access.
 - [ ] Existing issues imported
 
 ### Automation Configuration
+
 - [ ] Workflow file exists in `.github/workflows/`
 - [ ] Actions are enabled for repository
 - [ ] Test workflow run completed successfully
 - [ ] Automatic triage working for new issues
 
 ### Team Readiness
+
 - [ ] Team members trained on new workflow
 - [ ] Documentation accessible and understood
 - [ ] Notification preferences configured
@@ -299,12 +334,14 @@ Pin this issue to the repository for easy access.
 ## 🚀 Step 10: Go Live
 
 ### Launch Activities
+
 1. **Announcement**: Create issue announcing the new project board
 2. **Migration**: Move all active issues to appropriate columns
 3. **Monitoring**: Watch automation for first week
 4. **Feedback**: Collect team feedback and adjust
 
 ### Success Metrics to Track
+
 - Issue resolution time reduction
 - Team adoption rate
 - Automation accuracy
@@ -315,22 +352,27 @@ Pin this issue to the repository for easy access.
 ### Common Issues
 
 #### Project Creation Fails
+
 - **Cause**: Insufficient permissions
 - **Solution**: Ensure you have admin access to repository
 
 #### Automation Not Working
+
 - **Cause**: Actions disabled or missing scopes
 - **Solution**: Enable Actions and refresh auth with project scopes
 
 #### Issues Not Adding to Project
+
 - **Cause**: Project ID not stored correctly
 - **Solution**: Manually add project ID to `.github/project-id.txt`
 
 #### Labels Not Applied
+
 - **Cause**: Label names don't match automation rules
 - **Solution**: Check label spelling and case sensitivity
 
 ### Support Resources
+
 - [GitHub Projects Documentation](https://docs.github.com/en/issues/planning-and-tracking-with-projects)
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [GitHub CLI Documentation](https://cli.github.com/manual/)
@@ -340,6 +382,7 @@ Pin this issue to the repository for easy access.
 ## 🎉 Congratulations!
 
 Your JasaWeb Project Board is now set up with:
+
 - ✅ Comprehensive workflow management
 - ✅ Automated issue triage and organization
 - ✅ Specialized views for different issue types
@@ -347,6 +390,7 @@ Your JasaWeb Project Board is now set up with:
 - ✅ Team collaboration features
 
 The project board will help you:
+
 - Track the 4 master issues efficiently
 - Improve issue resolution time
 - Enhance team collaboration

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ErrorHandlingService } from './error-handling.service';
 import { AuditModule } from './audit.module';
+import { ErrorHandlingService } from './error-handling.service';
 
 @Module({
   imports: [AuditModule],

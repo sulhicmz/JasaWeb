@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { InvoiceController } from './invoice.controller';
-import { InvoiceService } from './invoice.service';
 import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
 import { EmailModule } from '../common/services/email.module';
+import { InvoiceController } from './invoice.controller';
+import { InvoiceService } from './invoice.service';
 
 @Module({
   imports: [MultiTenantPrismaModule, EmailModule],

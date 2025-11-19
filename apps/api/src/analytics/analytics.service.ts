@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../common/database/prisma.service';
 import { DateTime } from 'luxon';
+import { PrismaService } from '../common/database/prisma.service';
 
 @Injectable()
 export class AnalyticsService {

@@ -1,23 +1,24 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { validateEnv } from './common/config/env.validation';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './users/user.module';
-import { ProjectModule } from './projects/project.module';
-import { MilestoneModule } from './milestones/milestone.module';
-import { TicketModule } from './tickets/ticket.module';
-import { InvoiceModule } from './invoices/invoice.module';
-import { FileModule } from './files/file.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { ApprovalModule } from './approvals/approval.module';
+import { AuthModule } from './auth/auth.module';
+import { validateEnv } from './common/config/env.validation';
 import { EmailModule } from './common/services/email.module';
+import { FileModule } from './files/file.module';
+import { InvoiceModule } from './invoices/invoice.module';
+import { MilestoneModule } from './milestones/milestone.module';
+import { ProjectModule } from './projects/project.module';
+import { TicketModule } from './tickets/ticket.module';
+import { UserModule } from './users/user.module';
 import { AuditModule } from './common/services/audit.module';
 import { ErrorHandlingModule } from './common/services/error-handling.module';
 import { SessionModule } from './common/services/session.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { PrismaModule } from './common/database/prisma.module';
 import { MultiTenantPrismaModule } from './common/database/multi-tenant-prisma.module';
 import { MultiTenantGuard } from './common/guards/multi-tenant.guard';
@@ -25,7 +26,6 @@ import { MultiTenantMiddleware } from './common/middleware/multi-tenant.middlewa
 import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
-import { AnalyticsModule } from './analytics/analytics.module';
 
 const parseEnvNumber = (
   value: string | undefined,

@@ -5,39 +5,46 @@ This directory contains comprehensive issue templates for the JasaWeb repository
 ## 📁 Template Files
 
 ### Core Templates
+
 - **`bug_report.yml`** - Enhanced bug report with duplicate prevention fields
 - **`feature_request.yml`** - Feature request with problem statement and acceptance criteria
 - **`technical_task.yml`** - Technical implementation tasks
 - **`release.yml`** - Release tracking and deployment coordination
 
 ### Specialized Templates
+
 - **`security_issue.yml`** - Security vulnerability reporting (non-critical)
 - **`build_ci_issue.yml`** - Build failures, CI/CD pipeline issues
 - **`configuration_issue.yml`** - Environment setup and configuration problems
 
 ### Configuration
+
 - **`config.yml`** - Issue form configuration and contact links
 - **`GUIDE.md`** - Comprehensive guide for choosing and using templates
 
 ### Automation
+
 - **`../workflows/issue-validation.yml`** - Automated issue validation and duplicate detection
 - **`../scripts/validate-issue.js`** - Issue validation logic
 
 ## 🎯 Key Features
 
 ### Duplicate Prevention
+
 - **Required fields** for related issues and keywords
 - **Automated validation** checks for completeness
 - **Duplicate detection** suggests similar issues
 - **Risk assessment** categorizes duplicate potential
 
 ### Issue Quality
+
 - **Structured templates** guide users to provide complete information
 - **Type-specific fields** ensure relevant details are captured
 - **Validation checks** prevent incomplete submissions
 - **Helpful suggestions** improve issue quality
 
 ### Automation
+
 - **GitHub Actions** automatically validate new issues
 - **Smart labeling** based on validation results
 - **Duplicate suggestions** help maintainers triage faster
@@ -46,6 +53,7 @@ This directory contains comprehensive issue templates for the JasaWeb repository
 ## 🚀 Usage
 
 ### For Contributors
+
 1. Choose the appropriate template for your issue
 2. Fill in all required fields completely
 3. Provide detailed reproduction steps and environment information
@@ -53,6 +61,7 @@ This directory contains comprehensive issue templates for the JasaWeb repository
 5. Search for similar issues before submitting
 
 ### For Maintainers
+
 1. Review automated validation comments
 2. Check duplicate risk assessment
 3. Use suggested search terms to find related issues
@@ -62,6 +71,7 @@ This directory contains comprehensive issue templates for the JasaWeb repository
 ## 🔧 Customization
 
 ### Adding New Templates
+
 1. Create new `.yml` file in this directory
 2. Follow the established structure and naming conventions
 3. Include duplicate prevention fields
@@ -69,6 +79,7 @@ This directory contains comprehensive issue templates for the JasaWeb repository
 5. Test the template functionality
 
 ### Modifying Existing Templates
+
 1. Update the `.yml` file with desired changes
 2. Maintain required fields for duplicate prevention
 3. Update validation logic in `validate-issue.js` if needed
@@ -76,7 +87,9 @@ This directory contains comprehensive issue templates for the JasaWeb repository
 5. Test changes thoroughly
 
 ### Validation Rules
+
 Update the `IssueValidator` class in `validate-issue.js` to:
+
 - Add new validation rules
 - Modify duplicate detection logic
 - Update type-specific validations
@@ -85,6 +98,7 @@ Update the `IssueValidator` class in `validate-issue.js` to:
 ## 📊 Metrics
 
 The issue templates are designed to track:
+
 - **Duplicate reduction** - Monitor duplicate issue rates
 - **Time to triage** - Measure how quickly issues are processed
 - **Issue quality** - Track completeness and detail levels
@@ -93,13 +107,16 @@ The issue templates are designed to track:
 ## 🔍 Troubleshooting
 
 ### Common Issues
+
 - **Templates not appearing**: Check `config.yml` configuration
 - **Validation not working**: Verify GitHub Actions permissions
 - **Duplicate detection failing**: Check API rate limits and search syntax
 - **Labels not applying**: Ensure proper GitHub permissions
 
 ### Debug Mode
+
 Enable debug logging by setting repository secrets:
+
 - `ACTIONS_STEP_DEBUG: true`
 - `ACTIONS_RUNNER_DEBUG: true`
 
@@ -113,6 +130,7 @@ Enable debug logging by setting repository secrets:
 ## 🤝 Contributing
 
 To improve the issue templates:
+
 1. Test template changes in a fork
 2. Update documentation for any changes
 3. Ensure validation logic matches template fields

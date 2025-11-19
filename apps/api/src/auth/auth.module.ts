@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthService } from './auth.service';
+import { PrismaModule } from '../common/database/prisma.module';
+import { UserModule } from '../users/user.module';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { RefreshTokenService } from './refresh-token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
-import { UserModule } from '../users/user.module';
-import { PrismaModule } from '../common/database/prisma.module';
-import { RefreshTokenService } from './refresh-token.service';
 
 @Module({
   imports: [

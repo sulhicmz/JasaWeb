@@ -21,7 +21,9 @@ This directory contains standardized VS Code configurations for the JasaWeb deve
 ## 📁 Configuration Files
 
 ### `settings.json`
+
 Configures the workspace behavior and editor settings:
+
 - **Formatting**: Auto-format on save with Prettier
 - **Linting**: Auto-fix ESLint issues on save
 - **TypeScript**: Enhanced auto-imports and file move handling
@@ -30,7 +32,9 @@ Configures the workspace behavior and editor settings:
 - **Language Support**: Astro, Tailwind CSS, and Prisma integrations
 
 ### `extensions.json`
+
 Defines recommended extensions for optimal development:
+
 - **Core**: TypeScript, ESLint, Prettier, Tailwind CSS
 - **NestJS**: Official NestJS extension for API development
 - **Astro**: Official Astro extension for web development
@@ -40,7 +44,9 @@ Defines recommended extensions for optimal development:
 - **Security**: Dependency and vulnerability scanning
 
 ### `launch.json`
+
 Provides debugging configurations:
+
 - **Debug NestJS API**: Debug the backend API server
 - **Debug NestJS Tests**: Debug API test suites
 - **Debug Astro Web**: Debug the frontend development server
@@ -49,7 +55,9 @@ Provides debugging configurations:
 - **Debug Full Stack**: Debug both API and Web simultaneously
 
 ### `tasks.json`
+
 Defines reusable development tasks:
+
 - **Development**: Start dev servers (full stack, API only, web only)
 - **Building**: Build applications (all, API only, web only)
 - **Testing**: Run test suites (all, API, E2E)
@@ -61,12 +69,14 @@ Defines reusable development tasks:
 ## 🛠️ How to Use
 
 ### Running Tasks
+
 1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)
 2. Type "Tasks: Run Task"
 3. Select the desired task from the list
 4. Or use the Terminal menu: Terminal → Run Task...
 
 ### Debugging
+
 1. Open the file you want to debug
 2. Press `F5` or go to Run and Debug panel
 3. Select the appropriate debug configuration:
@@ -75,6 +85,7 @@ Defines reusable development tasks:
    - Use "Debug Full Stack" to debug both simultaneously
 
 ### Recommended Workflow
+
 1. **Start Development**: Run "Start Development (Full Stack)" task
 2. **Code Changes**: Edit files with auto-formatting and linting
 3. **Debug**: Use F5 with appropriate configuration
@@ -84,19 +95,25 @@ Defines reusable development tasks:
 ## 🔧 Customization
 
 ### Personal Settings Override
+
 If you need personal settings that differ from the team standards:
+
 1. Create `.vscode/settings.json` in your user home directory
 2. Add your personal overrides there
 3. Workspace settings will take precedence, but personal settings will override them
 
 ### Adding Extensions
+
 To add new recommended extensions for the team:
+
 1. Edit `.vscode/extensions.json`
 2. Add the extension ID to the `recommendations` array
 3. Commit the change for the team to get the recommendation
 
 ### Custom Tasks
+
 To add new development tasks:
+
 1. Edit `.vscode/tasks.json`
 2. Add task objects to the `tasks` array
 3. Follow the existing naming and grouping conventions
@@ -104,21 +121,25 @@ To add new development tasks:
 ## 🐛 Troubleshooting
 
 ### Extensions Not Installing
+
 - Ensure VS Code is version 1.60 or later
 - Check that you have internet connectivity
 - Try installing extensions manually from the Extensions panel
 
 ### Debugging Not Working
+
 - Verify that you have the required dependencies installed (`pnpm install`)
 - Check that the programs in `launch.json` exist in your `node_modules`
 - Ensure your launch configuration matches your project structure
 
 ### Tasks Not Found
+
 - Run `pnpm install` to ensure all dependencies are available
 - Check that the scripts exist in `package.json`
 - Verify you're in the correct working directory
 
 ### TypeScript Errors
+
 - Run "Type Check All" task to verify TypeScript configuration
 - Ensure `pnpm install` has been run
 - Check that `tsconfig.json` files are properly configured
@@ -134,6 +155,7 @@ To add new development tasks:
 ## 🤝 Contributing
 
 When making changes to these configurations:
+
 1. Test the changes in a fresh workspace
 2. Ensure all tasks and debug configurations work
 3. Update this documentation if adding new features

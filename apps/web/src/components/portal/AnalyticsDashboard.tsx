@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import DynamicChart from './DynamicChart';
 import {
   analyticsService,
   AnalyticsFilters,
   OverviewAnalytics,
 } from '../../services/analyticsService';
+import DynamicChart from './DynamicChart';
 
 interface AnalyticsDashboardProps {
   className?: string;

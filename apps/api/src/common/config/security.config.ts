@@ -37,8 +37,14 @@ export default registerAs('security', () => ({
   session: {
     secret: process.env.SESSION_SECRET || 'change-me-in-production',
     maxAge: parseNumber(process.env.SESSION_MAX_AGE_HOURS, 24),
-    absoluteTimeout: parseNumber(process.env.SESSION_ABSOLUTE_TIMEOUT_HOURS, 72),
-    inactivityTimeout: parseNumber(process.env.SESSION_INACTIVITY_TIMEOUT_MINUTES, 30),
+    absoluteTimeout: parseNumber(
+      process.env.SESSION_ABSOLUTE_TIMEOUT_HOURS,
+      72
+    ),
+    inactivityTimeout: parseNumber(
+      process.env.SESSION_INACTIVITY_TIMEOUT_MINUTES,
+      30
+    ),
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict' as const,

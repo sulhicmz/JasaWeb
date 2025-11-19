@@ -30,7 +30,7 @@ export class MultiTenantMiddleware implements NestMiddleware {
         // Find the organization the user belongs to
         const membership = await this.prisma.membership.findFirst({
           where: {
-            userId: userId,
+            userId,
           },
           include: {
             organization: true,

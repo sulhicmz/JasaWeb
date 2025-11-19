@@ -7,12 +7,14 @@ This guide helps you understand the changes made to the CI/CD workflows and how 
 ### Workflow Consolidation
 
 **Before:**
+
 - 10 separate workflow files
 - Duplicate setup steps across workflows
 - Overlapping functionality
 - Inefficient resource usage
 
 **After:**
+
 - 6 optimized workflow files
 - Shared dependency caching
 - Consolidated functionality
@@ -31,58 +33,73 @@ This guide helps you understand the changes made to the CI/CD workflows and how 
 ### Modified Workflows
 
 #### 1. ci.yml (Main CI Pipeline)
+
 **Changes:**
+
 - Added dependency caching (70% faster installs)
 - Parallel job execution
 - Integrated coverage reporting
 - Basic security checks included
 
 **Impact on Development:**
+
 - Faster PR checks
 - Immediate coverage feedback
 - Earlier security issue detection
 
 #### 2. enhanced-testing.yml
+
 **Changes:**
+
 - Reduced frequency (daily instead of every push)
 - Added accessibility tests
 - Consolidated test reporting
 
 **Impact on Development:**
+
 - Comprehensive tests run daily
 - Manual trigger available for urgent checks
 - Single test report artifact
 
 #### 3. security.yml
+
 **Changes:**
+
 - Consolidated 3 security workflows
 - Added CodeQL analysis
 - Parallel security scans
 - Comprehensive security reporting
 
 **Impact on Development:**
+
 - Single security report
 - Faster security feedback
 - More thorough scanning
 
 #### 4. performance.yml
+
 **Changes:**
+
 - Weekly schedule (was on every push)
 - Added bundle size validation
 - Automated threshold checking
 
 **Impact on Development:**
+
 - Performance tests don't slow down PRs
 - Manual trigger for performance testing
 - Clear performance metrics
 
 #### 5. monitoring.yml
+
 **Changes:**
+
 - Health checks every 15 min (was 5 min)
 - Comprehensive monitoring every 6 hours (was hourly)
 - Improved alerting
 
 **Impact on Operations:**
+
 - Reduced noise from frequent checks
 - Better alert quality
 - Lower resource usage
@@ -112,6 +129,7 @@ This guide helps you understand the changes made to the CI/CD workflows and how 
 ### Pull Request Workflow
 
 **What runs on PR:**
+
 1. CI Pipeline (ci.yml)
    - Quality checks
    - Unit tests with coverage
@@ -123,6 +141,7 @@ This guide helps you understand the changes made to the CI/CD workflows and how 
    - Code security analysis
 
 **What doesn't run on PR:**
+
 - Enhanced testing (daily schedule)
 - Performance tests (weekly schedule)
 - Monitoring (scheduled only)
@@ -143,6 +162,7 @@ gh workflow run performance.yml
 ```
 
 Or use the GitHub UI:
+
 1. Go to Actions tab
 2. Select workflow
 3. Click "Run workflow"
@@ -154,6 +174,7 @@ Or use the GitHub UI:
 ### For All Developers
 
 1. **Update Local Branches**
+
    ```bash
    git checkout main
    git pull origin main
@@ -170,6 +191,7 @@ Or use the GitHub UI:
 ### For Repository Admins
 
 1. **Update Branch Protection Rules**
+
    ```
    Required status checks:
    - CI Pipeline / quality-checks
@@ -198,6 +220,7 @@ Or use the GitHub UI:
 **Problem:** Dependencies not installing correctly
 
 **Solution:**
+
 ```bash
 # Clear GitHub Actions cache
 gh cache delete --all
@@ -211,6 +234,7 @@ gh cache delete --all
 **Problem:** Expected workflow didn't trigger
 
 **Solution:**
+
 1. Check workflow trigger conditions
 2. Verify file paths match trigger patterns
 3. Check concurrency settings
@@ -221,6 +245,7 @@ gh cache delete --all
 **Problem:** Tests passing locally but failing in CI
 
 **Solution:**
+
 1. Check environment variables
 2. Verify database setup
 3. Review service configurations
@@ -231,6 +256,7 @@ gh cache delete --all
 **Problem:** Security scans reporting issues
 
 **Solution:**
+
 1. Review security report artifact
 2. Address critical vulnerabilities first
 3. Update dependencies if needed
@@ -239,24 +265,29 @@ gh cache delete --all
 ## Best Practices
 
 ### 1. Commit Frequently
+
 - Smaller commits = faster CI runs
 - Easier to identify issues
 
 ### 2. Use Draft PRs
+
 - Draft PRs run CI but don't require all checks
 - Good for work-in-progress
 
 ### 3. Monitor CI Performance
+
 - Check workflow run times
 - Report slow workflows
 - Suggest optimizations
 
 ### 4. Keep Dependencies Updated
+
 - Regular dependency updates
 - Reduces security scan failures
 - Improves performance
 
 ### 5. Write Efficient Tests
+
 - Fast unit tests
 - Focused integration tests
 - Minimal E2E tests
@@ -301,6 +332,7 @@ A: Coverage reports are posted as PR comments and uploaded to Codecov.
 If critical issues arise, we can rollback:
 
 1. **Immediate Rollback**
+
    ```bash
    git revert <commit-hash>
    git push origin main

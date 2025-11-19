@@ -9,8 +9,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ErrorHandlingService } from '../services/error-handling.service';
 import { v4 as uuidv4 } from 'uuid';
+import { ErrorHandlingService } from '../services/error-handling.service';
 
 @Catch()
 export class ComprehensiveExceptionFilter implements ExceptionFilter {

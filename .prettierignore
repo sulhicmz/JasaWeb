@@ -1,0 +1,41 @@
+# GitHub templates and workflows (YAML formatting issues)
+.github/**/*.yml
+.github/**/*.yaml
+.github/scripts/validate-issue.js
+
+# Build outputs
+dist/
+build/
+coverage/
+.turbo/
+.next/
+.nuxt/
+.vercel/
+
+# Dependencies
+node_modules/
+
+# Cache
+.cache/
+.eslintcache
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Lock files
+package-lock.json
+yarn.lock

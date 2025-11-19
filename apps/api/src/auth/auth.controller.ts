@@ -8,13 +8,13 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
-import { Public } from '../common/decorators/public.decorator';
-import { RefreshTokenService } from './refresh-token.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Request as ExpressRequest } from 'express';
+import { Public } from '../common/decorators/public.decorator';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { AuthService } from './auth.service';
+import { LoginUserDto } from './dto/login-user.dto';
+import { RefreshTokenService } from './refresh-token.service';
 
 type AuthenticatedRequest = ExpressRequest & { user?: unknown };
 
@@ -22,7 +22,7 @@ type AuthenticatedRequest = ExpressRequest & { user?: unknown };
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private refreshTokenService: RefreshTokenService,
+    private refreshTokenService: RefreshTokenService
   ) {}
 
   @Public()
@@ -49,7 +49,8 @@ export class AuthController {
     }
 
     try {
-      const result = await this.refreshTokenService.rotateRefreshToken(refreshToken);
+      const result =
+        await this.refreshTokenService.rotateRefreshToken(refreshToken);
       if (!result) {
         return {
           statusCode: HttpStatus.UNAUTHORIZED,

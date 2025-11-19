@@ -41,7 +41,8 @@
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
     "security:scan": "node scripts/security-scan.js",
-    "postinstall": "node scripts/js-yaml-compat.js"
+    "postinstall": "node scripts/js-yaml-compat.js",
+    "prepare": "husky"
   },
   "keywords": [
     "astro",
@@ -51,12 +52,18 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@types/node": "^24.10.1",
     "@types/react": "^18.3.26",
     "@types/react-dom": "^18.3.7",
     "concurrently": "^8.2.2",
     "eslint": "^9.39.1",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-security": "^3.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.47.0",
@@ -66,6 +73,15 @@
     "node": ">=20.0.0"
   },
   "packageManager": "pnpm@8.15.0",
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
   "pnpm": {
     "overrides": {
       "js-yaml": "4.1.1",
