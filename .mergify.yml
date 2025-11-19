@@ -3,3 +3,10 @@ queue_rules:
     merge_method: rebase
     update_method: rebase
     autoqueue: true
+priority_rules:
+  - name: old
+    priority: high
+    conditions:
+      - and:
+          - base = main
+    allow_checks_interruption: false
