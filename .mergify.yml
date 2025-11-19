@@ -9,6 +9,5 @@ priority_rules:
   - name: main-branch-high-priority
     priority: high
     conditions:
-      - and:
-          - base = main
+      - base = main
     allow_checks_interruption: false
