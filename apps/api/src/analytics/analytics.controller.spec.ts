@@ -114,12 +114,30 @@ describe('AnalyticsController', () => {
       };
 
       jest
-        .spyOn(service, 'getOverviewAnalytics')
-        .mockResolvedValue(mockOverview);
+        .spyOn(service, 'getProjectAnalytics')
+        .mockResolvedValue(mockOverview.projects);
+      jest
+        .spyOn(service, 'getTeamPerformanceAnalytics')
+        .mockResolvedValue(mockOverview.teamPerformance);
+      jest
+        .spyOn(service, 'getFinancialAnalytics')
+        .mockResolvedValue(mockOverview.financial);
+      jest
+        .spyOn(service, 'getClientInsightsAnalytics')
+        .mockResolvedValue(mockOverview.clientInsights);
 
       const result = await controller.getOverviewAnalytics('org-123');
 
-      expect(service.getOverviewAnalytics).toHaveBeenCalledWith('org-123', {});
+      expect(service.getProjectAnalytics).toHaveBeenCalledWith('org-123', {});
+      expect(service.getTeamPerformanceAnalytics).toHaveBeenCalledWith(
+        'org-123',
+        {}
+      );
+      expect(service.getFinancialAnalytics).toHaveBeenCalledWith('org-123', {});
+      expect(service.getClientInsightsAnalytics).toHaveBeenCalledWith(
+        'org-123',
+        {}
+      );
       expect(result).toEqual(mockOverview);
     });
   });
