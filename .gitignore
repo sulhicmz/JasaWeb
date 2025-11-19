@@ -18,6 +18,7 @@ build/
 
 # TypeScript build info
 *.tsbuildinfo
+**/*.tsbuildinfo
 
 # Testing
 coverage/
