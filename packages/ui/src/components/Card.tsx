@@ -5,20 +5,31 @@ export interface CardProps {
   className?: string;
   title?: string;
   description?: string;
+  onClick?: () => void;
 }
 
-const Card: React.FC<CardProps> = ({ 
-  children, 
-  className = '', 
-  title, 
-  description 
+const Card: React.FC<CardProps> = ({
+  children,
+  className = '',
+  title,
+  description,
+  onClick,
 }) => {
   return (
-    <div className={`rounded-xl border bg-card text-card-foreground shadow ${className}`}>
+    <div
+      className={`rounded-xl border bg-card text-card-foreground shadow ${className}`}
+      onClick={onClick}
+    >
       {(title || description) && (
         <div className="p-6 pb-4">
-          {title && <h3 className="font-semibold leading-none tracking-tight mb-1">{title}</h3>}
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+          {title && (
+            <h3 className="font-semibold leading-none tracking-tight mb-1">
+              {title}
+            </h3>
+          )}
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
         </div>
       )}
       <div className={!title && !description ? 'p-6' : 'px-6 pt-0 pb-6'}>
