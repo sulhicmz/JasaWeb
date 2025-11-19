@@ -1,0 +1,5 @@
+queue_rules:
+  - name: open pr
+    merge_method: rebase
+    update_method: rebase
+    autoqueue: true
