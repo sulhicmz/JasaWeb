@@ -42,7 +42,7 @@
     "security:outdated": "pnpm outdated",
     "security:scan": "node scripts/security-scan.js",
     "postinstall": "node scripts/js-yaml-compat.js",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "keywords": [
     "astro",
