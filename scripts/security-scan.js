@@ -15,13 +15,28 @@ console.log('🔒 Starting Security Scan...\n');
 let packageManager = 'npm'; // default fallback
 if (fs.existsSync('pnpm-lock.yaml')) {
   try {
-    execSync('which pnpm', { stdio: 'pipe' });
+    execSync('pnpm --version', { stdio: 'pipe' });
     packageManager = 'pnpm';
+    console.log('✅ Using pnpm for security scanning\n');
   } catch (error) {
     console.log(
-      '⚠️  pnpm-lock.yaml found but pnpm not installed, using npm fallback\n'
+      '⚠️  pnpm-lock.yaml found but pnpm not available, using npm fallback\n'
     );
+    // Try to use npm if pnpm is not available
+    try {
+      execSync('npm --version', { stdio: 'pipe' });
+      packageManager = 'npm';
+      console.log('✅ Using npm as fallback for security scanning\n');
+    } catch (npmError) {
+      console.log('❌ Neither pnpm nor npm available for security scanning\n');
+      process.exit(1);
+    }
   }
+} else if (fs.existsSync('package-lock.json')) {
+  packageManager = 'npm';
+  console.log('✅ Using npm for security scanning\n');
+} else {
+  console.log('⚠️  No lockfile found, security scanning may be incomplete\n');
 }
 
 const results = {
@@ -129,10 +144,41 @@ checkFilePatterns(
 const lockFile =
   packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'package-lock.json';
 if (fs.existsSync(lockFile)) {
-  runCommand(
+  // Run audit with different levels for comprehensive scanning
+  const auditOutput = runCommand(
     `${packageManager} audit --audit-level moderate`,
-    `Running ${packageManager} audit`
+    `Running ${packageManager} audit (moderate level)`
   );
+
+  // Also check for high-severity vulnerabilities specifically
+  runCommand(
+    `${packageManager} audit --audit-level high`,
+    `Running ${packageManager} audit (high severity check)`
+  );
+
+  // Check for pnpm overrides if using pnpm
+  if (packageManager === 'pnpm') {
+    console.log('🔍 Checking pnpm overrides configuration...');
+    try {
+      const packageJsonPath = path.join(process.cwd(), 'package.json');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+
+      if (packageJson.pnpm && packageJson.pnpm.overrides) {
+        const overridesCount = Object.keys(packageJson.pnpm.overrides).length;
+        results.passed.push('pnpm overrides configuration');
+        console.log(
+          `✅ pnpm overrides configured with ${overridesCount} overrides\n`
+        );
+      } else {
+        results.warnings.push('pnpm overrides configuration');
+        console.log(
+          '⚠️  No pnpm overrides found - consider adding security overrides\n'
+        );
+      }
+    } catch (error) {
+      console.log('⚠️  Error checking pnpm overrides configuration\n');
+    }
+  }
 } else {
   console.log(`⚠️  No ${lockFile} found, skipping ${packageManager} audit`);
   console.log('   Consider running dependency audits in your CI environment\n');
@@ -221,6 +267,56 @@ try {
   }
 } catch (error) {
   console.log('⚠️  Error checking CORS configuration\n');
+}
+
+// 11. Check for security-related environment variables
+console.log('🔍 Checking for security environment variables...');
+try {
+  const envExamplePath = path.join(process.cwd(), '.env.example');
+  if (fs.existsSync(envExamplePath)) {
+    const envContent = fs.readFileSync(envExamplePath, 'utf-8');
+    const securityVars = ['JWT_SECRET', 'DATABASE_URL', 'ENCRYPTION_KEY'];
+    const foundVars = securityVars.filter((varName) =>
+      envContent.includes(varName)
+    );
+
+    if (foundVars.length >= 2) {
+      results.passed.push('Security environment variables');
+      console.log(
+        `✅ Security environment variables documented (${foundVars.length}/${securityVars.length})\n`
+      );
+    } else {
+      results.warnings.push('Security environment variables');
+      console.log(
+        `⚠️  Limited security environment variables documented (${foundVars.length}/${securityVars.length})\n`
+      );
+    }
+  } else {
+    results.warnings.push('Security environment variables');
+    console.log('⚠️  No .env.example file found\n');
+  }
+} catch (error) {
+  console.log('⚠️  Error checking security environment variables\n');
+}
+
+// 12. Check for rate limiting configuration
+console.log('🔍 Checking for rate limiting configuration...');
+try {
+  const appModulePath = path.join(process.cwd(), 'apps/api/src/app.module.ts');
+  const appModuleContent = fs.readFileSync(appModulePath, 'utf-8');
+
+  if (
+    appModuleContent.includes('ThrottlerModule') ||
+    appModuleContent.includes('throttler')
+  ) {
+    results.passed.push('Rate limiting configuration');
+    console.log('✅ Rate limiting is configured\n');
+  } else {
+    results.warnings.push('Rate limiting configuration');
+    console.log('⚠️  Rate limiting configuration not found\n');
+  }
+} catch (error) {
+  console.log('⚠️  Error checking rate limiting configuration\n');
 }
 
 // Print summary
