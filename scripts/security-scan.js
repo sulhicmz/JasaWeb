@@ -15,13 +15,23 @@ console.log('🔒 Starting Security Scan...\n');
 let packageManager = 'npm'; // default fallback
 if (fs.existsSync('pnpm-lock.yaml')) {
   try {
-    execSync('which pnpm', { stdio: 'pipe' });
+    // Try multiple methods to detect pnpm
+    execSync('pnpm --version', { stdio: 'pipe' });
     packageManager = 'pnpm';
   } catch (error) {
-    console.log(
-      '⚠️  pnpm-lock.yaml found but pnpm not installed, using npm fallback\n'
-    );
+    try {
+      execSync('which pnpm', { stdio: 'pipe' });
+      packageManager = 'pnpm';
+    } catch (whichError) {
+      console.log(
+        '⚠️  pnpm-lock.yaml found but pnpm not available, using npm fallback\n'
+      );
+    }
   }
+} else if (fs.existsSync('package-lock.json')) {
+  packageManager = 'npm';
+} else if (fs.existsSync('yarn.lock')) {
+  packageManager = 'yarn';
 }
 
 const results = {
