@@ -86,13 +86,74 @@ async function bootstrap() {
   // Setup Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('JasaWeb API')
-    .setDescription('API for JasaWeb client portal')
-    .setVersion('1.0')
-    .addBearerAuth()
+    .setDescription(
+      `
+    ## Overview
+    The JasaWeb API provides comprehensive endpoints for managing client projects, collaborations, and business operations.
+    
+    ## Authentication
+    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    \`Authorization: Bearer <your-jwt-token>\`
+    
+    ## Multi-Tenancy
+    This API supports multi-tenant architecture. Include the organization ID in the X-Tenant-ID header.
+    
+    ## Rate Limiting
+    API endpoints are rate-limited to ensure fair usage. Excessive requests will be throttled.
+    
+    ## Error Handling
+    The API uses standard HTTP status codes and returns detailed error messages in JSON format.
+    `
+    )
+    .setVersion('1.0.0')
+    .setContact(
+      'JasaWeb Support',
+      'https://jasaweb.com/support',
+      'support@jasaweb.com'
+    )
+    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth'
+    )
+    .addApiKey(
+      {
+        type: 'apiKey',
+        name: 'X-Tenant-ID',
+        description: 'Organization ID for multi-tenancy',
+        in: 'header',
+      },
+      'tenant-id'
+    )
+    .addTag('Authentication', 'User authentication and authorization')
+    .addTag('Users', 'User management operations')
+    .addTag('Projects', 'Project management and tracking')
+    .addTag('Analytics', 'Analytics and reporting')
+    .addTag('Files', 'File upload and management')
+    .addTag('Health', 'System health checks')
+    .addTag('Invoices', 'Invoice management')
+    .addTag('Milestones', 'Project milestone tracking')
+    .addTag('Tickets', 'Support ticket management')
+    .addTag('Approvals', 'Approval workflow management')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'JasaWeb API Documentation',
+    customfavIcon: '/favicon.ico',
+    customCss: `
+      .topbar-wrapper img { content: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzM2NjZkNiIvPgo8cGF0aCBkPSJNMjAgMTBMMjUgMTVMMjAgMjBMMTUgMTVMMjAgMTBaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMjAgMjBMMjUgMjVMMjAgMzBMMTUgMjVMMjAgMjBaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K'); }
+      .swagger-ui .topbar { background-color: #3666d6; }
+      .swagger-ui .topbar-wrapper .link { color: white; }
+    `,
+  });
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   await app.listen(port, '0.0.0.0');
