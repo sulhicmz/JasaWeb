@@ -11,6 +11,10 @@ export default defineConfig({
     service: {
       entrypoint: 'astro/assets/services/sharp',
     },
+    // Optimize images for better performance
+    domains: ['localhost', 'jasaweb.com'],
+    format: ['webp', 'avif', 'jpg'],
+    quality: 80,
   },
   vite: {
     plugins: [tailwindcss()],
@@ -22,6 +26,26 @@ export default defineConfig({
       include: /\.tsx?$/,
       exclude: /node_modules/,
     },
+    // Performance optimizations
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            charts: ['chart.js', 'react-chartjs-2'],
+            utils: ['socket.io-client'],
+          },
+        },
+      },
+    },
+    // Enable code splitting and tree shaking
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'chart.js'],
+    },
   },
   integrations: [react()],
+  // Performance settings
+  compressHTML: true,
+  // Enable prefetch for better perceived performance
+  prefetch: true,
 });

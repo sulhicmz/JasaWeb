@@ -41,6 +41,11 @@
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
     "security:scan": "node scripts/security-scan.js",
+    "performance:audit": "npm run build:web && npm run build:api && npx lighthouse http://localhost:4321 --output=html --output-path=./performance-report.html",
+    "performance:monitor": "cd apps/api && pnpm start:dev",
+    "performance:optimize": "./scripts/performance-optimization.sh",
+    "cache:clear": "cd apps/api && pnpm cache:clear",
+    "db:optimize": "cd apps/api && pnpm db:optimize",
     "postinstall": "node scripts/js-yaml-compat.js"
   },
   "keywords": [

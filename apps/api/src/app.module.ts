@@ -26,6 +26,9 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { PerformanceModule } from './performance/performance.module';
+import { PerformanceInterceptor } from './common/interceptors/performance.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 const parseEnvNumber = (
   value: string | undefined,
@@ -69,6 +72,7 @@ const parseEnvNumber = (
     SessionModule,
     HealthModule,
     AnalyticsModule,
+    PerformanceModule,
     PrismaModule,
     MultiTenantPrismaModule,
   ],
@@ -80,6 +84,10 @@ const parseEnvNumber = (
       useClass: MultiTenantGuard,
     },
     RolesGuard, // Register RolesGuard for use with @UseGuards(RolesGuard)
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: PerformanceInterceptor,
+    },
   ],
 })
 export class AppModule implements NestModule {

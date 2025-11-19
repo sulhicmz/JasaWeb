@@ -8,6 +8,12 @@ export interface Props {
 }
 
 const { title } = Astro.props;
+
+// Performance optimization: Preload critical resources
+const preloadResources = [
+  { href: '/src/styles/global.css', as: 'style' },
+  { href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css', as: 'style' },
+];
 ---
 
 <!DOCTYPE html>
@@ -17,8 +23,41 @@ const { title } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <title>{title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website'}</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <!-- Performance optimization: Preload critical resources -->
+    {preloadResources.map(resource => (
+      <link rel="preload" href={resource.href} as={resource.as} />
+    ))}
+    
+    <!-- DNS prefetch for external domains -->
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    
+    <!-- Preconnect for critical external resources -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    
+    <!-- Stylesheets with async loading -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="/src/styles/global.css" />
+    
+    <!-- Performance monitoring -->
+    <script>
+      // Enable performance monitoring
+      window.performanceMark = window.performanceMark || function(name) {
+        if (window.performance && window.performance.mark) {
+          window.performance.mark(name);
+        }
+      };
+      
+      // Mark critical rendering points
+      window.addEventListener('DOMContentLoaded', function() {
+        window.performanceMark('dom-loaded');
+      });
+      
+      window.addEventListener('load', function() {
+        window.performanceMark('page-loaded');
+      });
+    </script>
   </head>
   <body class="min-h-screen flex flex-col">
     <Header />
@@ -26,5 +65,47 @@ const { title } = Astro.props;
       <slot />
     </main>
     <Footer />
+    
+    <!-- Performance Dashboard (only in development) -->
+    {import.meta.env.DEV && (
+      <script type="module">
+        import { performanceMonitor } from '/src/services/performanceMonitor.ts';
+        import { serviceWorkerManager } from '/src/services/serviceWorkerManager.ts';
+        
+        // Initialize service worker
+        serviceWorkerManager.register({
+          onSuccess: (registration) => {
+            console.log('Service Worker registered successfully');
+          },
+          onUpdate: (registration) => {
+            console.log('Service Worker update available');
+            // Show update notification to user
+          },
+          onError: (error) => {
+            console.error('Service Worker registration failed:', error);
+          }
+        });
+        
+        // Initialize performance monitoring
+        console.log('Performance monitoring initialized');
+      </script>
+    )}
+    
+    <!-- Service Worker registration (production) -->
+    {import.meta.env.PROD && (
+      <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+              .then(function(registration) {
+                console.log('SW registered: ', registration);
+              })
+              .catch(function(registrationError) {
+                console.log('SW registration failed: ', registrationError);
+              });
+          });
+        }
+      </script>
+    )}
   </body>
 </html>
