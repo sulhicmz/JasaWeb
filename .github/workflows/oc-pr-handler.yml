@@ -5,12 +5,6 @@ on:
     - cron: '0 */1 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pull-requests: read
-  issues: read
-  actions: read
-
 # global lock: only 1 instance of this workflow running across events
 concurrency:
   group: ${{ github.workflow }}-global
@@ -39,11 +33,6 @@ jobs:
       GIT_COMMITTER_EMAIL: pr_handler@jasaweb.co.id
       
     steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -54,8 +43,8 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Run OpenCode1
-        id: run_issue_solver
+      - name: Run PR Handler
+        id: run_pr_handler
         timeout-minutes: 20
         run: |
           opencode run "$(cat <<'PROMPT'
