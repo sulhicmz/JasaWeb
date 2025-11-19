@@ -77,7 +77,8 @@
       "node-notifier": "8.0.1",
       "braces": "3.0.3",
       "micromatch": "4.0.8",
-      "glob": "11.1.0"
+      "glob": "11.1.0",
+      "mjml": "4.17.1"
     }
   }
 }
