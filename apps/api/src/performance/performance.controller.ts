@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   UseGuards,
   UseInterceptors,
   HttpCode,
@@ -8,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
+import { Roles, Role } from '../common/decorators/roles.decorator';
 import { PerformanceMonitoringService } from '../common/services/performance-monitoring.service';
 import { DatabaseOptimizationService } from '../common/services/database-optimization.service';
 import { EnhancedCacheService } from '../common/services/enhanced-cache.service';
@@ -26,7 +27,7 @@ export class PerformanceController {
   ) {}
 
   @Get('metrics')
-  @Roles('admin')
+  @Roles(Role.OrgAdmin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get performance metrics' })
   @ApiResponse({
@@ -64,7 +65,7 @@ export class PerformanceController {
   }
 
   @Get('database/recommendations')
-  @Roles('admin')
+  @Roles(Role.OrgAdmin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get database optimization recommendations' })
   @ApiResponse({
@@ -86,7 +87,7 @@ export class PerformanceController {
   }
 
   @Get('cache/stats')
-  @Roles('admin')
+  @Roles(Role.OrgAdmin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get cache statistics' })
   @ApiResponse({
@@ -103,7 +104,7 @@ export class PerformanceController {
   }
 
   @Post('database/optimize')
-  @Roles('admin')
+  @Roles(Role.OrgAdmin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Run database optimization' })
   @ApiResponse({ status: 200, description: 'Database optimization completed' })
@@ -117,7 +118,7 @@ export class PerformanceController {
   }
 
   @Post('database/create-indexes')
-  @Roles('admin')
+  @Roles(Role.OrgAdmin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Create recommended database indexes' })
   @ApiResponse({ status: 200, description: 'Database indexes created' })
@@ -131,7 +132,7 @@ export class PerformanceController {
   }
 
   @Post('cache/clear')
-  @Roles('admin')
+  @Roles(Role.OrgAdmin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Clear application cache' })
   @ApiResponse({ status: 200, description: 'Cache cleared successfully' })

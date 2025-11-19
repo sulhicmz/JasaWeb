@@ -47,7 +47,9 @@ export class EnhancedCacheService {
       this.logger.debug(`Cache MISS: ${fullKey}`);
       return null;
     } catch (error) {
-      this.logger.warn(`Cache get error for key ${fullKey}:`, error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Cache get error for key ${fullKey}:`, errorMessage);
       return null;
     }
   }
@@ -67,7 +69,9 @@ export class EnhancedCacheService {
       await this.cacheManager.set(fullKey, value, ttl * 1000); // Convert to milliseconds
       this.logger.debug(`Cache SET: ${fullKey} (TTL: ${ttl}s)`);
     } catch (error) {
-      this.logger.warn(`Cache set error for key ${fullKey}:`, error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Cache set error for key ${fullKey}:`, errorMessage);
     }
   }
 
@@ -81,7 +85,9 @@ export class EnhancedCacheService {
       await this.cacheManager.del(fullKey);
       this.logger.debug(`Cache DELETE: ${fullKey}`);
     } catch (error) {
-      this.logger.warn(`Cache delete error for key ${fullKey}:`, error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.warn(`Cache delete error for key ${fullKey}:`, errorMessage);
     }
   }
 
@@ -162,7 +168,9 @@ export class EnhancedCacheService {
         await this.getOrSet(key, factory, options);
         this.logger.debug(`Warmed up cache: ${key}`);
       } catch (error) {
-        this.logger.warn(`Failed to warm up cache ${key}:`, error.message);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn(`Failed to warm up cache ${key}:`, errorMessage);
       }
     });
 

@@ -75,7 +75,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  REDIS_PASSWORD: string;
+  REDIS_PASSWORD?: string;
 
   @IsNumber()
   @Min(0)
@@ -85,7 +85,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  REDIS_URL: string;
+  REDIS_URL?: string;
 
   @IsString()
   @IsOptional()

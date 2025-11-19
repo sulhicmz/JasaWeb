@@ -14,8 +14,18 @@ export const Cache = (ttl: number = 300) => {
     propertyKey?: string,
     descriptor?: PropertyDescriptor
   ) => {
-    SetMetadata(CACHE_KEY_METADATA, true)(target, propertyKey, descriptor);
-    SetMetadata(CACHE_TTL_METADATA, ttl)(target, propertyKey, descriptor);
+    if (propertyKey) {
+      SetMetadata(CACHE_KEY_METADATA, true)(
+        target,
+        propertyKey,
+        descriptor as PropertyDescriptor
+      );
+      SetMetadata(CACHE_TTL_METADATA, ttl)(
+        target,
+        propertyKey,
+        descriptor as PropertyDescriptor
+      );
+    }
   };
 };
 

@@ -97,9 +97,11 @@ export class DatabaseOptimizationService {
         await this.createIndex(rec);
         this.logger.log(`Created index: ${rec.indexName}`);
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         this.logger.error(
           `Failed to create index ${rec.indexName}:`,
-          error.message
+          errorMessage
         );
       }
     }
@@ -204,7 +206,9 @@ export class DatabaseOptimizationService {
         })),
       };
     } catch (error) {
-      this.logger.error('Failed to get database metrics:', error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Failed to get database metrics:', errorMessage);
       return {
         connectionCount: 0,
         activeConnections: 0,
@@ -223,7 +227,9 @@ export class DatabaseOptimizationService {
       await this.prisma.$queryRaw`ANALYZE`;
       this.logger.log('Database statistics updated');
     } catch (error) {
-      this.logger.error('Failed to optimize database:', error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Failed to optimize database:', errorMessage);
     }
   }
 
@@ -241,9 +247,11 @@ export class DatabaseOptimizationService {
 
       return Number(result[0]?.count || 0) > 0;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.warn(
         `Failed to check index existence for ${tableName}:`,
-        error.message
+        errorMessage
       );
       return false;
     }

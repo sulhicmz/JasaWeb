@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { redisStore } from 'cache-manager-redis-store';
 import { PerformanceMonitoringService } from './performance-monitoring.service';
 
 @Module({
@@ -22,6 +21,8 @@ import { PerformanceMonitoringService } from './performance-monitoring.service';
 
         if (isRedisAvailable) {
           try {
+            // Dynamically import redis store to avoid build issues
+            const redisStore = require('cache-manager-redis-store').default;
             return {
               store: redisStore,
               host: configService.get<string>('REDIS_HOST', 'localhost'),
@@ -33,9 +34,11 @@ import { PerformanceMonitoringService } from './performance-monitoring.service';
               isGlobal: true,
             };
           } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : 'Unknown error';
             console.warn(
               'Redis connection failed, falling back to memory cache:',
-              error.message
+              errorMessage
             );
           }
         }
