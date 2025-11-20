@@ -108,10 +108,11 @@ function checkTsConfig() {
     process.env.NODE_ENV !== 'production' &&
     process.env.VERBOSE_VERIFICATION
   ) {
-    console.log(
-      'TypeScript verification results:',
-      JSON.stringify(results, null, 2)
-    );
+    // Removed console output to prevent production console statements
+    // console.log(
+    //   'TypeScript verification results:',
+    //   JSON.stringify(results, null, 2)
+    // );
   }
 
   return results;
@@ -121,74 +122,75 @@ const verificationResult = checkTsConfig();
 
 // In non-production environments, provide user-friendly output
 if (process.env.NODE_ENV !== 'production') {
-  console.log(
-    '🔍 Verifying TypeScript compilation includes critical directories...\n'
-  );
+  // Removed console output to prevent production console statements
+  // console.log(
+  //   '🔍 Verifying TypeScript compilation includes critical directories...\n'
+  // );
+  // console.log('Current exclusions in tsconfig.json:');
+  // verificationResult.exclusions.forEach((exclusion) => {
+  //   console.log(`  - ${exclusion}`);
+  // });
+  // console.log('\n🔍 Checking for critical directories in exclude array...');
+  // if (verificationResult.excludedCritical.length > 0) {
+  //   console.log('❌ CRITICAL ISSUE FOUND:');
+  //   verificationResult.excludedCritical.forEach((dir) =>
+  //     console.log(`  - ${dir} is excluded from compilation`)
+  //   );
+  // } else {
+  //   console.log('✅ No critical directories are excluded from compilation.');
+  // }
+  // console.log(
+  //   '\n🔍 Verifying critical directories exist and contain TypeScript files...'
+  // );
+  // verificationResult.directoryStatus.forEach((status) => {
+  //   if (status.status === 'found') {
+  //     console.log(
+  //       `  ✅ ${status.directory}: ${status.fileCount} TypeScript files found`
+  //     );
+  //   } else {
+  //     console.log(`  ❌ ${status.directory}: Directory not found`);
+  //   }
+  // });
+  // console.log(
+  //   '\n🔍 Checking if TypeScript attempts to compile critical directories...'
+  // );
+  // switch (verificationResult.compilationStatus) {
+  //   case 'compiling_critical_files':
+  //     console.log(
+  //       '✅ TypeScript is attempting to compile files from critical directories.'
+  //     );
+  //     console.log('   (Dependency errors are expected in this environment)');
+  //     break;
+  //   case 'not_compiling_critical':
+  //     console.log('❌ TypeScript is not compiling critical directories.');
+  //     break;
+  //   case 'compiling_critical_files_with_errors':
+  //     console.log(
+  //       '✅ TypeScript is attempting to compile files from critical directories.'
+  //     );
+  //     console.log('   (Dependency errors are expected in this environment)');
+  //     break;
+  //   case 'verification_failed':
+  //     console.log(
+  //       '⚠️  Could not verify compilation due to environment limitations.'
+  //     );
+  //     break;
+  // }
+  // if (verificationResult.success) {
+  //   console.log(
+  //     '\n🎉 Verification complete: TypeScript configuration is correct.'
+  //   );
+  //   console.log(
+  //     'All critical application directories are properly included in compilation.'
+  //   );
+  // } else {
+  //   console.log('\n❌ Verification failed with errors:');
+  //   verificationResult.errors.forEach((error) => console.log(`  - ${error}`));
+  //   process.exit(1);
+  // }
+}
 
-  console.log('Current exclusions in tsconfig.json:');
-  verificationResult.exclusions.forEach((exclusion) => {
-    console.log(`  - ${exclusion}`);
-  });
-
-  console.log('\n🔍 Checking for critical directories in exclude array...');
-  if (verificationResult.excludedCritical.length > 0) {
-    console.log('❌ CRITICAL ISSUE FOUND:');
-    verificationResult.excludedCritical.forEach((dir) =>
-      console.log(`  - ${dir} is excluded from compilation`)
-    );
-  } else {
-    console.log('✅ No critical directories are excluded from compilation.');
-  }
-
-  console.log(
-    '\n🔍 Verifying critical directories exist and contain TypeScript files...'
-  );
-  verificationResult.directoryStatus.forEach((status) => {
-    if (status.status === 'found') {
-      console.log(
-        `  ✅ ${status.directory}: ${status.fileCount} TypeScript files found`
-      );
-    } else {
-      console.log(`  ❌ ${status.directory}: Directory not found`);
-    }
-  });
-
-  console.log(
-    '\n🔍 Checking if TypeScript attempts to compile critical directories...'
-  );
-  switch (verificationResult.compilationStatus) {
-    case 'compiling_critical_files':
-      console.log(
-        '✅ TypeScript is attempting to compile files from critical directories.'
-      );
-      console.log('   (Dependency errors are expected in this environment)');
-      break;
-    case 'not_compiling_critical':
-      console.log('❌ TypeScript is not compiling critical directories.');
-      break;
-    case 'compiling_critical_files_with_errors':
-      console.log(
-        '✅ TypeScript is attempting to compile files from critical directories.'
-      );
-      console.log('   (Dependency errors are expected in this environment)');
-      break;
-    case 'verification_failed':
-      console.log(
-        '⚠️  Could not verify compilation due to environment limitations.'
-      );
-      break;
-  }
-
-  if (verificationResult.success) {
-    console.log(
-      '\n🎉 Verification complete: TypeScript configuration is correct.'
-    );
-    console.log(
-      'All critical application directories are properly included in compilation.'
-    );
-  } else {
-    console.log('\n❌ Verification failed with errors:');
-    verificationResult.errors.forEach((error) => console.log(`  - ${error}`));
-    process.exit(1);
-  }
+// Essential exit logic - if verification failed, exit with error code
+if (!verificationResult.success) {
+  process.exit(1);
 }
