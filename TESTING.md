@@ -1,53 +1,75 @@
 # Testing Guide
 
-## API Testing
+This document provides guidelines for testing the JasaWeb monorepo using Jest as the standard testing framework.
 
-This document provides guidelines for testing the JasaWeb API application.
+## Running Tests
 
-### Running Tests
+### Run all tests across the monorepo
 
-#### Run all API tests
+```bash
+pnpm test
+```
+
+### Run tests in watch mode
+
+```bash
+pnpm test:watch
+```
+
+### Run tests with coverage
+
+```bash
+pnpm test:coverage
+```
+
+### Run API tests only
 
 ```bash
 pnpm test:api
 ```
 
-#### Run tests from API directory
+### Run Web tests only
+
+```bash
+pnpm test:web
+```
+
+### Run unit tests only
+
+```bash
+pnpm test:unit
+```
+
+### Run integration tests only
+
+```bash
+pnpm test:integration
+```
+
+### Run tests from specific app directory
 
 ```bash
 cd apps/api && pnpm test
-```
-
-#### Run tests in watch mode
-
-```bash
-cd apps/api && pnpm test:watch
-```
-
-#### Run tests with coverage
-
-```bash
-cd apps/api && pnpm test:cov
-```
-
-#### Run only unit tests
-
-```bash
-cd apps/api && pnpm test:unit
-```
-
-#### Run integration tests
-
-```bash
-cd apps/api && pnpm test:integration
+cd apps/web && pnpm test
 ```
 
 ### Test Structure
 
 - **Unit Tests**: Located alongside source files with `.spec.ts` extension
-- **Integration Tests**: Located in `test/integration` directory
-- **Test Configuration**: `test/jest.config.js`
+- **Integration Tests**: Located alongside source files with `.test.ts` extension or in `test/integration` directory
+- **E2E Tests**: Located in `tests/e2e` directory (using Playwright)
+- **Test Configuration**: `jest.config.js` (workspace level) and `apps/api/test/jest.config.js` (API specific)
 - **Coverage Reports**: Generated in `coverage/` directory
+
+### Testing Framework
+
+This monorepo uses **Jest** as the standard testing framework for all packages:
+
+- Consistent configuration across all apps and packages
+- TypeScript support via ts-jest
+- Coverage reporting with configurable thresholds
+- Parallel test execution for better performance
+- Mock utilities and global test setup
 
 ### Testing Guidelines
 
