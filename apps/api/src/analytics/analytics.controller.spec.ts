@@ -10,7 +10,6 @@ jest.mock('../common/decorators/current-organization-id.decorator', () => ({
       // Mock decorator implementation
     },
 }));
-
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
   let service: AnalyticsService;
