@@ -5,12 +5,6 @@ on:
     - cron: '0 */1 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pull-requests: read
-  issues: read
-  actions: read
-
 # global lock: only 1 instance of this workflow running across events
 concurrency:
   group: ${{ github.workflow }}-global
@@ -18,8 +12,8 @@ concurrency:
 
 jobs:
   opencode:
-    name: opencode - issue solver
-    runs-on: ubuntu-24.04-arm
+    name: opencode - pr handler
+    runs-on: self-hosted
     timeout-minutes: 40
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
@@ -33,17 +27,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      GIT_AUTHOR_NAME: pr_handler
-      GIT_AUTHOR_EMAIL: pr_handler@jasaweb.co.id
-      GIT_COMMITTER_NAME: pr_handler
-      GIT_COMMITTER_EMAIL: pr_handler@jasaweb.co.id
       
     steps:
-      - name: Harden runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
       - name: Checkout
         uses: actions/checkout@v5
         with:
@@ -54,8 +39,8 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Run OpenCode1
-        id: run_issue_solver
+      - name: Run PR Handler
+        id: run_pr_handler
         timeout-minutes: 20
         run: |
           opencode run "$(cat <<'PROMPT'
