@@ -1,0 +1,55 @@
+module.exports = {
+  displayName: 'JasaWeb',
+  testEnvironment: 'node',
+  projects: [
+    {
+      displayName: 'API',
+      testMatch: ['<rootDir>/apps/api/src/**/?(*.)+(spec|test).ts'],
+      setupFilesAfterEnv: ['<rootDir>/apps/api/test/setup.ts'],
+      testTimeout: 10000,
+      collectCoverageFrom: [
+        'apps/api/src/**/*.ts',
+        '!apps/api/src/**/*.dto.ts',
+        '!apps/api/src/**/*.entity.ts',
+        '!apps/api/src/**/*.interface.ts',
+        '!apps/api/src/main.ts',
+      ],
+      coverageDirectory: 'coverage',
+      coverageReporters: ['text', 'lcov', 'html'],
+    },
+    {
+      displayName: 'Web',
+      testMatch: ['<rootDir>/apps/web/**/?(*.)+(spec|test).{ts,tsx}'],
+      testEnvironment: 'jsdom',
+      setupFilesAfterEnv: ['<rootDir>/apps/web/test/setup.ts'],
+      testTimeout: 10000,
+    },
+    {
+      displayName: 'UI Package',
+      testMatch: ['<rootDir>/packages/ui/**/?(*.)+(spec|test).{ts,tsx}'],
+      testEnvironment: 'jsdom',
+      setupFilesAfterEnv: ['<rootDir>/packages/ui/test/setup.ts'],
+      testTimeout: 10000,
+    },
+  ],
+  collectCoverageFrom: [
+    'apps/*/src/**/*.{ts,tsx}',
+    'packages/*/src/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/*.config.*',
+    '!**/node_modules/**',
+    '!**/coverage/**',
+    '!**/test/**',
+    '!**/tests/**',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  coverageThresholds: {
+    global: {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+  },
+};

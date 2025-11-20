@@ -23,10 +23,11 @@ Updated `apps/api/tsconfig.json`:
 
 ### 3. Vitest Configuration Updates
 
-Updated `vitest.config.ts`:
+Updated testing configuration to use Jest:
 
-- **Deprecated Options**: Replaced `threads: false` with `pool: 'threads'`
-- **Reporter Fix**: Changed `reporter` to `reporters` for proper Vitest 4.x compatibility
+- **Removed Vitest**: Eliminated `vitest.config.ts` and Vitest dependencies
+- **Standardized on Jest**: Created workspace-level `jest.config.js` for consistent testing
+- **Test Scripts**: Updated package.json scripts to use Jest across monorepo
 
 ## Benefits
 

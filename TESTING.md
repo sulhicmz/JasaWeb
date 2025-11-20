@@ -6,48 +6,55 @@ This document provides guidelines for testing the JasaWeb API application.
 
 ### Running Tests
 
-#### Run all API tests
+#### Run all tests across monorepo
 
 ```bash
-pnpm test:api
-```
-
-#### Run tests from API directory
-
-```bash
-cd apps/api && pnpm test
+pnpm test
 ```
 
 #### Run tests in watch mode
 
 ```bash
-cd apps/api && pnpm test:watch
+pnpm test:watch
 ```
 
 #### Run tests with coverage
 
 ```bash
-cd apps/api && pnpm test:cov
+pnpm test:coverage
 ```
 
-#### Run only unit tests
+#### Run only API tests
 
 ```bash
-cd apps/api && pnpm test:unit
+pnpm test:api
 ```
 
-#### Run integration tests
+#### Run only Web app tests
 
 ```bash
-cd apps/api && pnpm test:integration
+pnpm test:web
+```
+
+#### Run only UI package tests
+
+```bash
+pnpm test:ui
+```
+
+#### Run specific test file
+
+```bash
+pnpm test apps/api/src/users/users.service.spec.ts
 ```
 
 ### Test Structure
 
 - **Unit Tests**: Located alongside source files with `.spec.ts` extension
-- **Integration Tests**: Located in `test/integration` directory
-- **Test Configuration**: `test/jest.config.js`
+- **Integration Tests**: Located alongside source files with `.integration.test.ts` extension
+- **Test Configuration**: `jest.config.js` (workspace level) and `apps/api/test/jest.config.js`
 - **Coverage Reports**: Generated in `coverage/` directory
+- **Test Setup**: Each workspace has its own setup file in `test/setup.ts`
 
 ### Testing Guidelines
 
