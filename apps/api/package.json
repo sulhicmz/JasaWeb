@@ -34,13 +34,11 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
-<<<<<<< HEAD
     "@nestjs/platform-socket.io": "^11.0.0",
     "@nestjs/swagger": "^11.2.1",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^11.0.0",
->>>>>>> 1339446 (deps(deps-dev): bump @types/node from 20.19.25 to 24.10.1 (#294))
     "bcrypt": "^5.1.1",
     "cache-manager": "^7.2.3",
     "class-transformer": "^0.5.1",
@@ -72,9 +70,7 @@
     "@types/jest": "^29.5.0",
     "@types/luxon": "^3.7.1",
     "@types/multer": "^1.4.13",
-<<<<<<< HEAD
     "@types/node": "^24.10.1",
->>>>>>> 1339446 (deps(deps-dev): bump @types/node from 20.19.25 to 24.10.1 (#294))
     "@types/nodemailer": "^7.0.3",
     "@types/passport-jwt": "^4.0.0",
     "@types/passport-local": "^1.0.34",
