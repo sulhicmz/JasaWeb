@@ -1,10 +1,32 @@
 # Testing Guide
 
+## Overview
+
+JasaWeb uses **Jest** as the standardized testing framework across the entire monorepo. This ensures consistent testing practices and reliable CI/CD integration.
+
 ## API Testing
 
 This document provides guidelines for testing the JasaWeb API application.
 
 ### Running Tests
+
+#### Run all tests (monorepo-wide)
+
+```bash
+pnpm test
+```
+
+#### Run tests in watch mode
+
+```bash
+pnpm test:watch
+```
+
+#### Run tests with coverage
+
+```bash
+pnpm test:coverage
+```
 
 #### Run all API tests
 
@@ -46,8 +68,16 @@ cd apps/api && pnpm test:integration
 
 - **Unit Tests**: Located alongside source files with `.spec.ts` extension
 - **Integration Tests**: Located in `test/integration` directory
-- **Test Configuration**: `test/jest.config.js`
+- **Test Configuration**:
+  - Root level: `jest.config.js` (monorepo configuration)
+  - API level: `apps/api/test/jest.config.js` (API-specific configuration)
 - **Coverage Reports**: Generated in `coverage/` directory
+
+### Testing Framework
+
+- **Primary Framework**: Jest (used across the entire monorepo)
+- **API Testing**: Jest with NestJS testing utilities
+- **Future E2E Testing**: Playwright (planned for web application)
 
 ### Testing Guidelines
 
