@@ -48,13 +48,72 @@ const { title } = Astro.props;
     </div>
   </div>
 
-  <!-- Authentication Check Script -->
+  <!-- Mobile Detection and Authentication Script -->
   <script client:load>
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem('authToken');
     if (!isAuthenticated) {
       // Redirect to login page if not authenticated
       window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      return;
     }
+
+    // Mobile detection and redirect
+    function isMobileDevice() {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+      const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+      
+      return mobileRegex.test(userAgent) || (isTouchDevice && isSmallScreen);
+    }
+
+    // Check if user prefers mobile version
+    const prefersMobile = localStorage.getItem('preferMobileVersion') === 'true';
+    
+    // Redirect to mobile version if on mobile device or user prefers mobile
+    if (isMobileDevice() || prefersMobile) {
+      // Check if we're not already on mobile version
+      if (!window.location.pathname.includes('/mobile')) {
+        window.location.href = '/portal/mobile';
+      }
+    }
+
+    // Add mobile version toggle for desktop users
+    function addMobileToggle() {
+      if (!isMobileDevice()) {
+        const toggle = document.createElement('button');
+        toggle.innerHTML = '<i class="fas fa-mobile-alt mr-2"></i>Mobile Version';
+        toggle.className = 'fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors z-50 text-sm';
+        toggle.onclick = () => {
+          localStorage.setItem('preferMobileVersion', 'true');
+          window.location.href = '/portal/mobile';
+        };
+        document.body.appendChild(toggle);
+      }
+    }
+
+    // Add toggle after page loads
+    addMobileToggle();
+
+    // Listen for screen orientation changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (isMobileDevice() && !window.location.pathname.includes('/mobile')) {
+          window.location.href = '/portal/mobile';
+        }
+      }, 100);
+    });
+
+    // Listen for window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (isMobileDevice() && !window.location.pathname.includes('/mobile')) {
+          window.location.href = '/portal/mobile';
+        }
+      }, 500);
+    });
   </script>
 </Layout>

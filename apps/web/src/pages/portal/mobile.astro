@@ -1,0 +1,23 @@
+---
+// src/pages/portal/mobile.astro
+import MobilePortalLayout from '../../layouts/MobilePortalLayout.astro';
+import MobileDashboard from '../../components/portal/MobileDashboard.tsx';
+
+export interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<MobilePortalLayout title="Dashboard">
+  <!-- Mobile Optimization Styles -->
+  <link rel="stylesheet" href="/src/styles/mobile.css" />
+  
+  <div class="p-4 mobile-safe-top mobile-safe-bottom">
+    <MobileDashboard client:load />
+  </div>
+  
+  <!-- Mobile Optimization Script -->
+  <script src="/src/scripts/mobile-optimization.js"></script>
+</MobilePortalLayout>
