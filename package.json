@@ -19,8 +19,9 @@
     "test": "cd apps/api && pnpm test",
     "test:e2e": "playwright test",
     "test:api": "cd apps/api && pnpm test",
-    "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+<<<<<<< HEAD
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix"
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --build",
@@ -65,7 +66,8 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@8.15.0",
+<<<<<<< HEAD
+  "packageManager": "pnpm@8.15.0+sha512.ea45517d5285d123eac02c3793505fa1fd6da90a2fc60d1e8d9e0c1e9292886ecfaff513f062b9d1cc8021bb8615033b1ac5bea3b2ee3fc165a6d7034bbe6b03"
   "pnpm": {
     "overrides": {
       "js-yaml": "4.1.1",
@@ -84,8 +86,10 @@
       "follow-redirects": "1.15.9",
       "cross-spawn": "7.0.6",
       "path-to-regexp": "8.1.0",
-      "undici": "6.20.1",
-      "ws": "8.18.0"
+<<<<<<< HEAD
+"undici": "6.21.2",
+    "ws": "8.18.0",
+    "astro": "5.15.9"
     }
   }
 }

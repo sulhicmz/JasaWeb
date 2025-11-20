@@ -32,6 +32,8 @@ const Card: React.FC<CardProps> = ({
           )}
         </div>
       )}
+        </div>
+       )}
       <div className={!title && !description ? 'p-6' : 'px-6 pt-0 pb-6'}>
         {children}
       </div>

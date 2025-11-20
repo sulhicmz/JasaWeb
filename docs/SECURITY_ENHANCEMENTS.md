@@ -15,6 +15,7 @@ This implementation addresses security hardening and compliance requirements by 
 Added Helmet middleware with comprehensive security headers:
 
 ```typescript
+<<<<<<< HEAD
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -48,6 +49,44 @@ app.use(helmet({
 ```
 
 **Benefits**:
+=======
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: { policy: 'same-origin' },
+    crossOriginResourcePolicy: { policy: 'same-origin' },
+    dnsPrefetchControl: { allow: false },
+    frameguard: { action: 'deny' },
+    hidePoweredBy: true,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    ieNoOpen: true,
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xssFilter: true,
+  })
+);
+```
+
+**Benefits**:
+
+>>>>>>> origin/main
 - Prevents clickjacking attacks
 - Mitigates XSS attacks
 - Enforces HTTPS with HSTS
@@ -72,6 +111,10 @@ app.enableCors({
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Restricts cross-origin requests to known domains
 - Limits HTTP methods to necessary ones
 - Controls exposed headers
@@ -104,6 +147,10 @@ export function validateEnvironment(config: Record<string, unknown>) {
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Ensures all required environment variables are present
 - Validates environment variable formats
 - Prevents application startup with invalid configuration
@@ -141,6 +188,10 @@ export const securityConfig = {
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Centralized security settings
 - Easy to update and maintain
 - Type-safe configuration
@@ -176,6 +227,10 @@ export class SecurityMiddleware implements NestMiddleware {
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Additional layer of security
 - Pattern-based attack detection
 - Automatic input sanitization
@@ -192,11 +247,25 @@ Endpoint-specific rate limiting:
 export class RateLimitGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const limit = this.reflector.get<number>('rateLimit', context.getHandler());
+<<<<<<< HEAD
     const window = this.reflector.get<number>('rateLimitWindow', context.getHandler());
 
     // Check rate limit
     if (validTimestamps.length >= limit) {
       throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+=======
+    const window = this.reflector.get<number>(
+      'rateLimitWindow',
+      context.getHandler()
+    );
+
+    // Check rate limit
+    if (validTimestamps.length >= limit) {
+      throw new HttpException(
+        'Too many requests',
+        HttpStatus.TOO_MANY_REQUESTS
+      );
+>>>>>>> origin/main
     }
 
     return true;
@@ -205,6 +274,10 @@ export class RateLimitGuard implements CanActivate {
 ```
 
 **Usage**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 ```typescript
 @UseGuards(RateLimitGuard)
 @RateLimit(5, 60000) // 5 requests per minute
@@ -215,6 +288,10 @@ async login(@Body() loginDto: LoginDto) {
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Prevents brute force attacks
 - Protects against DoS attacks
 - Configurable per endpoint
@@ -247,13 +324,21 @@ export class SecurityAuditInterceptor implements NestInterceptor {
       tap({
         next: (data) => this.logger.log('Security Event Completed'),
         error: (error) => this.logger.error('Security Event Failed'),
+<<<<<<< HEAD
       }),
+=======
+      })
+>>>>>>> origin/main
     );
   }
 }
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Comprehensive audit trail
 - Security event tracking
 - Compliance support
@@ -285,6 +370,10 @@ tmpfs:
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Minimal attack surface
 - Non-root user execution
 - Read-only file system
@@ -292,7 +381,11 @@ tmpfs:
 
 ### 9. Enhanced ESLint Security Rules
 
+<<<<<<< HEAD
 **Implementation**: `.eslintrc.js`
+=======
+**Implementation**: `eslint.config.js`
+>>>>>>> origin/main
 
 Added security-focused linting:
 
@@ -316,6 +409,10 @@ rules: {
 ```
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Catches security issues during development
 - Enforces secure coding practices
 - Prevents common vulnerabilities
@@ -332,6 +429,10 @@ pnpm security:scan
 ```
 
 **Checks**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Hardcoded secrets detection
 - eval() usage detection
 - Console statements
@@ -344,6 +445,10 @@ pnpm security:scan
 - CORS configuration
 
 **Benefits**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Automated security checks
 - Pre-commit validation
 - CI/CD integration
@@ -381,6 +486,10 @@ Enhanced security scanning in CI/CD:
 **File**: `.github/workflows/advanced-security.yml`
 
 **Scans**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - npm audit
 - Snyk security scan
 - OWASP ZAP baseline
@@ -391,6 +500,10 @@ Enhanced security scanning in CI/CD:
 - Code quality security check
 
 **Automation**:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 - Daily security scans
 - PR security checks
 - Automated reports
@@ -440,11 +553,19 @@ pnpm security:check
 ### Environment Setup
 
 1. Copy `.env.example` to `.env`:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 ```bash
 cp apps/api/.env.example apps/api/.env
 ```
 
 2. Update environment variables with secure values:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 ```bash
 # Generate strong secrets
 JWT_SECRET=$(openssl rand -base64 32)
@@ -453,6 +574,10 @@ SESSION_SECRET=$(openssl rand -base64 32)
 ```
 
 3. Configure CORS origins:
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 ```bash
 CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
 ```

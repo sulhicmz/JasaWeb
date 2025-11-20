@@ -13,7 +13,6 @@
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.10",
     "@astrojs/react": "^4.4.2",
-    "@jasaweb/ui": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",
     "astro": "^5.15.8",
     "chart.js": "^4.5.1",
