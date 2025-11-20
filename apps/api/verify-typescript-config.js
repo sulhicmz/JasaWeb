@@ -25,7 +25,7 @@ function checkTsConfig() {
 
   // Current exclusions in tsconfig.json:
   tsconfig.exclude?.forEach((exclusion) => {
-    // Log exclusion for verification
+    // Process exclusion silently
   });
 
   // Checking for critical directories in exclude array...
@@ -36,28 +36,23 @@ function checkTsConfig() {
   );
 
   if (excludedCritical.length > 0) {
-    // CRITICAL ISSUE FOUND:
-    excludedCritical.forEach((dir) => {
-      // Log: ${dir} is excluded from compilation
-    });
+    // Critical issue found - exit with error
     process.exit(1);
   }
   // No critical directories are excluded from compilation.
 
-  // Verifying critical directories exist and contain TypeScript files...
+  // Verifying critical directories exist and contain TypeScript files
   CRITICAL_DIRECTORIES.forEach((dir) => {
     const dirPath = path.join(__dirname, dir);
     if (fs.existsSync(dirPath)) {
       const tsFiles = fs
         .readdirSync(dirPath)
         .filter((file) => file.endsWith('.ts'));
-      // Log: ${dir}: ${tsFiles.length} TypeScript files found
-    } else {
-      // Log: ${dir}: Directory not found
+      // Directory check completed
     }
   });
 
-  // Checking if TypeScript attempts to compile critical directories...
+  // Checking if TypeScript attempts to compile critical directories
   try {
     const { execSync } = require('child_process');
     const result = execSync('npx tsc --noEmit --listFiles 2>&1', {
@@ -69,12 +64,7 @@ function checkTsConfig() {
       result.includes(dir.replace('src/', 'apps/api/src/'))
     );
 
-    if (hasCriticalFiles) {
-      // TypeScript is attempting to compile files from critical directories.
-      // (Dependency errors are expected in this environment)
-    } else {
-      // TypeScript is not compiling critical directories.
-    }
+    // Compilation check completed
   } catch (error) {
     // Expected due to missing dependencies, but check if critical files are mentioned
     const hasCriticalFiles = CRITICAL_DIRECTORIES.some(
@@ -83,16 +73,10 @@ function checkTsConfig() {
         error.message?.includes(dir.replace('src/', 'apps/api/src/'))
     );
 
-    if (hasCriticalFiles) {
-      // TypeScript is attempting to compile files from critical directories.
-      // (Dependency errors are expected in this environment)
-    } else {
-      // Could not verify compilation due to environment limitations.
-    }
+    // Error handling completed
   }
 
-  // Verification complete: TypeScript configuration is correct.
-  // All critical application directories are properly included in compilation.
+  // Verification complete
 }
 
 checkTsConfig();

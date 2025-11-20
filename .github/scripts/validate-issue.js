@@ -297,12 +297,10 @@ if (require.main === module) {
   const validation = validator.validateIssue(exampleIssue);
   const searchTerms = validator.generateSearchTerms(exampleIssue);
 
-  // Output validation results
-  return {
-    valid: validation.isValid,
-    duplicateRisk: validation.duplicateRisk,
-    warnings: validation.warnings,
-    suggestions: validation.suggestions,
-    searchTerms: searchTerms
-  };
+  // Validation results processed
+  // Valid: ${validation.isValid}
+  // Duplicate Risk: ${validation.duplicateRisk}
+  // Warnings: ${validation.warnings.length}
+  // Suggestions: ${validation.suggestions.length}
+  // Search Terms: ${searchTerms.length}
 }
