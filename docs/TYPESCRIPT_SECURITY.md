@@ -23,10 +23,10 @@ Updated `apps/api/tsconfig.json`:
 
 ### 3. Vitest Configuration Updates
 
-Updated `vitest.config.ts`:
+Updated `jest.config.js`:
 
-- **Deprecated Options**: Replaced `threads: false` with `pool: 'threads'`
-- **Reporter Fix**: Changed `reporter` to `reporters` for proper Vitest 4.x compatibility
+- **Standardized Configuration**: Aligned with Jest best practices
+- **Workspace Integration**: Added proper module mapping and setup files
 
 ## Benefits
 

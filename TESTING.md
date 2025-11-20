@@ -1,42 +1,50 @@
 # Testing Guide
 
-## API Testing
+## Overview
 
-This document provides guidelines for testing the JasaWeb API application.
+JasaWeb uses **Jest** as the standard testing framework across the entire monorepo. This ensures consistent testing experience and reliable CI/CD integration.
 
-### Running Tests
+## Running Tests
 
-#### Run all API tests
+### Run all tests in the monorepo
+
+```bash
+pnpm test
+```
+
+### Run tests in watch mode
+
+```bash
+pnpm test:watch
+```
+
+### Run tests with coverage
+
+```bash
+pnpm test:coverage
+```
+
+### Run API-specific tests
 
 ```bash
 pnpm test:api
-```
-
-#### Run tests from API directory
-
-```bash
+# or
 cd apps/api && pnpm test
 ```
 
-#### Run tests in watch mode
-
-```bash
-cd apps/api && pnpm test:watch
-```
-
-#### Run tests with coverage
+### Run API tests with coverage
 
 ```bash
 cd apps/api && pnpm test:cov
 ```
 
-#### Run only unit tests
+### Run only unit tests
 
 ```bash
 cd apps/api && pnpm test:unit
 ```
 
-#### Run integration tests
+### Run integration tests
 
 ```bash
 cd apps/api && pnpm test:integration
@@ -45,9 +53,20 @@ cd apps/api && pnpm test:integration
 ### Test Structure
 
 - **Unit Tests**: Located alongside source files with `.spec.ts` extension
-- **Integration Tests**: Located in `test/integration` directory
-- **Test Configuration**: `test/jest.config.js`
+- **Integration Tests**: Located in `test/integration` directory or use `.test.ts` extension
+- **Test Configuration**:
+  - Root level: `jest.config.js`
+  - API level: `apps/api/test/jest.config.js`
 - **Coverage Reports**: Generated in `coverage/` directory
+
+### Testing Framework Standardization
+
+This project has been standardized on **Jest** for all testing needs:
+
+- ✅ Jest configured at both root and API levels
+- ✅ Consistent test scripts across the monorepo
+- ✅ No Vitest configuration or dependencies
+- ✅ Unified test runner and coverage reporting
 
 ### Testing Guidelines
 

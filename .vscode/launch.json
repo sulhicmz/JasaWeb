@@ -47,11 +47,11 @@
       "protocol": "inspector"
     },
     {
-      "name": "Debug Vitest Tests",
+      "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/node_modules/.bin/vitest",
-      "args": ["run", "--no-coverage"],
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["--runInBand", "--no-cache"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "env": {
