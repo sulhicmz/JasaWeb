@@ -707,6 +707,47 @@ parse_arguments() {
 }
 
 # =============================================================================
+# Additional Functions
+# =============================================================================
+
+# Function to run specific checks
+run_specific_checks() {
+    local check_type=$1
+    
+    case "$check_type" in
+        lint)
+            run_eslint
+            ;;
+        types|typescript)
+            run_typescript
+            ;;
+        test)
+            run_tests
+            ;;
+        security)
+            run_security_audit
+            ;;
+        format)
+            run_format_check
+            ;;
+        complexity)
+            run_complexity_analysis
+            ;;
+        coverage)
+            run_coverage_analysis
+            ;;
+        dependencies)
+            run_dependency_analysis
+            ;;
+        *)
+            print_error "Unknown check type: $check_type"
+            echo "Available check types: lint, types, test, security, format, complexity, coverage, dependencies"
+            return 1
+            ;;
+    esac
+}
+
+# =============================================================================
 # Main Execution
 # =============================================================================
 
@@ -785,130 +826,3 @@ main() {
 
 # Execute main function with all arguments
 main "$@"
-
-# Function to run all code quality checks
-run_all_checks() {
-    print_info "Running all code quality checks..."
-    
-    # Run ESLint
-    print_info "Running ESLint..."
-    if pnpm lint; then
-        print_success "ESLint passed"
-    else
-        print_error "ESLint failed"
-        return 1
-    fi
-    
-    # Run TypeScript checks
-    print_info "Running TypeScript checks..."
-    if pnpm typecheck; then
-        print_success "TypeScript checks passed"
-    else
-        print_error "TypeScript checks failed"
-        return 1
-    fi
-    
-    # Run tests
-    print_info "Running tests..."
-    if pnpm test:run; then
-        print_success "All tests passed"
-    else
-        print_error "Some tests failed"
-        return 1
-    fi
-    
-    # Run security audit
-    print_info "Running security audit..."
-    if pnpm security:audit; then
-        print_success "Security audit passed"
-    else
-        print_warning "Security audit found issues"
-    fi
-    
-    print_success "All code quality checks completed!"
-}
-
-# Function to fix code issues
-fix_code() {
-    print_info "Fixing code issues..."
-    
-    # Fix ESLint issues
-    print_info "Fixing ESLint issues..."
-    if pnpm lint:fix; then
-        print_success "ESLint issues fixed"
-    else
-        print_error "Failed to fix ESLint issues"
-        return 1
-    fi
-    
-    # Format code
-    print_info "Formatting code..."
-    if pnpm format; then
-        print_success "Code formatted successfully"
-    else
-        print_error "Failed to format code"
-        return 1
-    fi
-    
-    print_success "Code issues fixed!"
-}
-
-# Function to run specific checks
-run_specific_checks() {
-    local check_type=$1
-    
-    case "$check_type" in
-        lint)
-            run_eslint
-            ;;
-        types|typescript)
-            run_typescript
-            ;;
-        test)
-            run_tests
-            ;;
-        security)
-            run_security_audit
-            ;;
-        format)
-            run_format_check
-            ;;
-        complexity)
-            run_complexity_analysis
-            ;;
-        coverage)
-            run_coverage_analysis
-            ;;
-        dependencies)
-            run_dependency_analysis
-            ;;
-        *)
-            print_error "Unknown check type: $check_type"
-            echo "Available check types: lint, types, test, security, format, complexity, coverage, dependencies"
-            return 1
-            ;;
-    esac
-}
-
-# Main execution
-case "$1" in
-    all)
-        run_all_checks
-        ;;
-    fix)
-        fix_code
-        ;;
-    check)
-        run_specific_checks "$2"
-        ;;
-    *)
-        echo "Code Quality Tools for JasaWeb"
-        echo "Usage: $0 {all|fix|check <type>}"
-        echo ""
-        echo "Commands:"
-        echo "  all        Run all code quality checks"
-        echo "  fix        Fix code issues (ESLint, formatting)"
-        echo "  check      Run specific check (lint, types, test, security, format)"
-        exit 1
-        ;;
-esac
