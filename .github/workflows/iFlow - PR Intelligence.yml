@@ -1,0 +1,143 @@
+name: "iFlow - PR Intelligence"
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # setiap 6 jam
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: read
+
+jobs:
+  gather_pr_data:
+    runs-on: ubuntu-24.04.arm
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Collect open PR metadata
+        run: |
+          mkdir -p pr_intel
+          gh pr list --state open --json \
+            number,title,author,mergeable,mergeStateStatus,updatedAt,createdAt,headRefName,baseRefName,reviewDecision,isDraft \
+            > pr_intel/open_prs.json
+          count=$(jq '. | length' pr_intel/open_prs.json)
+          echo "Found $count open PRs."
+          if [ "$count" -eq 0 ]; then
+            echo "No open PRs found. Skipping downstream job." >> $GITHUB_ENV
+            echo "skip_jobs=true" >> $GITHUB_ENV
+          else
+            echo "skip_jobs=false" >> $GITHUB_ENV
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+
+      - name: Upload PR intel
+        if: env.skip_jobs == 'false'
+        uses: actions/upload-artifact@v5
+        with:
+          name: pr-intel-data-${{ github.run_id }}
+          path: pr_intel/
+
+  smart_pr_agent:
+    needs: gather_pr_data
+    if: needs.gather_pr_data.outputs.skip_jobs != 'true'
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Download PR intel
+        uses: actions/download-artifact@v6
+        with:
+          name: pr-intel-data-${{ github.run_id }}
+          path: ./pr_intel
+
+      - name: Run iFlow CLI to handle problematic PRs
+        uses: iflow-ai/iflow-cli-action@v2.1.0
+        with:
+          api_key: ${{ secrets.IFLOW_API_KEY }}
+          timeout: "5400"
+          settings_json: |
+            {
+              "theme": "Dark",
+              "selectedAuthType": "iflow",
+              "apiKey": "${{ secrets.IFLOW_API_KEY }}",
+              "modelName": "qwen3-coder-plus"
+            }
+          prompt: |
+            ## ROLE
+            You are an autonomous GitHub PR management agent.
+            ## CONTEXT
+            - Repository: ${{ github.repository }}
+            - Data: ./pr_intel/open_prs.json
+            - The repository is fully checked out and you have write access.
+            ## GOALS
+            Analyze all open PRs and automatically:
+            1. Detect the next actionable PR:
+               - Prioritize PRs that are mergeable but blocked by unresolved comments.
+               - Next, PRs that are out-of-date with base branch.
+               - Then, PRs with conflicts or failed checks.
+            2. If all PRs are "green" (mergeable, checks passed, no unresolved threads):
+               - Post one repository comment: "✅ All PRs are healthy. No action needed."
+               - Exit cleanly.
+            3. For the selected PR:
+               - Fetch full discussion, review comments, and status checks.
+               - Determine minimal actions to move PR toward merge readiness.
+               - Perform safe automated steps:
+                 - Update branch from base (if out of date): `gh pr update --rebase` or merge base.
+                 - Resolve clear resolved comments if applicable.
+                 - If there are unaddressed review comments with suggested code (```diff```), apply them.
+                 - If checks failing due to known transient issues, re-run workflows via `gh run rerun`.
+               - Re-request reviewers if new commits pushed.
+               - Attempt merge:
+                 - If mergeable now: `gh pr merge $PR_NUMBER --squash --delete-branch --body "Merged automatically after successful fix."`
+                 - Else: enable auto-merge if all conditions nearly satisfied.
+            4. Post a short summary comment in the PR:
+               - Actions taken
+               - Remaining blockers
+               - Whether auto-merge enabled or not
+            ## RULES
+            - Skip PRs marked as draft.
+            - Skip PRs with no changes or closed.
+            - Never delete code branches manually unless merged.
+            - Never expose secrets.
+            - Never run long polling loops.
+            - Keep commits atomic and clean.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+
+      - name: Upload summary
+        if: success()
+        uses: actions/upload-artifact@v5
+        with:
+          name: pr-action-summary-${{ github.run_id }}
+          path: pr_intel/action_summary.json
+
+      - name: Optional summary comment
+        if: success()
+        run: |
+          if [ -f pr_intel/action_summary.json ]; then
+            summary=$(cat pr_intel/action_summary.json | jq -r '.')
+            echo "Posting summary comment..."
+            pr=$(jq -r '.handled_pr' pr_intel/action_summary.json)
+            if [ "$pr" != "null" ]; then
+              gh pr comment "$pr" --body "🤖 **iFlow PR Agent Summary**  
+              \`\`\`json
+              $summary
+              \`\`\`"
+            fi
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
