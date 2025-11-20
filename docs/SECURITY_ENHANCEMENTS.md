@@ -15,39 +15,42 @@ This implementation addresses security hardening and compliance requirements by 
 Added Helmet middleware with comprehensive security headers:
 
 ```typescript
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: true,
-  crossOriginOpenerPolicy: { policy: 'same-origin' },
-  crossOriginResourcePolicy: { policy: 'same-origin' },
-  dnsPrefetchControl: { allow: false },
-  frameguard: { action: 'deny' },
-  hidePoweredBy: true,
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  },
-  ieNoOpen: true,
-  noSniff: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  xssFilter: true,
-}));
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: { policy: 'same-origin' },
+    crossOriginResourcePolicy: { policy: 'same-origin' },
+    dnsPrefetchControl: { allow: false },
+    frameguard: { action: 'deny' },
+    hidePoweredBy: true,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    ieNoOpen: true,
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xssFilter: true,
+  })
+);
 ```
 
 **Benefits**:
+
 - Prevents clickjacking attacks
 - Mitigates XSS attacks
 - Enforces HTTPS with HSTS
@@ -72,6 +75,7 @@ app.enableCors({
 ```
 
 **Benefits**:
+
 - Restricts cross-origin requests to known domains
 - Limits HTTP methods to necessary ones
 - Controls exposed headers
@@ -104,6 +108,7 @@ export function validateEnvironment(config: Record<string, unknown>) {
 ```
 
 **Benefits**:
+
 - Ensures all required environment variables are present
 - Validates environment variable formats
 - Prevents application startup with invalid configuration
@@ -141,6 +146,7 @@ export const securityConfig = {
 ```
 
 **Benefits**:
+
 - Centralized security settings
 - Easy to update and maintain
 - Type-safe configuration
@@ -176,6 +182,7 @@ export class SecurityMiddleware implements NestMiddleware {
 ```
 
 **Benefits**:
+
 - Additional layer of security
 - Pattern-based attack detection
 - Automatic input sanitization
@@ -192,11 +199,17 @@ Endpoint-specific rate limiting:
 export class RateLimitGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const limit = this.reflector.get<number>('rateLimit', context.getHandler());
-    const window = this.reflector.get<number>('rateLimitWindow', context.getHandler());
+    const window = this.reflector.get<number>(
+      'rateLimitWindow',
+      context.getHandler()
+    );
 
     // Check rate limit
     if (validTimestamps.length >= limit) {
-      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        'Too many requests',
+        HttpStatus.TOO_MANY_REQUESTS
+      );
     }
 
     return true;
@@ -205,6 +218,7 @@ export class RateLimitGuard implements CanActivate {
 ```
 
 **Usage**:
+
 ```typescript
 @UseGuards(RateLimitGuard)
 @RateLimit(5, 60000) // 5 requests per minute
@@ -215,6 +229,7 @@ async login(@Body() loginDto: LoginDto) {
 ```
 
 **Benefits**:
+
 - Prevents brute force attacks
 - Protects against DoS attacks
 - Configurable per endpoint
@@ -247,13 +262,14 @@ export class SecurityAuditInterceptor implements NestInterceptor {
       tap({
         next: (data) => this.logger.log('Security Event Completed'),
         error: (error) => this.logger.error('Security Event Failed'),
-      }),
+      })
     );
   }
 }
 ```
 
 **Benefits**:
+
 - Comprehensive audit trail
 - Security event tracking
 - Compliance support
@@ -285,6 +301,7 @@ tmpfs:
 ```
 
 **Benefits**:
+
 - Minimal attack surface
 - Non-root user execution
 - Read-only file system
@@ -292,7 +309,7 @@ tmpfs:
 
 ### 9. Enhanced ESLint Security Rules
 
-**Implementation**: `.eslintrc.js`
+**Implementation**: `eslint.config.js`
 
 Added security-focused linting:
 
@@ -316,6 +333,7 @@ rules: {
 ```
 
 **Benefits**:
+
 - Catches security issues during development
 - Enforces secure coding practices
 - Prevents common vulnerabilities
@@ -332,6 +350,7 @@ pnpm security:scan
 ```
 
 **Checks**:
+
 - Hardcoded secrets detection
 - eval() usage detection
 - Console statements
@@ -344,6 +363,7 @@ pnpm security:scan
 - CORS configuration
 
 **Benefits**:
+
 - Automated security checks
 - Pre-commit validation
 - CI/CD integration
@@ -381,6 +401,7 @@ Enhanced security scanning in CI/CD:
 **File**: `.github/workflows/advanced-security.yml`
 
 **Scans**:
+
 - npm audit
 - Snyk security scan
 - OWASP ZAP baseline
@@ -391,6 +412,7 @@ Enhanced security scanning in CI/CD:
 - Code quality security check
 
 **Automation**:
+
 - Daily security scans
 - PR security checks
 - Automated reports
@@ -440,11 +462,13 @@ pnpm security:check
 ### Environment Setup
 
 1. Copy `.env.example` to `.env`:
+
 ```bash
 cp apps/api/.env.example apps/api/.env
 ```
 
 2. Update environment variables with secure values:
+
 ```bash
 # Generate strong secrets
 JWT_SECRET=$(openssl rand -base64 32)
@@ -453,6 +477,7 @@ SESSION_SECRET=$(openssl rand -base64 32)
 ```
 
 3. Configure CORS origins:
+
 ```bash
 CORS_ORIGIN=https://yourdomain.com,https://www.yourdomain.com
 ```

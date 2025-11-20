@@ -28,7 +28,7 @@ apps/*/package.json @sulhicmz
 apps/api/prisma/ @sulhicmz
 
 # Security configurations
-.eslintrc.js @sulhicmz
+eslint.config.js @sulhicmz
 .prettierrc.js @sulhicmz
 tsconfig.json @sulhicmz
 

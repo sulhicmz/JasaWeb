@@ -148,7 +148,7 @@ cd apps/api && npm audit --audit-level=moderate
 cd ../web && npm audit --audit-level=moderate
 
 # Run ESLint security rules
-npx eslint . --ext .js,.ts,.tsx --config .eslintrc.js
+npx eslint .
 ```
 
 ## Monitoring and Alerts
