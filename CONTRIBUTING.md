@@ -13,13 +13,19 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
 3. **Set up development environment**
    ```bash
    ./scripts/setup.sh
+   # or on Windows
+   scripts\setup.bat
    ```
-4. **Create a feature branch**
+4. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+5. **Create a feature branch**
    ```bash
    git checkout -b feature/amazing-feature
    ```
-5. **Make your changes**
-6. **Submit a pull request**
+6. **Make your changes**
+7. **Submit a pull request**
 
 ## 📋 Table of Contents
 
@@ -39,7 +45,47 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
 - Read our [Code of Conduct](./CODE_OF_CONDUCT.md)
 - Join our [Discussions](https://github.com/sulhicmz/JasaWeb/discussions) to ask questions
 
+### Project Structure
+
+This is a **pnpm monorepo** with the following structure:
+
+```
+JasaWeb/
+├── apps/
+│   ├── web/                    # Astro-based marketing site
+│   └── api/                    # NestJS API for client portal
+├── packages/
+│   ├── config/                 # Shared configuration
+│   └── ui/                     # Shared UI components
+├── scripts/                    # Development and utility scripts
+├── docs/                       # Project documentation
+└── .github/                    # GitHub workflows and templates
+```
+
+### Workspace Commands
+
+```bash
+# Install dependencies for all workspaces
+pnpm install
+
+# Run specific workspace commands
+pnpm dev --filter apps/web
+pnpm dev --filter apps/api
+
+# Build all workspaces
+pnpm build
+
+# Run tests across all workspaces
+pnpm test:run
+```
+
 ### 2. Setting Up
+
+**Prerequisites:**
+
+- Node.js >= 20.0.0
+- pnpm >= 8.15.0
+- Docker (for database)
 
 ```bash
 # Clone the repository
@@ -56,9 +102,55 @@ git remote add upstream https://github.com/sulhicmz/JasaWeb.git
 pnpm dev
 ```
 
+### Development Tools
+
+```bash
+# Watch and reload development tools
+pnpm dev-tools:watch
+
+# Database tools
+pnpm dev-tools:db
+
+# Code quality tools
+pnpm dev-tools:quality
+```
+
+### Database Commands
+
+```bash
+# Run database migrations
+pnpm db:migrate
+
+# Generate Prisma client
+pnpm db:generate
+
+# Seed database with sample data
+pnpm db:seed
+
+# Open Prisma Studio
+pnpm db:studio
+
+# Reset database
+pnpm db:reset
+```
+
+### Docker Commands
+
+```bash
+# Start Docker services
+pnpm docker:up
+
+# Stop Docker services
+pnpm docker:down
+
+# View Docker logs
+pnpm docker:logs
+```
+
 ### 3. Making Changes
 
 #### Branch Naming Convention
+
 - `feature/description` - New features
 - `fix/description` - Bug fixes
 - `docs/description` - Documentation changes
@@ -67,6 +159,7 @@ pnpm dev
 - `chore/description` - Maintenance tasks
 
 #### Commit Message Format
+
 We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
@@ -78,6 +171,7 @@ type(scope): description
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -90,6 +184,7 @@ type(scope): description
 - `build`: Build system changes
 
 **Examples:**
+
 ```
 feat(auth): add two-factor authentication
 fix(api): resolve user profile loading issue
@@ -100,17 +195,18 @@ test(auth): add unit tests for login service
 ### 4. Development Process
 
 1. **Create issue** (if not already exists)
-2. **Create branch** from `develop`
+2. **Create branch** from `main`
 3. **Make changes** with regular commits
 4. **Test thoroughly** (see testing guidelines)
 5. **Update documentation** if needed
-6. **Submit pull request** to `develop`
+6. **Submit pull request** to `main`
 
 ## 📝 Code Standards
 
 ### TypeScript/JavaScript
 
 #### General Guidelines
+
 - Use TypeScript for all new code
 - Follow strict TypeScript settings
 - Use meaningful variable and function names
@@ -118,6 +214,21 @@ test(auth): add unit tests for login service
 - Use ES6+ features when appropriate
 
 #### Code Style
+
+- **Prettier defaults** (two-space indent, single quotes in TS/JS)
+- **PascalCase** for React/Astro components
+- **camelCase** for variables/functions
+- **SCREAMING_SNAKE_CASE** for environment variables
+
+#### File Structure
+
+- Components co-located by feature: `apps/web/src/features/<domain>`
+- API modules by domain: `apps/api/src/modules/<domain>`
+- Environment defaults in `.env.example`
+- Never commit real secrets
+
+#### Code Style
+
 ```typescript
 // ✅ Good
 const getUserById = async (id: string): Promise<User | null> => {
@@ -136,6 +247,7 @@ const getUser = async (i) => {
 ```
 
 #### Error Handling
+
 ```typescript
 // ✅ Good
 try {
@@ -157,6 +269,7 @@ try {
 ### React/Astro Components
 
 #### Component Structure
+
 ```astro
 ---
 // Imports at the top
@@ -186,6 +299,7 @@ const handleEdit = () => {
 ```
 
 #### Best Practices
+
 - Use TypeScript interfaces for props
 - Keep components focused on single responsibility
 - Use semantic HTML elements
@@ -194,6 +308,7 @@ const handleEdit = () => {
 ### API Development (NestJS)
 
 #### Controller Structure
+
 ```typescript
 @Controller('projects')
 @UseGuards(AuthGuard)
@@ -210,7 +325,7 @@ export class ProjectController {
   @ApiOperation({ summary: 'Create project' })
   async createProject(
     @Body() createProjectDto: CreateProjectDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ): Promise<ProjectResponse> {
     return this.projectService.create(createProjectDto, user);
   }
@@ -218,12 +333,13 @@ export class ProjectController {
 ```
 
 #### Service Layer
+
 ```typescript
 @Injectable()
 export class ProjectService {
   constructor(
     private readonly projectRepository: ProjectRepository,
-    private readonly logger: Logger,
+    private readonly logger: Logger
   ) {}
 
   async findAll(): Promise<Project[]> {
@@ -240,6 +356,7 @@ export class ProjectService {
 ### Database (Prisma)
 
 #### Model Definitions
+
 ```prisma
 model Project {
   id          String   @id @default(cuid())
@@ -258,6 +375,7 @@ model Project {
 ```
 
 #### Query Best Practices
+
 ```typescript
 // ✅ Good - Use transactions for related operations
 async createProjectWithMilestones(data: CreateProjectDto): Promise<Project> {
@@ -317,6 +435,8 @@ apps/api/src/
     ├── unit/                   # Unit tests
     ├── integration/            # Integration tests
     └── e2e/                   # End-to-end tests
+
+apps/web/tests/e2e/             # Playwright E2E tests
 ```
 
 ### Unit Testing
@@ -351,7 +471,7 @@ describe('AuthService', () => {
       const email = 'test@example.com';
       const password = 'password123';
       const user = { id: '1', email, password: 'hashedPassword' };
-      
+
       userRepository.findByEmail.mockResolvedValue(user);
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
       jest.spyOn(jwt, 'sign').mockReturnValue('token');
@@ -368,12 +488,13 @@ describe('AuthService', () => {
       // Arrange
       const email = 'test@example.com';
       const password = 'wrongpassword';
-      
+
       userRepository.findByEmail.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.login(email, password))
-        .rejects.toThrow(UnauthorizedException);
+      await expect(service.login(email, password)).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 });
@@ -394,7 +515,7 @@ describe('AuthController (Integration)', () => {
 
     app = module.createNestApplication();
     prisma = module.get(PrismaService);
-    
+
     await app.init();
   });
 
@@ -456,7 +577,7 @@ describe('Authentication Flow (E2E)', () => {
     await page.fill('[data-testid="email-input"]', 'test@example.com');
     await page.fill('[data-testid="password-input"]', 'password123');
     await page.fill('[data-testid="confirm-password-input"]', 'password123');
-    
+
     // Submit form
     await page.click('[data-testid="register-button"]');
 
@@ -474,26 +595,94 @@ describe('Authentication Flow (E2E)', () => {
 });
 ```
 
+### Testing Framework Stack
+
+- **Vitest** for unit tests (`*.test.ts`)
+- **Playwright** for end-to-end tests (`apps/web/tests/e2e`)
+- **Contract tests** for API (`apps/api/tests/contracts`)
+- **Target ≥80% coverage** on critical paths
+
 ### Testing Requirements
 
-- **Unit Tests**: All business logic must have unit tests
+- **Unit Tests**: All business logic must have unit tests (`*.test.ts`)
 - **Integration Tests**: All API endpoints must have integration tests
-- **E2E Tests**: Critical user workflows must have E2E tests
-- **Coverage**: Minimum 80% code coverage
+- **E2E Tests**: Critical user workflows must have E2E tests (Playwright)
+- **Coverage**: Minimum 80% code coverage on critical paths
 - **Test Data**: Use factories or fixtures for test data
+
+### Testing Commands
+
+```bash
+# Run all tests
+pnpm test:run
+
+# Run tests in watch mode
+pnpm test
+
+# Run tests with UI
+pnpm test:ui
+
+# Generate coverage report
+pnpm test:coverage
+
+# Run E2E tests
+pnpm test:e2e
+
+# Run API-specific tests
+pnpm test:api
+```
+
+## 🔒 Security
+
+### Security Requirements
+
+All contributions must follow our security practices:
+
+- **OWASP Top 10 compliance** - Follow secure coding practices
+- **No hardcoded secrets** - Use environment variables
+- **Input validation** - Validate all user inputs
+- **Authentication & Authorization** - Proper access controls
+- **Audit logging** - Log critical security actions
+
+### Security Commands
+
+```bash
+# Run security audit
+pnpm security:audit
+
+# Fix security vulnerabilities
+pnpm security:audit:fix
+
+# Check for outdated packages
+pnpm security:outdated
+
+# Run comprehensive security scan
+pnpm security:scan
+
+# Full security check
+pnpm security:check
+```
+
+### Security Guidelines
+
+- Never commit secrets or API keys
+- Use Argon2 for password hashing
+- Implement proper CORS and rate limiting
+- Follow Indonesian PDP Act compliance
+- Report security issues privately (security@jasaweb.com)
 
 ## 📚 Documentation
 
 ### Code Documentation
 
-```typescript
+````typescript
 /**
  * Creates a new project with the provided data
- * 
+ *
  * @param createProjectDto - Project creation data
  * @param user - User creating the project
  * @returns Promise resolving to the created project
- * 
+ *
  * @example
  * ```typescript
  * const project = await projectService.create(
@@ -501,7 +690,7 @@ describe('Authentication Flow (E2E)', () => {
  *   user
  * );
  * ```
- * 
+ *
  * @throws {BadRequestException} When project data is invalid
  * @throws {UnauthorizedException} When user lacks permissions
  */
@@ -511,7 +700,7 @@ async create(
 ): Promise<Project> {
   // Implementation
 }
-```
+````
 
 ### API Documentation
 
@@ -531,10 +720,12 @@ async create(
 ### Before Submitting
 
 1. **Test your changes**
+
    ```bash
-   pnpm test
+   pnpm test:run
    pnpm lint
    pnpm typecheck
+   pnpm security:scan
    ```
 
 2. **Update documentation**
@@ -545,7 +736,7 @@ async create(
 3. **Ensure your branch is up to date**
    ```bash
    git fetch upstream
-   git rebase upstream/develop
+   git rebase upstream/main
    ```
 
 ### Pull Request Template
@@ -618,6 +809,7 @@ We are committed to providing a welcoming and inclusive environment. Please read
 ### Recognition
 
 Contributors are recognized in:
+
 - README.md contributors section
 - Release notes
 - Annual contributor highlights
@@ -642,21 +834,27 @@ Contributors are recognized in:
 ## 📋 Development Checklist
 
 ### Before Committing
+
 - [ ] Code follows style guidelines
-- [ ] Tests pass locally
-- [ ] Linting passes
-- [ ] TypeScript compilation succeeds
+- [ ] Tests pass locally (`pnpm test:run`)
+- [ ] Linting passes (`pnpm lint`)
+- [ ] TypeScript compilation succeeds (`pnpm typecheck`)
+- [ ] Security scan passes (`pnpm security:scan`)
 - [ ] Documentation updated
 - [ ] Self-review completed
 
 ### Before Opening PR
-- [ ] All tests pass
+
+- [ ] All tests pass (`pnpm test:run`)
 - [ ] Code reviewed by self
 - [ ] PR description filled out
 - [ ] Linked to relevant issues
+- [ ] Security scan passed (`pnpm security:scan`)
+- [ ] Build succeeds (`pnpm build`)
 - [ ] Ready for review
 
 ### Before Merge
+
 - [ ] All automated checks pass
 - [ ] Code review approved
 - [ ] Tests added for new features
@@ -666,6 +864,7 @@ Contributors are recognized in:
 ## 🎯 Ways to Contribute
 
 ### Code Contributions
+
 - Bug fixes
 - New features
 - Performance improvements
@@ -673,6 +872,7 @@ Contributors are recognized in:
 - Test improvements
 
 ### Non-Code Contributions
+
 - Documentation improvements
 - Bug reports and triage
 - Feature suggestions
@@ -681,6 +881,7 @@ Contributors are recognized in:
 - Translation help
 
 ### Infrastructure
+
 - CI/CD improvements
 - Docker optimizations
 - Security enhancements
