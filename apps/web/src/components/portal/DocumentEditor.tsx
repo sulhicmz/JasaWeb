@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   collaborationService,
   DocumentOperation,
-} from '../services/collaborationService';
+} from '../../services/collaborationService';
 
 interface DocumentEditorProps {
   projectId: string;

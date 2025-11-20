@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PresenceIndicator } from './PresenceIndicator';
 import { Chat } from './Chat';
 import { DocumentEditor } from './DocumentEditor';
-import { collaborationService } from '../services/collaborationService';
+import { collaborationService } from '../../services/collaborationService';
 
 interface CollaborationDashboardProps {
   projectId: string;

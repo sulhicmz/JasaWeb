@@ -3,7 +3,7 @@ import {
   collaborationService,
   CollaborationUser,
   ProjectParticipant,
-} from '../services/collaborationService';
+} from '../../services/collaborationService';
 
 interface PresenceIndicatorProps {
   projectId?: string;

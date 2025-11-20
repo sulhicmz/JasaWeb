@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   collaborationService,
   CollaborationMessage,
-} from '../services/collaborationService';
+} from '../../services/collaborationService';
 
 interface ChatProps {
   projectId: string;
