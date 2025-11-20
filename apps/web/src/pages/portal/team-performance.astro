@@ -1,0 +1,41 @@
+---
+// src/pages/portal/team-performance.astro
+import Layout from '../../layouts/Layout.astro';
+import DashboardHeader from '../../components/portal/DashboardHeader.astro';
+import TeamPerformance from '../../components/portal/TeamPerformance.tsx';
+
+export interface Props {
+  title?: string;
+}
+
+export const prerender = true;
+
+const { title } = Astro.props;
+---
+
+<Layout title="Team Performance">
+  <div class="min-h-screen bg-gray-50">
+    <DashboardHeader currentPage="team-performance" />
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Team Performance</h1>
+        <p class="mt-2 text-gray-600">Individual team member productivity and performance metrics</p>
+      </div>
+
+      <!-- Team Performance Dashboard -->
+      <TeamPerformance client:load />
+    </div>
+  </div>
+
+  <!-- Authentication Check Script -->
+  <script client:load>
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem('authToken');
+    if (!isAuthenticated) {
+      // Redirect to login page if not authenticated
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+  </script>
+</Layout>
