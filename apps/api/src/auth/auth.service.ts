@@ -1,10 +1,16 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RefreshTokenService } from './refresh-token.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { SecurityMonitoringService } from '../security/monitoring/security-monitoring.service';
+import { AuditService } from '../common/services/audit.service';
 
 @Injectable()
 export class AuthService {
@@ -12,18 +18,30 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private refreshTokenService: RefreshTokenService,
+    private securityService: SecurityMonitoringService,
+    private auditService: AuditService
   ) {}
 
-  async register(createUserDto: CreateUserDto): Promise<{ access_token: string; refreshToken: string; expiresAt: Date; user: { id: any; email: any; name: any; profilePicture: any; } }> {
+  async register(
+    createUserDto: CreateUserDto,
+    request?: any
+  ): Promise<{
+    access_token: string;
+    refreshToken: string;
+    expiresAt: Date;
+    user: { id: any; email: any; name: any; profilePicture: any };
+  }> {
     // Check if user already exists
-    const existingUser = await this.usersService.findByEmail(createUserDto.email);
+    const existingUser = await this.usersService.findByEmail(
+      createUserDto.email
+    );
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    
+
     // Create the user
     const user = await this.usersService.create({
       ...createUserDto,
@@ -31,11 +49,26 @@ export class AuthService {
     });
 
     // Generate JWT token and refresh token
-    const { token, refreshToken, expiresAt } = await this.refreshTokenService.createRefreshToken(user.id);
+    const { token, refreshToken, expiresAt } =
+      await this.refreshTokenService.createRefreshToken(user.id);
+
+    // Log security event
+    await this.securityService.recordSecurityEvent({
+      type: 'login_attempt',
+      userId: user.id,
+      ipAddress: request?.ip || 'unknown',
+      userAgent: request?.headers?.['user-agent'] || 'unknown',
+      success: true,
+      details: { registration: true },
+      riskScore: 10, // Low risk for registration
+    });
+
+    // Log to audit service
+    await this.auditService.logUserLogin(user.id, 'system');
 
     return {
       access_token: token,
-      refreshToken: refreshToken, // Send the full refresh token as returned by the service
+      refreshToken: refreshToken,
       expiresAt,
       user: {
         id: user.id,
@@ -46,19 +79,28 @@ export class AuthService {
     };
   }
 
-  async login(loginUserDto: LoginUserDto): Promise<{ access_token: string; refreshToken: string; expiresAt: Date; user: { id: any; email: any; name: any; profilePicture: any; } }> {
+  async login(loginUserDto: LoginUserDto): Promise<{
+    access_token: string;
+    refreshToken: string;
+    expiresAt: Date;
+    user: { id: any; email: any; name: any; profilePicture: any };
+  }> {
     const user = await this.usersService.findByEmail(loginUserDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginUserDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginUserDto.password,
+      user.password
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     // Generate JWT token and refresh token
-    const { token, refreshToken, expiresAt } = await this.refreshTokenService.createRefreshToken(user.id);
+    const { token, refreshToken, expiresAt } =
+      await this.refreshTokenService.createRefreshToken(user.id);
 
     return {
       access_token: token,
@@ -75,7 +117,7 @@ export class AuthService {
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    if (user && await bcrypt.compare(pass, user.password)) {
+    if (user && (await bcrypt.compare(pass, user.password))) {
       const { password, ...result } = user;
       return result;
     }

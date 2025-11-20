@@ -16,6 +16,11 @@ model User {
   name           String?
   password       String
   profilePicture String?
+  mfaEnabled     Boolean        @default(false)
+  mfaSecret      String?        @db.Text
+  mfaBackupCodes String[]        @default([])
+  mfaVerifiedAt  DateTime?
+  deletedAt      DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   memberships    Membership[]
@@ -27,6 +32,10 @@ model User {
   Task           Task[]
   refreshTokens  RefreshToken[]
   sessions       Session[]
+  securityEvents SecurityEvent[]
+  securityAlerts SecurityAlert[]
+  gdprRequests   GdprRequest[]
+  consentRecords ConsentRecord[]
 }
 
 model Organization {
@@ -42,6 +51,8 @@ model Organization {
   tickets      Ticket[]
   invoices     Invoice[]
   AuditLog     AuditLog[]
+  securityEvents SecurityEvent[]
+  securityAlerts SecurityAlert[]
 }
 
 model Membership {
@@ -201,4 +212,74 @@ model AuditLog {
   target         String // User, Project, File, etc.
   meta           Json?
   createdAt      DateTime     @default(now())
+}
+
+// Security and Compliance Models
+
+model SecurityEvent {
+  id             String   @id @default(cuid())
+  type           String   // login_attempt, mfa_verification, password_change, suspicious_activity, data_access
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  ipAddress      String
+  userAgent      String
+  success        Boolean
+  details        Json?
+  riskScore      Int      @default(0) // 0-100
+  createdAt      DateTime @default(now())
+}
+
+model SecurityAlert {
+  id             String   @id @default(cuid())
+  type           String   // multiple_failed_logins, unusual_data_access, mfa_abuse, etc.
+  severity       String   // low, medium, high, critical
+  message        String
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  metadata       Json
+  resolved       Boolean  @default(false)
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  createdAt      DateTime @default(now())
+}
+
+model GdprRequest {
+  id         String   @id @default(cuid())
+  type       String   // data_export, data_deletion, consent_withdrawal, data_access
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email      String
+  reason     String?
+  status     String   @default("pending") // pending, processing, completed, rejected
+  processedAt DateTime?
+  processedBy String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ConsentRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // marketing, analytics, cookies, data_processing
+  granted   Boolean
+  timestamp DateTime @default(now())
+  ipAddress String
+  userAgent String
+}
+
+model DataProcessingRecord {
+  id                String   @id @default(cuid())
+  purpose           String   // Service delivery, marketing, analytics, legal compliance
+  legalBasis        String   // Consent, contract, legal obligation, legitimate interest
+  dataCategories    String[] // email, name, usage data, cookies, IP address
+  retentionPeriod   String   // 6 months, 2 years, 7 years, etc.
+  securityMeasures  String[] // encryption, access controls, audit logging
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
