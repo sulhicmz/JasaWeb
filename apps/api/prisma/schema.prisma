@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -125,7 +125,7 @@ model Task {
   assignee   User?     @relation(fields: [assigneeId], references: [id])
   status     String // todo, in-progress, review, completed
   dueAt      DateTime?
-  labels     String[]  @default([])
+  labels     String?   @default("")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
