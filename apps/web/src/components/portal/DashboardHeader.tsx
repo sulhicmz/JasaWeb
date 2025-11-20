@@ -26,6 +26,16 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       current: currentPage === 'projects',
     },
     {
+      name: 'Analytics',
+      href: '/portal/analytics',
+      current: currentPage === 'analytics',
+    },
+    {
+      name: 'Team',
+      href: '/portal/team-performance',
+      current: currentPage === 'team-performance',
+    },
+    {
       name: 'Tickets',
       href: '/portal/tickets',
       current: currentPage === 'tickets',
