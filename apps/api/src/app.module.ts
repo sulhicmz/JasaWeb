@@ -26,6 +26,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ConfigValidationService } from './common/config/config-validation.service';
 
 const parseEnvNumber = (
   value: string | undefined,
@@ -75,6 +76,7 @@ const parseEnvNumber = (
   controllers: [AppController],
   providers: [
     AppService,
+    ConfigValidationService,
     {
       provide: APP_GUARD,
       useClass: MultiTenantGuard,
