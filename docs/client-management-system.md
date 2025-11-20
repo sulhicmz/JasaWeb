@@ -33,6 +33,7 @@ The JasaWeb Enterprise Client Management System is a comprehensive platform desi
 ### Target Users
 
 #### External Users (Clients)
+
 - **Organization Owner**: Full access to organization resources
 - **Organization Admin**: Manage users and projects
 - **Finance**: Handle billing and payments
@@ -40,6 +41,7 @@ The JasaWeb Enterprise Client Management System is a comprehensive platform desi
 - **Guest**: Read-only access to specific resources
 
 #### Internal Users (Team)
+
 - **Project Manager**: Oversee project delivery
 - **Designer**: Create and manage design assets
 - **Developer**: Implement features and fixes
@@ -54,13 +56,15 @@ The JasaWeb Enterprise Client Management System is a comprehensive platform desi
 ### Technology Stack
 
 #### Frontend
+
 - **Framework**: Astro 4.0+ (Marketing Site)
-- **Styling**: Tailwind CSS 3.3+
+- **Styling**: Tailwind CSS 4.1+ (with native Vite plugin)
 - **Components**: Custom component library
 - **State Management**: Native Astro state management
 - **Forms**: Zod schema validation
 
 #### Backend
+
 - **Framework**: NestJS 10.0+
 - **Language**: TypeScript 5.0+
 - **API Style**: RESTful with OpenAPI/Swagger documentation
@@ -68,6 +72,7 @@ The JasaWeb Enterprise Client Management System is a comprehensive platform desi
 - **Authorization**: Role-Based Access Control (RBAC)
 
 #### Database
+
 - **Primary Database**: PostgreSQL 15+
 - **ORM**: Prisma 6.16+
 - **Multi-tenancy**: Organization-based data isolation
@@ -75,6 +80,7 @@ The JasaWeb Enterprise Client Management System is a comprehensive platform desi
 - **Search**: PostgreSQL full-text search
 
 #### Infrastructure
+
 - **Package Manager**: pnpm 8.15+
 - **Containerization**: Docker & Docker Compose
 - **CI/CD**: GitHub Actions
@@ -143,6 +149,7 @@ export class MultiTenantPrismaService {
 ```
 
 **Benefits:**
+
 - Data isolation between organizations
 - Simplified queries (no manual filtering)
 - Enhanced security
@@ -155,12 +162,14 @@ export class MultiTenantPrismaService {
 ### 1. Organization Management
 
 #### Features
+
 - Multi-organization support
 - Organization settings and preferences
 - Billing configuration
 - Custom branding (future)
 
 #### Key Operations
+
 ```typescript
 // Create organization
 POST /api/organizations
@@ -187,6 +196,7 @@ PATCH /api/organizations/:id
 ### 2. User & Membership Management
 
 #### Features
+
 - User registration and authentication
 - Role-based access control
 - Multi-organization membership
@@ -195,18 +205,19 @@ PATCH /api/organizations/:id
 
 #### User Roles
 
-| Role | Permissions | Use Case |
-|------|-------------|----------|
-| **Owner** | Full access to organization | Organization founder |
-| **Admin** | Manage users, projects, settings | Team lead |
-| **Finance** | View/manage invoices, payments | Accounting team |
-| **Reviewer** | Review and approve deliverables | Stakeholders |
-| **Member** | View assigned projects | Team members |
-| **Guest** | Read-only access | External reviewers |
+| Role         | Permissions                      | Use Case             |
+| ------------ | -------------------------------- | -------------------- |
+| **Owner**    | Full access to organization      | Organization founder |
+| **Admin**    | Manage users, projects, settings | Team lead            |
+| **Finance**  | View/manage invoices, payments   | Accounting team      |
+| **Reviewer** | Review and approve deliverables  | Stakeholders         |
+| **Member**   | View assigned projects           | Team members         |
+| **Guest**    | Read-only access                 | External reviewers   |
 
 ### 3. Project Management
 
 #### Features
+
 - Project creation and tracking
 - Status management (draft, progress, review, completed, paused, cancelled)
 - Timeline and deadline tracking
@@ -214,6 +225,7 @@ PATCH /api/organizations/:id
 - Multi-view support (summary/detail)
 
 #### Key Operations
+
 ```typescript
 // Create project
 POST /api/projects
@@ -247,6 +259,7 @@ GET /api/projects?view=detail
 ### 4. File Management
 
 #### Features
+
 - File upload and storage
 - Version control
 - Folder organization
@@ -255,12 +268,14 @@ GET /api/projects?view=detail
 - Checksum verification
 
 #### Supported File Types
+
 - **Documents**: PDF, DOC, DOCX, XLS, XLSX
 - **Images**: JPG, PNG, GIF, SVG, WEBP
 - **Design**: PSD, AI, SKETCH, FIGMA (links)
 - **Archives**: ZIP, RAR, 7Z
 
 #### Key Operations
+
 ```typescript
 // Upload file
 POST /api/projects/:projectId/files
@@ -281,6 +296,7 @@ GET /api/files/:id/download
 ### 5. Approval Workflow
 
 #### Features
+
 - Multi-stage approval process
 - Comment and feedback system
 - Approval history and audit trail
@@ -288,6 +304,7 @@ GET /api/files/:id/download
 - Timestamp and digital signature
 
 #### Approval Types
+
 - **Design**: UI/UX designs, mockups
 - **Content**: Copy, images, videos
 - **Feature**: New functionality
@@ -295,6 +312,7 @@ GET /api/files/:id/download
 - **Deployment**: Production releases
 
 #### Key Operations
+
 ```typescript
 // Request approval
 POST /api/projects/:projectId/approvals
@@ -318,6 +336,7 @@ GET /api/approvals/:id/history
 ### 6. Support Ticket System
 
 #### Features
+
 - Ticket creation and tracking
 - Priority management (low, medium, high, critical)
 - SLA tracking
@@ -326,6 +345,7 @@ GET /api/approvals/:id/history
 - Resolution tracking
 
 #### Ticket Types
+
 - **Bug**: Software defects
 - **Feature**: Feature requests
 - **Improvement**: Enhancement suggestions
@@ -334,14 +354,15 @@ GET /api/approvals/:id/history
 
 #### SLA Targets
 
-| Priority | Response Time | Resolution Time |
-|----------|---------------|-----------------|
-| **Critical** | 1 hour | 4 hours |
-| **High** | 4 hours | 24 hours |
-| **Medium** | 8 hours | 3 days |
-| **Low** | 24 hours | 7 days |
+| Priority     | Response Time | Resolution Time |
+| ------------ | ------------- | --------------- |
+| **Critical** | 1 hour        | 4 hours         |
+| **High**     | 4 hours       | 24 hours        |
+| **Medium**   | 8 hours       | 3 days          |
+| **Low**      | 24 hours      | 7 days          |
 
 #### Key Operations
+
 ```typescript
 // Create ticket
 POST /api/tickets
@@ -371,6 +392,7 @@ PATCH /api/tickets/:id/resolve
 ### 7. Invoice & Payment Management
 
 #### Features
+
 - Invoice generation
 - Payment tracking
 - Multiple payment methods
@@ -379,6 +401,7 @@ PATCH /api/tickets/:id/resolve
 - Milestone-based billing
 
 #### Invoice States
+
 - **Draft**: Being prepared
 - **Issued**: Sent to client
 - **Paid**: Payment received
@@ -386,6 +409,7 @@ PATCH /api/tickets/:id/resolve
 - **Cancelled**: Voided
 
 #### Key Operations
+
 ```typescript
 // Create invoice
 POST /api/invoices
@@ -414,6 +438,7 @@ GET /api/invoices/:id/download
 ### 8. Audit Logging
 
 #### Features
+
 - Comprehensive activity tracking
 - User action logging
 - Security audit trail
@@ -421,6 +446,7 @@ GET /api/invoices/:id/download
 - Searchable logs
 
 #### Logged Actions
+
 - User authentication (login, logout, failed attempts)
 - File operations (upload, download, delete)
 - Approval actions (request, approve, reject)
@@ -429,6 +455,7 @@ GET /api/invoices/:id/download
 - Settings changes
 
 #### Key Operations
+
 ```typescript
 // Query audit logs
 GET /api/audit-logs?action=file_upload&startDate=2025-01-01
@@ -446,40 +473,40 @@ GET /api/audit-logs/organization/:orgId
 
 ### Permission Matrix
 
-| Feature | Owner | Admin | Finance | Reviewer | Member | Guest |
-|---------|-------|-------|---------|----------|--------|-------|
-| **Organization** |
-| View organization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Update settings | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Delete organization | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Users** |
-| View users | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Invite users | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Update roles | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Remove users | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Projects** |
-| View projects | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create projects | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Update projects | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Delete projects | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Files** |
-| View files | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Upload files | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Delete files | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Approvals** |
-| View approvals | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Request approval | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Approve/Reject | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
-| **Tickets** |
-| View tickets | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create tickets | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Update tickets | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Invoices** |
-| View invoices | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Create invoices | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Record payments | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Audit Logs** |
-| View logs | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Feature             | Owner | Admin | Finance | Reviewer | Member | Guest |
+| ------------------- | ----- | ----- | ------- | -------- | ------ | ----- |
+| **Organization**    |
+| View organization   | ✅    | ✅    | ✅      | ✅       | ✅     | ✅    |
+| Update settings     | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| Delete organization | ✅    | ❌    | ❌      | ❌       | ❌     | ❌    |
+| **Users**           |
+| View users          | ✅    | ✅    | ✅      | ✅       | ✅     | ❌    |
+| Invite users        | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| Update roles        | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| Remove users        | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| **Projects**        |
+| View projects       | ✅    | ✅    | ✅      | ✅       | ✅     | ✅    |
+| Create projects     | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| Update projects     | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| Delete projects     | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| **Files**           |
+| View files          | ✅    | ✅    | ✅      | ✅       | ✅     | ✅    |
+| Upload files        | ✅    | ✅    | ❌      | ✅       | ✅     | ❌    |
+| Delete files        | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| **Approvals**       |
+| View approvals      | ✅    | ✅    | ✅      | ✅       | ✅     | ✅    |
+| Request approval    | ✅    | ✅    | ❌      | ✅       | ✅     | ❌    |
+| Approve/Reject      | ✅    | ✅    | ❌      | ✅       | ❌     | ❌    |
+| **Tickets**         |
+| View tickets        | ✅    | ✅    | ✅      | ✅       | ✅     | ✅    |
+| Create tickets      | ✅    | ✅    | ✅      | ✅       | ✅     | ❌    |
+| Update tickets      | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
+| **Invoices**        |
+| View invoices       | ✅    | ✅    | ✅      | ❌       | ❌     | ❌    |
+| Create invoices     | ✅    | ✅    | ✅      | ❌       | ❌     | ❌    |
+| Record payments     | ✅    | ✅    | ✅      | ❌       | ❌     | ❌    |
+| **Audit Logs**      |
+| View logs           | ✅    | ✅    | ❌      | ❌       | ❌     | ❌    |
 
 ### Implementing RBAC
 
@@ -488,13 +515,16 @@ GET /api/audit-logs/organization/:orgId
 @Injectable()
 export class RolesGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
+    const requiredRoles = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler()
+    );
     if (!requiredRoles) return true;
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    return requiredRoles.some(role => user.roles?.includes(role));
+    return requiredRoles.some((role) => user.roles?.includes(role));
   }
 }
 
@@ -517,6 +547,7 @@ export class ProjectsController {
 ### Core Models
 
 #### User
+
 ```prisma
 model User {
   id             String         @id @default(cuid())
@@ -541,6 +572,7 @@ model User {
 ```
 
 #### Organization
+
 ```prisma
 model Organization {
   id           String       @id @default(cuid())
@@ -561,6 +593,7 @@ model Organization {
 ```
 
 #### Project
+
 ```prisma
 model Project {
   id             String       @id @default(cuid())
@@ -609,6 +642,7 @@ CREATE INDEX idx_tickets_org_status ON tickets(organization_id, status);
 ### Authentication
 
 #### Login
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -631,6 +665,7 @@ Response 200:
 ```
 
 #### Register
+
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -650,6 +685,7 @@ Response 201:
 ```
 
 #### Refresh Token
+
 ```http
 POST /api/auth/refresh
 Content-Type: application/json
@@ -668,6 +704,7 @@ Response 200:
 ### Projects
 
 #### List Projects
+
 ```http
 GET /api/projects?view=summary&status=progress
 Authorization: Bearer {accessToken}
@@ -693,6 +730,7 @@ Response 200:
 ```
 
 #### Create Project
+
 ```http
 POST /api/projects
 Authorization: Bearer {accessToken}
@@ -716,6 +754,7 @@ Response 201:
 ```
 
 #### Get Project Statistics
+
 ```http
 GET /api/projects/project-123/stats
 Authorization: Bearer {accessToken}
@@ -779,6 +818,7 @@ Response 200:
 ### Dashboard
 
 #### Overview Widgets
+
 - **Project Status**: Current project progress and milestones
 - **Open Tickets**: Recent support tickets requiring attention
 - **Pending Approvals**: Items awaiting review
@@ -787,6 +827,7 @@ Response 200:
 - **Activity Feed**: Recent project activities
 
 #### Metrics Display
+
 ```typescript
 interface DashboardMetrics {
   projects: {
@@ -815,6 +856,7 @@ interface DashboardMetrics {
 ### Project View
 
 #### Project Details
+
 - Project information and timeline
 - Milestone progress tracker
 - Team members and roles
@@ -823,6 +865,7 @@ interface DashboardMetrics {
 - Approval queue
 
 #### Timeline View
+
 ```typescript
 interface ProjectTimeline {
   milestones: Array<{
@@ -845,6 +888,7 @@ interface ProjectTimeline {
 ### File Management
 
 #### Features
+
 - Drag-and-drop upload
 - Folder organization
 - File preview
@@ -853,6 +897,7 @@ interface ProjectTimeline {
 - Search and filter
 
 #### File Browser Interface
+
 ```typescript
 interface FileBrowser {
   currentFolder: string;
@@ -879,6 +924,7 @@ interface FileBrowser {
 ### Approval Center
 
 #### Features
+
 - Pending approvals list
 - Approval history
 - Comment and feedback
@@ -886,6 +932,7 @@ interface FileBrowser {
 - Batch approval (future)
 
 #### Approval Interface
+
 ```typescript
 interface ApprovalItem {
   id: string;
@@ -908,6 +955,7 @@ interface ApprovalItem {
 ### Support Center
 
 #### Features
+
 - Create support tickets
 - Track ticket status
 - View ticket history
@@ -915,6 +963,7 @@ interface ApprovalItem {
 - Rate support quality
 
 #### Ticket Interface
+
 ```typescript
 interface SupportTicket {
   id: string;
@@ -936,6 +985,7 @@ interface SupportTicket {
 ### Billing Center
 
 #### Features
+
 - View invoices
 - Payment history
 - Download receipts
@@ -943,6 +993,7 @@ interface SupportTicket {
 - Billing information
 
 #### Invoice Display
+
 ```typescript
 interface Invoice {
   id: string;
@@ -974,6 +1025,7 @@ interface Invoice {
 ### Authentication Security
 
 #### Password Requirements
+
 - Minimum 8 characters
 - At least one uppercase letter
 - At least one lowercase letter
@@ -981,6 +1033,7 @@ interface Invoice {
 - At least one special character
 
 #### Password Hashing
+
 ```typescript
 import * as bcrypt from 'bcrypt';
 
@@ -990,12 +1043,16 @@ async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
+async function verifyPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 ```
 
 #### JWT Configuration
+
 ```typescript
 export const jwtConfig = {
   accessToken: {
@@ -1012,11 +1069,13 @@ export const jwtConfig = {
 ### Data Protection
 
 #### Encryption at Rest
+
 - Database encryption (PostgreSQL)
 - File storage encryption (S3 SSE)
 - Backup encryption
 
 #### Encryption in Transit
+
 - HTTPS/TLS 1.3
 - Certificate pinning
 - Secure WebSocket connections
@@ -1024,12 +1083,14 @@ export const jwtConfig = {
 ### Access Control
 
 #### Multi-Factor Authentication (Future)
+
 - TOTP (Time-based One-Time Password)
 - SMS verification
 - Email verification
 - Backup codes
 
 #### Session Management
+
 ```typescript
 interface Session {
   id: string;
@@ -1045,6 +1106,7 @@ interface Session {
 ### Compliance
 
 #### GDPR Compliance
+
 - Data minimization
 - Right to access
 - Right to erasure
@@ -1052,6 +1114,7 @@ interface Session {
 - Consent management
 
 #### Indonesian Data Protection (UU PDP)
+
 - Data localization
 - Consent requirements
 - Data breach notification
@@ -1060,6 +1123,7 @@ interface Session {
 ### Security Best Practices
 
 #### Input Validation
+
 ```typescript
 import { z } from 'zod';
 
@@ -1072,16 +1136,19 @@ const createProjectSchema = z.object({
 ```
 
 #### SQL Injection Prevention
+
 - Use Prisma ORM (parameterized queries)
 - Input sanitization
 - Prepared statements
 
 #### XSS Prevention
+
 - Content Security Policy (CSP)
 - Output encoding
 - HTML sanitization
 
 #### CSRF Protection
+
 - CSRF tokens
 - SameSite cookies
 - Origin validation
@@ -1093,6 +1160,7 @@ const createProjectSchema = z.object({
 ### Database Optimization
 
 #### Query Optimization
+
 ```typescript
 // Use select to fetch only needed fields
 const projects = await prisma.project.findMany({
@@ -1118,6 +1186,7 @@ const stats = await prisma.project.aggregate({
 ```
 
 #### Connection Pooling
+
 ```typescript
 // Prisma connection pool configuration
 datasource db {
@@ -1131,6 +1200,7 @@ datasource db {
 ```
 
 #### Caching Strategy
+
 ```typescript
 // Redis caching example
 import { Redis } from 'ioredis';
@@ -1151,6 +1221,7 @@ async function getCachedProject(id: string) {
 ### API Performance
 
 #### Response Time Targets
+
 - **Health Check**: < 50ms
 - **List Endpoints**: < 200ms
 - **Detail Endpoints**: < 150ms
@@ -1158,6 +1229,7 @@ async function getCachedProject(id: string) {
 - **File Upload**: < 2s (depends on size)
 
 #### Rate Limiting
+
 ```typescript
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -1173,6 +1245,7 @@ export class AppModule {}
 ```
 
 #### Pagination
+
 ```typescript
 interface PaginationParams {
   page: number;
@@ -1209,12 +1282,14 @@ async function findPaginated(params: PaginationParams) {
 ### Frontend Performance
 
 #### Asset Optimization
+
 - Image optimization (WebP, AVIF)
 - Code splitting
 - Lazy loading
 - CDN delivery
 
 #### Performance Metrics
+
 - **First Contentful Paint (FCP)**: < 1.8s
 - **Largest Contentful Paint (LCP)**: < 2.5s
 - **Time to Interactive (TTI)**: < 3.8s
@@ -1227,6 +1302,7 @@ async function findPaginated(params: PaginationParams) {
 ### Environment Setup
 
 #### Development
+
 ```bash
 # Install dependencies
 pnpm install
@@ -1246,6 +1322,7 @@ pnpm dev
 ```
 
 #### Staging
+
 ```bash
 # Build applications
 pnpm build
@@ -1258,6 +1335,7 @@ pnpm start
 ```
 
 #### Production
+
 ```bash
 # Build for production
 NODE_ENV=production pnpm build
@@ -1272,6 +1350,7 @@ pm2 start ecosystem.config.js
 ### Docker Deployment
 
 #### Docker Compose
+
 ```yaml
 version: '3.8'
 
@@ -1285,12 +1364,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
 
   api:
     build:
@@ -1300,7 +1379,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       - postgres
       - redis
@@ -1310,7 +1389,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     ports:
-      - "4321:4321"
+      - '4321:4321'
     depends_on:
       - api
 
@@ -1343,6 +1422,7 @@ export class HealthController {
 ### Code Organization
 
 #### Module Structure
+
 ```
 feature/
 ├── dto/
@@ -1358,6 +1438,7 @@ feature/
 ```
 
 #### Naming Conventions
+
 - **Files**: kebab-case (e.g., `project-service.ts`)
 - **Classes**: PascalCase (e.g., `ProjectService`)
 - **Functions**: camelCase (e.g., `createProject`)
@@ -1374,13 +1455,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    const status = exception instanceof HttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message = exception instanceof HttpException
-      ? exception.message
-      : 'Internal server error';
+    const message =
+      exception instanceof HttpException
+        ? exception.message
+        : 'Internal server error';
 
     response.status(status).json({
       statusCode: status,
@@ -1395,6 +1478,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 ### Testing Strategy
 
 #### Unit Tests
+
 ```typescript
 describe('ProjectService', () => {
   let service: ProjectService;
@@ -1420,6 +1504,7 @@ describe('ProjectService', () => {
 ```
 
 #### Integration Tests
+
 ```typescript
 describe('Projects API', () => {
   let app: INestApplication;
@@ -1462,6 +1547,7 @@ describe('Projects API', () => {
 ### Documentation
 
 #### API Documentation
+
 ```typescript
 @ApiTags('projects')
 @Controller('projects')
@@ -1497,17 +1583,20 @@ export class ProjectsController {
 ## 📞 Support & Resources
 
 ### Documentation
+
 - [API Documentation](http://localhost:3000/api/docs)
 - [Testing Strategy](./testing-strategy.md)
 - [Optimization Plan](./optimization-plan.md)
 - [Project Plan](../plan.md)
 
 ### Community
+
 - [GitHub Issues](https://github.com/sulhicmz/JasaWeb/issues)
 - [GitHub Discussions](https://github.com/sulhicmz/JasaWeb/discussions)
 - [Email Support](mailto:support@jasaweb.com)
 
 ### Contributing
+
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Code of Conduct](../CODE_OF_CONDUCT.md)
 - [Security Policy](../SECURITY.md)
