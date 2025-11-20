@@ -1,24 +1,46 @@
-import { IsEmail, IsString, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  MinLength,
+  IsEnum,
+  IsInt,
+} from 'class-validator';
+import { OnboardingStatus } from '../entities/user.entity';
 
 export class UpdateUserDto {
   @IsOptional()
   @IsEmail()
-    email?: string;
+  email?: string;
 
   @IsOptional()
   @IsString()
   @MinLength(2)
-    name?: string;
+  name?: string;
 
   @IsOptional()
   @IsString()
   @MinLength(6)
-    password?: string;
+  password?: string;
 
   @IsOptional()
   @IsString()
-    profilePicture?: string;
+  profilePicture?: string;
 
   @IsOptional()
-    isActive?: boolean;
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsEnum(OnboardingStatus)
+  onboardingStatus?: OnboardingStatus;
+
+  @IsOptional()
+  @IsInt()
+  onboardingStep?: number;
+
+  @IsOptional()
+  onboardingCompletedAt?: Date;
+
+  @IsOptional()
+  onboardingPreferences?: Record<string, any>;
 }
