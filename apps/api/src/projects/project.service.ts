@@ -1,5 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import { WorkflowAutomationService } from './workflow-automation.service';
 
 const projectRelationsInclude = {
   milestones: true,
@@ -47,6 +53,7 @@ export interface CreateProjectDto {
   status?: string;
   startAt?: Date;
   dueAt?: Date;
+  projectTemplateId?: string;
 }
 
 export interface UpdateProjectDto {
@@ -58,16 +65,30 @@ export interface UpdateProjectDto {
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
+  constructor(
+    private readonly multiTenantPrisma: MultiTenantPrismaService,
+    @Inject(forwardRef(() => WorkflowAutomationService))
+    private readonly workflowAutomation: WorkflowAutomationService
+  ) {}
 
   async create(createProjectDto: CreateProjectDto, organizationId: string) {
-    return this.multiTenantPrisma.project.create({
+    const project = await this.multiTenantPrisma.project.create({
       data: {
         ...createProjectDto,
         organizationId,
         status: createProjectDto.status || 'draft',
       },
     });
+
+    // Trigger workflow automation for project creation
+    if (createProjectDto.projectTemplateId) {
+      await this.workflowAutomation.processProjectCreation(
+        project.id,
+        createProjectDto.projectTemplateId
+      );
+    }
+
+    return project;
   }
 
   async findAll(view: ProjectViewMode = 'summary') {
@@ -89,12 +110,26 @@ export class ProjectService {
 
   async update(id: string, updateProjectDto: UpdateProjectDto) {
     // First check if project exists
-    await this.findOne(id);
+    const existingProject = await this.findOne(id);
 
-    return this.multiTenantPrisma.project.update({
+    const project = await this.multiTenantPrisma.project.update({
       where: { id },
       data: updateProjectDto,
     });
+
+    // Trigger workflow automation for status change
+    if (
+      updateProjectDto.status &&
+      updateProjectDto.status !== existingProject.status
+    ) {
+      await this.workflowAutomation.processProjectStatusChange(
+        id,
+        existingProject.status,
+        updateProjectDto.status
+      );
+    }
+
+    return project;
   }
 
   async remove(id: string) {
@@ -107,7 +142,10 @@ export class ProjectService {
   }
 
   // Business logic methods
-  async findByOrganization(organizationId: string, view: ProjectViewMode = 'summary') {
+  async findByOrganization(
+    organizationId: string,
+    view: ProjectViewMode = 'summary'
+  ) {
     return this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       ...buildProjectQuery(view),
@@ -140,26 +178,27 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    const [completedMilestones, pendingApprovals, completedTasks] = await Promise.all([
-      this.multiTenantPrisma.milestone.count({
-        where: {
-          projectId: id,
-          status: 'completed',
-        },
-      }),
-      this.multiTenantPrisma.approval.count({
-        where: {
-          projectId: id,
-          status: 'pending',
-        },
-      }),
-      this.multiTenantPrisma.task.count({
-        where: {
-          projectId: id,
-          status: 'completed',
-        },
-      }),
-    ]);
+    const [completedMilestones, pendingApprovals, completedTasks] =
+      await Promise.all([
+        this.multiTenantPrisma.milestone.count({
+          where: {
+            projectId: id,
+            status: 'completed',
+          },
+        }),
+        this.multiTenantPrisma.approval.count({
+          where: {
+            projectId: id,
+            status: 'pending',
+          },
+        }),
+        this.multiTenantPrisma.task.count({
+          where: {
+            projectId: id,
+            status: 'completed',
+          },
+        }),
+      ]);
 
     const milestoneCount = (project as any)._count?.milestones || 0;
     const fileCount = (project as any)._count?.files || 0;
@@ -172,7 +211,10 @@ export class ProjectService {
       pendingApprovals,
       taskCount,
       completedTasks,
-      progress: milestoneCount > 0 ? Math.round((completedMilestones / milestoneCount) * 100) : 0,
+      progress:
+        milestoneCount > 0
+          ? Math.round((completedMilestones / milestoneCount) * 100)
+          : 0,
     };
   }
 }

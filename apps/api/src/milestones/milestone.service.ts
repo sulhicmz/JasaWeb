@@ -1,5 +1,12 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import { WorkflowAutomationService } from '../projects/workflow-automation.service';
 
 export interface CreateMilestoneDto {
   projectId: string;
@@ -17,9 +24,13 @@ export interface UpdateMilestoneDto {
 
 @Injectable()
 export class MilestoneService {
-  constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
+  constructor(
+    private readonly multiTenantPrisma: MultiTenantPrismaService,
+    @Inject(forwardRef(() => WorkflowAutomationService))
+    private readonly workflowAutomation: WorkflowAutomationService
+  ) {}
 
-  async create(createMilestoneDto: CreateMilestoneDto, organizationId: string) {
+async create(createMilestoneDto: CreateMilestoneDto, organizationId: string) {
     // Validate that the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: createMilestoneDto.projectId },
@@ -29,10 +40,27 @@ export class MilestoneService {
       throw new BadRequestException('Project does not exist or does not belong to your organization');
     }
 
-    return await this.multiTenantPrisma.milestone.create({
+    const milestone = await this.multiTenantPrisma.milestone.create({
       data: {
         ...createMilestoneDto,
         status: createMilestoneDto.dueAt && new Date(createMilestoneDto.dueAt) < new Date() ? 'overdue' : 'todo',
+      },
+    });
+
+    // Trigger workflow automation for milestone creation
+    await this.workflowAutomation.processMilestoneCreation(milestone.id, createMilestoneDto.projectId);
+
+    return milestone;
+  }
+
+    return await this.multiTenantPrisma.milestone.create({
+      data: {
+        ...createMilestoneDto,
+        status:
+          createMilestoneDto.dueAt &&
+          new Date(createMilestoneDto.dueAt) < new Date()
+            ? 'overdue'
+            : 'todo',
       },
     });
   }
@@ -45,7 +73,9 @@ export class MilestoneService {
       });
 
       if (!project) {
-        throw new BadRequestException('Project does not exist or does not belong to your organization');
+        throw new BadRequestException(
+          'Project does not exist or does not belong to your organization'
+        );
       }
 
       return await this.multiTenantPrisma.milestone.findMany({
@@ -55,9 +85,9 @@ export class MilestoneService {
             select: {
               id: true,
               name: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
     } else {
       return await this.multiTenantPrisma.milestone.findMany({
@@ -66,9 +96,9 @@ export class MilestoneService {
             select: {
               id: true,
               name: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
     }
   }
@@ -81,39 +111,64 @@ export class MilestoneService {
           select: {
             id: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!milestone) {
-      throw new BadRequestException('Milestone not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Milestone not found or does not belong to your organization'
+      );
     }
 
     return milestone;
   }
 
-  async update(id: string, updateMilestoneDto: UpdateMilestoneDto, organizationId: string) {
+  async update(
+    id: string,
+    updateMilestoneDto: UpdateMilestoneDto,
+    organizationId: string
+  ) {
     // Check if milestone exists
-    const existingMilestone = await this.multiTenantPrisma.milestone.findUnique({
-      where: { id },
-    });
+    const existingMilestone = await this.multiTenantPrisma.milestone.findUnique(
+      {
+        where: { id },
+      }
+    );
 
     if (!existingMilestone) {
-      throw new BadRequestException('Milestone not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Milestone not found or does not belong to your organization'
+      );
     }
 
     // Automatically update status based on due date if needed
     const updateData = { ...updateMilestoneDto };
-    if (updateMilestoneDto.dueAt && new Date(updateMilestoneDto.dueAt) < new Date() &&
-        updateMilestoneDto.status !== 'completed') {
+    if (
+      updateMilestoneDto.dueAt &&
+      new Date(updateMilestoneDto.dueAt) < new Date() &&
+      updateMilestoneDto.status !== 'completed'
+    ) {
       updateData.status = 'overdue';
     }
 
-    return await this.multiTenantPrisma.milestone.update({
+    const milestone = await this.multiTenantPrisma.milestone.update({
       where: { id },
       data: updateData,
     });
+
+    // Trigger workflow automation for status change
+    if (updateMilestoneDto.status && updateMilestoneDto.status !== existingMilestone.status) {
+      await this.workflowAutomation.processMilestoneStatusChange(
+        id,
+        existingMilestone.projectId,
+        existingMilestone.status,
+        updateMilestoneDto.status,
+      );
+    }
+
+    return milestone;
   }
 
   async remove(id: string, organizationId: string) {
@@ -122,7 +177,9 @@ export class MilestoneService {
     });
 
     if (!milestone) {
-      throw new BadRequestException('Milestone not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Milestone not found or does not belong to your organization'
+      );
     }
 
     return await this.multiTenantPrisma.milestone.delete({
@@ -139,9 +196,9 @@ export class MilestoneService {
           select: {
             id: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
@@ -151,16 +208,16 @@ export class MilestoneService {
         status: 'overdue',
         dueAt: {
           lt: new Date(),
-        }
+        },
       },
       include: {
         project: {
           select: {
             id: true,
             name: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 
@@ -172,10 +229,12 @@ export class MilestoneService {
     })) as Array<{ status: string }>;
 
     const total = milestones.length;
-    const todo = milestones.filter(m => m.status === 'todo').length;
-    const inProgress = milestones.filter(m => m.status === 'in-progress').length;
-    const completed = milestones.filter(m => m.status === 'completed').length;
-    const overdue = milestones.filter(m => m.status === 'overdue').length;
+    const todo = milestones.filter((m) => m.status === 'todo').length;
+    const inProgress = milestones.filter(
+      (m) => m.status === 'in-progress'
+    ).length;
+    const completed = milestones.filter((m) => m.status === 'completed').length;
+    const overdue = milestones.filter((m) => m.status === 'overdue').length;
 
     return {
       total,

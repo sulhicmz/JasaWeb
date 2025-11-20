@@ -58,21 +58,23 @@ model Membership {
 }
 
 model Project {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  name           String
-  status         String // draft, progress, review, completed, paused, cancelled
-  startAt        DateTime?
-  dueAt          DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  milestones     Milestone[]
-  files          File[]
-  approvals      Approval[]
-  tasks          Task[]
-  tickets        Ticket[]
-  invoices       Invoice[]
+  id                 String           @id @default(cuid())
+  organizationId     String
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectTemplateId  String?
+  projectTemplate    ProjectTemplate? @relation(fields: [projectTemplateId], references: [id])
+  name               String
+  status             String // draft, progress, review, completed, paused, cancelled
+  startAt            DateTime?
+  dueAt              DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  milestones         Milestone[]
+  files              File[]
+  approvals          Approval[]
+  tasks              Task[]
+  tickets            Ticket[]
+  invoices           Invoice[]
 }
 
 model Milestone {
@@ -201,4 +203,69 @@ model AuditLog {
   target         String // User, Project, File, etc.
   meta           Json?
   createdAt      DateTime     @default(now())
+}
+
+model ProjectTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  serviceType String // school-website, news-portal, company-profile
+  isActive    Boolean  @default(true)
+  version     String   @default("1.0")
+  settings    Json?    // Template-specific settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  milestoneTemplates MilestoneTemplate[]
+  projects           Project[]
+
+  @@unique([name, version])
+}
+
+model MilestoneTemplate {
+  id                String            @id @default(cuid())
+  projectTemplateId String
+  projectTemplate   ProjectTemplate   @relation(fields: [projectTemplateId], references: [id], onDelete: Cascade)
+  title             String
+  description       String?
+  order             Int
+  durationDays      Int?              // Estimated duration in days
+  isRequired        Boolean           @default(true)
+  settings          Json?             // Milestone-specific settings
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  taskTemplates TaskTemplate[]
+
+  @@unique([projectTemplateId, order])
+}
+
+model TaskTemplate {
+  id                 String            @id @default(cuid())
+  milestoneTemplateId String
+  milestoneTemplate  MilestoneTemplate  @relation(fields: [milestoneTemplateId], references: [id], onDelete: Cascade)
+  title              String
+  description        String?
+  order              Int
+  assigneeRole       String?           // Role that should be assigned this task
+  durationDays       Int?              // Estimated duration in days
+  isRequired         Boolean           @default(true)
+  settings           Json?             // Task-specific settings
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@unique([milestoneTemplateId, order])
+}
+
+model WorkflowRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  trigger     String   // milestone_created, task_completed, project_status_changed
+  condition   Json?    // Conditions for the rule to trigger
+  action      String   // create_task, send_notification, update_status, create_approval
+  parameters  Json?    // Parameters for the action
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
