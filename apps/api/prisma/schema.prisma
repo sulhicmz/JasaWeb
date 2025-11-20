@@ -206,35 +206,3 @@ model AuditLog {
   meta           Json?
   createdAt      DateTime     @default(now())
 }
-
-model Message {
-  id           String   @id @default(cuid())
-  senderId     String
-  sender       User     @relation(fields: [senderId], references: [id])
-  projectId    String
-  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  content      String
-  type         String   // chat, comment, notification
-  recipientId  String?
-  createdAt    DateTime @default(now())
-  
-  @@index([projectId])
-  @@index([senderId])
-  @@index([recipientId])
-}
-
-model Document {
-  id           String   @id @default(cuid())
-  projectId    String
-  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title        String
-  content      String   @default("")
-  version      Int      @default(1)
-  updatedById  String
-  updatedBy    User     @relation(fields: [updatedById], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  @@index([projectId])
-  @@index([updatedById])
-}
