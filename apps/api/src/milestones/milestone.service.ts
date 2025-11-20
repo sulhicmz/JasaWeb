@@ -30,30 +30,19 @@ export class MilestoneService {
     private readonly workflowAutomation: WorkflowAutomationService
   ) {}
 
-async create(createMilestoneDto: CreateMilestoneDto, organizationId: string) {
+  async create(createMilestoneDto: CreateMilestoneDto, organizationId: string) {
     // Validate that the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: createMilestoneDto.projectId },
     });
 
     if (!project) {
-      throw new BadRequestException('Project does not exist or does not belong to your organization');
+      throw new BadRequestException(
+        'Project does not exist or does not belong to your organization'
+      );
     }
 
     const milestone = await this.multiTenantPrisma.milestone.create({
-      data: {
-        ...createMilestoneDto,
-        status: createMilestoneDto.dueAt && new Date(createMilestoneDto.dueAt) < new Date() ? 'overdue' : 'todo',
-      },
-    });
-
-    // Trigger workflow automation for milestone creation
-    await this.workflowAutomation.processMilestoneCreation(milestone.id, createMilestoneDto.projectId);
-
-    return milestone;
-  }
-
-    return await this.multiTenantPrisma.milestone.create({
       data: {
         ...createMilestoneDto,
         status:
@@ -63,6 +52,14 @@ async create(createMilestoneDto: CreateMilestoneDto, organizationId: string) {
             : 'todo',
       },
     });
+
+    // Trigger workflow automation for milestone creation
+    await this.workflowAutomation.processMilestoneCreation(
+      milestone.id,
+      createMilestoneDto.projectId
+    );
+
+    return milestone;
   }
 
   async findAll(projectId?: string, organizationId: string = '') {
@@ -159,12 +156,15 @@ async create(createMilestoneDto: CreateMilestoneDto, organizationId: string) {
     });
 
     // Trigger workflow automation for status change
-    if (updateMilestoneDto.status && updateMilestoneDto.status !== existingMilestone.status) {
+    if (
+      updateMilestoneDto.status &&
+      updateMilestoneDto.status !== existingMilestone.status
+    ) {
       await this.workflowAutomation.processMilestoneStatusChange(
         id,
         existingMilestone.projectId,
         existingMilestone.status,
-        updateMilestoneDto.status,
+        updateMilestoneDto.status
       );
     }
 
