@@ -54,13 +54,11 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
       - name: Download PR intel
         uses: actions/download-artifact@v6
         with:
           name: pr-intel-data-${{ github.run_id }}
           path: ./pr_intel
-
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
