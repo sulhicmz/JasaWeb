@@ -63,7 +63,9 @@ const StatusWidgets: React.FC = () => {
 
       setStatusData({ projects, tickets, invoices });
     } catch (error) {
-      console.error('Error loading status data:', error);
+      if (import.meta.env.DEV) {
+        console.debug('Error loading status data:', error);
+      }
     } finally {
       setLoading(false);
     }

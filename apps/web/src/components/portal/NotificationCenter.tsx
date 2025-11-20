@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  notificationService,
+import { notificationService } from '../../services/notificationService';
+import type {
   Notification,
   NotificationUpdate,
 } from '../../services/notificationService';
@@ -37,7 +37,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         setUnreadCount(data.unread || 0);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      if (import.meta.env.DEV) {
+        console.debug('Failed to fetch notifications:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +68,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       // Also send via WebSocket for real-time update
       notificationService.markAsRead(notificationId);
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      if (import.meta.env.DEV) {
+        console.debug('Failed to mark notification as read:', error);
+      }
     }
   };
 
@@ -91,7 +95,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       // Also send via WebSocket for real-time update
       notificationService.markAllAsRead();
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      if (import.meta.env.DEV) {
+        console.debug('Failed to mark all notifications as read:', error);
+      }
     }
   };
 
@@ -116,7 +122,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('Failed to delete notification:', error);
+      if (import.meta.env.DEV) {
+        console.debug('Failed to delete notification:', error);
+      }
     }
   };
 
@@ -357,7 +365,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <button
               onClick={() => {
                 // TODO: Navigate to full notifications page
-                console.log('Navigate to full notifications page');
+                if (import.meta.env.DEV) {
+                  console.debug('Navigate to full notifications page');
+                }
               }}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
             >
