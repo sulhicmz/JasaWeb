@@ -46,19 +46,7 @@
       "cwd": "${workspaceFolder}/apps/web",
       "protocol": "inspector"
     },
-    {
-      "name": "Debug Vitest Tests",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/node_modules/.bin/vitest",
-      "args": ["run", "--no-coverage"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "env": {
-        "NODE_ENV": "test"
-      },
-      "cwd": "${workspaceFolder}"
-    },
+
     {
       "name": "Debug Current TypeScript File",
       "type": "node",

@@ -59,7 +59,7 @@ SECURITY.md @jasaweb-maintainers
 **/*.spec.ts @jasaweb-backend @jasaweb-frontend
 **/test/ @jasaweb-backend @jasaweb-frontend
 **/tests/ @jasaweb-backend @jasaweb-frontend
-vitest.config.* @jasaweb-maintainers
+jest.config.* @jasaweb-maintainers
 
 # Build and Deployment
 /dist/ @jasaweb-maintainers

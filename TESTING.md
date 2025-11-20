@@ -1,12 +1,30 @@
 # Testing Guide
 
-## API Testing
+## Overview
 
-This document provides guidelines for testing the JasaWeb API application.
+JasaWeb uses Jest as the standardized testing framework across the entire monorepo. This ensures consistent testing patterns and reliable CI/CD integration.
 
-### Running Tests
+## Running Tests
 
-#### Run all API tests
+#### Run all tests in the monorepo
+
+```bash
+pnpm test
+```
+
+#### Run tests in watch mode
+
+```bash
+pnpm test:watch
+```
+
+#### Run tests with coverage
+
+```bash
+pnpm test:coverage
+```
+
+#### Run API tests specifically
 
 ```bash
 pnpm test:api
