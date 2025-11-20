@@ -1,72 +1,72 @@
 # CODEOWNERS
 
 # Global owners for all files
-* @jasaweb-maintainers
+* @sulhicmz
 
 # Application-specific owners
 
 # Web Frontend (Astro)
-/apps/web/ @jasaweb-frontend
-apps/web/src/ @jasaweb-frontend
-apps/web/public/ @jasaweb-frontend
-apps/web/astro.config.* @jasaweb-frontend
+/apps/web/ @sulhicmz
+apps/web/src/ @sulhicmz
+apps/web/public/ @sulhicmz
+apps/web/astro.config.* @sulhicmz
 
 # API Backend (NestJS)
-/apps/api/ @jasaweb-backend
-apps/api/src/ @jasaweb-backend
-apps/api/prisma/ @jasaweb-backend
-apps/api/test/ @jasaweb-backend
+/apps/api/ @sulhicmz
+apps/api/src/ @sulhicmz
+apps/api/prisma/ @sulhicmz
+apps/api/test/ @sulhicmz
 
 # Shared Packages
-/packages/ui/ @jasaweb-frontend
-/packages/config/ @jasaweb-backend @jasaweb-frontend
-/packages/testing/ @jasaweb-backend @jasaweb-frontend
+/packages/ui/ @sulhicmz
+/packages/config/ @sulhicmz
+/packages/testing/ @sulhicmz
 
 # Infrastructure and DevOps
-/.github/ @jasaweb-maintainers
-docker-compose.yml @jasaweb-maintainers
-Dockerfile* @jasaweb-maintainers
-*.dockerfile @jasaweb-maintainers
+/.github/ @sulhicmz
+docker-compose.yml @sulhicmz
+Dockerfile* @sulhicmz
+*.dockerfile @sulhicmz
 
 # Configuration Files
-/package.json @jasaweb-maintainers
-/pnpm-workspace.yaml @jasaweb-maintainers
-/tsconfig*.json @jasaweb-maintainers
-/.eslintrc* @jasaweb-maintainers
-/.prettierrc* @jasaweb-maintainers
+/package.json @sulhicmz
+/pnpm-workspace.yaml @sulhicmz
+/tsconfig*.json @sulhicmz
+/.eslintrc* @sulhicmz
+/.prettierrc* @sulhicmz
 
 # Documentation
-/docs/ @jasaweb-maintainers
-*.md @jasaweb-maintainers
-README.md @jasaweb-maintainers
+/docs/ @sulhicmz
+*.md @sulhicmz
+README.md @sulhicmz
 
 # Security and Compliance
-/.github/dependabot.* @jasaweb-maintainers
-/.github/workflows/security.yml @jasaweb-maintainers
-SECURITY.md @jasaweb-maintainers
+/.github/dependabot.* @sulhicmz
+/.github/workflows/security.yml @sulhicmz
+SECURITY.md @sulhicmz
 
 # Database
-**/*.sql @jasaweb-backend
-**/schema.prisma @jasaweb-backend
-**/migrations/ @jasaweb-backend
+**/*.sql @sulhicmz
+**/schema.prisma @sulhicmz
+**/migrations/ @sulhicmz
 
 # Environment and Configuration
-.env* @jasaweb-maintainers
-**/.env* @jasaweb-maintainers
+.env* @sulhicmz
+**/.env* @sulhicmz
 
 # Testing
-**/*.test.ts @jasaweb-backend @jasaweb-frontend
-**/*.spec.ts @jasaweb-backend @jasaweb-frontend
-**/test/ @jasaweb-backend @jasaweb-frontend
-**/tests/ @jasaweb-backend @jasaweb-frontend
-vitest.config.* @jasaweb-maintainers
+**/*.test.ts @sulhicmz
+**/*.spec.ts @sulhicmz
+**/test/ @sulhicmz
+**/tests/ @sulhicmz
+vitest.config.* @sulhicmz
 
 # Build and Deployment
-/dist/ @jasaweb-maintainers
-/build/ @jasaweb-maintainers
-**/dist/ @jasaweb-maintainers
-**/build/ @jasaweb-maintainers
+/dist/ @sulhicmz
+/build/ @sulhicmz
+**/dist/ @sulhicmz
+**/build/ @sulhicmz
 
 # Default fallback for unowned files
 # This line should be last
-* @jasaweb-maintainers
+* @sulhicmz
