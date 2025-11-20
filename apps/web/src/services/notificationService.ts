@@ -48,9 +48,7 @@ class NotificationService {
 
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      if (import.meta.env.DEV) {
-        console.debug('No auth token found, skipping notification connection');
-      }
+      // No auth token found, skipping notification connection
       return;
     }
 
@@ -74,30 +72,22 @@ class NotificationService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      if (import.meta.env.DEV) {
-        console.debug('Connected to notification service');
-      }
+      // Connected to notification service
       this.reconnectAttempts = 0;
       this.callbacks.onConnect?.();
     });
 
     this.socket.on('disconnect', (reason: any) => {
-      if (import.meta.env.DEV) {
-        console.debug('Disconnected from notification service:', reason);
-      }
+      // Disconnected from notification service
       this.callbacks.onDisconnect?.();
     });
 
     this.socket.on('connect_error', (error: any) => {
-      if (import.meta.env.DEV) {
-        console.debug('Notification connection error:', error);
-      }
+      // Notification connection error
       this.reconnectAttempts++;
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        if (import.meta.env.DEV) {
-          console.debug('Max reconnection attempts reached');
-        }
+        // Max reconnection attempts reached
         this.callbacks.onError?.(error);
       }
 
@@ -105,9 +95,7 @@ class NotificationService {
     });
 
     this.socket.on('notification', (notification: Notification) => {
-      if (import.meta.env.DEV) {
-        console.debug('Received notification:', notification);
-      }
+      // Received notification
       this.callbacks.onNotification?.(notification);
 
       // Show browser notification if permission granted
@@ -115,23 +103,17 @@ class NotificationService {
     });
 
     this.socket.on('notification-update', (update: NotificationUpdate) => {
-      if (import.meta.env.DEV) {
-        console.debug('Received notification update:', update);
-      }
+      // Received notification update
       this.callbacks.onNotificationUpdate?.(update);
     });
 
     this.socket.on('unread-count', (data: { count: number }) => {
-      if (import.meta.env.DEV) {
-        console.debug('Unread count updated:', data.count);
-      }
+      // Unread count updated
       this.callbacks.onUnreadCount?.(data.count);
     });
 
     this.socket.on('error', (error: any) => {
-      if (import.meta.env.DEV) {
-        console.debug('Socket error:', error);
-      }
+      // Socket error
       this.callbacks.onError?.(error);
     });
   }
