@@ -11,15 +11,25 @@ permissions:
   pull-requests: write
   issues: write
   actions: read
-
 jobs:
-  gather_pr_data:
-    runs-on: ubuntu-24.04.arm
+  opencode:
+    name: OC Manajer Kualitas Kode
+    runs-on: self-hosted
+    timeout-minutes: 40
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
-          fetch-depth: 0
-
+          fetch-depth: 1
       - name: Collect open PR metadata
         run: |
           mkdir -p pr_intel
@@ -37,43 +47,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-
       - name: Upload PR intel
         if: env.skip_jobs == 'false'
         uses: actions/upload-artifact@v5
         with:
           name: pr-intel-data-${{ github.run_id }}
           path: pr_intel/
-
-  smart_pr_agent:
-    needs: gather_pr_data
-    if: needs.gather_pr_data.outputs.skip_jobs != 'true'
-    runs-on: ubuntu-24.04-arm
-
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Download PR intel
-        uses: actions/download-artifact@v6
-        with:
-          name: pr-intel-data-${{ github.run_id }}
-          path: ./pr_intel
-
-      - name: Run iFlow CLI to handle problematic PRs
-        uses: iflow-ai/iflow-cli-action@v2.1.0
-        with:
-          api_key: ${{ secrets.IFLOW_API_KEY }}
-          timeout: "5400"
-          settings_json: |
-            {
-              "theme": "Dark",
-              "selectedAuthType": "iflow",
-              "apiKey": "${{ secrets.IFLOW_API_KEY }}",
-              "modelName": "qwen3-coder-plus"
-            }
-          prompt: |
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+      - name: Run Manajer Kualitas Kode
+        id: run_code_quality
+        timeout-minutes: 20
+        run: |
+          opencode run "$(cat <<'PROMPT'
             ## ROLE
             You are an autonomous GitHub PR management agent.
             ## CONTEXT
@@ -112,32 +100,11 @@ jobs:
             - Never expose secrets.
             - Never run long polling loops.
             - Keep commits atomic and clean.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-
-      - name: Upload summary
-        if: success()
-        uses: actions/upload-artifact@v5
-        with:
-          name: pr-action-summary-${{ github.run_id }}
-          path: pr_intel/action_summary.json
-
-      - name: Optional summary comment
-        if: success()
-        run: |
-          if [ -f pr_intel/action_summary.json ]; then
-            summary=$(cat pr_intel/action_summary.json | jq -r '.')
-            echo "Posting summary comment..."
-            pr=$(jq -r '.handled_pr' pr_intel/action_summary.json)
-            if [ "$pr" != "null" ]; then
-              gh pr comment "$pr" --body "🤖 **iFlow PR Agent Summary**  
-              \`\`\`json
-              $summary
-              \`\`\`"
-            fi
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
