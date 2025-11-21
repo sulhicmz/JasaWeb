@@ -1,0 +1,148 @@
+---
+// src/pages/offline.astro
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Offline - JasaWeb">
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+      <!-- Offline Icon -->
+      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-wifi-slash text-3xl text-gray-400"></i>
+      </div>
+      
+      <!-- Title -->
+      <h1 class="text-2xl font-bold text-gray-900 mb-4">You're Offline</h1>
+      
+      <!-- Description -->
+      <p class="text-gray-600 mb-6">
+        It looks like you've lost your internet connection. Some features may not be available until you're back online.
+      </p>
+      
+      <!-- Available Features -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h2 class="font-semibold text-blue-900 mb-2">Available Offline</h2>
+        <ul class="text-sm text-blue-800 space-y-1">
+          <li><i class="fas fa-check text-blue-600 mr-2"></i>View cached projects</li>
+          <li><i class="fas fa-check text-blue-600 mr-2"></i>Browse previously loaded pages</li>
+          <li><i class="fas fa-check text-blue-600 mr-2"></i>Access downloaded files</li>
+        </ul>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <button 
+          onclick="checkConnection()" 
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          <i class="fas fa-sync-alt mr-2"></i>
+          Try Again
+        </button>
+        
+        <a 
+          href="/portal" 
+          class="block w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center"
+        >
+          <i class="fas fa-home mr-2"></i>
+          Go to Dashboard
+        </a>
+      </div>
+      
+      <!-- Connection Status -->
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <div class="flex items-center justify-center text-sm text-gray-500">
+          <div id="connectionStatus" class="flex items-center">
+            <div class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div>
+            <span>No connection</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let retryCount = 0;
+    const maxRetries = 5;
+    
+    function checkConnection() {
+      const statusElement = document.getElementById('connectionStatus');
+      const button = event.target;
+      
+      // Show loading state
+      button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Checking...';
+      button.disabled = true;
+      
+      // Try to fetch a small resource to check connection
+      fetch('/api/health', { 
+        method: 'HEAD',
+        cache: 'no-cache'
+      })
+      .then(response => {
+        if (response.ok) {
+          // Connection is back
+          statusElement.innerHTML = '<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div><span>Connected</span>';
+          button.innerHTML = '<i class="fas fa-check mr-2"></i>Connected!';
+          button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+          button.classList.add('bg-green-600');
+          
+          // Redirect after a short delay
+          setTimeout(() => {
+            window.location.href = '/portal';
+          }, 1000);
+        } else {
+          throw new Error('Network response was not ok');
+        }
+      })
+      .catch(error => {
+        // Still offline
+        retryCount++;
+        
+        if (retryCount >= maxRetries) {
+          button.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Still Offline';
+          button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+          button.classList.add('bg-orange-600');
+          
+          // Reset after delay
+          setTimeout(() => {
+            button.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Try Again';
+            button.classList.remove('bg-orange-600');
+            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            button.disabled = false;
+            retryCount = 0;
+          }, 3000);
+        } else {
+          button.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Try Again';
+          button.disabled = false;
+        }
+        
+        statusElement.innerHTML = '<div class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div><span>No connection</span>';
+      });
+    }
+    
+    // Monitor connection changes
+    window.addEventListener('online', () => {
+      const statusElement = document.getElementById('connectionStatus');
+      statusElement.innerHTML = '<div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div><span>Connected</span>';
+      
+      // Show notification
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      notification.innerHTML = '<i class="fas fa-wifi mr-2"></i>Connection restored!';
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    });
+    
+    window.addEventListener('offline', () => {
+      const statusElement = document.getElementById('connectionStatus');
+      statusElement.innerHTML = '<div class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></div><span>No connection</span>';
+    });
+    
+    // Check initial connection status
+    if (navigator.onLine) {
+      checkConnection();
+    }
+  </script>
+</Layout>

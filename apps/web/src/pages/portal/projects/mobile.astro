@@ -1,0 +1,17 @@
+---
+// src/pages/portal/projects/mobile.astro
+import MobilePortalLayout from '../../../layouts/MobilePortalLayout.astro';
+import MobileProjects from '../../../components/portal/MobileProjects.tsx';
+
+export interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<MobilePortalLayout title="Projects" showBackButton={true}>
+  <div class="p-4">
+    <MobileProjects client:load />
+  </div>
+</MobilePortalLayout>
