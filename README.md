@@ -51,11 +51,11 @@ jasaweb/
 
 | Component           | Technology   | Version |
 | ------------------- | ------------ | ------- |
-| **Frontend**        | Astro        | ^4.0.0  |
-| **Backend**         | NestJS       | ^10.0.0 |
+| **Frontend**        | Astro        | ^5.15.9 |
+| **Backend**         | NestJS       | ^11.0.0 |
 | **Database**        | PostgreSQL   | 15+     |
-| **ORM**             | Prisma       | ^6.16.3 |
-| **Language**        | TypeScript   | ^5.0.0  |
+| **ORM**             | Prisma       | ^6.19.0 |
+| **Language**        | TypeScript   | ^5.6.3  |
 | **Package Manager** | pnpm         | ^8.15.0 |
 | **Styling**         | Tailwind CSS | ^4.1.17 |
 | **Testing**         | Vitest       | ^1.0.0  |
