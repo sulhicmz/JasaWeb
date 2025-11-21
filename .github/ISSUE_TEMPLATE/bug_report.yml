@@ -1,15 +1,15 @@
 name: 🐛 Bug Report
 description: File a bug report to help us improve
-title: "[BUG]: "
-labels: ["bug", "triage"]
+title: '[BUG]: '
+labels: ['bug', 'triage']
 body:
   - type: markdown
     attributes:
       value: |
         # 🐛 Bug Report
-        
+
         Thanks for taking the time to fill out this bug report! Please provide as much detail as possible.
-        
+
         **Before submitting**: Please search existing issues to avoid duplicates.
 
   - type: input
@@ -17,7 +17,7 @@ body:
     attributes:
       label: Related Issues
       description: Link any related issues or PRs (use "None" if no related issues)
-      placeholder: "#123, #456, or None"
+      placeholder: '#123, #456, or None'
     validations:
       required: true
 
@@ -26,7 +26,7 @@ body:
     attributes:
       label: Error Keywords
       description: Key error messages or keywords (helps find duplicates)
-      placeholder: "Cannot find module, TypeError, 404 Unauthorized, etc."
+      placeholder: 'Cannot find module, TypeError, 404 Unauthorized, etc.'
     validations:
       required: true
 
@@ -129,7 +129,7 @@ body:
       label: Confirmation
       description: Please confirm the following
       options:
-        - label: I have searched existing issues for similar problems (checked keywords: [error keywords from above])
+        - label: 'I have searched existing issues for similar problems (checked keywords: [error keywords from above])'
           required: true
         - label: I have provided enough information to reproduce the issue
           required: true
