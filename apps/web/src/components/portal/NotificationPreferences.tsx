@@ -113,9 +113,7 @@ export const NotificationPreferences: React.FC<
         setPreferences(defaultPrefs);
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.debug('Failed to fetch notification preferences:', error);
-      }
+      console.error('Failed to fetch notification preferences:', error);
       // Initialize with default preferences
       const defaultPrefs = notificationTypes.map((type) => ({
         type: type.key,
@@ -152,9 +150,7 @@ export const NotificationPreferences: React.FC<
         throw new Error('Failed to save preferences');
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.debug('Failed to save notification preferences:', error);
-      }
+      console.error('Failed to save notification preferences:', error);
       alert('Failed to save preferences. Please try again.');
     } finally {
       setSaving(false);

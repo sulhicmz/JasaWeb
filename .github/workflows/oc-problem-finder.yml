@@ -22,7 +22,7 @@ jobs:
 
   opencode:
     name: opencode - main agent runner
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 40
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 

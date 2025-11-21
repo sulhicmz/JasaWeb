@@ -8,29 +8,9 @@ const parseNumber = (value: string | undefined, fallback: number): number => {
 export default registerAs('security', () => ({
   // JWT Configuration
   jwt: {
-    secret: (() => {
-      const secret = process.env.JWT_SECRET;
-      if (!secret) {
-        throw new Error('JWT_SECRET environment variable is required');
-      }
-      if (secret.length < 32) {
-        throw new Error('JWT_SECRET must be at least 32 characters long');
-      }
-      return secret;
-    })(),
+    secret: process.env.JWT_SECRET || 'change-me-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-    refreshSecret: (() => {
-      const secret = process.env.JWT_REFRESH_SECRET;
-      if (!secret) {
-        throw new Error('JWT_REFRESH_SECRET environment variable is required');
-      }
-      if (secret.length < 32) {
-        throw new Error(
-          'JWT_REFRESH_SECRET must be at least 32 characters long'
-        );
-      }
-      return secret;
-    })(),
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'change-me-in-production',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
 
@@ -55,25 +35,10 @@ export default registerAs('security', () => ({
 
   // Session Configuration
   session: {
-    secret: (() => {
-      const secret = process.env.SESSION_SECRET;
-      if (!secret) {
-        throw new Error('SESSION_SECRET environment variable is required');
-      }
-      if (secret.length < 32) {
-        throw new Error('SESSION_SECRET must be at least 32 characters long');
-      }
-      return secret;
-    })(),
+    secret: process.env.SESSION_SECRET || 'change-me-in-production',
     maxAge: parseNumber(process.env.SESSION_MAX_AGE_HOURS, 24),
-    absoluteTimeout: parseNumber(
-      process.env.SESSION_ABSOLUTE_TIMEOUT_HOURS,
-      72
-    ),
-    inactivityTimeout: parseNumber(
-      process.env.SESSION_INACTIVITY_TIMEOUT_MINUTES,
-      30
-    ),
+    absoluteTimeout: parseNumber(process.env.SESSION_ABSOLUTE_TIMEOUT_HOURS, 72),
+    inactivityTimeout: parseNumber(process.env.SESSION_INACTIVITY_TIMEOUT_MINUTES, 30),
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: 'strict' as const,
@@ -108,16 +73,7 @@ export default registerAs('security', () => ({
   // Encryption
   encryption: {
     algorithm: process.env.ENCRYPTION_ALGORITHM || 'aes-256-gcm',
-    key: (() => {
-      const key = process.env.ENCRYPTION_KEY;
-      if (!key) {
-        throw new Error('ENCRYPTION_KEY environment variable is required');
-      }
-      if (key.length !== 32) {
-        throw new Error('ENCRYPTION_KEY must be exactly 32 characters long');
-      }
-      return key;
-    })(),
+    key: process.env.ENCRYPTION_KEY || 'change-me-in-production-32-chars',
     ivLength: 16,
   },
 

@@ -49,32 +49,17 @@ jasaweb/
 
 ### Technology Stack
 
-| Component           | Technology   | Version |
-| ------------------- | ------------ | ------- |
-| **Frontend**        | Astro        | ^4.0.0  |
-| **Backend**         | NestJS       | ^10.0.0 |
-| **Database**        | PostgreSQL   | 15+     |
-| **ORM**             | Prisma       | ^6.16.3 |
-| **Language**        | TypeScript   | ^5.0.0  |
-| **Package Manager** | pnpm         | ^8.15.0 |
-| **Styling**         | Tailwind CSS | ^4.1.17 |
-| **Testing**         | Vitest       | ^1.0.0  |
-| **Container**       | Docker       | Latest  |
-
-### 🔄 Recent Migration: Tailwind CSS v4
-
-This project has been migrated from the deprecated `@astrojs/tailwind` integration to Tailwind CSS v4 with the native Vite plugin:
-
-- **Before**: Used `@astrojs/tailwind` integration (deprecated)
-- **After**: Uses `@tailwindcss/vite` plugin with Tailwind CSS v4
-- **Benefits**: Better performance, smaller bundle size, latest Tailwind features
-- **Impact**: No breaking changes - existing Tailwind classes continue to work
-
-The migration includes:
-
-- Updated `astro.config.mjs` to use the Vite plugin
-- Updated CSS imports to use the new v4 syntax (`@import 'tailwindcss'`)
-- Removed dependency on the deprecated Astro integration
+| Component | Technology | Version |
+|-----------|------------|---------|
+| **Frontend** | Astro | ^4.0.0 |
+| **Backend** | NestJS | ^10.0.0 |
+| **Database** | PostgreSQL | 15+ |
+| **ORM** | Prisma | ^6.16.3 |
+| **Language** | TypeScript | ^5.0.0 |
+| **Package Manager** | pnpm | ^8.15.0 |
+| **Styling** | Tailwind CSS | ^3.3.0 |
+| **Testing** | Vitest | ^1.0.0 |
+| **Container** | Docker | Latest |
 
 ## 🚀 Quick Start
 
@@ -89,14 +74,12 @@ The migration includes:
 ### Installation
 
 1. **Clone the repository**
-
    ```bash
    git clone https://github.com/sulhicmz/JasaWeb.git
    cd JasaWeb
    ```
 
 2. **Setup Node.js and pnpm**
-
    ```bash
    # Install and use correct Node.js version
    nvm use
@@ -107,13 +90,11 @@ The migration includes:
    ```
 
 3. **Install dependencies**
-
    ```bash
    pnpm install
    ```
 
 4. **Environment setup**
-
    ```bash
    # Copy environment templates
    cp .env.example .env
@@ -125,7 +106,6 @@ The migration includes:
    ```
 
 5. **Start development services**
-
    ```bash
    # Start database and other services
    docker-compose up -d
@@ -138,7 +118,6 @@ The migration includes:
    ```
 
 6. **Start development servers**
-
    ```bash
    # Start all applications in development mode
    pnpm dev
@@ -183,7 +162,6 @@ JasaWeb provides pre-configured VS Code settings for an optimal development expe
 ### Required Environment Variables
 
 #### Root `.env`
-
 ```bash
 # Application
 NODE_ENV=development
@@ -210,7 +188,6 @@ S3_SECRET_KEY=your-secret-key
 ```
 
 #### API Environment (`apps/api/.env`)
-
 ```bash
 # API Configuration
 API_PORT=3000
@@ -229,7 +206,6 @@ CORS_ORIGIN=http://localhost:4321
 ```
 
 #### Web Environment (`apps/web/.env`)
-
 ```bash
 # Site Configuration
 SITE_URL=http://localhost:4321
@@ -294,46 +270,43 @@ pnpm dev-tools:quality # Code quality tools
 JasaWeb includes several development tools to improve productivity:
 
 1. **File Watcher**: Automatically rebuild and reload applications when files change
-
    ```bash
    # Watch all applications
    ./scripts/dev-tools/watch-and-reload.sh all
-
+   
    # Watch API only
    ./scripts/dev-tools/watch-and-reload.sh api
-
+   
    # Watch Web only
    ./scripts/dev-tools/watch-and-reload.sh web
    ```
 
 2. **Database Tools**: Simplify database operations
-
    ```bash
    # Reset database (WARNING: Deletes all data)
    ./scripts/dev-tools/database-tools.sh reset
-
+   
    # Create new migration
    ./scripts/dev-tools/database-tools.sh migrate "migration-name"
-
+   
    # Run pending migrations
    ./scripts/dev-tools/database-tools.sh up
-
+   
    # Open Prisma Studio
    ./scripts/dev-tools/database-tools.sh studio
-
+   
    # Generate Prisma client
    ./scripts/dev-tools/database-tools.sh generate
    ```
 
 3. **Code Quality Tools**: Run checks and fix issues
-
    ```bash
    # Run all code quality checks
    ./scripts/dev-tools/code-quality.sh all
-
+   
    # Fix code issues
    ./scripts/dev-tools/code-quality.sh fix
-
+   
    # Run specific check (lint, types, test, security, format)
    ./scripts/dev-tools/code-quality.sh check lint
    ```
@@ -382,14 +355,12 @@ pnpm test:e2e
 ### Available Endpoints
 
 #### Authentication
-
 - `POST /auth/login` - User login
 - `POST /auth/register` - User registration
 - `POST /auth/refresh` - Refresh token
 - `POST /auth/logout` - User logout
 
 #### Projects
-
 - `GET /projects` - List projects (summary view)
 - `GET /projects?view=detail` - List projects (detailed view)
 - `POST /projects` - Create project
@@ -398,7 +369,6 @@ pnpm test:e2e
 - `DELETE /projects/:id` - Delete project
 
 #### Health Check
-
 - `GET /health` - Application health status
 
 ### API Documentation
@@ -410,11 +380,11 @@ pnpm test:e2e
 
 ### Environment Setup
 
-| Environment | URL                 | Branch    | Description            |
-| ----------- | ------------------- | --------- | ---------------------- |
-| Development | dev.jasaweb.com     | develop   | Development testing    |
-| Staging     | staging.jasaweb.com | main      | Pre-production testing |
-| Production  | jasaweb.com         | main/tags | Live production        |
+| Environment | URL | Branch | Description |
+|-------------|-----|--------|-------------|
+| Development | dev.jasaweb.com | develop | Development testing |
+| Staging | staging.jasaweb.com | main | Pre-production testing |
+| Production | jasaweb.com | main/tags | Live production |
 
 ### Deployment Process
 
@@ -429,7 +399,6 @@ pnpm test:e2e
    - Custom domains can be configured in Cloudflare dashboard
 
 3. **Manual Deployment** (if needed)
-
 ```bash
 # Build for production
 pnpm build
@@ -527,7 +496,6 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 ### Common Issues
 
 #### Database Connection Issues
-
 ```bash
 # Check Docker containers
 docker-compose ps
@@ -540,7 +508,6 @@ docker-compose logs postgres
 ```
 
 #### Dependency Issues
-
 ```bash
 # Clear pnpm cache
 pnpm store prune
@@ -551,7 +518,6 @@ pnpm install
 ```
 
 #### Build Issues
-
 ```bash
 # Clear build cache
 pnpm clean

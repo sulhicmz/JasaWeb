@@ -1,0 +1,182 @@
+import React, { useState, useEffect } from 'react';
+import { knowledgeBaseService, KbCategory, KbArticle } from '../../services/knowledgeBaseService';
+
+interface KnowledgeBaseHomeProps {}
+
+const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
+  const [categories, setCategories] = useState<KbCategory[]>([]);
+  const [featuredArticles, setFeaturedArticles] = useState<KbArticle[]>([]);
+  const [recentArticles, setRecentArticles] = useState<KbArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [categoriesData, featuredData, recentData] = await Promise.all([
+        knowledgeBaseService.getCategories(),
+        knowledgeBaseService.getArticles({ featured: true }),
+        knowledgeBaseService.getArticles({ status: 'published' }),
+      ]);
+
+      setCategories(categoriesData);
+      setFeaturedArticles(featuredData.slice(0, 6));
+      setRecentArticles(recentData.slice(0, 8));
+    } catch (error) {
+      console.error('Error loading knowledge base data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/knowledge-base/search?q=${encodeURIComponent(searchQuery)}`;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">Knowledge Base</h1>
+            <p className="text-xl mb-8 text-blue-100">
+              Find answers, guides, and resources to help you get the most out of JasaWeb
+            </p>
+            
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for articles, guides, and answers..."
+                  className="w-full px-6 py-4 text-gray-900 bg-white rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Categories */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Browse by Category</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((category) => (
+              <a
+                key={category.id}
+                href={`/knowledge-base/category/${category.id}`}
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+              >
+                <div className="flex items-center mb-4">
+                  {category.icon && (
+                    <span className="text-3xl mr-3">{category.icon}</span>
+                  )}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">{category.name}</h3>
+                    {category.description && (
+                      <p className="text-gray-600 text-sm mt-1">{category.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">
+                    {category._count?.articles || 0} articles
+                  </span>
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Articles */}
+        {featuredArticles.length > 0 && (
+          <section className="mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Featured Articles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredArticles.map((article) => (
+                <a
+                  key={article.id}
+                  href={`/knowledge-base/article/${article.slug}`}
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+                >
+                  <div className="flex items-center mb-3">
+                    <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                      Featured
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {article.title}
+                  </h3>
+                  {article.excerpt && (
+                    <p className="text-gray-600 mb-4 line-clamp-3">{article.excerpt}</p>
+                  )}
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>{article.category.name}</span>
+                    <span>{article.viewCount} views</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recent Articles */}
+        {recentArticles.length > 0 && (
+          <section>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Recent Articles</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recentArticles.map((article) => (
+                <a
+                  key={article.id}
+                  href={`/knowledge-base/article/${article.slug}`}
+                  className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {article.title}
+                  </h3>
+                  {article.excerpt && (
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{article.excerpt}</p>
+                  )}
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>{article.category.name}</span>
+                    <span>{new Date(article.publishedAt || article.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default KnowledgeBaseHome;

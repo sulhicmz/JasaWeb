@@ -54,9 +54,7 @@ const QuickActions: React.FC = () => {
       // Reload projects
       window.dispatchEvent(new CustomEvent('reloadProjects'));
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.debug('Error creating project:', error);
-      }
+      console.error('Error creating project:', error);
       showNotification('Failed to create project. Please try again.', 'error');
     }
   };
@@ -93,9 +91,7 @@ const QuickActions: React.FC = () => {
       form.reset();
       showNotification('Ticket created successfully!', 'success');
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.debug('Error creating ticket:', error);
-      }
+      console.error('Error creating ticket:', error);
       showNotification('Failed to create ticket. Please try again.', 'error');
     }
   };
