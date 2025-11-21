@@ -1,13 +1,65 @@
+# Documentation for better PR management
+# https://docs.mergify.io
+
 queue_rules:
-  - name: open pr
+  - name: default
+    queue_conditions:
+      # Only queue PRs that have all required checks passing
+      - check-success=build
+      - check-success=lint
+      - check-success=test
+      - check-success=typecheck
+      # Don't queue draft PRs
+      - -draft
     merge_method: rebase
     update_method: rebase
     autoqueue: true
+    # Allow PR batch processing to reduce CI load
+    batch_size: 3
+    # Allow automatic rebasing
+    rebase_fallback: fallback to normal merge
+    # Don't allow merging if there are conflicts
+    merge_conditions:
+      - -conflict
+
+  - name: hotfix-queue
+    queue_conditions:
+      # Allow security and critical hotfixes to skip some checks
+      - label=hotfix OR label=security
+      - check-success=lint
+      - check-success=test
+      - -draft
+    merge_method: rebase
+    update_method: rebase
+    autoqueue: true
+    merge_conditions:
+      - -conflict
+    # Higher priority but lower batch size to reduce risk
+    batch_size: 1
+    allow_checks_interruption: true
 
 # Priority rules to ensure important PRs are processed quickly
 priority_rules:
-  - name: main-branch-high-priority
+  - name: critical-priority
     priority: high
     conditions:
-      - base = main
+      # Security, hotfix, and main branch priority
+      - label=security OR label=hotfix OR base = main
+    allow_checks_interruption: true
+
+  - name: feature-priority
+    priority: medium
+    conditions:
+      # Feature PRs targeting main
+      - base = main AND -merged-in-previous-week = main
     allow_checks_interruption: false
+
+  - name: normal-priority
+    priority: low
+    conditions:
+      # All other PRs
+      - -label = high-priority OR -label = security OR -label = hotfix
+    allow_checks_interruption: false
+
+# Automatically add labels based on PR characteristics
+# Note: This requires Mergify Pro features, documented for future implementation
