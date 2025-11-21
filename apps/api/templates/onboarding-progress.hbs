@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Onboarding Progress Update</title>
+</head>
+<body>
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="color: #2563eb; margin: 0; font-size: 28px;">🎉 Great Progress!</h1>
+      <p style="color: #6b7280; margin: 10px 0 0 0; font-size: 16px;">You're doing amazing with your onboarding</p>
+    </div>
+
+    <!-- Progress Overview -->
+    <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+      <h2 style="color: #0c4a6e; margin: 0 0 15px 0;">Your Progress</h2>
+      
+      <!-- Progress Bar -->
+      <div style="background: #e0f2fe; border-radius: 4px; height: 8px; margin-bottom: 10px;">
+        <div style="background: #0ea5e9; height: 8px; border-radius: 4px; width: {{progressPercentage}}%;"></div>
+      </div>
+      
+      <p style="color: #0c4a6e; margin: 0; font-size: 14px;">
+        {{completedSteps}} of {{totalSteps}} steps completed ({{progressPercentage}}%)
+      </p>
+    </div>
+
+    <!-- Completed Steps -->
+    {{#if completedStepsList}}
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #1f2937; margin: 0 0 15px 0;">✅ Recently Completed:</h3>
+      {{#each completedStepsList}}
+      <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+        <h4 style="color: #166534; margin: 0 0 4px 0; font-size: 14px;">{{this.title}}</h4>
+        <p style="color: #166534; margin: 0; font-size: 12px;">{{this.description}}</p>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- Next Steps -->
+    {{#if nextSteps}}
+    <div style="margin-bottom: 25px;">
+      <h3 style="color: #1f2937; margin: 0 0 15px 0;">🔄 What's Next:</h3>
+      {{#each nextSteps}}
+      <div style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+        <h4 style="color: #1f2937; margin: 0 0 4px 0; font-size: 14px;">{{this.title}}</h4>
+        <p style="color: #6b7280; margin: 0; font-size: 12px;">{{this.description}}</p>
+        {{#if this.estimatedTime}}
+        <p style="color: #6b7280; margin: 4px 0 0 0; font-size: 11px;">⏱️ {{this.estimatedTime}}</p>
+        {{/if}}
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- Encouragement -->
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+      <h4 style="color: #92400e; margin: 0 0 8px 0; font-size: 14px;">🌟 You're Almost There!</h4>
+      <p style="color: #92400e; margin: 0; font-size: 13px; line-height: 1.5;">
+        {{encouragementMessage}}
+      </p>
+    </div>
+
+    <!-- CTA Button -->
+    <div style="text-align: center; margin-bottom: 25px;">
+      <a href="{{onboardingUrl}}" style="background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+        Continue Onboarding
+      </a>
+    </div>
+
+    <!-- Resources -->
+    <div style="background: #f9fafb; border-radius: 8px; padding: 20px;">
+      <h4 style="color: #1f2937; margin: 0 0 12px 0; text-align: center;">Helpful Resources</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <a href="{{helpCenterUrl}}" style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; text-decoration: none; display: block;">
+          <h5 style="color: #1f2937; margin: 0 0 4px 0; font-size: 13px;">📚 Help Center</h5>
+          <p style="color: #6b7280; margin: 0; font-size: 11px;">Guides and tutorials</p>
+        </a>
+        <a href="{{videoTutorialsUrl}}" style="background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; text-decoration: none; display: block;">
+          <h5 style="color: #1f2937; margin: 0 0 4px 0; font-size: 13px;">🎥 Video Tutorials</h5>
+          <p style="color: #6b7280; margin: 0; font-size: 11px;">Watch and learn</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <p style="color: #6b7280; margin: 0; font-size: 12px;">
+        Keep up the great work!<br>
+        <strong>The JasaWeb Team</strong>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
