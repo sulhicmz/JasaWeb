@@ -1,0 +1,171 @@
+import React, { useEffect } from 'react';
+import {
+  useOnboarding,
+  OnboardingWizard,
+  OnboardingChecklist,
+  ProductTour,
+  defaultTourSteps,
+} from '../onboarding';
+import { CompletionScreen } from './CompletionScreen';
+import { CurrentStepScreen } from './CurrentStepScreen';
+
+export const OnboardingClient: React.FC = () => {
+  const {
+    state,
+    steps,
+    isLoading,
+    error,
+    showWizard,
+    showTour,
+    fetchOnboardingState,
+    completeStep,
+    skipStep,
+    showOnboardingWizard,
+    hideOnboardingWizard,
+    startProductTour,
+    endProductTour,
+  } = useOnboarding();
+
+  // Initialize onboarding data
+  useEffect(() => {
+    fetchOnboardingState();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Something went wrong
+          </h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchOnboardingState}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!state) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Onboarding Not Available
+          </h1>
+          <p className="text-gray-600 mb-4">
+            Please log in to access the onboarding process.
+          </p>
+          <a
+            href="/login"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block"
+          >
+            Log In
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold text-gray-900">
+                JasaWeb Onboarding
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={showOnboardingWizard}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Show Wizard
+              </button>
+              <button
+                onClick={startProductTour}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Start Tour
+              </button>
+              <a
+                href="/portal"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Go to Portal
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Progress Section */}
+          <div className="lg:col-span-1">
+            <OnboardingChecklist
+              steps={steps}
+              completedSteps={state.completedSteps}
+              skippedSteps={state.skippedSteps}
+              currentStep={state.currentStep}
+              onStepClick={(stepKey) => {
+                // This would typically update the current step
+                console.log('Navigate to step:', stepKey);
+              }}
+            />
+          </div>
+
+          {/* Content Section */}
+          <div className="lg:col-span-2">
+            {state.isCompleted ? (
+              <CompletionScreen organizationName={state.organization.name} />
+            ) : (
+              <CurrentStepScreen
+                currentStep={steps.find((s) => s.stepKey === state.currentStep)}
+                completedSteps={state.completedSteps}
+                totalSteps={steps.filter((s) => s.isRequired).length}
+              />
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Onboarding Wizard Modal */}
+      {showWizard && state && (
+        <OnboardingWizard
+          onboardingState={state}
+          steps={steps}
+          onCompleteStep={completeStep}
+          onSkipStep={skipStep}
+          onClose={hideOnboardingWizard}
+        />
+      )}
+
+      {/* Product Tour Modal */}
+      {showTour && (
+        <ProductTour
+          steps={defaultTourSteps}
+          isOpen={showTour}
+          onComplete={endProductTour}
+          onSkip={endProductTour}
+        />
+      )}
+    </div>
+  );
+};
