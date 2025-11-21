@@ -1,5 +1,4 @@
-import io from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 
 export interface Notification {
   id: string;
@@ -27,7 +26,7 @@ export interface NotificationServiceCallbacks {
 }
 
 class NotificationService {
-  private socket: any | null = null;
+  private socket: Socket | null = null;
   private callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -48,7 +47,7 @@ class NotificationService {
 
     const token = localStorage.getItem('auth_token');
     if (!token) {
-      // No auth token found, skipping notification connection
+      console.warn('No auth token found, skipping notification connection');
       return;
     }
 
@@ -72,22 +71,22 @@ class NotificationService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      // Connected to notification service
+      console.log('Connected to notification service');
       this.reconnectAttempts = 0;
       this.callbacks.onConnect?.();
     });
 
-    this.socket.on('disconnect', (reason: any) => {
-      // Disconnected from notification service
+    this.socket.on('disconnect', (reason) => {
+      console.log('Disconnected from notification service:', reason);
       this.callbacks.onDisconnect?.();
     });
 
-    this.socket.on('connect_error', (error: any) => {
-      // Notification connection error
+    this.socket.on('connect_error', (error) => {
+      console.error('Notification connection error:', error);
       this.reconnectAttempts++;
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        // Max reconnection attempts reached
+        console.error('Max reconnection attempts reached');
         this.callbacks.onError?.(error);
       }
 
@@ -95,7 +94,7 @@ class NotificationService {
     });
 
     this.socket.on('notification', (notification: Notification) => {
-      // Received notification
+      console.log('Received notification:', notification);
       this.callbacks.onNotification?.(notification);
 
       // Show browser notification if permission granted
@@ -103,17 +102,17 @@ class NotificationService {
     });
 
     this.socket.on('notification-update', (update: NotificationUpdate) => {
-      // Received notification update
+      console.log('Received notification update:', update);
       this.callbacks.onNotificationUpdate?.(update);
     });
 
     this.socket.on('unread-count', (data: { count: number }) => {
-      // Unread count updated
+      console.log('Unread count updated:', data.count);
       this.callbacks.onUnreadCount?.(data.count);
     });
 
     this.socket.on('error', (error: any) => {
-      // Socket error
+      console.error('Socket error:', error);
       this.callbacks.onError?.(error);
     });
   }

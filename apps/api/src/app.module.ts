@@ -25,12 +25,8 @@ import { MultiTenantMiddleware } from './common/middleware/multi-tenant.middlewa
 import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
-import { AnalyticsModule } from './analytics/analytics.module';
 
-const parseEnvNumber = (
-  value: string | undefined,
-  fallback: number
-): number => {
+const parseEnvNumber = (value: string | undefined, fallback: number): number => {
   const parsed = Number.parseInt(value ?? '', 10);
   return Number.isNaN(parsed) ? fallback : parsed;
 };
@@ -49,12 +45,10 @@ const parseEnvNumber = (
         max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
       }),
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
-        limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
-      },
-    ]),
+    ThrottlerModule.forRoot([{
+      ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
+      limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
+    }]),
     AuthModule,
     UserModule,
     ProjectModule,
@@ -68,7 +62,6 @@ const parseEnvNumber = (
     ErrorHandlingModule,
     SessionModule,
     HealthModule,
-    AnalyticsModule,
     PrismaModule,
     MultiTenantPrismaModule,
   ],

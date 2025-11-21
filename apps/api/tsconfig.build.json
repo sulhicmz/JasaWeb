@@ -4,5 +4,15 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
+<<<<<<< HEAD
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "test",
+    "node_modules",
+    "dist"
+  ]
+=======
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "test", "node_modules", "dist"]
+>>>>>>> origin/main
 }

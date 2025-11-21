@@ -16,10 +16,6 @@ build/
 .nuxt/
 .vercel/
 
-# TypeScript build info
-*.tsbuildinfo
-**/*.tsbuildinfo
-
 # Testing
 coverage/
 .nyc_output/
