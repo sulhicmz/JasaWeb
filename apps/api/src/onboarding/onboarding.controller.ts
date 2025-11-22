@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { OnboardingService } from './onboarding.service';
 import { CreateOnboardingStateDto } from './dto/create-onboarding-state.dto';
@@ -26,6 +27,11 @@ export class OnboardingController {
   async getOnboardingState(@Req() req: any) {
     const userId = req.user.userId;
     const organizationId = req.user.organizationId;
+
+    // Security: Ensure user can only access their own onboarding state
+    if (req.user.userId !== userId) {
+      throw new UnauthorizedException('Access denied: You can only access your own onboarding state');
+    }
 
     return await this.onboardingService.getOnboardingState(
       userId,
@@ -50,6 +56,11 @@ export class OnboardingController {
   ) {
     const userId = req.user.userId;
 
+    // Security: Ensure user can only update their own onboarding state
+    if (req.user.userId !== userId) {
+      throw new UnauthorizedException('Access denied: You can only update your own onboarding state');
+    }
+
     return await this.onboardingService.updateOnboardingState(
       userId,
       updateOnboardingStateDto
@@ -63,12 +74,22 @@ export class OnboardingController {
   ) {
     const userId = req.user.userId;
 
+    // Security: Ensure user can only complete their own onboarding steps
+    if (req.user.userId !== userId) {
+      throw new UnauthorizedException('Access denied: You can only complete your own onboarding steps');
+    }
+
     return await this.onboardingService.completeStep(userId, completeStepDto);
   }
 
   @Post('skip-step/:stepKey')
   async skipStep(@Req() req: any, @Param('stepKey') stepKey: string) {
     const userId = req.user.userId;
+
+    // Security: Ensure user can only skip their own onboarding steps
+    if (req.user.userId !== userId) {
+      throw new UnauthorizedException('Access denied: You can only skip your own onboarding steps');
+    }
 
     return await this.onboardingService.skipStep(userId, stepKey);
   }

@@ -142,7 +142,7 @@ export class OnboardingService {
       throw new NotFoundException('Onboarding state not found');
     }
 
-    // Check if step can be completed (dependencies met)
+    // Get step from database instead of hardcoded list
     const step = await this.prisma.onboardingStep.findUnique({
       where: { stepKey },
     });
@@ -151,7 +151,10 @@ export class OnboardingService {
       throw new NotFoundException('Step not found');
     }
 
-    for (const dependency of step.dependsOn) {
+    // Check dependencies from database
+    const stepDependencies = step.dependsOn || [];
+
+    for (const dependency of stepDependencies) {
       if (!existingState.completedSteps.includes(dependency)) {
         throw new BadRequestException(
           `Step ${dependency} must be completed first`
@@ -174,8 +177,8 @@ export class OnboardingService {
       ? existingState.completedSteps
       : [...existingState.completedSteps, stepKey];
 
-    // Determine next step
-    const nextStep = this.getNextStep(
+    // Get next step from database
+    const nextStep = await this.getNextStep(
       completedSteps,
       existingState.skippedSteps
     );
@@ -246,6 +249,7 @@ export class OnboardingService {
       throw new NotFoundException('Onboarding state not found');
     }
 
+    // Get step from database
     const step = await this.prisma.onboardingStep.findUnique({
       where: { stepKey },
     });
@@ -262,7 +266,8 @@ export class OnboardingService {
       ? existingState.skippedSteps
       : [...existingState.skippedSteps, stepKey];
 
-    const nextStep = this.getNextStep(
+    // Get next step from database
+    const nextStep = await this.getNextStep(
       existingState.completedSteps,
       skippedSteps
     );
@@ -311,25 +316,21 @@ export class OnboardingService {
     return step;
   }
 
-  private getNextStep(
+  private async getNextStep(
     completedSteps: string[],
     skippedSteps: string[]
-  ): string {
-    // Get all available steps in order
-    const allSteps = [
-      { key: 'welcome', order: 1 },
-      { key: 'org-setup', order: 2 },
-      { key: 'team-invite', order: 3 },
-      { key: 'project-create', order: 4 },
-      { key: 'tour', order: 5 },
-    ];
+  ): Promise<string> {
+    // Get all available steps from database
+    const allSteps = await this.prisma.onboardingStep.findMany({
+      orderBy: { order: 'asc' },
+    });
 
     for (const step of allSteps) {
       if (
-        !completedSteps.includes(step.key) &&
-        !skippedSteps.includes(step.key)
+        !completedSteps.includes(step.stepKey) &&
+        !skippedSteps.includes(step.stepKey)
       ) {
-        return step.key;
+        return step.stepKey;
       }
     }
 
@@ -340,7 +341,13 @@ export class OnboardingService {
     completedSteps: string[],
     skippedSteps: string[]
   ): boolean {
-    const requiredSteps = ['welcome', 'org-setup', 'project-create'];
+    // Get required steps from database
+    const requiredStepsResult = await this.prisma.onboardingStep.findMany({
+      where: { isRequired: true },
+      select: { stepKey: true },
+    });
+
+    const requiredSteps = requiredStepsResult.map(step => step.stepKey);
 
     return requiredSteps.every(
       (step) => completedSteps.includes(step) || skippedSteps.includes(step)
@@ -371,8 +378,12 @@ export class OnboardingService {
     completedSteps: string[]
   ) {
     try {
-      const allSteps = await this.getAllSteps();
-      const requiredSteps = allSteps.filter((step) => step.isRequired);
+      // Get required steps from database for progress calculation
+      const allStepsResult = await this.prisma.onboardingStep.findMany({
+        orderBy: { order: 'asc' },
+      });
+      const requiredSteps = allStepsResult.filter(step => step.isRequired);
+      
       const progressPercentage = Math.round(
         (completedSteps.length / requiredSteps.length) * 100
       );
