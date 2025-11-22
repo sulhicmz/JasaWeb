@@ -1,4 +1,4 @@
-# CI/CD Package Manager Implementation Guide
+# CI/CD Package Manager Installation Guide
 
 ## 🚨 Critical Issue #444
 
@@ -6,16 +6,18 @@ This document provides the complete solution for installing Node.js and pnpm in 
 
 ## Problem
 
-The CI/CD environment lacks essential package managers (`pnpm` and `npm`), which blocks:
+The CI/CD environment lacks Node.js package managers (npm and pnpm), which blocks:
 
-- Security vulnerability scanning
+- Security vulnerability scanning (`pnpm audit`)
 - Dependency management and updates
 - Test execution and code quality checks
 - Build processes and deployment
 
-## Solution
+## Solution: Add Package Manager Installation to All Workflows
 
-Add the following installation step to ALL 6 workflow files after the checkout step:
+### Required Changes
+
+Add the following step to ALL 6 workflow files after the checkout step:
 
 ```yaml
 - name: Install Node.js and pnpm
@@ -33,40 +35,92 @@ Add the following installation step to ALL 6 workflow files after the checkout s
     pnpm --version
 ```
 
-## Workflow Files Requiring Updates
+### Workflow Files Requiring Updates
 
 1. `.github/workflows/oc-maintainer.yml`
+   - Add after line 46 (after checkout step)
+   - Before line 48 (Install OpenCode CLI)
+
 2. `.github/workflows/oc-issue-solver.yml`
+   - Add after line 45 (after checkout step)
+   - Before line 47 (Check for open issues)
+
 3. `.github/workflows/oc-pr-handler.yml`
+   - Add after line 35 (after checkout step)
+   - Before line 37 (Install OpenCode CLI)
+
 4. `.github/workflows/oc-problem-finder.yml`
-5. `.github/workflows/oc-researcher.yml`
+   - Add after line 48 (after checkout step)
+   - Before line 49 (Install OpenCode CLI)
+
+5. `.github/workflows/oc- researcher.yml`
+   - Add after line 48 (after checkout step)
+   - Before line 49 (Install OpenCode CLI)
+
 6. `.github/workflows/iFlow - PR Intelligence.yml`
+   - Add after line 32 (after checkout step)
+   - Before line 33 (Collect open PR metadata)
 
-## Implementation Instructions
+### Implementation Steps
 
-For each workflow file:
+1. **Manual Application Required**
+   - Due to GitHub App permission constraints, these changes must be applied manually by a repository maintainer
+   - Each workflow file needs the installation step added at the specified location
 
-1. Add the installation step immediately after the `actions/checkout@v5` step
-2. Place it before any steps that require package managers
-3. Test by running any workflow to verify installation
+2. **Testing After Implementation**
+   - Run any workflow to verify package manager installation
+   - Check that `node --version`, `npm --version`, and `pnpm --version` all return valid outputs
+   - Test `pnpm audit` to verify security scanning functionality
 
-## Expected Benefits
+3. **Verification Commands**
 
-- ✅ **Security**: Enables vulnerability scanning with `pnpm audit`
-- ✅ **Development**: Allows dependency installation and management
-- ✅ **CI/CD**: Unblocks all workflows requiring package managers
-- ✅ **Maintenance**: Removes critical blocker for repository maintenance
+   ```bash
+   # Test package manager availability
+   node --version  # Should return v20.x.x
+   npm --version   # Should return 10.x.x
+   pnpm --version  # Should return 9.x.x
 
-## Verification
+   # Test security scanning
+   pnpm audit      # Should run without errors
+   ```
 
-After implementation, workflow logs should show:
+### Expected Impact
 
-```
-v20.x.x    # Node.js version
-10.x.x     # npm version
-9.x.x      # pnpm version
-```
+After implementation:
 
----
+- ✅ Enables security vulnerability scanning with `pnpm audit`
+- ✅ Allows dependency installation and management
+- ✅ Unblocks all workflows requiring package managers
+- ✅ Removes critical blocker for repository maintenance activities
+- ✅ Improves overall repository security posture
 
-**Priority**: CRITICAL - This unblocks all other maintenance activities and security improvements.
+### Risk Assessment
+
+- **Risk**: Low - Standard package manager installation
+- **Rollback**: Simple - Can revert workflow changes if issues occur
+- **Testing**: Verify with workflow run after changes
+- **Compatibility**: Node.js 20.x is LTS and widely supported
+
+### Troubleshooting
+
+If installation fails:
+
+1. Check runner internet connectivity
+2. Verify sudo permissions on runner
+3. Check for conflicting Node.js installations
+4. Review workflow logs for specific error messages
+
+### Next Steps
+
+1. Apply changes to all 6 workflow files
+2. Test with a workflow run
+3. Enable security scanning
+4. Proceed with other maintenance activities that were blocked
+
+## Priority
+
+**CRITICAL** - This blocks all other maintenance activities and security scanning.
+
+## Related Issue
+
+Fixes #444 - 🚨 Critical: Install Package Managers in CI/CD Environment
