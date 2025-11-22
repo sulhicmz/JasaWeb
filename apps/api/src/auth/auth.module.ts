@@ -7,20 +7,27 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { UserModule } from '../users/user.module';
 import { PrismaModule } from '../common/database/prisma.module';
 import { RefreshTokenService } from './refresh-token.service';
+import { ConfigValidationService } from '../common/config/config-validation.service';
 
 @Module({
   imports: [
     UserModule,
     PrismaModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'default_secret',
+      secret: process.env.JWT_SECRET,
       signOptions: {
         expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
       },
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenService, LocalStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    RefreshTokenService,
+    LocalStrategy,
+    JwtStrategy,
+    ConfigValidationService,
+  ],
   exports: [AuthService, RefreshTokenService],
 })
 export class AuthModule {}
