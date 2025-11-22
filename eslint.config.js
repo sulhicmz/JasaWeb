@@ -24,7 +24,7 @@ module.exports = tseslint.config(
       'linebreak-style': ['error', 'unix'],
       quotes: 'off',
       semi: ['error', 'always'],
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/triple-slash-reference': 'off',
