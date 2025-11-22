@@ -8,12 +8,18 @@ import { UserModule } from '../users/user.module';
 import { PrismaModule } from '../common/database/prisma.module';
 import { RefreshTokenService } from './refresh-token.service';
 
+// Validate required environment variables
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET environment variable is required for AuthModule');
+}
+
 @Module({
   imports: [
     UserModule,
     PrismaModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'default_secret',
+      secret: jwtSecret,
       signOptions: {
         expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
       },
