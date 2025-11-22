@@ -30,8 +30,8 @@ module.exports = tseslint.config(
       '@typescript-eslint/triple-slash-reference': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-require-imports': 'off',
-      'security/detect-object-injection': 'off',
-      'security/detect-non-literal-fs-filename': 'off',
+      'security/detect-object-injection': 'warn',
+      'security/detect-non-literal-fs-filename': 'warn',
       // Security rules
       'no-eval': 'error',
       'no-implied-eval': 'error',
