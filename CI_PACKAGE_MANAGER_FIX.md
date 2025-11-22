@@ -1,6 +1,10 @@
 # CI/CD Package Manager Installation Guide
 
-## Critical Issue Summary
+## 🚨 Critical Issue #444
+
+This document provides the complete solution for installing Node.js and pnpm in all CI/CD workflows to resolve the critical package manager issue.
+
+## Problem
 
 The CI/CD environment lacks Node.js package managers (npm and pnpm), which blocks:
 
