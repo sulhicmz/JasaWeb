@@ -18,7 +18,7 @@ Incorrect order of setup steps in GitHub Actions workflows. The `actions/setup-n
 
 **Affected Workflows:**
 - oc - PR Automator
-- oc - Efficient Automator  
+- oc - Efficient Automator
 - oc - Code Quality & Testing
 - oc - Autonomous Developer
 - oc - Maintenance & Monitoring
@@ -236,7 +236,7 @@ Incorrect order of setup steps in GitHub Actions workflows. The `actions/setup-n
 - [GitHub Actions Best Practices](https://docs.github.com/en/actions)
 - [Pnpm Action Setup Documentation](https://github.com/pnpm/action-setup)
 - [OpenCode CLI Documentation](https://opencode.ai/docs)
-- [Workflow Security Best Practices](docs/SECURITY_BEST_PRACTICES.md)
+- [Workflow Security Best Practices](SECURITY_BEST_PRACTICES.md)
 
 ---
 

@@ -143,7 +143,7 @@ Model execution failures
 ```yaml
 # Ensure proper checkout configuration
 - name: Checkout
-  uses: actions/checkout@v5
+  uses: actions/checkout@v4
   with:
     fetch-depth: 0
     token: ${{ secrets.GH_TOKEN }}
@@ -375,8 +375,8 @@ gh pr merge <pr-number> --merge
 ## 🔗 Additional Resources
 
 ### Documentation
-- [Workflow Error Analysis](docs/WORKFLOW_ERROR_ANALYSIS_AND_FIXES.md)
-- [Security Best Practices](docs/SECURITY_BEST_PRACTICES.md)
+- [Workflow Error Analysis](WORKFLOW_ERROR_ANALYSIS_AND_FIXES.md)
+- [Security Best Practices](SECURITY_BEST_PRACTICES.md)
 - [OpenCode CLI Documentation](https://opencode.ai/docs)
 
 ### Tools and Utilities
