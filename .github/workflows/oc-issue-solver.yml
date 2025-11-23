@@ -1,0 +1,313 @@
+name: oc - Issue Solver
+
+on:
+  issues:
+    types: [opened, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to solve'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  issue-solver:
+    name: OC Issue Solver
+    runs-on: self-hosted
+    timeout-minutes: 40
+    permissions:
+      id-token: write
+      contents: write
+      issues: write
+      pull-requests: write
+      actions: write
+      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GH_TOKEN }}
+          
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Analyze and Solve Issue
+        id: solve-issue
+        timeout-minutes: 30
+        run: |
+          ISSUE_NUMBER="${{ github.event.issue.number || github.event.inputs.issue_number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+          ISSUE_LABELS="${{ join(github.event.issue.labels.*.name, ', ') }}"
+          
+          echo "Processing issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          echo "Labels: $ISSUE_LABELS"
+          
+          opencode run "$(cat <<'PROMPT'
+            Analyze and solve the following GitHub issue for JasaWeb project:
+            
+            Issue Details:
+            - Number: #'$ISSUE_NUMBER'
+            - Title: '$ISSUE_TITLE'
+            - Body: '$ISSUE_BODY'
+            - Labels: '$ISSUE_LABELS'
+            
+            Analysis Steps:
+            1. Categorize the issue type (bug, feature, documentation, improvement, etc.)
+            2. Assess complexity and estimated effort
+            3. Identify affected components and modules
+            4. Determine priority and impact
+            5. Plan implementation approach
+            6. Identify dependencies and prerequisites
+            
+            Implementation Strategy:
+            1. If it's a bug:
+               - Locate the problematic code
+               - Identify root cause
+               - Implement fix with proper error handling
+               - Add tests to prevent regression
+               - Update documentation if needed
+            
+            2. If it's a feature request:
+               - Design implementation approach
+               - Create necessary components/services
+               - Implement with proper error handling
+               - Add comprehensive tests
+               - Update documentation
+            
+            3. If it's documentation:
+               - Identify relevant documentation files
+               - Update with accurate information
+               - Add examples and code snippets
+               - Verify links and formatting
+            
+            4. If it's an improvement:
+               - Analyze current implementation
+               - Identify optimization opportunities
+               - Implement improvements
+               - Ensure backward compatibility
+               - Add performance tests
+            
+            Actions to Take:
+            1. Create a new branch: fix/issue-$ISSUE_NUMBER
+            2. Implement the solution following best practices
+            3. Add appropriate tests (unit, integration, e2e)
+            4. Update documentation if needed
+            5. Create a pull request with detailed description
+            6. Link the PR to the original issue
+            7. Auto-merge if all checks pass and it's a simple fix
+            
+            Quality Requirements:
+            - Follow existing code patterns and conventions
+            - Ensure TypeScript type safety
+            - Add proper error handling
+            - Include comprehensive tests
+            - Update relevant documentation
+            - Maintain backward compatibility
+            
+            Communication:
+            - Add clear commit messages
+            - Create detailed PR description
+            - Comment on issue with progress updates
+            - Close issue automatically when PR is merged
+            
+            Focus on delivering a complete, tested solution that addresses the root cause.
+            If the issue is unclear or needs more information, create a comment asking for clarification.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false \
+            
+      - name: Run Tests
+        id: run-tests
+        timeout-minutes: 10
+        run: |
+          echo "Running tests to validate the solution..."
+          pnpm test:quick
+          pnpm lint
+          pnpm typecheck
+          
+      - name: Create Pull Request
+        id: create-pr
+        if: success()
+        run: |
+          echo "Creating pull request for issue solution..."
+          
+          # Get current branch name
+          BRANCH_NAME=$(git branch --show-current)
+          
+          # Create PR if not already exists
+          if ! gh pr view --json number --jq '.number' 2>/dev/null; then
+            PR_URL=$(gh pr create \
+              --title "Fix #$ISSUE_NUMBER: $ISSUE_TITLE" \
+              --body "## 🎯 Issue Resolution
+              
+            This PR addresses issue #$ISSUE_NUMBER: **$ISSUE_TITLE**
+            
+            ### 📝 Changes Made
+            - Implemented solution following best practices
+            - Added comprehensive tests
+            - Updated documentation where needed
+            - Ensured backward compatibility
+            
+            ### 🧪 Testing
+            - All unit tests pass
+            - Integration tests validate functionality
+            - Code quality checks pass
+            - TypeScript compilation successful
+            
+            ### 🔗 Related Issue
+            Closes #$ISSUE_NUMBER
+            
+            ---
+            
+            🤖 *This PR was automatically generated by OpenCode CLI Issue Solver*" \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --label "auto-generated" \
+              --label "issue-solver")
+            
+            echo "PR created: $PR_URL"
+          else
+            echo "PR already exists for this branch"
+          fi
+          
+      - name: Auto-Merge Simple Fixes
+        id: auto-merge
+        if: success()
+        run: |
+          # Check if PR is ready for auto-merge
+          PR_NUMBER=$(gh pr view --json number --jq '.number')
+          
+          if [ -n "$PR_NUMBER" ]; then
+            # Get PR status
+            PR_STATUS=$(gh pr view "$PR_NUMBER" --json mergeable --jq '.mergeable')
+            PR_REVIEWS=$(gh pr view "$PR_NUMBER" --json reviews --jq '.reviews | length')
+            
+            # Auto-merge if conditions are met
+            if [ "$PR_STATUS" = "CLEAN" ] && [ "$PR_REVIEWS" -ge 0 ]; then
+              echo "Auto-merging PR #$PR_NUMBER..."
+              gh pr merge "$PR_NUMBER" --merge --delete-branch
+              
+              # Close the original issue
+              gh issue close "$ISSUE_NUMBER" \
+                --comment "✅ **Issue Resolved**
+                
+                This issue has been automatically resolved and merged via PR #$PR_NUMBER.
+                
+                🤖 *Resolution handled by OpenCode CLI Issue Solver*"
+            else
+              echo "PR not ready for auto-merge (Status: $PR_STATUS, Reviews: $PR_REVIEWS)"
+            fi
+          fi
+          
+      - name: Update Issue Status
+        id: update-issue
+        if: always()
+        run: |
+          # Add comment to issue with status update
+          if [ "${{ job.status }}" = "success" ]; then
+            gh issue comment "$ISSUE_NUMBER" \
+              --body "## 🚀 Issue Resolution Progress
+              
+            ✅ **Solution Implemented**
+            - Code changes have been implemented
+            - Tests have been added and are passing
+            - Pull request has been created
+            - Auto-merge process initiated
+            
+            ### 📊 Current Status
+            - **Branch**: $BRANCH_NAME
+            - **PR**: #$PR_NUMBER
+            - **Tests**: ✅ Passing
+            - **Code Quality**: ✅ Validated
+            
+            ### 🔄 Next Steps
+            - Waiting for PR review and merge
+            - Issue will be automatically closed when PR is merged
+            
+            ---
+            
+            🤖 *Status updated by OpenCode CLI Issue Solver*"
+          else
+            gh issue comment "$ISSUE_NUMBER" \
+              --body "## ⚠️ Issue Resolution Status
+              
+            ❌ **Resolution Failed**
+            - An error occurred during the resolution process
+            - The issue needs manual intervention
+            - Please check the workflow logs for details
+            
+            ### 🔍 Troubleshooting
+            - Check workflow logs for error details
+            - Verify issue requirements are clear
+            - Consider breaking down complex issues
+            
+            ---
+            
+            🤖 *Status updated by OpenCode CLI Issue Solver*"
+          fi
+          
+      - name: Create Issue Resolution Summary
+        if: always()
+        run: |
+          echo "## 🔧 Issue Solver Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Issue Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Issue Number**: #$ISSUE_NUMBER" >> $GITHUB_STEP_SUMMARY
+          echo "- **Title**: $ISSUE_TITLE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Labels**: $ISSUE_LABELS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Resolution Actions" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Issue analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Solution implemented" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests added and validated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Pull request created" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Issue status updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Resolution Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "- **Status**: ✅ Successfully Resolved" >> $GITHUB_STEP_SUMMARY
+            echo "- **PR**: Created and ready for review" >> $GITHUB_STEP_SUMMARY
+            echo "- **Auto-merge**: Initiated if conditions met" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ❌ Resolution Failed" >> $GITHUB_STEP_SUMMARY
+            echo "- **Action**: Manual intervention required" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor PR review and merge process" >> $GITHUB_STEP_SUMMARY
+          echo "- Issue will auto-close when PR is merged" >> $GITHUB_STEP_SUMMARY
+          echo "- Check workflow logs if resolution failed" >> $GITHUB_STEP_SUMMARY

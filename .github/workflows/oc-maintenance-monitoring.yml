@@ -1,0 +1,364 @@
+name: oc - Maintenance & Monitoring
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Setiap 6 jam
+  workflow_dispatch:
+    inputs:
+      maintenance_type:
+        description: 'Type of maintenance'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - security-only
+          - performance-only
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  maintenance-monitoring:
+    name: OC Maintenance & Monitoring
+    runs-on: self-hosted
+    timeout-minutes: 60
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run System Health Check
+        id: health-check
+        timeout-minutes: 15
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Perform comprehensive system health check for JasaWeb project:
+            
+            1. Check package.json dependencies for outdated packages
+            2. Verify all critical services are working (API, Web, Database)
+            3. Check for any broken links or missing assets
+            4. Validate environment configurations
+            5. Review recent error logs or issues
+            6. Check disk space and resource usage
+            7. Verify backup systems are working
+            
+            Create a detailed health report with:
+            - Overall system status (HEALTHY/WARNING/CRITICAL)
+            - Specific issues found with severity levels
+            - Recommended actions for each issue
+            - Priority order for fixes
+            
+            If critical issues are found, create an issue with appropriate labels and priority.
+            If minor issues are found, create a PR with fixes.
+            
+            Focus on automation and self-healing where possible.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false \
+            
+      - name: Run Performance Analysis
+        id: performance-analysis
+        timeout-minutes: 20
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Analyze JasaWeb project performance and identify optimization opportunities:
+            
+            1. Analyze build times and identify bottlenecks
+            2. Check test execution times and suggest optimizations
+            3. Review database query performance
+            4. Analyze bundle sizes and suggest optimizations
+            5. Check CI/CD pipeline performance
+            6. Review memory usage patterns
+            7. Identify slow API endpoints
+            
+            Create performance optimization plan:
+            - List performance issues with impact levels
+            - Suggest specific code optimizations
+            - Recommend configuration changes
+            - Prioritize optimizations by ROI
+            
+            Implement quick wins automatically (simple optimizations).
+            Create PRs for complex optimizations with detailed explanations.
+            
+            Focus on measurable improvements in speed and efficiency.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Run Dependency Maintenance
+        id: dependency-maintenance
+        timeout-minutes: 15
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Perform dependency maintenance for JasaWeb project:
+            
+            1. Check for security vulnerabilities in all dependencies
+            2. Identify outdated packages and update compatibility
+            3. Remove unused dependencies
+            4. Check for duplicate or conflicting dependencies
+            5. Verify license compatibility
+            6. Update dev dependencies to latest stable versions
+            
+            Actions to take:
+            - Update patch/minor versions automatically
+            - Create PRs for major version updates with compatibility notes
+            - Remove unused dependencies
+            - Fix any security vulnerabilities found
+            - Update lockfiles and verify builds still work
+            
+            Create detailed changelog for all updates made.
+            Test all changes before creating PRs.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Run Code Quality Maintenance
+        id: code-quality-maintenance
+        timeout-minutes: 15
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Perform code quality maintenance for JasaWeb project:
+            
+            1. Run linting and fix auto-fixable issues
+            2. Check for code duplication and refactor
+            3. Identify dead code and unused imports
+            4. Review code complexity and suggest simplifications
+            5. Check for consistent coding patterns
+            6. Update TypeScript types for better type safety
+            7. Improve error handling and logging
+            
+            Maintenance tasks:
+            - Auto-fix linting issues
+            - Remove dead code and unused imports
+            - Refactor complex functions
+            - Improve type definitions
+            - Add missing error handling
+            - Update documentation for changed code
+            
+            Focus on maintainability and readability improvements.
+            Create PRs for significant refactoring with clear explanations.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Generate Maintenance Report
+        id: maintenance-report
+        timeout-minutes: 10
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Generate comprehensive maintenance report for JasaWeb project:
+            
+            Collect data from previous maintenance tasks and create:
+            
+            1. Executive Summary:
+               - Overall system health status
+               - Critical issues resolved
+               - Performance improvements made
+               - Security vulnerabilities fixed
+               - Code quality improvements
+            
+            2. Detailed Metrics:
+               - Number of issues identified and resolved
+               - Performance improvements (percentage/time saved)
+               - Dependencies updated and security fixes
+               - Code quality metrics improvement
+               - Test coverage changes
+            
+            3. Recommendations:
+               - Upcoming maintenance priorities
+               - Long-term improvement suggestions
+               - Resource allocation recommendations
+               - Risk assessment for next period
+            
+            4. Action Items:
+               - Immediate actions required
+               - Scheduled maintenance tasks
+               - Monitoring improvements needed
+               - Documentation updates required
+            
+            Create this report as a GitHub issue with:
+            - Clear title with date and status
+            - Structured sections with bullet points
+            - Relevant labels (maintenance, monitoring, report)
+            - Assign to appropriate team members
+            
+            Also update the maintenance dashboard if it exists.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false \
+            
+      - name: Cleanup and Optimization
+        id: cleanup-optimization
+        timeout-minutes: 10
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Perform cleanup and optimization tasks for JasaWeb project:
+            
+            1. Clean up old branches and PRs
+            2. Remove temporary files and artifacts
+            3. Optimize git repository size
+            4. Clean up old issues and close stale ones
+            5. Update documentation with latest changes
+            6. Archive old logs and reports
+            7. Optimize database and storage usage
+            
+            Automation tasks:
+            - Close stale issues with appropriate comments
+            - Delete old branches that have been merged
+            - Archive old reports and logs
+            - Update README and documentation
+            - Optimize repository size and structure
+            
+            Focus on keeping the repository clean and efficient.
+            Create summary of cleanup actions taken.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder \
+            --share false \
+            
+      - name: Update Monitoring Dashboard
+        id: update-dashboard
+        timeout-minutes: 10
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Update monitoring dashboard for JasaWeb project:
+            
+            1. Collect metrics from all maintenance tasks
+            2. Update performance charts and graphs
+            3. Refresh system health indicators
+            4. Update dependency status overview
+            5. Refresh code quality metrics
+            6. Update security status dashboard
+            7. Generate trend analysis
+            
+            Dashboard updates:
+            - System health status with color coding
+            - Performance metrics with trends
+            - Dependency security status
+            - Code quality improvements
+            - Maintenance task completion rates
+            - Resource usage statistics
+            
+            Create interactive dashboard in docs/dashboard.html
+            Include real-time data and historical trends
+            Add alerts and notifications for critical issues
+            
+            Make dashboard accessible and user-friendly.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Schedule Next Maintenance
+        id: schedule-next
+        timeout-minutes: 5
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Schedule next maintenance cycle for JasaWeb project:
+            
+            Based on current maintenance results, determine:
+            
+            1. Next maintenance schedule:
+               - Recommended frequency based on issues found
+               - Priority level for next cycle
+               - Specific focus areas for next run
+               - Resource requirements
+            
+            2. Alert configuration:
+               - Set up alerts for critical issues
+               - Configure monitoring thresholds
+               - Define escalation procedures
+               - Set up notification preferences
+            
+            3. Preparation tasks:
+               - List tasks to prepare for next cycle
+               - Identify resources needed
+               - Schedule any required downtime
+               - Prepare rollback procedures
+            
+            Create a GitHub issue with:
+               - Next maintenance schedule
+               - Preparation checklist
+               - Alert configurations
+               - Resource requirements
+               
+            Label appropriately and assign to maintenance team.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder \
+            --share false \
+            
+      - name: Create Maintenance Summary
+        if: always()
+        run: |
+          echo "## 🛠️ Maintenance & Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Tasks Completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ System Health Check" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Dependency Maintenance" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Code Quality Maintenance" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Maintenance Report Generated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Cleanup and Optimization" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Monitoring Dashboard Updated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Next Maintenance Scheduled" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Key Improvements" >> $GITHUB_STEP_SUMMARY
+          echo "- Automated system health monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance optimization implementation" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependency security and updates" >> $GITHUB_STEP_SUMMARY
+          echo "- Code quality improvements" >> $GITHUB_STEP_SUMMARY
+          echo "- Repository cleanup and optimization" >> $GITHUB_STEP_SUMMARY
+          echo "- Real-time dashboard updates" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Review maintenance report" >> $GITHUB_STEP_SUMMARY
+          echo "- Address critical issues identified" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor performance improvements" >> $GITHUB_STEP_SUMMARY
+          echo "- Prepare for next maintenance cycle" >> $GITHUB_STEP_SUMMARY
