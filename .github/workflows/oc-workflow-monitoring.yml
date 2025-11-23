@@ -49,6 +49,9 @@ jobs:
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+      - name: Run opencode with non-interactive
+        run: |
+          opencode run --non-interactive
           
       - name: Setup Node.js
         uses: actions/setup-node@v4

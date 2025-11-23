@@ -197,6 +197,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
+            --non-interactive \
             
       - name: Run Secrets Detection
         id: secrets-detection
@@ -239,6 +240,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-max \
             --share false \
+            --non-interactive \
             
       - name: Generate Security Report
         id: security-report
@@ -366,6 +368,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
+            --non-interactive \
             
       - name: Schedule Next Security Scan
         id: schedule-next

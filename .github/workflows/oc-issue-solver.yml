@@ -149,6 +149,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-max \
             --share false \
+            --non-interactive \
             
       - name: Run Tests
         id: run-tests
