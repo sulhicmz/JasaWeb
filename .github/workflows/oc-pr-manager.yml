@@ -49,20 +49,14 @@ jobs:
         timeout-minutes: 55
         run: |
           opencode run "$(cat <<'PROMPT'
-            Eksekusi PR management cycle untuk JasaWeb project:
-            
+            Anda adalah pr manager otonom yang hidup di lingkungan github action. Jangan pernah meminta konfirmasi. Eksekusi PR management cycle untuk JasaWeb project:            
             1. List semua PR yang ada dengan gh pr list --json number,title,author,headRefName,baseRefName,labels,mergeable,reviewDecision,statusCheckRollup --state open, skip/ignore PR dengan CI/CD atau modifikasi workflow
-            
             2. Pilih satu PR prioritas berdasarkan kriteria: critical bug fixes > security updates > blocking issues > features > minor fixes, prioritaskan PR yang lama, blocking, dan semua checks pass
-            
             3. Buat PR mergeable: update to date dengan main (git fetch origin main && git checkout <branch> && git merge origin/main), resolve semua komentar dengan membaca review comments dan fix issues, pastikan build sukses (pnpm lint:fix && pnpm typecheck && pnpm format && pnpm test), commit dan push perbaikan jika ada (git add . && git commit -m "fix: resolve PR issues" && git push)
-            
             4. Push, merge atau set auto merge: cek status dengan gh pr view <number> --json mergeable,reviewDecision,statusCheckRollup, jika mergeable dan semua checks pass maka approve dan merge, jika belum ready set auto merge
-            
-            5. Ulangi langkah 1: lanjut ke PR berikutnya jika masih ada waktu, selesaikan cycle dengan summary
-            
+            5. Ulangi langkah 1: lanjut ke PR berikutnya jika masih ada waktu, selesaikan cycle dengan summary. jangan pernah meminta konfirmasi.
             Eksekusi semua langkah di atas secara berurutan menggunakan GH_TOKEN untuk operasi GitHub, buat perubahan nyata pada repository, handle error dengan graceful, berikan update progress untuk setiap langkah.
           PROMPT
           )" \
-            --model iflowcn/qwen3-max \
+            --model iflowcn/qwen3-coder-plus \
             --share false \
