@@ -8,7 +8,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
   }
 
   async enableShutdownHooks(app: INestApplication) {
-    this.$on('beforeExit' as any, async () => {
+    // PrismaClient doesn't have proper TypeScript support for $on events
+    // This method can be implemented differently if needed
+    process.on('beforeExit', async () => {
       await app.close();
     });
   }
