@@ -154,6 +154,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-max \
             --share false \
+            --non-interactive \
             
       - name: Implement High-Impact Features
         id: implement-features
@@ -318,6 +319,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
+            --non-interactive \
             
       - name: Optimize Performance
         id: optimize-performance
@@ -486,6 +488,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
+            --non-interactive \
             
       - name: Generate Development Report
         id: development-report

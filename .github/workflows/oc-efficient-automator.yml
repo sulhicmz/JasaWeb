@@ -144,6 +144,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-max \
             --share false \
+            --non-interactive \
             
       - name: Create Summary Report
         if: always()
