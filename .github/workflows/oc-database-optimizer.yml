@@ -142,7 +142,8 @@ jobs:
           PROMPT
           )" \
             --model iflowcn/qwen3-coder-plus \
-            --share false
+            --share false \
+            --non-interactive
             
       - name: Create Database Optimization Summary
         if: always()
