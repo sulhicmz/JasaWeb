@@ -2,8 +2,15 @@ name: oc - PR Manager
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # Run every 10 minutes
+    - cron: '*/30 * * * *' # Jalankan setiap 30 menit
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Nomor PR yang akan diproses (opsional)'
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -11,10 +18,11 @@ permissions:
   pull-requests: write
   issues: write
   actions: write
+  security-events: write
 
 concurrency:
-  group: ${{ github.workflow }}-global
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pr-manager:
@@ -27,6 +35,7 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
+      security-events: write
       
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -34,7 +43,7 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
@@ -62,20 +71,49 @@ jobs:
         id: ai-pr-manager
         timeout-minutes: 55
         run: |
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.inputs.pr_number }}"
+          TRIGGER_EVENT="${{ github.event_name }}"
+
           opencode run "$(cat <<'PROMPT'
-            Eksekusi PR management cycle untuk JasaWeb project:
-            
-            1. List semua PR yang ada dengan gh pr list --json number,title,author,headRefName,baseRefName,labels,mergeable,reviewDecision,statusCheckRollup --state open, skip/ignore PR dengan CI/CD atau modifikasi workflow
-            
-            2. Pilih satu PR prioritas berdasarkan kriteria: critical bug fixes > security updates > blocking issues > features > minor fixes, prioritaskan PR yang lama, blocking, dan semua checks pass
-            
-            3. Buat PR mergeable: update to date dengan main (git fetch origin main && git checkout <branch> && git merge origin/main), resolve semua komentar dengan membaca review comments dan fix issues, pastikan build sukses (pnpm lint:fix && pnpm typecheck && pnpm format && pnpm test), commit dan push perbaikan jika ada (git add . && git commit -m "fix: resolve PR issues" && git push)
-            
-            4. Push, merge atau set auto merge: cek status dengan gh pr view <number> --json mergeable,reviewDecision,statusCheckRollup, jika mergeable dan semua checks pass maka approve dan merge, jika belum ready set auto merge
-            
-            5. Ulangi langkah 1: lanjut ke PR berikutnya jika masih ada waktu, selesaikan cycle dengan summary
-            
-            Eksekusi semua langkah di atas secara berurutan menggunakan GH_TOKEN untuk operasi GitHub, buat perubahan nyata pada repository, handle error dengan graceful, berikan update progress untuk setiap langkah.
+            Anda adalah Manajer PR AI untuk proyek JasaWeb. Tugas Anda adalah mengelola Pull Request (PR) secara efisien, baik yang dipicu oleh jadwal maupun oleh event PR.
+
+            **Konteks Pemicu**:
+            - Event: '$TRIGGER_EVENT'
+            - Nomor PR (jika ada): '$PR_NUMBER'
+
+            **Strategi Eksekusi**:
+
+            **CASE 1: Jika dipicu oleh `schedule` atau `workflow_dispatch` tanpa nomor PR:**
+            1.  **List & Prioritaskan**: Dapatkan daftar semua PR yang terbuka (`gh pr list --state open --json ...`). Abaikan PR yang terkait dengan CI/CD atau perubahan alur kerja.
+            2.  **Prioritaskan**: Urutkan PR berdasarkan kriteria: `critical bug fixes` > `security` > `blocking issues` > `features`. Prioritaskan juga PR yang sudah lama terbuka atau yang memiliki status checks yang sudah lolos.
+            3.  **Proses PR Tunggal**: Pilih **satu** PR dengan prioritas tertinggi untuk diproses dalam siklus ini.
+            4.  **Analisis & Perbaikan**: Untuk PR yang dipilih:
+                a.  **Checkout Branch**: `git checkout <branch_name>`
+                b.  **Sinkronisasi**: Pastikan branch up-to-date dengan `main` (`git fetch origin main && git merge origin/main`). Tangani konflik jika ada.
+                c.  **Analisis Kode & Review**: Lakukan analisis kualitas kode, keamanan, dan pengujian. Periksa komentar review yang ada.
+                d.  **Perbaikan Otomatis**: Jalankan `pnpm lint:fix`, `pnpm format`, dan perbaiki masalah umum (misalnya, impor yang tidak digunakan, kesalahan tipe sederhana).
+                e.  **Pengujian**: Jalankan `pnpm test` untuk memvalidasi perubahan.
+                f.  **Commit & Push**: Jika ada perbaikan, commit dengan pesan yang jelas (`fix: atasi masalah review dan CI`) dan push ke branch PR.
+            5.  **Merge atau Set Auto-Merge**: Setelah semua checks lolos (`gh pr view <number> --json statusCheckRollup`), setujui (`gh pr review --approve`) dan gabungkan (`gh pr merge --merge --delete-branch`) jika PR tersebut sederhana dan berisiko rendah. Jika tidak, setel auto-merge (`gh pr merge --auto`).
+            6.  **Laporan**: Berikan ringkasan singkat tentang PR yang diproses dan tindakan yang diambil.
+
+            **CASE 2: Jika dipicu oleh `pull_request` (event: '$TRIGGER_EVENT', nomor PR: '$PR_NUMBER'):**
+            1.  **Fokus pada PR Saat Ini**: Semua tindakan hanya berlaku untuk PR nomor '$PR_NUMBER'.
+            2.  **Analisis Mendalam**: Lakukan analisis komprehensif pada PR:
+                a.  **Kualitas Kode**: Periksa standar pengkodean, penanganan error, dan potensi masalah performa.
+                b.  **Pengujian**: Pastikan cakupan pengujian memadai.
+                c.  **Dokumentasi**: Verifikasi apakah dokumentasi yang relevan telah diperbarui.
+            3.  **Perbaikan & Pengujian Otomatis**:
+                a.  Jalankan `pnpm lint:fix`, `pnpm format`, `pnpm typecheck`.
+                b.  Jalankan suite pengujian lengkap: `pnpm test`.
+                c.  Jika ada perbaikan, commit dan push ke branch PR.
+            4.  **Review & Komentar**: Posting komentar review di PR. Jika ada masalah, berikan saran perbaikan yang jelas. Jika semuanya baik, setujui PR.
+            5.  **Merge atau Set Auto-Merge**: Jika semua checks lolos dan PR disetujui, gabungkan (`gh pr merge --merge --delete-branch`) atau setel auto-merge (`gh pr merge --auto`).
+
+            **Aturan Penting**:
+            - Gunakan `GH_TOKEN` untuk semua operasi GitHub.
+            - Buat perubahan nyata pada repositori; jangan hanya melaporkan.
+            - Tangani error dengan baik dan berikan pesan yang jelas jika terjadi kegagalan.
           PROMPT
           )" \
             --model iflowcn/qwen3-max \
