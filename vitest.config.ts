@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // Fast, targeted testing configuration
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['**/src/**/*.{test,spec}.{ts,tsx}'],
     exclude: [
       'node_modules',
       'dist',
@@ -42,7 +42,7 @@ export default defineConfig({
     },
 
     // Environment setup
-    environment: 'node',
+    environment: 'jsdom',
     globals: true,
 
     // Minimal reporting for CI
