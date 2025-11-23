@@ -66,9 +66,7 @@ async function bootstrap() {
   // Disable X-Powered-By header
   app.getHttpAdapter().getInstance().disable('x-powered-by');
 
-  // Apply global throttler guard for rate limiting
-  const throttlerGuard = app.get(ThrottlerGuard);
-  app.useGlobalGuards(throttlerGuard);
+  // ThrottlerGuard is applied globally via APP_GUARD in AppModule
 
   // Use global validation pipe
   app.useGlobalPipes(
