@@ -67,16 +67,16 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
           
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-          
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8.15.0
           
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -197,6 +197,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
+            --non-interactive \
             
       - name: Run Secrets Detection
         id: secrets-detection
@@ -239,6 +240,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-max \
             --share false \
+            --non-interactive \
             
       - name: Generate Security Report
         id: security-report
@@ -366,6 +368,7 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
+            --non-interactive \
             
       - name: Schedule Next Security Scan
         id: schedule-next
