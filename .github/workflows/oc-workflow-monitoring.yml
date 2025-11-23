@@ -1,0 +1,291 @@
+name: oc - Workflow Monitoring
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Setiap 15 menit
+  workflow_dispatch:
+    inputs:
+      monitoring_type:
+        description: 'Type of monitoring'
+        required: false
+        default: 'health-check'
+        type: choice
+        options:
+          - health-check
+          - performance-analysis
+          - error-analysis
+          - full-report
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  workflow-monitoring:
+    name: OC Workflow Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+      issues: write
+      pull-requests: write
+      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Monitor Workflow Health
+        id: health-monitor
+        timeout-minutes: 8
+        run: |
+          MONITORING_TYPE="${{ github.event.inputs.monitoring_type || 'health-check' }}"
+          
+          echo "Starting workflow monitoring..."
+          echo "Monitoring Type: $MONITORING_TYPE"
+          
+          # Get workflow runs from last 24 hours
+          WORKFLOWS=(
+            "oc-pr-automator"
+            "oc-efficient-automator" 
+            "oc-code-quality-testing"
+            "oc-autonomous-developer"
+            "oc-maintenance-monitoring"
+            "oc-security-scanning"
+            "oc-issue-solver"
+          )
+          
+          TOTAL_RUNS=0
+          FAILED_RUNS=0
+          SUCCESS_RATE=0
+          CRITICAL_ISSUES=()
+          
+          for workflow in "${WORKFLOWS[@]}"; do
+            echo "Analyzing workflow: $workflow"
+            
+            # Get recent runs
+            RUNS_JSON=$(gh run list --workflow="$workflow" --limit=10 --json)
+            RECENT_RUNS=$(echo "$RUNS_JSON" | jq '.[] | select(.created_at > (now - 86400 | strftime("%Y-%m-%dT%H:%M:%SZ")))')
+            
+            if [ -n "$RECENT_RUNS" ]; then
+              WORKFLOW_RUNS=$(echo "$RECENT_RUNS" | jq 'length')
+              WORKFLOW_FAILURES=$(echo "$RECENT_RUNS" | jq 'select(.conclusion == "failure") | length')
+              WORKFLOW_SUCCESS_RATE=$(echo "scale=2; (100 * ($WORKFLOW_RUNS - $WORKFLOW_FAILURES)) / $WORKFLOW_RUNS" | bc)
+              
+              TOTAL_RUNS=$((TOTAL_RUNS + WORKFLOW_RUNS))
+              FAILED_RUNS=$((FAILED_RUNS + WORKFLOW_FAILURES))
+              
+              echo "  - Runs: $WORKFLOW_RUNS, Failures: $WORKFLOW_FAILURES, Success Rate: $WORKFLOW_SUCCESS_RATE%"
+              
+              # Check for critical issues (3+ consecutive failures)
+              CONSECUTIVE_FAILURES=$(echo "$RECENT_RUNS" | jq -s 'group_by(.workflow) | map(select(.[0:3] | all(.conclusion == "failure"))) | length')
+              if [ "$CONSECUTIVE_FAILURES" -gt 0 ]; then
+                CRITICAL_ISSUES+=("$workflow: $CONSECUTIVE_FAILURES consecutive failures")
+              fi
+            else
+              echo "  - No recent runs found"
+            fi
+          done
+          
+          # Calculate overall success rate
+          if [ "$TOTAL_RUNS" -gt 0 ]; then
+            SUCCESS_RATE=$(echo "scale=2; (100 * ($TOTAL_RUNS - $FAILED_RUNS)) / $TOTAL_RUNS" | bc)
+          fi
+          
+          echo "Overall Statistics:"
+          echo "  - Total Runs: $TOTAL_RUNS"
+          echo "  - Failed Runs: $FAILED_RUNS"
+          echo "  - Success Rate: $SUCCESS_RATE%"
+          echo "  - Critical Issues: ${#CRITICAL_ISSUES[@]}"
+          
+          # Set outputs for next steps
+          echo "total_runs=$TOTAL_RUNS" >> $GITHUB_OUTPUT
+          echo "failed_runs=$FAILED_RUNS" >> $GITHUB_OUTPUT
+          echo "success_rate=$SUCCESS_RATE" >> $GITHUB_OUTPUT
+          echo "critical_issues_count=${#CRITICAL_ISSUES[@]}" >> $GITHUB_OUTPUT
+          
+          # Store critical issues for reporting
+          printf '%s\n' "${CRITICAL_ISSUES[@]}" > /tmp/critical_issues.txt
+          
+      - name: Generate Monitoring Report
+        id: generate-report
+        timeout-minutes: 5
+        run: |
+          MONITORING_TYPE="${{ github.event.inputs.monitoring_type || 'health-check' }}"
+          TOTAL_RUNS="${{ steps.health-monitor.outputs.total_runs }}"
+          FAILED_RUNS="${{ steps.health-monitor.outputs.failed_runs }}"
+          SUCCESS_RATE="${{ steps.health-monitor.outputs.success_rate }}"
+          CRITICAL_ISSUES_COUNT="${{ steps.health-monitor.outputs.critical_issues_count }}"
+          
+          echo "Generating monitoring report..."
+          
+          # Determine health status
+          HEALTH_STATUS="HEALTHY"
+          PRIORITY="low"
+          if [ "$SUCCESS_RATE" -lt 80 ]; then
+            HEALTH_STATUS="WARNING"
+            PRIORITY="medium"
+          fi
+          if [ "$SUCCESS_RATE" -lt 60 ] || [ "$CRITICAL_ISSUES_COUNT" -gt 0 ]; then
+            HEALTH_STATUS="CRITICAL"
+            PRIORITY="high"
+          fi
+          
+          echo "Health Status: $HEALTH_STATUS"
+          echo "Priority: $PRIORITY"
+          
+          # Create monitoring report
+          REPORT_BODY="## 🔍 GitHub Actions Workflow Monitoring Report
+          
+          **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Monitoring Type**: $MONITORING_TYPE
+          
+          ### 📊 Overall Status
+          - **Health Status**: $HEALTH_STATUS
+          - **Total Runs**: $TOTAL_RUNS
+          - **Failed Runs**: $FAILED_RUNS
+          - **Success Rate**: $SUCCESS_RATE%
+          - **Critical Issues**: $CRITICAL_ISSUES_COUNT
+          
+          ### 🚨 Critical Issues
+          "
+          
+          if [ -f "/tmp/critical_issues.txt" ] && [ -s "/tmp/critical_issues.txt" ]; then
+            while IFS= read -r issue; do
+              REPORT_BODY="$REPORT_BODY
+          - ❌ $issue"
+            done < /tmp/critical_issues.txt"
+          else
+            REPORT_BODY="$REPORT_BODY
+          - ✅ No critical issues detected"
+          fi
+          
+          REPORT_BODY="$REPORT_BODY
+          
+          ### 📈 Performance Analysis
+          - **Average Success Rate**: $SUCCESS_RATE%
+          - **Failure Rate**: $(echo "scale=2; 100 - $SUCCESS_RATE" | bc)%
+          - **Monitoring Frequency**: Every 15 minutes
+          
+          ### 🎯 Recommendations
+          "
+          
+          if [ "$HEALTH_STATUS" = "CRITICAL" ]; then
+            REPORT_BODY="$REPORT_BODY
+          - 🚨 **IMMEDIATE ACTION REQUIRED**
+          - Investigate failing workflows immediately
+          - Check runner configuration and dependencies
+          - Review recent changes that may have caused failures
+          - Consider temporarily disabling problematic workflows"
+          elif [ "$HEALTH_STATUS" = "WARNING" ]; then
+            REPORT_BODY="$REPORT_BODY
+          - ⚠️ **ATTENTION NEEDED**
+          - Monitor workflow performance closely
+          - Review error patterns and optimize
+          - Consider adjusting timeout configurations
+          - Update dependencies if needed"
+          else
+            REPORT_BODY="$REPORT_BODY
+          - ✅ **SYSTEM HEALTHY**
+          - Continue normal monitoring
+          - Maintain current configuration
+          - Regular optimization reviews recommended"
+          fi
+          
+          REPORT_BODY="$REPORT_BODY
+          
+          ### 🔗 Related Resources
+          - [Workflow Runs Dashboard](https://github.com/sulhicmz/JasaWeb/actions)
+          - [Workflow Error Analysis](docs/WORKFLOW_ERROR_ANALYSIS_AND_FIXES.md)
+          - [Troubleshooting Guide](docs/WORKFLOW_TROUBLESHOOTING.md)
+          
+          ---
+          
+          🤖 *Report generated by OpenCode CLI Workflow Monitoring*"
+          
+          # Create or update monitoring issue
+          EXISTING_ISSUE=$(gh issue list --label="workflow-monitoring" --state=open --json | jq '.[] | select(.title | contains("Workflow Monitoring Report")) | .number')
+          
+          if [ -n "$EXISTING_ISSUE" ]; then
+            echo "Updating existing monitoring issue #$EXISTING_ISSUE"
+            gh issue edit "$EXISTING_ISSUE" \
+              --title "🔍 Workflow Monitoring Report - $HEALTH_STATUS" \
+              --body "$REPORT_BODY" \
+              --add-label "$PRIORITY" \
+              --add-label "monitoring"
+          else
+            echo "Creating new monitoring issue"
+            gh issue create \
+              --title "🔍 Workflow Monitoring Report - $HEALTH_STATUS" \
+              --body "$REPORT_BODY" \
+              --label "workflow-monitoring" \
+              --label "$PRIORITY" \
+              --label "monitoring"
+          fi
+          
+      - name: Create Monitoring Summary
+        if: always()
+        run: |
+          TOTAL_RUNS="${{ steps.health-monitor.outputs.total_runs }}"
+          FAILED_RUNS="${{ steps.health-monitor.outputs.failed_runs }}"
+          SUCCESS_RATE="${{ steps.health-monitor.outputs.success_rate }}"
+          CRITICAL_ISSUES_COUNT="${{ steps.health-monitor.outputs.critical_issues_count }}"
+          
+          echo "## 🔍 Workflow Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Monitoring Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Workflows Analyzed**: 7" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Runs (24h)**: $TOTAL_RUNS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Failed Runs**: $FAILED_RUNS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Success Rate**: $SUCCESS_RATE%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical Issues**: $CRITICAL_ISSUES_COUNT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Health Status" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$SUCCESS_RATE" -ge 80 ] && [ "$CRITICAL_ISSUES_COUNT" -eq 0 ]; then
+            echo "- **Status**: ✅ HEALTHY" >> $GITHUB_STEP_SUMMARY
+            echo "- **Action**: Continue normal monitoring" >> $GITHUB_STEP_SUMMARY
+          elif [ "$SUCCESS_RATE" -ge 60 ]; then
+            echo "- **Status**: ⚠️ WARNING" >> $GITHUB_STEP_SUMMARY
+            echo "- **Action**: Monitor closely, investigate patterns" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: 🚨 CRITICAL" >> $GITHUB_STEP_SUMMARY
+            echo "- **Action**: Immediate investigation required" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Next Monitoring Cycle" >> $GITHUB_STEP_SUMMARY
+          echo "- **Next Check**: In 15 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Full Report**: Available in monitoring issue" >> $GITHUB_STEP_SUMMARY
+          echo "- **Historical Data**: Tracked in monitoring dashboard" >> $GITHUB_STEP_SUMMARY
