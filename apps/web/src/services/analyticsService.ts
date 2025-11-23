@@ -163,7 +163,7 @@ class AnalyticsService {
   // Export functionality
   async exportData(
     type: 'pdf' | 'excel' | 'csv',
-    data: any,
+    data: Record<string, unknown>,
     filename?: string
   ) {
     const token = localStorage.getItem('authToken');

@@ -1,12 +1,16 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 
+export interface NotificationData {
+  [key: string]: unknown;
+}
+
 export interface Notification {
   id: string;
   type: string;
   title: string;
   message: string;
-  data: any;
+  data: NotificationData;
   isRead: boolean;
   createdAt: Date;
 }
@@ -23,11 +27,11 @@ export interface NotificationServiceCallbacks {
   onUnreadCount?: (count: number) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }
 
 class NotificationService {
-  private socket: any | null = null;
+  private socket: Socket | null = null;
   private callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -77,12 +81,12 @@ class NotificationService {
       this.callbacks.onConnect?.();
     });
 
-    this.socket.on('disconnect', (reason: any) => {
+    this.socket.on('disconnect', (reason: string) => {
       // Disconnected from notification service
       this.callbacks.onDisconnect?.();
     });
 
-    this.socket.on('connect_error', (error: any) => {
+    this.socket.on('connect_error', (error: Error) => {
       // Notification connection error
       this.reconnectAttempts++;
 
@@ -112,7 +116,7 @@ class NotificationService {
       this.callbacks.onUnreadCount?.(data.count);
     });
 
-    this.socket.on('error', (error: any) => {
+    this.socket.on('error', (error: Error) => {
       // Socket error
       this.callbacks.onError?.(error);
     });
