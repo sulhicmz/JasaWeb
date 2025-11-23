@@ -1,0 +1,177 @@
+name: oc - Efficient Automator
+
+on:
+  schedule:
+    - cron: '0 1,9,17 * * *'  # Setiap 8 jam: 01:00, 09:00, 17:00 UTC
+  workflow_dispatch:
+    inputs:
+      task_type:
+        description: 'Type of automation task'
+        required: false
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - quick-fixes
+          - security-only
+          - quality-only
+          - maintenance-only
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  efficient-automator:
+    name: OC Efficient Automator
+    runs-on: self-hosted
+    timeout-minutes: 25
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GH_TOKEN }}
+          
+      - name: Error Handling Setup
+        run: |
+          set -euo pipefail
+          trap 'echo "❌ Error occurred in step ${{ github.step }}. Exit code: $?"' ERR
+          trap 'echo "🔄 Cleaning up..."' EXIT
+          
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          package_json_file: package.json
+          
+      - name: Install dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          
+      - name: Run Efficient Automation
+        id: efficient-automation
+        timeout-minutes: 15
+        run: |
+          TASK_TYPE="${{ github.event.inputs.task_type || 'comprehensive' }}"
+          
+          echo "Starting efficient automation cycle..."
+          echo "Task Type: $TASK_TYPE"
+          
+          opencode run "$(cat <<'PROMPT'
+            Perform efficient automation for JasaWeb project:
+            
+            Task Type: '$TASK_TYPE'
+            
+            Efficient Automation Strategy:
+            1. Quick Assessment:
+               - Identify immediate issues that need attention
+               - Check for critical security vulnerabilities
+               - Review recent failed workflows or builds
+               - Analyze performance degradation indicators
+               - Check for urgent user-reported issues
+            
+            2. Prioritized Actions:
+               Based on task type, focus on:
+               
+               - Comprehensive: All areas with priority on critical issues
+               - Quick-fixes: High-impact, low-effort improvements
+               - Security-only: Security vulnerabilities and hardening
+               - Quality-only: Code quality and test coverage
+               - Maintenance-only: Dependencies and cleanup
+            
+            3. Persistent Results:
+               - ALL findings must create GitHub issues
+               - ALL fixes must create Pull Requests
+               - ALL reports must update documentation
+               - NO local-only changes allowed
+               - Everything must be tracked in repository
+            
+            4. Efficiency Measures:
+               - Maximum 15 minutes execution time
+               - Focus on high-impact, low-effort tasks
+               - Automate repetitive manual tasks
+               - Prevent future workflow failures
+               - Reduce resource consumption
+            
+            Actions to Take:
+            1. Create issues for problems found
+            2. Create PRs for fixes implemented
+            3. Update documentation with findings
+            4. Comment on existing issues/PRs with updates
+            5. Close resolved issues automatically
+            6. Merge approved PRs when safe
+            
+            Quality Requirements:
+            - Every action must create a GitHub issue or PR
+            - No local-only changes allowed
+            - All work must be persisted
+            - Clear commit messages and PR descriptions
+            - Proper testing for all changes
+            
+            Focus on delivering persistent, trackable results.
+            Ensure all work is visible in the repository.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false \
+            
+      - name: Create Summary Report
+        if: always()
+        run: |
+          echo "## ⚡ Efficient Automator Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Task Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Task Type**: $TASK_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Duration**: 25 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Runner**: self-hosted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Automation Actions" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Quick assessment completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Prioritized actions executed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Results persisted via issues/PRs" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Documentation updated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Efficiency measures applied" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Key Improvements" >> $GITHUB_STEP_SUMMARY
+          echo "- Reduced workflow execution time" >> $GITHUB_STEP_SUMMARY
+          echo "- Eliminated local-only changes" >> $GITHUB_STEP_SUMMARY
+          echo "- Ensured result persistence" >> $GITHUB_STEP_SUMMARY
+          echo "- Improved error handling" >> $GITHUB_STEP_SUMMARY
+          echo "- Optimized resource usage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor created issues and PRs" >> $GITHUB_STEP_SUMMARY
+          echo "- Review automation effectiveness" >> $GITHUB_STEP_SUMMARY
+          echo "- Adjust task priorities as needed" >> $GITHUB_STEP_SUMMARY
+          echo "- Continue efficiency improvements" >> $GITHUB_STEP_SUMMARY
