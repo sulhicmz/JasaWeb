@@ -1,0 +1,82 @@
+name: oc - PR Manager
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # Run every 10 minutes
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  pr-manager:
+    name: OC PR Manager
+    runs-on: self-hosted
+    timeout-minutes: 60
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+          
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run AI PR Manager
+        id: ai-pr-manager
+        timeout-minutes: 55
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Eksekusi PR management cycle untuk JasaWeb project:
+            
+            1. List semua PR yang ada dengan gh pr list --json number,title,author,headRefName,baseRefName,labels,mergeable,reviewDecision,statusCheckRollup --state open, skip/ignore PR dengan CI/CD atau modifikasi workflow
+            
+            2. Pilih satu PR prioritas berdasarkan kriteria: critical bug fixes > security updates > blocking issues > features > minor fixes, prioritaskan PR yang lama, blocking, dan semua checks pass
+            
+            3. Buat PR mergeable: update to date dengan main (git fetch origin main && git checkout <branch> && git merge origin/main), resolve semua komentar dengan membaca review comments dan fix issues, pastikan build sukses (pnpm lint:fix && pnpm typecheck && pnpm format && pnpm test), commit dan push perbaikan jika ada (git add . && git commit -m "fix: resolve PR issues" && git push)
+            
+            4. Push, merge atau set auto merge: cek status dengan gh pr view <number> --json mergeable,reviewDecision,statusCheckRollup, jika mergeable dan semua checks pass maka approve dan merge, jika belum ready set auto merge
+            
+            5. Ulangi langkah 1: lanjut ke PR berikutnya jika masih ada waktu, selesaikan cycle dengan summary
+            
+            Eksekusi semua langkah di atas secara berurutan menggunakan GH_TOKEN untuk operasi GitHub, buat perubahan nyata pada repository, handle error dengan graceful, berikan update progress untuk setiap langkah.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false
