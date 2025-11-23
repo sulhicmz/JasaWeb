@@ -135,7 +135,9 @@ export class AnalyticsService {
       userId?: string;
     }
   ) {
-    const whereClause: any = {
+    const whereClause: WhereClause & {
+      memberships: { some: { organizationId: string } };
+    } = {
       memberships: {
         some: {
           organizationId,
@@ -499,7 +501,7 @@ export class AnalyticsService {
 
     // Group by time period
     const trends = auditLogs.reduce(
-      (acc: Record<string, any>, log: any) => {
+      (acc: Record<string, any>, log: { action: string; createdAt: Date }) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
 
