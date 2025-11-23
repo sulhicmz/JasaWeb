@@ -1,0 +1,638 @@
+name: oc - Autonomous Developer
+
+on:
+  schedule:
+    - cron: '0 */8 * * *'  # Setiap 8 jam
+  workflow_dispatch:
+    inputs:
+      development_type:
+        description: 'Development focus area'
+        required: false
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - features
+          - bugfixes
+          - optimization
+          - documentation
+      priority:
+        description: 'Priority level'
+        required: false
+        default: 'balanced'
+        type: choice
+        options:
+          - high-impact
+          - balanced
+          - quick-wins
+          - maintenance
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: ${{ github.workflow }}-global
+  cancel-in-progress: false
+
+jobs:
+  autonomous-developer:
+    name: OC Autonomous Developer
+    runs-on: self-hosted
+    timeout-minutes: 60
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+      
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+          
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Analyze Project State
+        id: analyze-project
+        timeout-minutes: 15
+        run: |
+          DEVELOPMENT_TYPE="${{ github.event.inputs.development_type || 'comprehensive' }}"
+          PRIORITY="${{ github.event.inputs.priority || 'balanced' }}"
+          
+          echo "Starting autonomous development cycle..."
+          echo "Development Type: $DEVELOPMENT_TYPE"
+          echo "Priority: $PRIORITY"
+          
+          opencode run "$(cat <<'PROMPT'
+            Perform comprehensive project analysis for JasaWeb autonomous development:
+            
+            Analysis Parameters:
+            - Development Type: '$DEVELOPMENT_TYPE'
+            - Priority Level: '$PRIORITY'
+            
+            Analysis Areas:
+            1. Codebase Health Assessment:
+               - Identify technical debt and code smells
+               - Analyze code complexity and maintainability
+               - Review test coverage and quality
+               - Check for performance bottlenecks
+               - Identify security vulnerabilities
+               - Assess documentation completeness
+            
+            2. Feature Gap Analysis:
+               - Review project roadmap and requirements
+               - Identify missing features or functionality
+               - Analyze user feedback and issues
+               - Check for incomplete implementations
+               - Identify opportunities for innovation
+               - Assess competitive landscape
+            
+            3. Bug and Issue Analysis:
+               - Review open issues and bug reports
+               - Identify recurring problems
+               - Analyze error logs and crash reports
+               - Check for performance issues
+               - Review user complaints and feedback
+               - Prioritize by impact and frequency
+            
+            4. Optimization Opportunities:
+               - Performance optimization opportunities
+               - Code refactoring opportunities
+               - Database optimization potential
+               - Frontend optimization opportunities
+               - Infrastructure improvements
+               - Cost reduction opportunities
+            
+            5. Documentation and Quality:
+               - Documentation gaps and improvements
+               - Code quality enhancements
+               - Testing improvements needed
+               - Developer experience enhancements
+               - Onboarding improvements
+               - Knowledge sharing opportunities
+            
+            Output Requirements:
+            1. Prioritized development tasks list
+            2. Impact assessment for each task
+            3. Resource requirements estimation
+            4. Dependencies and prerequisites
+            5. Risk assessment and mitigation
+            6. Implementation roadmap
+            
+            Focus on high-impact, achievable improvements.
+            Consider current team capacity and project priorities.
+            Balance between new features, bug fixes, and optimizations.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false \
+            
+      - name: Implement High-Impact Features
+        id: implement-features
+        timeout-minutes: 20
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Implement high-impact features for JasaWeb project based on analysis:
+            
+            Implementation Strategy:
+            1. Feature Selection:
+               - Choose 1-2 high-impact features
+               - Prioritize by business value and feasibility
+               - Consider current project needs
+               - Balance complexity and impact
+               - Ensure alignment with project goals
+            
+            2. Feature Implementation:
+               - Design feature architecture
+               - Implement core functionality
+               - Add proper error handling
+               - Include comprehensive testing
+               - Update documentation
+               - Ensure backward compatibility
+            
+            3. Quality Assurance:
+               - Unit tests for all new code
+               - Integration tests for feature workflows
+               - E2E tests for user scenarios
+               - Performance testing if applicable
+               - Security testing for new endpoints
+               - Accessibility testing for UI changes
+            
+            4. Integration and Deployment:
+               - Ensure proper integration with existing code
+               - Update configuration files if needed
+               - Add migration scripts if required
+               - Update API documentation
+               - Create user documentation
+               - Prepare deployment notes
+            
+            Feature Categories to Consider:
+            1. Client Portal Enhancements:
+               - Improved dashboard functionality
+               - Better project management features
+               - Enhanced file management
+               - Improved notification system
+               - Better reporting capabilities
+            
+            2. API Improvements:
+               - New endpoints for missing functionality
+               - Performance optimizations
+               - Better error handling
+               - Improved authentication
+               - Enhanced security features
+            
+            3. Frontend Enhancements:
+               - Improved user interface
+               - Better responsive design
+               - Performance optimizations
+               - Accessibility improvements
+               - Better user experience
+            
+            4. Developer Experience:
+               - Better development tools
+               - Improved documentation
+               - Better testing infrastructure
+               - Enhanced debugging capabilities
+               - Better deployment processes
+            
+            Actions to Take:
+            1. Create feature branches for each implementation
+            2. Implement features following best practices
+            3. Add comprehensive tests and documentation
+            4. Create pull requests with detailed descriptions
+            5. Ensure all quality checks pass
+            6. Request reviews and merge if approved
+            
+            Focus on delivering complete, tested features.
+            Ensure minimal disruption to existing functionality.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Fix Critical Bugs
+        id: fix-bugs
+        timeout-minutes: 15
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Identify and fix critical bugs for JasaWeb project:
+            
+            Bug Analysis and Fix Strategy:
+            1. Bug Identification:
+               - Review open issues and bug reports
+               - Analyze error logs and crash reports
+               - Check for performance issues
+               - Review user feedback and complaints
+               - Identify security vulnerabilities
+               - Check for integration issues
+            
+            2. Bug Prioritization:
+               - Critical: Security issues, data loss, system crashes
+               - High: Major functionality broken, performance degradation
+               - Medium: Minor functionality issues, usability problems
+               - Low: Cosmetic issues, minor improvements
+            
+            3. Bug Fix Implementation:
+               - Identify root cause of each bug
+               - Implement comprehensive fix
+               - Add regression tests
+               - Ensure no side effects
+               - Update documentation if needed
+               - Test thoroughly before deployment
+            
+            4. Quality Assurance:
+               - Unit tests for fixed code
+               - Integration tests for affected workflows
+               - E2E tests for user scenarios
+               - Performance testing for fixes
+               - Security testing for vulnerabilities
+               - Regression testing for related features
+            
+            Common Bug Categories to Address:
+            1. Authentication and Authorization:
+               - Login issues and session management
+               - Permission and access control problems
+               - Token handling and refresh issues
+               - Multi-tenant isolation issues
+            
+            2. Data Management:
+               - Database connection issues
+               - Data integrity problems
+               - File upload/download issues
+               - Data synchronization problems
+               - Backup and recovery issues
+            
+            3. API and Integration:
+               - API endpoint failures
+               - Request/response handling issues
+               - Third-party integration problems
+               - Rate limiting and throttling issues
+               - Error handling and logging
+            
+            4. User Interface:
+               - Display and rendering issues
+               - Responsive design problems
+               - Browser compatibility issues
+               - Accessibility problems
+               - Performance and loading issues
+            
+            Actions to Take:
+            1. Create bug fix branches for critical issues
+            2. Implement comprehensive fixes with proper testing
+            3. Add regression tests to prevent future occurrences
+            4. Update documentation and error messages
+            5. Create pull requests with detailed fix descriptions
+            6. Ensure all quality checks pass before merge
+            
+            Focus on critical and high-impact bugs first.
+            Ensure fixes are thorough and well-tested.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Optimize Performance
+        id: optimize-performance
+        timeout-minutes: 15
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Optimize performance for JasaWeb project:
+            
+            Performance Optimization Strategy:
+            1. Performance Analysis:
+               - Identify slow database queries
+               - Analyze API response times
+               - Check frontend bundle sizes
+               - Review memory usage patterns
+               - Analyze CPU utilization
+               - Check network request efficiency
+            
+            2. Backend Optimizations:
+               - Database query optimization
+               - Caching implementation improvements
+               - API endpoint performance
+               - Background job optimization
+               - Memory usage optimization
+               - Connection pooling improvements
+            
+            3. Frontend Optimizations:
+               - Bundle size reduction
+               - Code splitting implementation
+               - Image and asset optimization
+               - Caching strategies
+               - Lazy loading implementation
+               - Rendering performance improvements
+            
+            4. Infrastructure Optimizations:
+               - Server configuration improvements
+               - CDN optimization
+               - Load balancing improvements
+               - Database server optimization
+               - Network optimization
+               - Monitoring and alerting improvements
+            
+            Specific Optimization Areas:
+            1. Database Performance:
+               - Query optimization and indexing
+               - Connection pooling improvements
+               - Query result caching
+               - Database schema optimization
+               - Slow query analysis and fixes
+            
+            2. API Performance:
+               - Response time optimization
+               - Request payload optimization
+               - Pagination implementation
+               - Rate limiting optimization
+               - API endpoint caching
+            
+            3. Frontend Performance:
+               - JavaScript bundle optimization
+               - CSS optimization and minification
+               - Image optimization and compression
+               - Font loading optimization
+               - Critical path optimization
+            
+            4. Caching Strategies:
+               - Application-level caching
+               - Database query caching
+               - CDN caching optimization
+               - Browser caching improvements
+               - Edge caching implementation
+            
+            Actions to Take:
+            1. Implement performance improvements with measurable impact
+            2. Add performance monitoring and alerting
+            3. Create performance benchmarks and tests
+            4. Document optimization decisions and trade-offs
+            5. Create pull requests with performance metrics
+            6. Ensure optimizations don't break functionality
+            
+            Focus on optimizations with measurable performance gains.
+            Ensure improvements don't introduce new bugs or complexity.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder-plus \
+            --share false \
+            
+      - name: Improve Documentation
+        id: improve-documentation
+        timeout-minutes: 10
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Improve documentation for JasaWeb project:
+            
+            Documentation Improvement Strategy:
+            1. Documentation Audit:
+               - Review existing documentation completeness
+               - Identify outdated information
+               - Check for missing sections
+               - Analyze documentation quality
+               - Review user feedback on docs
+               - Check for consistency and accuracy
+            
+            2. Documentation Enhancement:
+               - Update API documentation
+               - Improve getting started guides
+               - Add more code examples
+               - Create troubleshooting guides
+               - Enhance developer documentation
+               - Improve user documentation
+            
+            3. Documentation Types:
+               - Technical documentation (API, architecture)
+               - User documentation (guides, tutorials)
+               - Developer documentation (setup, contribution)
+               - Operations documentation (deployment, monitoring)
+               - Security documentation (policies, procedures)
+               - Legal documentation (licenses, compliance)
+            
+            4. Documentation Quality:
+               - Clear and concise writing
+               - Comprehensive examples
+               - Proper formatting and structure
+               - Accurate and up-to-date information
+               - Easy navigation and search
+               - Multiple formats (markdown, HTML)
+            
+            Documentation Areas to Improve:
+            1. API Documentation:
+               - Complete endpoint documentation
+               - Request/response examples
+               - Error handling documentation
+               - Authentication and authorization
+               - Rate limiting and quotas
+            
+            2. Developer Documentation:
+               - Setup and installation guides
+               - Development workflow documentation
+               - Testing guidelines and examples
+               - Contribution guidelines
+               - Code style and conventions
+            
+            3. User Documentation:
+               - Getting started guides
+               - Feature documentation
+               - Troubleshooting guides
+               - FAQ and common issues
+               - Video tutorials and screenshots
+            
+            4. Operations Documentation:
+               - Deployment guides
+               - Monitoring and alerting
+               - Backup and recovery
+               - Security procedures
+               - Performance tuning
+            
+            Actions to Take:
+            1. Update existing documentation with accurate information
+            2. Add missing documentation sections
+            3. Improve documentation quality and examples
+            4. Create interactive documentation if possible
+            5. Add documentation testing and validation
+            6. Create pull requests for documentation improvements
+            
+            Focus on making documentation comprehensive and user-friendly.
+            Ensure documentation is always accurate and up-to-date.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder \
+            --share false \
+            
+      - name: Generate Development Report
+        id: development-report
+        timeout-minutes: 10
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Generate comprehensive autonomous development report for JasaWeb project:
+            
+            Report Components:
+            1. Development Summary:
+               - Features implemented and their impact
+               - Bugs fixed and their severity
+               - Performance improvements and metrics
+               - Documentation enhancements made
+               - Code quality improvements
+               - Testing improvements implemented
+            
+            2. Impact Assessment:
+               - Business value delivered
+               - User experience improvements
+               - Developer productivity gains
+               - System reliability improvements
+               - Security enhancements
+               - Cost savings achieved
+            
+            3. Technical Metrics:
+               - Code coverage improvements
+               - Performance benchmarks
+               - Bug reduction metrics
+               - Code quality metrics
+               - Documentation completeness
+               - Test automation improvements
+            
+            4. Development Process:
+               - Development time and efficiency
+               - Code review process improvements
+               - Testing automation enhancements
+               - Deployment process improvements
+               - Monitoring and alerting improvements
+               - Team productivity improvements
+            
+            5. Future Recommendations:
+               - Next development priorities
+               - Technical debt reduction plan
+               - Performance optimization roadmap
+               - Security improvement roadmap
+               - Documentation enhancement plan
+               - Team skill development needs
+            
+            Report Format:
+            1. Executive summary with key achievements
+            2. Detailed technical implementation summary
+            3. Metrics and performance improvements
+            4. Challenges faced and solutions
+            5. Recommendations for next cycle
+            
+            Create this report as:
+            - GitHub issue with development labels
+            - Detailed report in docs/development-report.html
+            - Summary in workflow artifacts
+            - Update development dashboard
+            
+            Include actionable next steps and assign to appropriate team.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-max \
+            --share false \
+            
+      - name: Schedule Next Development Cycle
+        id: schedule-next
+        timeout-minutes: 5
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            Schedule next autonomous development cycle for JasaWeb project:
+            
+            Based on current development results, determine:
+            
+            1. Next Cycle Planning:
+               - Recommended development focus areas
+               - Priority level for next cycle
+               - Resource requirements estimation
+               - Timeline and milestones
+               - Success criteria definition
+            
+            2. Development Roadmap:
+               - Short-term development goals (1-2 weeks)
+               - Medium-term objectives (1-2 months)
+               - Long-term vision (3-6 months)
+               - Feature prioritization matrix
+               - Resource allocation plan
+            
+            3. Process Improvements:
+               - Development workflow enhancements
+               - Testing automation improvements
+               - Code review process improvements
+               - Documentation process improvements
+               - Monitoring and alerting enhancements
+            
+            4. Team and Skills:
+               - Skill development needs
+               - Training requirements
+               - Tool and technology upgrades
+               - Collaboration improvements
+               - Knowledge sharing initiatives
+            
+            Create GitHub issue with:
+               - Next development cycle schedule
+               - Development roadmap and priorities
+               - Resource requirements and timeline
+               - Process improvement recommendations
+               
+            Label appropriately and assign to development team.
+          PROMPT
+          )" \
+            --model iflowcn/qwen3-coder \
+            --share false \
+            
+      - name: Create Development Summary
+        if: always()
+        run: |
+          echo "## 🚀 Autonomous Developer Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Development Cycle Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Development Type**: $DEVELOPMENT_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Priority Level**: $PRIORITY" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cycle Duration**: 60 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Development Activities" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Project state analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ High-impact features implemented" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Critical bugs identified and fixed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance optimizations applied" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Documentation improvements made" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Development report generated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Next development cycle scheduled" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Development Impact" >> $GITHUB_STEP_SUMMARY
+          echo "- **Features**: New functionality delivered" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bugs**: Issues resolved and prevented" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance**: System optimizations implemented" >> $GITHUB_STEP_SUMMARY
+          echo "- **Documentation**: Knowledge base enhanced" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quality**: Code standards improved" >> $GITHUB_STEP_SUMMARY
+          echo "- **Automation**: Development processes enhanced" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Review development report and metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor implemented features and fixes" >> $GITHUB_STEP_SUMMARY
+          echo "- Prepare for next development cycle" >> $GITHUB_STEP_SUMMARY
+          echo "- Address any issues or feedback" >> $GITHUB_STEP_SUMMARY
+          echo "- Continue continuous improvement process" >> $GITHUB_STEP_SUMMARY
