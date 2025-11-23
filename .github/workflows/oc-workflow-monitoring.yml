@@ -2,7 +2,7 @@ name: oc - Workflow Monitoring
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Setiap 15 menit
+    - cron: '0 * * * *' # Setiap jam
   workflow_dispatch:
     inputs:
       monitoring_type:
@@ -17,27 +17,23 @@ on:
           - full-report
 
 permissions:
-  id-token: write
-  contents: read
-  actions: read
   issues: write
-  pull-requests: write
+  actions: read
+  contents: read # Diperlukan untuk checkout
 
 concurrency:
   group: ${{ github.workflow }}-global
-  cancel-in-progress: false
+  cancel-in-progress: true # Batalkan run sebelumnya jika ada yang baru
 
 jobs:
   workflow-monitoring:
     name: OC Workflow Monitoring
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
     permissions:
-      id-token: write
-      contents: read
-      actions: read
       issues: write
-      pull-requests: write
+      actions: read
+      contents: read # Diperlukan untuk checkout
       
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -45,7 +41,7 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
           
@@ -53,6 +49,9 @@ jobs:
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+      - name: Run opencode with non-interactive
+        run: |
+          opencode run --non-interactive
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -96,13 +95,18 @@ jobs:
             echo "Analyzing workflow: $workflow"
             
             # Get recent runs
-            RUNS_JSON=$(gh run list --workflow="$workflow" --limit=10 --json)
-            RECENT_RUNS=$(echo "$RUNS_JSON" | jq '.[] | select(.created_at > (now - 86400 | strftime("%Y-%m-%dT%H:%M:%SZ")))')
+            RUNS_JSON=$(gh run list --workflow="$workflow.yml" --limit=10 --json status,conclusion,createdAt --jq '.')
+            RECENT_RUNS=$(echo "$RUNS_JSON" | jq --arg time_24h_ago "$(date -u -d '24 hours ago' --iso-8601=seconds)" '[.[] | select(.createdAt > $time_24h_ago)]')
             
-            if [ -n "$RECENT_RUNS" ]; then
+            if [ -n "$RECENT_RUNS" ] && [ "$(echo "$RECENT_RUNS" | jq 'length')" -gt 0 ]; then
               WORKFLOW_RUNS=$(echo "$RECENT_RUNS" | jq 'length')
-              WORKFLOW_FAILURES=$(echo "$RECENT_RUNS" | jq 'select(.conclusion == "failure") | length')
-              WORKFLOW_SUCCESS_RATE=$(echo "scale=2; (100 * ($WORKFLOW_RUNS - $WORKFLOW_FAILURES)) / $WORKFLOW_RUNS" | bc)
+              WORKFLOW_FAILURES=$(echo "$RECENT_RUNS" | jq '[.[] | select(.conclusion == "failure")] | length')
+              
+              if [ "$WORKFLOW_RUNS" -gt 0 ]; then
+                WORKFLOW_SUCCESS_RATE=$(echo "scale=2; (100 * ($WORKFLOW_RUNS - $WORKFLOW_FAILURES)) / $WORKFLOW_RUNS" | bc)
+              else
+                WORKFLOW_SUCCESS_RATE=100
+              fi
               
               TOTAL_RUNS=$((TOTAL_RUNS + WORKFLOW_RUNS))
               FAILED_RUNS=$((FAILED_RUNS + WORKFLOW_FAILURES))
@@ -110,9 +114,9 @@ jobs:
               echo "  - Runs: $WORKFLOW_RUNS, Failures: $WORKFLOW_FAILURES, Success Rate: $WORKFLOW_SUCCESS_RATE%"
               
               # Check for critical issues (3+ consecutive failures)
-              CONSECUTIVE_FAILURES=$(echo "$RECENT_RUNS" | jq -s 'group_by(.workflow) | map(select(.[0:3] | all(.conclusion == "failure"))) | length')
-              if [ "$CONSECUTIVE_FAILURES" -gt 0 ]; then
-                CRITICAL_ISSUES+=("$workflow: $CONSECUTIVE_FAILURES consecutive failures")
+              CONSECUTIVE_FAILURES=$(echo "$RECENT_RUNS" | jq -s '.[0:3] | if all(.conclusion == "failure") then 1 else 0 end')
+              if [ "$CONSECUTIVE_FAILURES" -eq 1 ]; then
+                CRITICAL_ISSUES+=("$workflow: 3+ consecutive failures")
               fi
             else
               echo "  - No recent runs found"
@@ -154,11 +158,11 @@ jobs:
           # Determine health status
           HEALTH_STATUS="HEALTHY"
           PRIORITY="low"
-          if [ "$SUCCESS_RATE" -lt 80 ]; then
+          if (( $(echo "$SUCCESS_RATE < 90" | bc -l) )); then
             HEALTH_STATUS="WARNING"
             PRIORITY="medium"
           fi
-          if [ "$SUCCESS_RATE" -lt 60 ] || [ "$CRITICAL_ISSUES_COUNT" -gt 0 ]; then
+          if (( $(echo "$SUCCESS_RATE < 75" | bc -l) )) || [ "$CRITICAL_ISSUES_COUNT" -gt 0 ]; then
             HEALTH_STATUS="CRITICAL"
             PRIORITY="high"
           fi
@@ -174,7 +178,7 @@ jobs:
           
           ### 📊 Overall Status
           - **Health Status**: $HEALTH_STATUS
-          - **Total Runs**: $TOTAL_RUNS
+          - **Total Runs (24h)**: $TOTAL_RUNS
           - **Failed Runs**: $FAILED_RUNS
           - **Success Rate**: $SUCCESS_RATE%
           - **Critical Issues**: $CRITICAL_ISSUES_COUNT
@@ -182,7 +186,7 @@ jobs:
           ### 🚨 Critical Issues
           "
           
-          if [ -f "/tmp/critical_issues.txt" ] && [ -s "/tmp/critical_issues.txt" ]; then
+          if [ -s "/tmp/critical_issues.txt" ]; then
             while IFS= read -r issue; do
               REPORT_BODY="$REPORT_BODY
           - ❌ $issue"
@@ -194,65 +198,52 @@ jobs:
           
           REPORT_BODY="$REPORT_BODY
           
-          ### 📈 Performance Analysis
-          - **Average Success Rate**: $SUCCESS_RATE%
-          - **Failure Rate**: $(echo "scale=2; 100 - $SUCCESS_RATE" | bc)%
-          - **Monitoring Frequency**: Every 15 minutes
-          
           ### 🎯 Recommendations
           "
           
           if [ "$HEALTH_STATUS" = "CRITICAL" ]; then
             REPORT_BODY="$REPORT_BODY
           - 🚨 **IMMEDIATE ACTION REQUIRED**
-          - Investigate failing workflows immediately
-          - Check runner configuration and dependencies
-          - Review recent changes that may have caused failures
-          - Consider temporarily disabling problematic workflows"
+          - Investigate failing workflows immediately.
+          - Check runner configuration and dependencies.
+          - Review recent changes that may have caused failures."
           elif [ "$HEALTH_STATUS" = "WARNING" ]; then
             REPORT_BODY="$REPORT_BODY
           - ⚠️ **ATTENTION NEEDED**
-          - Monitor workflow performance closely
-          - Review error patterns and optimize
-          - Consider adjusting timeout configurations
-          - Update dependencies if needed"
+          - Monitor workflow performance closely.
+          - Review error patterns and optimize."
           else
             REPORT_BODY="$REPORT_BODY
           - ✅ **SYSTEM HEALTHY**
-          - Continue normal monitoring
-          - Maintain current configuration
-          - Regular optimization reviews recommended"
+          - Continue normal monitoring."
           fi
           
           REPORT_BODY="$REPORT_BODY
           
           ### 🔗 Related Resources
-          - [Workflow Runs Dashboard](https://github.com/sulhicmz/JasaWeb/actions)
-          - [Workflow Error Analysis](docs/WORKFLOW_ERROR_ANALYSIS_AND_FIXES.md)
-          - [Troubleshooting Guide](docs/WORKFLOW_TROUBLESHOOTING.md)
+          - [Workflow Runs Dashboard](https://github.com/${{ github.repository }}/actions)
+          - [Workflow Error Analysis Doc](docs/WORKFLOW_ERROR_ANALYSIS_AND_FIXES.md)
           
           ---
           
           🤖 *Report generated by OpenCode CLI Workflow Monitoring*"
           
           # Create or update monitoring issue
-          EXISTING_ISSUE=$(gh issue list --label="workflow-monitoring" --state=open --json | jq '.[] | select(.title | contains("Workflow Monitoring Report")) | .number')
+          EXISTING_ISSUE=$(gh issue list --label="workflow-monitoring" --state=open --limit 1 --json number --jq '.[0].number // ""')
           
           if [ -n "$EXISTING_ISSUE" ]; then
             echo "Updating existing monitoring issue #$EXISTING_ISSUE"
             gh issue edit "$EXISTING_ISSUE" \
               --title "🔍 Workflow Monitoring Report - $HEALTH_STATUS" \
-              --body "$REPORT_BODY" \
-              --add-label "$PRIORITY" \
-              --add-label "monitoring"
+              --body "$REPORT_BODY"
+            gh issue comment "$EXISTING_ISSUE" --body "Regular update: Status is **$HEALTH_STATUS**."
           else
             echo "Creating new monitoring issue"
             gh issue create \
               --title "🔍 Workflow Monitoring Report - $HEALTH_STATUS" \
               --body "$REPORT_BODY" \
-              --label "workflow-monitoring" \
-              --label "$PRIORITY" \
-              --label "monitoring"
+              --label "workflow-monitoring,automation,area:ci" \
+              --assignee "@me"
           fi
           
       - name: Create Monitoring Summary
@@ -274,18 +265,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎯 Health Status" >> $GITHUB_STEP_SUMMARY
           
-          if [ "$SUCCESS_RATE" -ge 80 ] && [ "$CRITICAL_ISSUES_COUNT" -eq 0 ]; then
+          if (( $(echo "$SUCCESS_RATE >= 90" | bc -l) )) && [ "$CRITICAL_ISSUES_COUNT" -eq 0 ]; then
             echo "- **Status**: ✅ HEALTHY" >> $GITHUB_STEP_SUMMARY
-            echo "- **Action**: Continue normal monitoring" >> $GITHUB_STEP_SUMMARY
-          elif [ "$SUCCESS_RATE" -ge 60 ]; then
+          elif (( $(echo "$SUCCESS_RATE >= 75" | bc -l) )); then
             echo "- **Status**: ⚠️ WARNING" >> $GITHUB_STEP_SUMMARY
-            echo "- **Action**: Monitor closely, investigate patterns" >> $GITHUB_STEP_SUMMARY
           else
             echo "- **Status**: 🚨 CRITICAL" >> $GITHUB_STEP_SUMMARY
-            echo "- **Action**: Immediate investigation required" >> $GITHUB_STEP_SUMMARY
           fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📈 Next Monitoring Cycle" >> $GITHUB_STEP_SUMMARY
-          echo "- **Next Check**: In 15 minutes" >> $GITHUB_STEP_SUMMARY
-          echo "- **Full Report**: Available in monitoring issue" >> $GITHUB_STEP_SUMMARY
-          echo "- **Historical Data**: Tracked in monitoring dashboard" >> $GITHUB_STEP_SUMMARY
