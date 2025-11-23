@@ -81,7 +81,7 @@ describe('Security Configuration Tests', () => {
         }).compile();
 
         fail('Expected module creation to fail');
-      } catch (error) {
+      } catch (error: any) {
         expect(error.message).toContain('Environment validation failed');
       }
     });
@@ -104,7 +104,7 @@ describe('Security Configuration Tests', () => {
         }).compile();
 
         fail('Expected module creation to fail');
-      } catch (error) {
+      } catch (error: any) {
         expect(error.message).toContain('Environment validation failed');
       }
     });
