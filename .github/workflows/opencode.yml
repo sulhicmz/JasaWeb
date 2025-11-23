@@ -1,0 +1,34 @@
+name: opencode
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      custom_prompt:
+        description: 'Custom prompt untuk OpenCode'
+        required: false
+        type: string
+        default: 'Pastikan build berhasil.'
+
+jobs:
+  opencode:
+    runs-on: self-hosted
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Run opencode
+        uses: sst/opencode/github@latest
+        env:
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+        with:
+          model: iflowcn/qwen3-coder
+          prompt: |
+            ${{ github.event.inputs.custom_prompt || 'Pastikan build berhasil.' }}
