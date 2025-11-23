@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from '../common/database/prisma.service';
 
 export interface OnboardingEvent {
   userId: string;
@@ -10,9 +11,12 @@ export interface OnboardingEvent {
 
 @Injectable()
 export class OnboardingAnalyticsService {
+  private readonly logger = new Logger(OnboardingAnalyticsService.name);
   private events: OnboardingEvent[] = [];
 
-  trackEvent(
+  constructor(private prisma: PrismaService) {}
+
+  async trackEvent(
     userId: string,
     organizationId: string,
     event: string,
@@ -26,102 +30,109 @@ export class OnboardingAnalyticsService {
       timestamp: new Date(),
     };
 
+    // For now, store in-memory since the database model doesn't exist yet in the schema
+    // In production, this would be updated to use the database model
     this.events.push(analyticsEvent);
 
-    // Log event for now (in production, this would go to a proper analytics service)
-    console.log('Onboarding Analytics Event:', {
+    // Log event for debugging
+    this.logger.log({
+      message: 'Onboarding Analytics Event',
       userId,
       organizationId,
       event,
       data,
       timestamp: analyticsEvent.timestamp,
     });
-
-    // In a real implementation, you would send this to:
-    // - Google Analytics
-    // - Mixpanel/Amplitude
-    // - Internal analytics database
-    // - Data warehouse
   }
 
-  trackStepStarted(userId: string, organizationId: string, stepKey: string) {
-    this.trackEvent(userId, organizationId, 'step_started', { stepKey });
+  async trackStepStarted(
+    userId: string,
+    organizationId: string,
+    stepKey: string
+  ) {
+    await this.trackEvent(userId, organizationId, 'step_started', { stepKey });
   }
 
-  trackStepCompleted(
+  async trackStepCompleted(
     userId: string,
     organizationId: string,
     stepKey: string,
     timeSpent?: number
   ) {
-    this.trackEvent(userId, organizationId, 'step_completed', {
+    await this.trackEvent(userId, organizationId, 'step_completed', {
       stepKey,
       timeSpent,
     });
   }
 
-  trackStepSkipped(userId: string, organizationId: string, stepKey: string) {
-    this.trackEvent(userId, organizationId, 'step_skipped', { stepKey });
+  async trackStepSkipped(
+    userId: string,
+    organizationId: string,
+    stepKey: string
+  ) {
+    await this.trackEvent(userId, organizationId, 'step_skipped', { stepKey });
   }
 
-  trackOnboardingStarted(userId: string, organizationId: string) {
-    this.trackEvent(userId, organizationId, 'onboarding_started');
+  async trackOnboardingStarted(userId: string, organizationId: string) {
+    await this.trackEvent(userId, organizationId, 'onboarding_started');
   }
 
-  trackOnboardingCompleted(
+  async trackOnboardingCompleted(
     userId: string,
     organizationId: string,
     totalTimeSpent: number
   ) {
-    this.trackEvent(userId, organizationId, 'onboarding_completed', {
+    await this.trackEvent(userId, organizationId, 'onboarding_completed', {
       totalTimeSpent,
     });
   }
 
-  trackOnboardingAbandoned(
+  async trackOnboardingAbandoned(
     userId: string,
     organizationId: string,
     lastStep: string
   ) {
-    this.trackEvent(userId, organizationId, 'onboarding_abandoned', {
+    await this.trackEvent(userId, organizationId, 'onboarding_abandoned', {
       lastStep,
     });
   }
 
-  trackTourStarted(userId: string, organizationId: string) {
-    this.trackEvent(userId, organizationId, 'tour_started');
+  async trackTourStarted(userId: string, organizationId: string) {
+    await this.trackEvent(userId, organizationId, 'tour_started');
   }
 
-  trackTourCompleted(
+  async trackTourCompleted(
     userId: string,
     organizationId: string,
     timeSpent: number
   ) {
-    this.trackEvent(userId, organizationId, 'tour_completed', { timeSpent });
+    await this.trackEvent(userId, organizationId, 'tour_completed', {
+      timeSpent,
+    });
   }
 
-  trackTourSkipped(userId: string, organizationId: string) {
-    this.trackEvent(userId, organizationId, 'tour_skipped');
+  async trackTourSkipped(userId: string, organizationId: string) {
+    await this.trackEvent(userId, organizationId, 'tour_skipped');
   }
 
   // Analytics query methods
-  getEventsByUser(userId: string): OnboardingEvent[] {
+  async getEventsByUser(userId: string) {
     return this.events.filter((event) => event.userId === userId);
   }
 
-  getEventsByOrganization(organizationId: string): OnboardingEvent[] {
+  async getEventsByOrganization(organizationId: string) {
     return this.events.filter(
       (event) => event.organizationId === organizationId
     );
   }
 
-  getEventsByType(event: string): OnboardingEvent[] {
+  async getEventsByType(event: string) {
     return this.events.filter((e) => e.event === event);
   }
 
-  getOnboardingMetrics(organizationId?: string) {
+  async getOnboardingMetrics(organizationId?: string) {
     const events = organizationId
-      ? this.getEventsByOrganization(organizationId)
+      ? this.events.filter((event) => event.organizationId === organizationId)
       : this.events;
 
     const started = events.filter(
@@ -206,12 +217,12 @@ export class OnboardingAnalyticsService {
   }
 
   // Export events for external analysis
-  exportEvents(): OnboardingEvent[] {
+  async exportEvents() {
     return [...this.events];
   }
 
   // Clear events (useful for testing)
-  clearEvents() {
+  async clearEvents() {
     this.events = [];
   }
 }

@@ -19,6 +19,18 @@ export class OnboardingService {
   ) {}
 
   async getOnboardingState(userId: string, organizationId: string) {
+    // First, verify that the user belongs to the organization
+    const membership = await this.prisma.membership.findFirst({
+      where: {
+        userId,
+        organizationId,
+      },
+    });
+
+    if (!membership) {
+      throw new BadRequestException('User is not a member of this organization');
+    }
+
     const state = await this.prisma.onboardingState.findUnique({
       where: { userId },
       include: {
@@ -34,6 +46,14 @@ export class OnboardingService {
     if (!state) {
       return await this.createOnboardingState(userId, organizationId);
     }
+
+    // Ensure the onboarding state is for the correct organization
+    if (state.organizationId !== organizationId) {
+      throw new BadRequestException('Onboarding state does not belong to this organization');
+    }
+
+    return state;
+  }
 
     return state;
   }
@@ -86,7 +106,7 @@ export class OnboardingService {
     await this.sendWelcomeEmail(onboardingState);
 
     // Track onboarding started
-    this.analyticsService.trackOnboardingStarted(userId, organizationId);
+    await this.analyticsService.trackOnboardingStarted(userId, organizationId);
 
     return onboardingState;
   }
@@ -104,6 +124,18 @@ export class OnboardingService {
 
     if (!existingState) {
       throw new NotFoundException('Onboarding state not found');
+    }
+
+    // Verify that the user is authorized to update this onboarding state
+    const membership = await this.prisma.membership.findFirst({
+      where: {
+        userId,
+        organizationId: existingState.organizationId,
+      },
+    });
+
+    if (!membership) {
+      throw new BadRequestException('User is not authorized to update this onboarding state');
     }
 
     const updatedState = await this.prisma.onboardingState.update({
@@ -142,6 +174,18 @@ export class OnboardingService {
       throw new NotFoundException('Onboarding state not found');
     }
 
+    // Verify that the user is authorized to update this onboarding state
+    const membership = await this.prisma.membership.findFirst({
+      where: {
+        userId,
+        organizationId: existingState.organizationId,
+      },
+    });
+
+    if (!membership) {
+      throw new BadRequestException('User is not authorized to update this onboarding state');
+    }
+
     // Get step from database instead of hardcoded list
     const step = await this.prisma.onboardingStep.findUnique({
       where: { stepKey },
@@ -165,7 +209,7 @@ export class OnboardingService {
     // Track step started if not already completed
     const isNewStep = !existingState.completedSteps.includes(stepKey);
     if (isNewStep) {
-      this.analyticsService.trackStepStarted(
+      await this.analyticsService.trackStepStarted(
         userId,
         existingState.organizationId,
         stepKey
@@ -211,7 +255,7 @@ export class OnboardingService {
 
     // Track step completion
     if (isNewStep) {
-      this.analyticsService.trackStepCompleted(
+      await this.analyticsService.trackStepCompleted(
         userId,
         existingState.organizationId,
         stepKey
@@ -222,7 +266,7 @@ export class OnboardingService {
     if (isCompleted && !existingState.isCompleted) {
       // Calculate total time (simplified - in production you'd store start timestamp)
       const totalTimeSpent = 10 * 60 * 1000; // 10 minutes in milliseconds
-      this.analyticsService.trackOnboardingCompleted(
+      await this.analyticsService.trackOnboardingCompleted(
         userId,
         existingState.organizationId,
         totalTimeSpent
@@ -249,6 +293,18 @@ export class OnboardingService {
       throw new NotFoundException('Onboarding state not found');
     }
 
+    // Verify that the user is authorized to update this onboarding state
+    const membership = await this.prisma.membership.findFirst({
+      where: {
+        userId,
+        organizationId: existingState.organizationId,
+      },
+    });
+
+    if (!membership) {
+      throw new BadRequestException('User is not authorized to update this onboarding state');
+    }
+
     // Get step from database
     const step = await this.prisma.onboardingStep.findUnique({
       where: { stepKey },
@@ -273,7 +329,7 @@ export class OnboardingService {
     );
 
     // Track step skipped
-    this.analyticsService.trackStepSkipped(
+    await this.analyticsService.trackStepSkipped(
       userId,
       existingState.organizationId,
       stepKey
@@ -347,7 +403,7 @@ export class OnboardingService {
       select: { stepKey: true },
     });
 
-    const requiredSteps = requiredStepsResult.map(step => step.stepKey);
+    const requiredSteps = requiredStepsResult.map((step) => step.stepKey);
 
     return requiredSteps.every(
       (step) => completedSteps.includes(step) || skippedSteps.includes(step)
@@ -382,8 +438,8 @@ export class OnboardingService {
       const allStepsResult = await this.prisma.onboardingStep.findMany({
         orderBy: { order: 'asc' },
       });
-      const requiredSteps = allStepsResult.filter(step => step.isRequired);
-      
+      const requiredSteps = allStepsResult.filter((step) => step.isRequired);
+
       const progressPercentage = Math.round(
         (completedSteps.length / requiredSteps.length) * 100
       );

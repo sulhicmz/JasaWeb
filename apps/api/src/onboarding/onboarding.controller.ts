@@ -25,13 +25,14 @@ export class OnboardingController {
 
   @Get('state')
   async getOnboardingState(@Req() req: any) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const organizationId = req.user.organizationId;
 
-    // Security: Ensure user can only access their own onboarding state
-    if (req.user.userId !== userId) {
-      throw new UnauthorizedException('Access denied: You can only access your own onboarding state');
-    }
+    return await this.onboardingService.getOnboardingState(
+      userId,
+      organizationId
+    );
+  }
 
     return await this.onboardingService.getOnboardingState(
       userId,
@@ -54,12 +55,13 @@ export class OnboardingController {
     @Req() req: any,
     @Body() updateOnboardingStateDto: UpdateOnboardingStateDto
   ) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
-    // Security: Ensure user can only update their own onboarding state
-    if (req.user.userId !== userId) {
-      throw new UnauthorizedException('Access denied: You can only update your own onboarding state');
-    }
+    return await this.onboardingService.updateOnboardingState(
+      userId,
+      updateOnboardingStateDto
+    );
+  }
 
     return await this.onboardingService.updateOnboardingState(
       userId,
@@ -72,24 +74,20 @@ export class OnboardingController {
     @Req() req: any,
     @Body() completeStepDto: CompleteStepDto
   ) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
-    // Security: Ensure user can only complete their own onboarding steps
-    if (req.user.userId !== userId) {
-      throw new UnauthorizedException('Access denied: You can only complete your own onboarding steps');
-    }
+    return await this.onboardingService.completeStep(userId, completeStepDto);
+  }
 
     return await this.onboardingService.completeStep(userId, completeStepDto);
   }
 
   @Post('skip-step/:stepKey')
   async skipStep(@Req() req: any, @Param('stepKey') stepKey: string) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
-    // Security: Ensure user can only skip their own onboarding steps
-    if (req.user.userId !== userId) {
-      throw new UnauthorizedException('Access denied: You can only skip your own onboarding steps');
-    }
+    return await this.onboardingService.skipStep(userId, stepKey);
+  }
 
     return await this.onboardingService.skipStep(userId, stepKey);
   }
