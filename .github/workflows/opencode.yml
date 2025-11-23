@@ -9,11 +9,11 @@ on:
         description: 'Custom prompt untuk OpenCode'
         required: false
         type: string
-        default: 'Pastikan build berhasil.'
+        default: 'Please review and update any relevant documentation based on the changes in this pull request. Analyze code changes, identify any documentation that needs to be updated (README files, API docs, inline comments, etc.), and make necessary updates to ensure documentation stays in sync with the implementation.'
 
 jobs:
   opencode:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
@@ -31,4 +31,4 @@ jobs:
         with:
           model: iflowcn/qwen3-coder
           prompt: |
-            ${{ github.event.inputs.custom_prompt || 'Pastikan build berhasil.' }}
+            ${{ github.event.inputs.custom_prompt || 'Please review and update any relevant documentation based on the changes in this pull request. Analyze code changes, identify any documentation that needs to be updated (README files, API docs, inline comments, etc.), and make necessary updates to ensure documentation stays in sync with the implementation.' }}
