@@ -2,7 +2,7 @@ name: oc - Autonomous Developer
 
 on:
   schedule:
-    - cron: '0 */8 * * *'  # Setiap 8 jam
+    - cron: '0 2,10,18 * * *'  # Setiap 8 jam: 02:00, 10:00, 18:00 UTC
   workflow_dispatch:
     inputs:
       development_type:
@@ -42,7 +42,7 @@ jobs:
   autonomous-developer:
     name: OC Autonomous Developer
     runs-on: self-hosted
-    timeout-minutes: 60
+    timeout-minutes: 40
     permissions:
       id-token: write
       contents: write
@@ -61,6 +61,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
           
+      - name: Error Handling Setup
+        run: |
+          set -euo pipefail
+          trap 'echo "❌ Error occurred in step ${{ github.step }}. Exit code: $?"' ERR
+          trap 'echo "🔄 Cleaning up..."' EXIT
+          
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
@@ -76,9 +82,12 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
+          package_json_file: package.json
           
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
         
       - name: Analyze Project State
         id: analyze-project
@@ -150,6 +159,9 @@ jobs:
             Focus on high-impact, achievable improvements.
             Consider current team capacity and project priorities.
             Balance between new features, bug fixes, and optimizations.
+            
+            IMPORTANT: Create GitHub issues for all findings and PRs for all implementations.
+            All work must be persisted through issues and PRs, not just local changes.
           PROMPT
           )" \
             --model iflowcn/qwen3-max \

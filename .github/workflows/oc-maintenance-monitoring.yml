@@ -2,7 +2,7 @@ name: oc - Maintenance & Monitoring
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Setiap 6 jam
+    - cron: '0 4,12,20 * * *'  # Setiap 8 jam: 04:00, 12:00, 20:00 UTC
   workflow_dispatch:
     inputs:
       maintenance_type:
@@ -31,7 +31,7 @@ jobs:
   maintenance-monitoring:
     name: OC Maintenance & Monitoring
     runs-on: self-hosted
-    timeout-minutes: 60
+    timeout-minutes: 40
     permissions:
       id-token: write
       contents: write
@@ -49,6 +49,12 @@ jobs:
         with:
           fetch-depth: 1
           
+      - name: Error Handling Setup
+        run: |
+          set -euo pipefail
+          trap 'echo "❌ Error occurred in step ${{ github.step }}. Exit code: $?"' ERR
+          trap 'echo "🔄 Cleaning up..."' EXIT
+          
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
@@ -64,9 +70,12 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
+          package_json_file: package.json
           
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
         
       - name: Run System Health Check
         id: health-check
@@ -93,6 +102,9 @@ jobs:
             If minor issues are found, create a PR with fixes.
             
             Focus on automation and self-healing where possible.
+            
+            IMPORTANT: All findings must be persisted through GitHub issues or PRs.
+            Create issues for problems, PRs for fixes, and update documentation.
           PROMPT
           )" \
             --model iflowcn/qwen3-max \

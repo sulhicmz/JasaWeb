@@ -24,8 +24,8 @@ concurrency:
 jobs:
   pr-automator:
     name: OC PR Automator
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: self-hosted
+    timeout-minutes: 30
     permissions:
       id-token: write
       contents: write
@@ -44,6 +44,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
           
+      - name: Error Handling Setup
+        run: |
+          set -euo pipefail
+          trap 'echo "❌ Error occurred in step ${{ github.step }}. Exit code: $?"' ERR
+          trap 'echo "🔄 Cleaning up..."' EXIT
+          
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
@@ -59,9 +65,12 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
+          package_json_file: package.json
           
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
         
       - name: Analyze Pull Request
         id: analyze-pr
@@ -141,6 +150,9 @@ jobs:
             
             Focus on constructive feedback and actionable improvements.
             If issues are found, provide specific suggestions for fixes.
+            
+            IMPORTANT: All review findings must be persisted through PR comments.
+            Create issues for critical problems, update documentation for improvements.
           PROMPT
           )" \
             --model iflowcn/qwen3-max \

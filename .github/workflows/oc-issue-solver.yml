@@ -44,6 +44,12 @@ jobs:
           fetch-depth: 1
           token: ${{ secrets.GH_TOKEN }}
           
+      - name: Error Handling Setup
+        run: |
+          set -euo pipefail
+          trap 'echo "❌ Error occurred in step ${{ github.step }}. Exit code: $?"' ERR
+          trap 'echo "🔄 Cleaning up..."' EXIT
+          
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
@@ -59,21 +65,30 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
+          package_json_file: package.json
           
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
         
       - name: Analyze and Solve Issue
         id: solve-issue
         timeout-minutes: 30
         run: |
           ISSUE_NUMBER="${{ github.event.issue.number || github.event.inputs.issue_number }}"
-          ISSUE_TITLE="${{ github.event.issue.title }}"
-          ISSUE_BODY="${{ github.event.issue.body }}"
-          ISSUE_LABELS="${{ join(github.event.issue.labels.*.name, ', ') }}"
+          ISSUE_TITLE="${{ github.event.issue.title || '' }}"
+          ISSUE_BODY="${{ github.event.issue.body || '' }}"
+          ISSUE_LABELS="${{ join(github.event.issue.labels.*.name, ', ') || '' }}"
           
           echo "Processing issue #$ISSUE_NUMBER: $ISSUE_TITLE"
           echo "Labels: $ISSUE_LABELS"
+          
+          # Validate issue number exists
+          if [ -z "$ISSUE_NUMBER" ]; then
+            echo "Error: No issue number provided"
+            exit 1
+          fi
           
           opencode run "$(cat <<'PROMPT'
             Analyze and solve the following GitHub issue for JasaWeb project:
