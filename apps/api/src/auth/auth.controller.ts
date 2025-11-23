@@ -13,7 +13,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { RefreshTokenService } from './refresh-token.service';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import type { Request as ExpressRequest } from 'express';
 
 type AuthenticatedRequest = ExpressRequest & { user?: unknown };
@@ -22,22 +22,25 @@ type AuthenticatedRequest = ExpressRequest & { user?: unknown };
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private refreshTokenService: RefreshTokenService,
+    private refreshTokenService: RefreshTokenService
   ) {}
 
   @Public()
+  @Throttle(5, 60) // 5 requests per minute for registration
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto): Promise<any> {
     return await this.authService.register(createUserDto);
   }
 
   @Public()
+  @Throttle(5, 60) // 5 requests per minute for login
   @Post('login')
   async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
     return await this.authService.login(loginUserDto);
   }
 
   @Public()
+  @Throttle(10, 60) // 10 requests per minute for token refresh
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body('refreshToken') refreshToken: string): Promise<any> {
@@ -49,7 +52,8 @@ export class AuthController {
     }
 
     try {
-      const result = await this.refreshTokenService.rotateRefreshToken(refreshToken);
+      const result =
+        await this.refreshTokenService.rotateRefreshToken(refreshToken);
       if (!result) {
         return {
           statusCode: HttpStatus.UNAUTHORIZED,
@@ -74,6 +78,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle(10, 60) // 10 requests per minute for logout
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Body('refreshToken') refreshToken: string): Promise<any> {

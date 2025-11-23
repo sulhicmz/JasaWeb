@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './common/config/env.validation';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
@@ -35,6 +35,34 @@ const parseEnvNumber = (
   return Number.isNaN(parsed) ? fallback : parsed;
 };
 
+// Environment-specific rate limiting configuration
+const getThrottleConfig = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isTest = process.env.NODE_ENV === 'test';
+
+  if (isTest) {
+    // Very permissive for tests
+    return {
+      ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60),
+      limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 1000),
+    };
+  }
+
+  if (isProduction) {
+    // Stricter limits for production
+    return {
+      ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60),
+      limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 5),
+    };
+  }
+
+  // Relaxed limits for development
+  return {
+    ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60),
+    limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 20),
+  };
+};
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,12 +77,7 @@ const parseEnvNumber = (
         max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
       }),
     }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
-        limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
-      },
-    ]),
+    ThrottlerModule.forRoot([getThrottleConfig()]),
     AuthModule,
     UserModule,
     ProjectModule,
@@ -78,6 +101,10 @@ const parseEnvNumber = (
     {
       provide: APP_GUARD,
       useClass: MultiTenantGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     RolesGuard, // Register RolesGuard for use with @UseGuards(RolesGuard)
   ],

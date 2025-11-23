@@ -7,6 +7,7 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
 import { ErrorHandlingService } from './common/services/error-handling.service';
 import helmet from 'helmet';
 import compression from 'compression';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -64,6 +65,8 @@ async function bootstrap() {
 
   // Disable X-Powered-By header
   app.getHttpAdapter().getInstance().disable('x-powered-by');
+
+  // ThrottlerGuard is applied globally via APP_GUARD in AppModule
 
   // Use global validation pipe
   app.useGlobalPipes(
