@@ -30,17 +30,19 @@ export class RolesGuard implements CanActivate {
 
     // Get the request object
     const request = context.switchToHttp().getRequest<Request>();
-    const user = (request as any).user; // This would come from JWT strategy after auth
+    const user = request.user; // This would come from JWT strategy after auth
 
     if (!user) {
-      throw new UnauthorizedException('Authentication required');
+      throw new UnauthorizedException('Access denied. User not authenticated.');
     }
 
     // Extract organizationId from the request (set by our multi-tenant middleware)
-    const organizationId = (request as any).organizationId;
+    const organizationId = request.organizationId;
 
     if (!organizationId) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException(
+        'Access denied. Organization context not found.'
+      );
     }
 
     // Get the user's role in the organization
@@ -52,13 +54,16 @@ export class RolesGuard implements CanActivate {
     });
 
     if (!membership) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException(
+        'Access denied. User does not belong to this organization.'
+      );
     }
 
     // Check if user's role is in the required roles
     const hasRequiredRole = requiredRoles.some(
       (role) => role === membership.role
     );
+
     if (!hasRequiredRole) {
       throw new ForbiddenException('Insufficient permissions');
     }

@@ -12,7 +12,7 @@ export class MultiTenantGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
 
     // Check if organization context is set
-    if (!(request as any).organizationId) {
+    if (!request.organizationId) {
       // Use generic forbidden message to avoid leaking system information
       throw new ForbiddenException('Access denied');
     }

@@ -22,8 +22,8 @@ describe('AuthModule Security', () => {
 
       // If we reach here, the test should fail because JWT_SECRET is required
       fail('AuthModule should not initialize without JWT_SECRET');
-    } catch (error: any) {
-      expect(error.message).toContain('JWT_SECRET');
+    } catch (error) {
+      expect((error as Error).message).toContain('JWT_SECRET');
     } finally {
       // Restore original environment
       if (originalEnv) {
