@@ -185,8 +185,10 @@ class AnalyticsService {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
+    const extension = type === 'excel' ? 'xlsx' : type;
     a.download =
-      filename || `analytics-${new Date().toISOString().split('T')[0]}.${type}`;
+      filename ||
+      `analytics-${new Date().toISOString().split('T')[0]}.${extension}`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
