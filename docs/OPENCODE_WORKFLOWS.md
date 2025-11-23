@@ -97,48 +97,77 @@ Dokumentasi ini menjelaskan semua workflow GitHub Actions yang menggunakan OpenC
 - Focused task selection
 - Efficient implementation
 
-### 4. Integration Optimizer (`oc-integration.yml`)
+### 4. Code Quality Testing (`oc-code-quality-testing.yml`)
 
 **Trigger**: Schedule (daily) atau manual
 
-**Purpose**: Optimasi performa dan biaya
+**Purpose**: Automated code quality testing dan validation
 
 **Process**:
-1. Analisis workflow performance
-2. Token usage optimization
-3. Apply performance improvements
-4. Cleanup maintenance
-5. Setup monitoring
+1. Run comprehensive test suite
+2. Code quality analysis
+3. Performance benchmarking
+4. Security validation
+5. Generate quality reports
 
 **Key Features**:
-- Token usage reduction
-- Performance optimization
-- Automated cleanup
-- Cost tracking
+- Automated test execution
+- Code quality metrics
+- Performance benchmarking
+- Security validation
 
 **Token Optimization**:
-- Prompt complexity reduction
-- Model selection optimization
-- Caching strategies
+- Focused test execution
+- Parallel testing
+- Cached test results
 
-### 5. Performance Dashboard (`oc-dashboard.yml`)
+### 5. Maintenance Monitoring (`oc-maintenance-monitoring.yml`)
 
-**Trigger**: Schedule (4 hourly) atau manual
+**Trigger**: Schedule (6 hourly) atau manual
 
-**Purpose**: Real-time monitoring dan alerting
+**Purpose**: System maintenance dan monitoring
 
 **Process**:
-1. Collect workflow metrics
-2. Generate dashboard data
-3. Create interactive dashboard
-4. Generate alerts untuk issues
-5. Update metrics history
+1. Health check semua services
+2. Performance monitoring
+3. Resource utilization tracking
+4. Automated cleanup
+5. Generate maintenance reports
 
 **Key Features**:
-- Real-time performance metrics
-- Interactive HTML dashboard
-- Automated alerting
-- Cost tracking
+- System health monitoring
+- Performance tracking
+- Automated maintenance
+- Resource optimization
+
+**Token Optimization**:
+- Efficient monitoring
+- Scheduled maintenance
+- Resource optimization
+
+### 6. Security Scanning (`oc-security-scanning.yml`)
+
+**Trigger**: Schedule (daily) atau manual
+
+**Purpose**: Comprehensive security scanning
+
+**Process**:
+1. Vulnerability scanning
+2. Code security analysis
+3. Dependency security check
+4. Security policy validation
+5. Generate security reports
+
+**Key Features**:
+- Automated vulnerability scanning
+- Code security analysis
+- Dependency security checks
+- Security compliance validation
+
+**Token Optimization**:
+- Focused security scans
+- Prioritized vulnerability analysis
+- Efficient security reporting
 
 ## Configuration
 
@@ -192,14 +221,15 @@ IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
 - Issue Solver: ~5,000 tokens per issue
 - PR Automator: ~3,000 tokens per PR
 - Autonomous Developer: ~10,000 tokens per run
-- Integration Optimizer: ~8,000 tokens per run
-- Dashboard: ~2,000 tokens per run
+- Code Quality Testing: ~8,000 tokens per run
+- Maintenance Monitoring: ~2,000 tokens per run
+- Security Scanning: ~6,000 tokens per run
 
 ## Monitoring
 
 ### Dashboard Access
 
-URL: `https://github.com/[repository]/blob/main/docs/dashboard.html`
+Dashboard metrics are available in the repository's Actions tab and through the maintenance monitoring workflow logs.
 
 ### Metrics Tracked
 

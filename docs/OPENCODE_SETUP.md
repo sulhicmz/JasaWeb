@@ -124,10 +124,23 @@ ls .github/workflows/oc-*.yml
 2. Tunggu proses review
 3. Check apakah PR otomatis di-merge
 
-#### Test Dashboard
+#### Test Code Quality Testing
 
-1. Tunggu 4 jam atau trigger manual
-2. Check dashboard di: `docs/dashboard.html`
+1. Trigger manual workflow
+2. Check hasil test di Actions tab
+3. Verify quality metrics
+
+#### Test Maintenance Monitoring
+
+1. Tunggu 6 jam atau trigger manual
+2. Check monitoring reports
+3. Verify system health
+
+#### Test Security Scanning
+
+1. Trigger manual workflow
+2. Check security reports
+3. Verify vulnerability scan results
 
 ## Configuration
 
@@ -194,17 +207,19 @@ focus_area:
 
 ## Monitoring
 
-### Dashboard Access
+### Monitoring Access
 
-1. Go to repository > docs > dashboard.html
-2. Atau akses langsung: `https://github.com/[owner]/[repo]/blob/main/docs/dashboard.html`
+1. Go to repository > Actions tab
+2. Pilih workflow yang ingin dimonitor
+3. Check hasil execution dan logs
 
 ### Metrics Collection
 
 Metrics otomatis dikumpulkan di:
-- `metrics/dashboard/dashboard-data.json`
-- `metrics/dashboard/history.csv`
-- `metrics/integration-optimization.csv`
+- Actions workflow logs
+- Security scan reports
+- Code quality reports
+- Maintenance monitoring logs
 
 ### Alert Configuration
 
@@ -212,6 +227,7 @@ Alerts otomatis dibuat untuk:
 - Success rate < 80%
 - Token usage > 100,000
 - Workflow failures
+- Security vulnerabilities
 
 ## Troubleshooting
 
