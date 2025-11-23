@@ -13,7 +13,7 @@ import { RefreshTokenService } from './refresh-token.service';
     UserModule,
     PrismaModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'default_secret',
+      secret: process.env.JWT_SECRET,
       signOptions: {
         expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
       },
