@@ -24,7 +24,7 @@ concurrency:
 jobs:
   pr-automator:
     name: OC PR Automator
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
       id-token: write
