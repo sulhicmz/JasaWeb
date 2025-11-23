@@ -194,8 +194,8 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/jasaweb
 
 # Authentication
 # SECURITY WARNING: Use cryptographically secure secrets in production (min 32 characters)
-JWT_SECRET=your-super-secret-jwt-key
-JWT_REFRESH_SECRET=your-super-secret-refresh-key
+JWT_SECRET=CHANGE_THIS_32_CHARACTER_RANDOM_STRING
+JWT_REFRESH_SECRET=CHANGE_THIS_32_CHARACTER_RANDOM_STRING
 
 # External Services
 SMTP_HOST=smtp.gmail.com
