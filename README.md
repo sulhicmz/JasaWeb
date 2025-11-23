@@ -193,6 +193,7 @@ PORT=4321
 DATABASE_URL=postgresql://postgres:password@localhost:5432/jasaweb
 
 # Authentication
+# SECURITY WARNING: Use cryptographically secure secrets in production (min 32 characters)
 JWT_SECRET=your-super-secret-jwt-key
 JWT_REFRESH_SECRET=your-super-secret-refresh-key
 
