@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "@jasaweb/web",
   "type": "module",
@@ -26,3 +27,33 @@
     "wrangler": "^4.47.0"
   }
 }
+=======
+{
+  "name": "@jasaweb/web",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev dist",
+    "cf-build": "astro build && echo '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/api/*\",\"/_astro/*\"]}' > dist/_routes.json",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.6.10",
+    "@astrojs/react": "^4.4.2",
+    "@tailwindcss/vite": "^4.1.17",
+    "astro": "^5.15.8",
+    "chart.js": "^4.5.1",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.2.0",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.1.17"
+  },
+  "devDependencies": {
+    "wrangler": "^4.47.0"
+  }
+}
+>>>>>>> 766ef3f (deps(deps): bump react-dom from 18.3.1 to 19.2.0 in /apps/web)
