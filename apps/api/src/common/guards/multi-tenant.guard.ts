@@ -1,16 +1,22 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Request } from 'express';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
+import { RequestWithAuth } from '../types/request';
 
 @Injectable()
 export class MultiTenantGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request>();
-    
+    const request = context.switchToHttp().getRequest<RequestWithAuth>();
+
     // Check if organization context is set
-    if (!(request as any).organizationId) {
-      return false;
+    if (!request.organizationId) {
+      // Use generic forbidden message to avoid leaking system information
+      throw new ForbiddenException('Access denied');
     }
-    
+
     return true;
   }
 }

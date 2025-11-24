@@ -1,14 +1,20 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '../decorators/roles.decorator';
-import { Request } from 'express';
 import { PrismaService } from '../database/prisma.service';
+import { RequestWithAuth } from '../types/request';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private prisma: PrismaService,
+    private prisma: PrismaService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -17,24 +23,26 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    
+
     if (!requiredRoles) {
       return true; // If no roles required, allow access
     }
 
     // Get the request object
-    const request = context.switchToHttp().getRequest<Request>();
-    const user = (request as any).user; // This would come from JWT strategy after auth
-    
+    const request = context.switchToHttp().getRequest<RequestWithAuth>();
+    const user = request.user; // This would come from JWT strategy after auth
+
     if (!user) {
-      return false; // No authenticated user
+      throw new UnauthorizedException('Access denied. User not authenticated.');
     }
 
     // Extract organizationId from the request (set by our multi-tenant middleware)
-    const organizationId = (request as any).organizationId;
-    
+    const organizationId = request.organizationId;
+
     if (!organizationId) {
-      return false; // No organization context
+      throw new ForbiddenException(
+        'Access denied. Organization context not found.'
+      );
     }
 
     // Get the user's role in the organization
@@ -46,10 +54,20 @@ export class RolesGuard implements CanActivate {
     });
 
     if (!membership) {
-      return false; // User doesn't belong to this organization
+      throw new ForbiddenException(
+        'Access denied. User does not belong to this organization.'
+      );
     }
 
     // Check if user's role is in the required roles
-    return requiredRoles.some(role => role === membership.role);
+    const hasRequiredRole = requiredRoles.some(
+      (role) => role === membership.role
+    );
+
+    if (!hasRequiredRole) {
+      throw new ForbiddenException('Insufficient permissions');
+    }
+
+    return true;
   }
 }
