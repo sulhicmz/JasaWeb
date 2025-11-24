@@ -8,20 +8,20 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "eslint . --fix"
+    "lint": "eslint src/**/*.ts* --fix"
   },
   "dependencies": {
-    "react": "^18.2.0",
+    "react": "^19.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
+    "@types/react": "^19.2.5",
     "@types/react-dom": "^18.2.0",
     "tsup": "^8.5.1",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
+    "react": "^19.2.0",
     "react-dom": "^18.2.0"
   }
 }
