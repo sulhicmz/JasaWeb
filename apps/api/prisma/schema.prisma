@@ -27,6 +27,9 @@ model User {
   Task           Task[]
   refreshTokens  RefreshToken[]
   sessions       Session[]
+  kbArticles     KbArticle[]
+  kbFeedback     KbFeedback[]
+  kbSearchLogs   KbSearchLog[]
 }
 
 model Organization {
@@ -125,7 +128,7 @@ model Task {
   assignee   User?     @relation(fields: [assigneeId], references: [id])
   status     String // todo, in-progress, review, completed
   dueAt      DateTime?
-  labels     String?   @default("")
+  labels     String[]  @default([])
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
@@ -201,4 +204,82 @@ model AuditLog {
   target         String // User, Project, File, etc.
   meta           Json?
   createdAt      DateTime     @default(now())
+}
+
+model KnowledgeBaseCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  parentId    String?
+  parent      KnowledgeBaseCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    KnowledgeBaseCategory[] @relation("CategoryHierarchy")
+  articles    KbArticle[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model KbArticle {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   // Rich text content
+  excerpt     String?  // Brief description for search results
+  status      String   // draft, published, archived
+  featured    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  categoryId  String
+  category    KnowledgeBaseCategory @relation(fields: [categoryId], references: [id])
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  tags        KbTag[]
+  feedback    KbFeedback[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([publishedAt])
+  @@index([featured])
+}
+
+model KbTag {
+  id       String     @id @default(cuid())
+  name     String     @unique
+  color    String?
+  articles KbArticle[]
+  createdAt DateTime   @default(now())
+}
+
+model KbFeedback {
+  id        String   @id @default(cuid())
+  articleId String
+  article   KbArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  rating    Int      // 1-5 stars
+  comment   String?
+  helpful   Boolean? // Was this article helpful?
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+  @@index([userId])
+}
+
+model KbSearchLog {
+  id        String   @id @default(cuid())
+  query     String
+  results   Int      @default(0)
+  clicked   String?  // Article ID that was clicked
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([query])
+  @@index([createdAt])
 }

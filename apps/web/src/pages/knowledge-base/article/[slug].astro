@@ -1,0 +1,10 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ArticleView from '../../../components/knowledge-base/ArticleView';
+
+export const prerender = false;
+---
+
+<Layout title="Article - JasaWeb Knowledge Base">
+  <ArticleView client:load />
+</Layout>
