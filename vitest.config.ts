@@ -2,34 +2,34 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    // Fast, targeted testing configuration
-    include: ['**/src/**/*.{test,spec}.{ts,tsx}'],
+    // Root-level test configuration
+    include: ['**/*.{test,spec}.{ts,tsx}'],
     exclude: [
       'node_modules',
       'dist',
+      'apps/**',
+      'packages/**',
       '**/*.d.ts',
       '**/*.config.*',
       '**/coverage/**',
     ],
 
-    // Run tests in single thread for faster execution
-    pool: 'threads',
+    // Global settings
+    globals: true,
+    environment: 'node',
+    testTimeout: 10000,
+    hookTimeout: 10000,
 
-    // Reduce timeout for faster feedback
-    testTimeout: 5000,
-    hookTimeout: 5000,
-
-    // Simple coverage for critical paths only
+    // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json'],
+      reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/**',
         'dist/**',
         '**/*.d.ts',
         '**/*.config.*',
-        '**/test/**',
-        '**/tests/**',
+        '**/coverage/**',
       ],
       thresholds: {
         global: {
@@ -41,11 +41,7 @@ export default defineConfig({
       },
     },
 
-    // Environment setup
-    environment: 'jsdom',
-    globals: true,
-
-    // Minimal reporting for CI
+    // Reporting
     reporters: process.env.CI ? ['verbose'] : ['default'],
   },
 });
