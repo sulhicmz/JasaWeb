@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '../decorators/roles.decorator';
-import { Request } from 'express';
 import { PrismaService } from '../database/prisma.service';
+import { RequestWithAuth } from '../types/request';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -29,7 +29,7 @@ export class RolesGuard implements CanActivate {
     }
 
     // Get the request object
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<RequestWithAuth>();
     const user = request.user; // This would come from JWT strategy after auth
 
     if (!user) {
