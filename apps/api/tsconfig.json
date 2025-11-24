@@ -15,7 +15,7 @@
     "module": "ES2022",
     "moduleResolution": "bundler"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/**/*"],
   "exclude": [
     "node_modules",
     "dist"
@@ -25,3 +25,4 @@
     // projects, and common/database MUST remain included for type safety.
   ]
 }
+EOL</execute_command>

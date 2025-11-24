@@ -30,9 +30,7 @@ if (fs.existsSync(grayMatterEnginesPath)) {
   );
 
   fs.writeFileSync(grayMatterEnginesPath, content, 'utf8');
-  console.log(
-    '✅ Successfully patched gray-matter engines for js-yaml 4.x compatibility'
-  );
+  // Successfully patched gray-matter engines for js-yaml 4.x compatibility
 } else {
-  console.log('⚠️  gray-matter engines not found, skipping patch');
+  // gray-matter engines not found, skipping patch
 }

@@ -1,0 +1,25 @@
+---
+// src/pages/portal/settings.astro
+import Layout from '../../layouts/Layout.astro';
+import DashboardHeader from '../../components/portal/DashboardHeader.astro';
+import NotificationPreferences from '../../components/portal/NotificationPreferences.astro';
+---
+
+<Layout title="Client Portal Settings">
+  <div class="min-h-screen bg-gray-50">
+    <DashboardHeader currentPage="settings" />
+    
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Settings</h1>
+        <p class="mt-2 text-gray-600">Manage your account and notification preferences</p>
+      </div>
+
+      <!-- Notification Preferences -->
+      <div class="space-y-6">
+        <NotificationPreferences />
+      </div>
+    </div>
+  </div>
+</Layout>

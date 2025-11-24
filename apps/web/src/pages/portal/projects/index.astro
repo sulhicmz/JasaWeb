@@ -1,0 +1,222 @@
+---
+// src/pages/portal/projects/index.astro
+import Layout from '../../../layouts/Layout.astro';
+import DashboardHeader from '../../../components/portal/DashboardHeader.astro';
+
+export interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Layout title="Projects - Client Portal">
+  <div class="min-h-screen bg-gray-50">
+    <DashboardHeader />
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Page Header -->
+      <div class="mb-8 flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Projects</h1>
+          <p class="mt-2 text-gray-600">Manage and track all your projects</p>
+        </div>
+        <button onclick="window.location.href='/portal'" class="text-indigo-600 hover:text-indigo-800 font-medium">
+          ← Back to Dashboard
+        </button>
+      </div>
+
+      <!-- Projects Grid -->
+      <div id="projects-container">
+        <!-- Loading State -->
+        <div id="projects-loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          <p class="mt-4 text-gray-500">Loading projects...</p>
+        </div>
+
+        <!-- Projects Grid -->
+        <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+          <!-- Projects will be dynamically inserted here -->
+        </div>
+
+        <!-- Error State -->
+        <div id="projects-error" class="text-center py-12 hidden">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="mt-2 text-gray-500">Failed to load projects</p>
+          <button onclick="loadProjects()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+            Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script client:load>
+    // API configuration
+    const API_BASE_URL = 'http://localhost:3001';
+
+    // Check authentication
+    const isAuthenticated = localStorage.getItem('authToken');
+    if (!isAuthenticated) {
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+
+    // Load projects
+    async function loadProjects() {
+      const loadingEl = document.getElementById('projects-loading');
+      const gridEl = document.getElementById('projects-grid');
+      const errorEl = document.getElementById('projects-error');
+
+      try {
+        loadingEl.classList.remove('hidden');
+        gridEl.classList.add('hidden');
+        errorEl.classList.add('hidden');
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/projects`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+
+        const projects = await response.json();
+        displayProjects(projects);
+
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        loadingEl.classList.add('hidden');
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+    // Display projects
+    function displayProjects(projects) {
+      const loadingEl = document.getElementById('projects-loading');
+      const gridEl = document.getElementById('projects-grid');
+      const errorEl = document.getElementById('projects-error');
+
+      if (projects.length === 0) {
+        gridEl.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <p class="mt-2 text-gray-500">No projects found</p>
+            <button onclick="window.location.href='/portal'" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+              Create Your First Project
+            </button>
+          </div>
+        `;
+      } else {
+        gridEl.innerHTML = projects.map(project => createProjectCard(project)).join('');
+      }
+
+      loadingEl.classList.add('hidden');
+      gridEl.classList.remove('hidden');
+    }
+
+    // Create project card
+    function createProjectCard(project) {
+      const statusColor = getStatusColor(project.status);
+      const progress = calculateProgress(project);
+      
+      return `
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-medium text-gray-900">${project.name}</h3>
+              <p class="text-sm text-gray-500 mt-1">${project.description || 'No description'}</p>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+              ${project.status || 'Active'}
+            </span>
+          </div>
+          
+          <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Progress</span>
+              <span>${progress}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-500">Created</span>
+              <span class="text-gray-900">${formatDate(project.createdAt)}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-500">Last Updated</span>
+              <span class="text-gray-900">${formatDate(project.updatedAt)}</span>
+            </div>
+          </div>
+          
+          <div class="flex space-x-2">
+            <button onclick="viewProject('${project.id}')" class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 text-sm">
+              View Details
+            </button>
+            <button onclick="editProject('${project.id}')" class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm">
+              Edit
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Get status color
+    function getStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'completed':
+          return 'bg-green-100 text-green-800';
+        case 'in-progress':
+          return 'bg-blue-100 text-blue-800';
+        case 'on-hold':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'cancelled':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    // Calculate progress (mock implementation)
+    function calculateProgress(project) {
+      return Math.floor(Math.random() * 100);
+    }
+
+    // Format date
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+
+    // View project details
+    function viewProject(projectId) {
+      // This would navigate to project details page
+      alert(`Viewing project ${projectId} - Details page coming soon!`);
+    }
+
+    // Edit project
+    function editProject(projectId) {
+      // This would open edit modal or navigate to edit page
+      alert(`Editing project ${projectId} - Edit functionality coming soon!`);
+    }
+
+    // Load projects on page load
+    document.addEventListener('DOMContentLoaded', loadProjects);
+  </script>
+</Layout>
