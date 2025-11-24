@@ -1,0 +1,143 @@
+---
+// src/pages/test-mobile.astro
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Mobile Detection Test">
+  <div class="min-h-screen bg-gray-50 p-4">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-2xl font-bold text-gray-900 mb-6">Mobile Detection Test</h1>
+      
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Device Information</h2>
+        <div class="space-y-2">
+          <p><strong>User Agent:</strong> <span id="userAgent" class="text-gray-600"></span></p>
+          <p><strong>Screen Width:</strong> <span id="screenWidth" class="text-gray-600"></span>px</p>
+          <p><strong>Touch Support:</strong> <span id="touchSupport" class="text-gray-600"></span></p>
+          <p><strong>Mobile Detected:</strong> <span id="mobileDetected" class="text-gray-600"></span></p>
+          <p><strong>Online Status:</strong> <span id="onlineStatus" class="text-gray-600"></span></p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">PWA Features</h2>
+        <div class="space-y-2">
+          <p><strong>Service Worker Support:</strong> <span id="swSupport" class="text-gray-600"></span></p>
+          <p><strong>Push Notification Support:</strong> <span id="pushSupport" class="text-gray-600"></span></p>
+          <p><strong>Background Sync Support:</strong> <span id="syncSupport" class="text-gray-600"></span></p>
+          <p><strong>Install Prompt Available:</strong> <span id="installPrompt" class="text-gray-600"></span></p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
+        <div class="space-y-3">
+          <button 
+            onclick="testMobileRedirect()" 
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Test Mobile Redirect
+          </button>
+          <button 
+            onclick="testOffline()" 
+            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Test Offline Functionality
+          </button>
+          <button 
+            onclick="installPWA()" 
+            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Install PWA
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Device Information
+    document.getElementById('userAgent').textContent = navigator.userAgent;
+    document.getElementById('screenWidth').textContent = window.innerWidth;
+    document.getElementById('touchSupport').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+    
+    // Mobile detection
+    function isMobileDevice() {
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isSmallScreen = window.innerWidth <= 768;
+      
+      return mobileRegex.test(userAgent) || (isTouchDevice && isSmallScreen);
+    }
+    
+    document.getElementById('mobileDetected').textContent = isMobileDevice() ? 'Yes' : 'No';
+    document.getElementById('onlineStatus').textContent = navigator.onLine ? 'Online' : 'Offline';
+    
+    // PWA Features
+    document.getElementById('swSupport').textContent = 'serviceWorker' in navigator ? 'Yes' : 'No';
+    document.getElementById('pushSupport').textContent = 'PushManager' in window ? 'Yes' : 'No';
+    document.getElementById('syncSupport').textContent = 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype ? 'Yes' : 'No';
+    document.getElementById('installPrompt').textContent = 'beforeinstallprompt' in window ? 'Yes' : 'No';
+    
+    // Test functions
+    function testMobileRedirect() {
+      if (isMobileDevice()) {
+        alert('Mobile device detected! You would be redirected to: /portal/mobile');
+        console.log('Would redirect to /portal/mobile');
+      } else {
+        alert('Desktop device detected. No redirect needed.');
+        console.log('Desktop device - no redirect');
+      }
+    }
+    
+    function testOffline() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+          console.log('Service worker ready:', registration);
+          alert('Service worker is ready. Try going offline to test offline functionality.');
+        }).catch(error => {
+          console.error('Service worker error:', error);
+          alert('Service worker not available.');
+        });
+      } else {
+        alert('Service worker not supported in this browser.');
+      }
+    }
+    
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      console.log('Install prompt available');
+    });
+    
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+          } else {
+            console.log('User dismissed the install prompt');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert('Install prompt not available. Try accessing the site on a supported browser or device.');
+      }
+    }
+    
+    // Monitor online/offline status
+    window.addEventListener('online', () => {
+      document.getElementById('onlineStatus').textContent = 'Online';
+      console.log('Back online');
+    });
+    
+    window.addEventListener('offline', () => {
+      document.getElementById('onlineStatus').textContent = 'Offline';
+      console.log('Gone offline');
+    });
+  </script>
+</Layout>
