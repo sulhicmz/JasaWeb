@@ -1,0 +1,316 @@
+---
+// src/pages/portal/invoices.astro
+import Layout from '../../layouts/Layout.astro';
+import DashboardHeader from '../../components/portal/DashboardHeader.astro';
+
+const pageTitle = 'Invoices - Portal Klien';
+---
+
+<Layout title="Invoices">
+  <div class="min-h-screen bg-gray-50">
+    <DashboardHeader currentPage="invoices" />
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Faktur</h1>
+        <p class="mt-2 text-gray-600">Kelola dan lacak faktur Anda</p>
+      </div>
+
+      <!-- Invoice Summary Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Invoices -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Faktur</h3>
+            <svg class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div class="flex items-baseline">
+            <p id="total-invoices" class="text-2xl font-semibold text-gray-900">0</p>
+            <p class="ml-2 text-sm text-gray-500">faktur</p>
+          </div>
+        </div>
+
+        <!-- Paid Invoices -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-500">Faktur Lunas</h3>
+            <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="flex items-baseline">
+            <p id="paid-invoices" class="text-2xl font-semibold text-gray-900">0</p>
+            <p class="ml-2 text-sm text-gray-500">faktur</p>
+          </div>
+        </div>
+
+        <!-- Pending Invoices -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-500">Faktur Tertunda</h3>
+            <svg class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="flex items-baseline">
+            <p id="pending-invoices" class="text-2xl font-semibold text-gray-900">0</p>
+            <p class="ml-2 text-sm text-gray-500">faktur</p>
+          </div>
+        </div>
+
+        <!-- Total Amount -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-500">Total Nilai</h3>
+            <svg class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="flex items-baseline">
+            <p id="total-amount" class="text-2xl font-semibold text-gray-900">Rp 0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" id="statusFilter">
+              <option value="">Semua Status</option>
+              <option value="draft">Draft</option>
+              <option value="issued">Diterbitkan</option>
+              <option value="paid">Lunas</option>
+              <option value="overdue">Terlambat</option>
+              <option value="cancelled">Dibatalkan</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+            <input type="month" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" id="monthFilter">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cari</label>
+            <input type="text" placeholder="Cari faktur..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" id="searchInput">
+          </div>
+          <div class="flex items-end">
+            <button class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition" onclick="applyFilters()">
+              Terapkan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoices Table -->
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-lg font-medium text-gray-900">Daftar Faktur</h3>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition flex items-center" onclick="createInvoice()">
+            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Buat Faktur
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Faktur</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Klien</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jatuh Tempo</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="invoices-table-body" class="bg-white divide-y divide-gray-200">
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="7">Data faktur akan dimuat di sini</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script client:load>
+    // API configuration
+    const API_BASE_URL = 'http://localhost:3001';
+
+    // Load invoices from API
+    async function loadInvoices() {
+      const tableBody = document.getElementById('invoices-table-body');
+
+      try {
+        tableBody.innerHTML = `
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="7">Memuat faktur...</td>
+          </tr>
+        `;
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/invoices`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch invoices');
+        }
+
+        const invoices = await response.json();
+        displayInvoices(invoices);
+        updateInvoiceSummary(invoices);
+
+      } catch (error) {
+        console.error('Error loading invoices:', error);
+        tableBody.innerHTML = `
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="7">Gagal memuat faktur</td>
+          </tr>
+        `;
+      }
+    }
+
+    // Display invoices in the table
+    function displayInvoices(invoices) {
+      const tableBody = document.getElementById('invoices-table-body');
+
+      if (invoices.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="7">Tidak ada faktur ditemukan</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = invoices.map(invoice => {
+        const statusColor = getStatusColor(invoice.status);
+        const formattedDate = invoice.date ? new Date(invoice.date).toLocaleDateString('id-ID') : 'N/A';
+        const formattedDueDate = invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('id-ID') : 'N/A';
+        const formattedAmount = new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR'
+        }).format(invoice.amount || 0);
+        
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">#${invoice.id || 'N/A'}</div>
+              <div class="text-sm text-gray-500">${invoice.title || invoice.description || ''}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${invoice.client || invoice.clientName || 'N/A'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${formattedDate}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${formattedDueDate}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              ${formattedAmount}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor}">
+                ${invoice.status || 'N/A'}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-3">
+                <button onclick="viewInvoice('${invoice.id}')" class="text-indigo-600 hover:text-indigo-900">Lihat</button>
+                <button onclick="downloadInvoice('${invoice.id}')" class="text-gray-600 hover:text-gray-900">Unduh</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Update invoice summary cards
+    function updateInvoiceSummary(invoices) {
+      // Total invoices
+      document.getElementById('total-invoices').textContent = invoices.length;
+      
+      // Paid invoices
+      const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+      document.getElementById('paid-invoices').textContent = paidInvoices;
+      
+      // Pending invoices (draft, issued, overdue)
+      const pendingInvoices = invoices.filter(inv => 
+        inv.status === 'draft' || inv.status === 'issued' || inv.status === 'overdue'
+      ).length;
+      document.getElementById('pending-invoices').textContent = pendingInvoices;
+      
+      // Total amount
+      const totalAmount = invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+      document.getElementById('total-amount').textContent = new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR'
+      }).format(totalAmount);
+    }
+
+    // Get status color based on invoice status
+    function getStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'paid':
+          return 'bg-green-100 text-green-800';
+        case 'overdue':
+          return 'bg-red-100 text-red-800';
+        case 'cancelled':
+          return 'bg-gray-100 text-gray-800';
+        case 'draft':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'issued':
+          return 'bg-blue-100 text-blue-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    // Apply filters
+    function applyFilters() {
+      // In a real implementation, this would filter the invoices based on selected criteria
+      loadInvoices();
+    }
+
+    // View invoice
+    function viewInvoice(invoiceId) {
+      // In a real implementation, this would navigate to the invoice detail page
+      alert(`Viewing invoice details for ID: ${invoiceId}`);
+    }
+
+    // Download invoice
+    function downloadInvoice(invoiceId) {
+      // In a real implementation, this would download the invoice as PDF
+      alert(`Downloading invoice ID: ${invoiceId}`);
+    }
+
+    // Create invoice
+    function createInvoice() {
+      // In a real implementation, this would open a form to create a new invoice
+      alert('Create new invoice form would open here');
+    }
+
+    // Set current month as default in month filter
+    document.addEventListener('DOMContentLoaded', function() {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+      const year = now.getFullYear();
+      document.getElementById('monthFilter').value = `${year}-${month}`;
+      
+      // Load initial invoices data
+      loadInvoices();
+    });
+  </script>
+</Layout>

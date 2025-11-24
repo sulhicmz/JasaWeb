@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+# Pre-commit hook untuk optimasi validasi lokal
+
+# Cek apakah ada perubahan di file TypeScript/JavaScript
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.\(ts\|tsx\|js\|jsx\)$'; then
+  echo "🔍 Running linting..."
+  npx eslint --fix .
+  if [ $? -ne 0 ]; then
+    echo "❌ ESLint errors found. Please fix them before committing."
+    exit 1
+  fi
+fi
+
+# Cek apakah ada perubahan di file JSON, CSS, HTML
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.\(json\|css\|html\|md\)$'; then
+  echo "🧹 Running prettier..."
+  npx prettier --write .
+  if [ $? -ne 0 ]; then
+    echo "❌ Prettier errors found. Please fix them before committing."
+    exit 1
+  fi
+fi
+
+# Cek apakah ada perubahan di file TypeScript/JavaScript untuk type checking
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.\(ts\|tsx\)$'; then
+  echo "🔍 Running type checking..."
+  npx tsc --noEmit
+  if [ $? -ne 0 ]; then
+    echo "❌ Type checking errors found. Please fix them before committing."
+    exit 1
+  fi
+fi
+
+# Jika tidak ada perubahan signifikan, jalankan test hanya untuk spesifik file
+echo "🧪 Running quick tests..."
+pnpm test:quick
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix them before committing."
+  exit 1
+fi
+
+echo "✅ Pre-commit validation successful!"

@@ -102,3 +102,19 @@ temp/
 # Docker
 .docker/
 docker-compose.override.yml
+
+# Temporary documentation (not to be committed)
+plan.md
+todo.md
+spec.md
+*_IMPLEMENTATION.md
+*_IMPLEMENTATION_GUIDE.md
+*_PLAN.md
+*_SUMMARY.md
+*_FIXES.md
+*_VALIDATION.md
+AGENTS.md
+GEMINI.md
+
+# Code specification
+.specify/
