@@ -1,0 +1,12 @@
+diff --git a/apps/web/src/services/knowledgeBaseService.ts b/apps/web/src/services/knowledgeBaseService.ts
+index b0ffb99..dafdccc 100644
+--- a/apps/web/src/services/knowledgeBaseService.ts
++++ b/apps/web/src/services/knowledgeBaseService.ts
+@@ -10,6 +10,7 @@ export interface KbCategory {
+   parentId?: string;
+   parent?: KbCategory;
+   children?: KbCategory[];
++  articles?: KbArticle[];
+   _count?: {
+     articles: number;
+   };

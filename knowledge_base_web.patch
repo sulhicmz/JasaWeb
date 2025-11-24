@@ -1,0 +1,21 @@
+diff --git a/apps/web/src/components/knowledge-base/CategoryView.tsx b/apps/web/src/components/knowledge-base/CategoryView.tsx
+index 142bcc9..a5c9424 100644
+--- a/apps/web/src/components/knowledge-base/CategoryView.tsx
++++ b/apps/web/src/components/knowledge-base/CategoryView.tsx
+@@ -20,9 +20,14 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
+   const loadCategory = async (categoryId: string) => {
+     try {
+       setLoading(true);
+-      const categoryData = await knowledgeBaseService.getCategory(categoryId);
++
++      const [categoryData, categoryArticles] = await Promise.all([
++        knowledgeBaseService.getCategory(categoryId),
++        knowledgeBaseService.getArticles({ categoryId, status: 'published' }),
++      ]);
++
+       setCategory(categoryData);
+-      setArticles(categoryData.articles || []);
++      setArticles(categoryArticles);
+     } catch (error) {
+       console.error('Error loading category:', error);
+     } finally {

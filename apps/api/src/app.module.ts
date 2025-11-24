@@ -26,6 +26,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
 
 const parseEnvNumber = (
   value: string | undefined,
@@ -69,6 +70,7 @@ const parseEnvNumber = (
     SessionModule,
     HealthModule,
     AnalyticsModule,
+    KnowledgeBaseModule,
     PrismaModule,
     MultiTenantPrismaModule,
   ],
