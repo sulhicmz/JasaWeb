@@ -226,7 +226,7 @@ importers:
         specifier: ^3.0.0
         version: 3.6.2
       prisma:
-        specifier: ^6.16.3
+        specifier: ^6.19.0
         version: 6.19.0(typescript@5.9.3)
       socket.io-client:
         specifier: ^4.8.1
