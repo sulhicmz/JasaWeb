@@ -1,0 +1,334 @@
+---
+// src/layouts/MobilePortalLayout.astro
+import '../styles/global.css';
+
+export interface Props {
+  title?: string;
+  showBackButton?: boolean;
+  backUrl?: string;
+}
+
+const { title, showBackButton = false, backUrl = '/portal' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="JasaWeb" />
+    <title>{title ? `${title} | JasaWeb` : 'JasaWeb Portal'}</title>
+    <link rel="icon" type="image/svg+xml" href="/pwa-192x192.svg" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <!-- PWA Install Prompt Styles -->
+    <style>
+      .pwa-install-prompt {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .pwa-install-prompt:hover {
+        transform: translateX(-50%) translateY(-2px);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+      }
+      
+      .pwa-install-prompt.show {
+        display: flex;
+      }
+      
+      /* Mobile-first responsive */
+      @media (min-width: 768px) {
+        .pwa-install-prompt {
+          bottom: 100px;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-gray-50 flex flex-col pb-16">
+    <!-- Mobile Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <div class="px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          {showBackButton && (
+            <button 
+              onclick="history.back()" 
+              class="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Back"
+            >
+              <i class="fas fa-arrow-left text-lg"></i>
+            </button>
+          )}
+          <h1 class="text-lg font-semibold text-gray-900 truncate">{title}</h1>
+        </div>
+        
+        <!-- Mobile Actions -->
+        <div class="flex items-center gap-2">
+          <button 
+            class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors relative"
+            onclick="toggleNotifications()"
+            aria-label="Notifications"
+          >
+            <i class="fas fa-bell text-lg"></i>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" id="notificationIndicator"></span>
+          </button>
+          
+          <button 
+            class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            onclick="toggleUserMenu()"
+            aria-label="User menu"
+          >
+            <i class="fas fa-user-circle text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+      <slot />
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+      <div class="grid grid-cols-5 h-16">
+        <a 
+          href="/portal" 
+          class="flex flex-col items-center justify-center gap-1 text-blue-600 hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-home text-xl"></i>
+          <span class="text-xs font-medium">Home</span>
+        </a>
+        
+        <a 
+          href="/portal/projects" 
+          class="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-folder text-xl"></i>
+          <span class="text-xs font-medium">Projects</span>
+        </a>
+        
+        <button 
+          onclick="openQuickActions()"
+          class="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors relative"
+        >
+          <div class="absolute -top-1 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+            <i class="fas fa-plus text-white text-lg"></i>
+          </div>
+          <span class="text-xs font-medium mt-7">Quick</span>
+        </button>
+        
+        <a 
+          href="/portal/analytics" 
+          class="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-chart-bar text-xl"></i>
+          <span class="text-xs font-medium">Analytics</span>
+        </a>
+        
+        <a 
+          href="/portal/settings" 
+          class="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        >
+          <i class="fas fa-cog text-xl"></i>
+          <span class="text-xs font-medium">Settings</span>
+        </a>
+      </div>
+    </nav>
+
+    <!-- PWA Install Prompt -->
+    <div id="pwaInstallPrompt" class="pwa-install-prompt">
+      <i class="fas fa-download"></i>
+      <span>Install JasaWeb App</span>
+      <i class="fas fa-times text-sm opacity-70" onclick="dismissInstallPrompt(event)"></i>
+    </div>
+
+    <!-- Mobile Menu Overlays -->
+    <div id="notificationOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="toggleNotifications()"></div>
+    <div id="userMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="toggleUserMenu()"></div>
+
+    <!-- Notification Panel -->
+    <div id="notificationPanel" class="fixed top-16 right-4 w-80 max-w-[90vw] bg-white rounded-lg shadow-xl z-50 hidden transform transition-all duration-300">
+      <div class="p-4 border-b border-gray-200">
+        <h3 class="font-semibold text-gray-900">Notifications</h3>
+      </div>
+      <div class="max-h-96 overflow-y-auto">
+        <div class="p-4 text-center text-gray-500">
+          <i class="fas fa-bell-slash text-2xl mb-2"></i>
+          <p class="text-sm">No new notifications</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Menu Panel -->
+    <div id="userMenuPanel" class="fixed top-16 right-4 w-64 max-w-[90vw] bg-white rounded-lg shadow-xl z-50 hidden transform transition-all duration-300">
+      <div class="p-4 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div>
+            <p class="font-medium text-gray-900">Client User</p>
+            <p class="text-sm text-gray-500">client@jasaweb.com</p>
+          </div>
+        </div>
+      </div>
+      <div class="py-2">
+        <a href="/portal/settings" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+          <i class="fas fa-cog w-4 mr-3"></i>Settings
+        </a>
+        <a href="/portal/help" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+          <i class="fas fa-question-circle w-4 mr-3"></i>Help
+        </a>
+        <button onclick="logout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
+          <i class="fas fa-sign-out-alt w-4 mr-3"></i>Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Scripts -->
+    <script>
+      // PWA Install Prompt
+      let deferredPrompt;
+      let installPromptDismissed = localStorage.getItem('installPromptDismissed') === 'true';
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        if (!installPromptDismissed) {
+          setTimeout(() => {
+            document.getElementById('pwaInstallPrompt').classList.add('show');
+          }, 3000);
+        }
+      });
+
+      document.getElementById('pwaInstallPrompt').addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          deferredPrompt = null;
+        }
+        document.getElementById('pwaInstallPrompt').classList.remove('show');
+      });
+
+      function dismissInstallPrompt(event) {
+        event.stopPropagation();
+        document.getElementById('pwaInstallPrompt').classList.remove('show');
+        localStorage.setItem('installPromptDismissed', 'true');
+        installPromptDismissed = true;
+      }
+
+      // Mobile Navigation Functions
+      function toggleNotifications() {
+        const overlay = document.getElementById('notificationOverlay');
+        const panel = document.getElementById('notificationPanel');
+        const userOverlay = document.getElementById('userMenuOverlay');
+        const userPanel = document.getElementById('userMenuPanel');
+        
+        // Close user menu if open
+        userOverlay.classList.add('hidden');
+        userPanel.classList.add('hidden');
+        
+        // Toggle notifications
+        overlay.classList.toggle('hidden');
+        panel.classList.toggle('hidden');
+        
+        if (!panel.classList.contains('hidden')) {
+          panel.style.transform = 'translateY(0) scale(1)';
+          document.getElementById('notificationIndicator').style.display = 'none';
+        } else {
+          panel.style.transform = 'translateY(-10px) scale(0.95)';
+        }
+      }
+
+      function toggleUserMenu() {
+        const overlay = document.getElementById('userMenuOverlay');
+        const panel = document.getElementById('userMenuPanel');
+        const notificationOverlay = document.getElementById('notificationOverlay');
+        const notificationPanel = document.getElementById('notificationPanel');
+        
+        // Close notifications if open
+        notificationOverlay.classList.add('hidden');
+        notificationPanel.classList.add('hidden');
+        
+        // Toggle user menu
+        overlay.classList.toggle('hidden');
+        panel.classList.toggle('hidden');
+        
+        if (!panel.classList.contains('hidden')) {
+          panel.style.transform = 'translateY(0) scale(1)';
+        } else {
+          panel.style.transform = 'translateY(-10px) scale(0.95)';
+        }
+      }
+
+      function openQuickActions() {
+        // Quick actions modal or bottom sheet
+        console.log('Opening quick actions...');
+      }
+
+      function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      }
+
+      // Touch gesture support
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+
+      document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      });
+
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            // Swipe left - could be used for navigation
+            console.log('Swipe left detected');
+          } else {
+            // Swipe right - could be used for back navigation
+            console.log('Swipe right detected');
+          }
+        }
+      }
+
+      // Authentication check
+      const isAuthenticated = localStorage.getItem('authToken');
+      if (!isAuthenticated) {
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+      }
+    </script>
+  </body>
+</html>
