@@ -66,6 +66,13 @@ git push origin feature/your-task
 
 ## 🔄 Pull Request Process
 
+### Pre-commit Validation
+Before committing, our system automatically runs:
+- **Linting & Formatting**: Code style validation
+- **Type Checking**: TypeScript compilation checks
+- **Quick Tests**: Fast test execution (under 30 seconds)
+- **Security Scanning**: Basic vulnerability checks
+
 ### PR Types
 - **🚀 Feature** - New functionality
 - **🐛 Bugfix** - Fixing issues

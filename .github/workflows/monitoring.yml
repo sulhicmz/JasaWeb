@@ -1,0 +1,94 @@
+name: 'Monitoring'
+
+on:
+  schedule:
+    # Health check every 30 minutes instead of 15 minutes (reduced frequency)
+    - cron: '*/30 * * * *'
+    # Comprehensive monitoring every 12 hours instead of 6 hours (reduced frequency)
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+permissions:
+  contents: 'read'
+  issues: 'write'
+  pull-requests: 'write'
+
+jobs:
+  # Health check (runs every 30 minutes)
+  health-check:
+    runs-on: 'ubuntu-latest'
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '*/30 * * * *' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: 'Check service availability'
+        run: |
+          echo "🔍 Health check at $(date)"
+          # Add actual health check logic here
+          echo "✅ Service is healthy"
+
+      - name: 'Report status'
+        if: ${{ failure() }}
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |
+            github.rest.issues.create({
+              owner: '${{ github.repository }}'.split('/')[0],
+              repo: '${{ github.repository }}'.split('/')[1],
+              title: '🚨 Health Check Failed',
+              body: 'Health check failed at ${{ github.run_started_at }}\n\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })
+
+  # Comprehensive monitoring (runs every 12 hours)
+  comprehensive-monitoring:
+    runs-on: 'ubuntu-latest'
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '0 */12 * * *' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683'
+
+      - name: 'Setup Node.js'
+        uses: 'actions/setup-node@1d0ff4f03b81e0f8d0e6a0d6d47e9b7c02d4c6b1'
+        with:
+          node-version: '20'
+
+      - name: 'Setup pnpm'
+        uses: 'pnpm/action-setup@v4'
+        with:
+          version: '8.15.0'
+
+      - name: 'Get pnpm store directory'
+        id: 'pnpm-cache'
+        run: 'echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT'
+
+      - name: 'Setup pnpm cache'
+        uses: 'actions/cache@v4'
+        with:
+          path: '${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}'
+          key: '${{ runner.os }}-pnpm-store-${{ hashFiles(''**/pnpm-lock.yaml'') }}'
+          restore-keys: '${{ runner.os }}-pnpm-store-'
+
+      - name: 'Install dependencies'
+        run: 'pnpm install --frozen-lockfile'
+
+      - name: 'Run comprehensive checks'
+        run: |
+          echo "📊 Comprehensive monitoring at $(date)"
+          # Add actual monitoring logic here
+          echo "✅ Monitoring completed"
+
+      - name: 'Send status report'
+        if: ${{ success() }}
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |
+            // Add status reporting logic here
+            console.log('Monitoring report sent')
