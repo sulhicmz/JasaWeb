@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "Shared configuration for JasaWeb",
   "scripts": {
-    "lint": "echo 'TODO: Add lint script'"
+    "lint": "eslint . --fix",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "eslint": "^8.0.0",
-    "prettier": "^3.0.0",
-    "typescript": "^5.0.0"
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.6.3",
+    "vitest": "^1.0.0"
   }
 }
