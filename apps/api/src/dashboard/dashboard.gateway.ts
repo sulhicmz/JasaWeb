@@ -68,7 +68,7 @@ export class DashboardGateway
         throw new WsException('Unauthorized: No token provided');
       }
 
-      const payload = this.jwtService.verify(token);
+      const payload = await this.jwtService.verifyAsync(token);
       client.userId = payload.sub;
       client.organizationId = payload.organizationId;
       client.userRole = payload.role;
