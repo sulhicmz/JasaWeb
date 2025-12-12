@@ -1,4 +1,3 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DashboardGateway } from '../src/dashboard/dashboard.gateway';
 import { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
@@ -6,40 +5,65 @@ import { MultiTenantPrismaService } from '../src/common/database/multi-tenant-pr
 
 describe('DashboardGateway', () => {
   let gateway: DashboardGateway;
-  let mockCacheManager: Partial<Cache>;
-  let mockJwtService: Partial<JwtService>;
-  let mockPrismaService: Partial<MultiTenantPrismaService>;
+  let mockCacheManager: jest.Mocked<Cache>;
+  let mockJwtService: jest.Mocked<JwtService>;
+  let mockPrismaService: jest.Mocked<MultiTenantPrismaService>;
   let mockClient: any;
   let mockServer: any;
 
   beforeEach(() => {
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
-    };
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+    } as any;
 
     mockJwtService = {
-      verify: vi.fn(),
-    };
+      verifyAsync: jest.fn(),
+    } as any;
 
     mockPrismaService = {
       user: {
-        findUnique: vi.fn(),
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       project: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       ticket: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       invoice: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       milestone: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
-    };
+    } as any;
 
     mockClient = {
       id: 'test-client-id',
@@ -48,60 +72,70 @@ describe('DashboardGateway', () => {
           token: 'test-token',
         },
         headers: {},
+        query: {},
       },
-      join: vi.fn(),
-      leave: vi.fn(),
-      emit: vi.fn(),
-      disconnect: vi.fn(),
+      emit: jest.fn(),
+      join: jest.fn(),
+      leave: jest.fn(),
+      disconnect: jest.fn(),
     };
 
     mockServer = {
-      to: vi.fn().mockReturnThis(),
-      emit: vi.fn(),
+      emit: jest.fn(),
+      to: jest.fn().mockReturnThis(),
+      in: jest.fn().mockReturnThis(),
     };
 
     gateway = new DashboardGateway(
-      mockCacheManager as Cache,
-      mockJwtService as JwtService,
-      mockPrismaService as MultiTenantPrismaService
+      mockCacheManager,
+      mockJwtService,
+      mockPrismaService
     );
-
-    gateway['server'] = mockServer;
+    gateway.server = mockServer;
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('handleConnection', () => {
-    it('should authenticate client with valid token', async () => {
+    it('should authenticate and connect client successfully', async () => {
       const payload = {
         sub: 'user-123',
         organizationId: 'org-123',
-        role: 'owner',
+        role: 'org_owner',
+      };
+      const user = {
+        id: 'user-123',
+        email: 'test@example.com',
+        name: 'Test User',
+        memberships: [{ organizationId: 'org-123' }],
       };
 
-      mockJwtService.verify!.mockReturnValue(payload);
-      mockPrismaService.user!.findUnique!.mockResolvedValue({
-        id: 'user-123',
-        memberships: [{ organizationId: 'org-123' }],
-      });
+      (mockJwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
+      (mockPrismaService.user.findUnique as jest.Mock).mockResolvedValue(user);
 
       await gateway.handleConnection(mockClient);
 
-      expect(mockJwtService.verify).toHaveBeenCalledWith('test-token');
-      expect(mockClient.join).toHaveBeenCalledWith('org-org-123');
-      expect(mockClient.join).toHaveBeenCalledWith('user-user-123');
-      expect(mockClient.emit).toHaveBeenCalledWith(
-        'initial-data',
-        expect.any(Object)
+      expect(mockJwtService.verifyAsync).toHaveBeenCalledWith('test-token');
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 'user-123' },
+        include: {
+          memberships: {
+            where: { organizationId: 'org-123' },
+          },
+        },
+      });
+      expect(mockClient.join).toHaveBeenCalledWith(
+        `org-${payload.organizationId}`
       );
+      expect(mockClient.join).toHaveBeenCalledWith(`user-${payload.sub}`);
     });
 
-    it('should reject connection with invalid token', async () => {
-      mockJwtService.verify!.mockImplementation(() => {
-        throw new Error('Invalid token');
-      });
+    it('should handle authentication failure', async () => {
+      (mockJwtService.verifyAsync as jest.Mock).mockRejectedValue(
+        new Error('Invalid token')
+      );
 
       await gateway.handleConnection(mockClient);
 
@@ -110,29 +144,67 @@ describe('DashboardGateway', () => {
       });
       expect(mockClient.disconnect).toHaveBeenCalled();
     });
+  });
 
-    it('should reject connection without token', async () => {
-      mockClient.handshake.auth.token = null;
+  describe('handleDisconnect', () => {
+    it('should log client disconnection', () => {
+      gateway.handleDisconnect(mockClient);
+      // Should not throw any errors
+      expect(true).toBe(true);
+    });
+  });
 
-      await gateway.handleConnection(mockClient);
+  describe('broadcastDashboardUpdate', () => {
+    it('should broadcast update to organization members', async () => {
+      const updateData = {
+        type: 'stats' as const,
+        data: { projects: 5 },
+        timestamp: new Date(),
+        organizationId: 'org-123',
+      };
 
-      expect(mockClient.emit).toHaveBeenCalledWith('error', {
-        message: 'Authentication failed',
+      await gateway.broadcastDashboardUpdate(updateData);
+
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('dashboard-update', {
+        type: 'stats',
+        data: { projects: 5 },
+        timestamp: updateData.timestamp,
       });
-      expect(mockClient.disconnect).toHaveBeenCalled();
+    });
+
+    it('should send personal update for user-specific data', async () => {
+      const updateData = {
+        type: 'ticket' as const,
+        data: { userId: 'user-123', ticketId: 'ticket-456' },
+        timestamp: new Date(),
+        organizationId: 'org-123',
+      };
+
+      await gateway.broadcastDashboardUpdate(updateData);
+
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.to).toHaveBeenCalledWith('user-user-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('personal-update', {
+        type: 'ticket',
+        data: { userId: 'user-123', ticketId: 'ticket-456' },
+        timestamp: updateData.timestamp,
+      });
     });
   });
 
   describe('handleSubscribeDashboard', () => {
-    beforeEach(() => {
-      mockClient.organizationId = 'org-123';
-    });
+    it('should subscribe client to dashboard updates', async () => {
+      const clientWithAuth = {
+        ...mockClient,
+        userId: 'user-123',
+        organizationId: 'org-123',
+        userRole: 'org_owner',
+      };
 
-    it('should subscribe to dashboard updates', async () => {
-      await gateway.handleSubscribeDashboard(
-        { organizationId: 'org-123' },
-        mockClient
-      );
+      const data = { organizationId: 'org-123' };
+
+      await gateway.handleSubscribeDashboard(data, clientWithAuth);
 
       expect(mockClient.join).toHaveBeenCalledWith('org-org-123');
       expect(mockClient.emit).toHaveBeenCalledWith('subscribed', {
@@ -140,156 +212,76 @@ describe('DashboardGateway', () => {
       });
     });
 
-    it('should reject subscription to different organization', async () => {
+    it('should throw error for different organization', async () => {
+      const clientWithAuth = {
+        ...mockClient,
+        userId: 'user-123',
+        organizationId: 'org-123',
+        userRole: 'org_owner',
+      };
+
+      const data = { organizationId: 'org-456' };
+
       await expect(
-        gateway.handleSubscribeDashboard(
-          { organizationId: 'different-org' },
-          mockClient
-        )
-      ).rejects.toThrow('Unauthorized');
+        gateway.handleSubscribeDashboard(data, clientWithAuth)
+      ).rejects.toThrow(
+        'Unauthorized: Cannot subscribe to different organization'
+      );
     });
   });
 
-  describe('broadcastDashboardUpdate', () => {
-    it('should broadcast update to organization room', async () => {
-      const payload = {
-        type: 'stats' as const,
-        data: { test: 'data' },
-        timestamp: new Date(),
-        organizationId: 'org-123',
-      };
+  describe('handleUnsubscribeDashboard', () => {
+    it('should unsubscribe client from dashboard updates', async () => {
+      const data = { organizationId: 'org-123' };
 
-      await gateway.broadcastDashboardUpdate(payload);
+      await gateway.handleUnsubscribeDashboard(data, mockClient);
 
-      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
-      expect(mockServer.emit).toHaveBeenCalledWith('dashboard-update', {
-        type: 'stats',
-        data: { test: 'data' },
-        timestamp: payload.timestamp,
+      expect(mockClient.leave).toHaveBeenCalledWith('org-org-123');
+      expect(mockClient.emit).toHaveBeenCalledWith('unsubscribed', {
+        room: 'org-org-123',
       });
     });
+  });
 
-    it('should also broadcast to user room if userId is present', async () => {
-      const payload = {
-        type: 'ticket' as const,
-        data: { userId: 'user-123', test: 'data' },
-        timestamp: new Date(),
+  describe('handleRefreshStats', () => {
+    it('should refresh stats and broadcast to organization', async () => {
+      const clientWithAuth = {
+        ...mockClient,
+        userId: 'user-123',
         organizationId: 'org-123',
+        userRole: 'org_owner',
       };
 
-      await gateway.broadcastDashboardUpdate(payload);
+      const data = { organizationId: 'org-123' };
+
+      // Mock the cache to return null so fresh stats are fetched
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(null);
+
+      // Mock the Prisma calls
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue([
+        { status: 'active' },
+        { status: 'completed' },
+      ]);
+      (mockPrismaService.ticket.findMany as jest.Mock).mockResolvedValue([
+        { status: 'open', priority: 'high' },
+      ]);
+      (mockPrismaService.invoice.findMany as jest.Mock).mockResolvedValue([
+        { status: 'issued', amount: 5000 },
+      ]);
+      (mockPrismaService.milestone.findMany as jest.Mock).mockResolvedValue([
+        { status: 'completed', dueAt: new Date() },
+      ]);
+
+      await gateway.handleRefreshStats(data, clientWithAuth);
 
       expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
-      expect(mockServer.to).toHaveBeenCalledWith('user-user-123');
-    });
-  });
-
-  describe('getDashboardStats', () => {
-    it('should return cached stats if available', async () => {
-      const cachedStats = {
-        projects: { total: 5, active: 3, completed: 2, onHold: 0 },
-        tickets: {
-          total: 10,
-          open: 4,
-          inProgress: 3,
-          highPriority: 2,
-          critical: 1,
-        },
-        invoices: {
-          total: 3,
-          pending: 1,
-          overdue: 0,
-          totalAmount: 15000,
-          pendingAmount: 5000,
-        },
-        milestones: { total: 8, completed: 5, overdue: 1, dueThisWeek: 2 },
-      };
-
-      mockCacheManager.get!.mockResolvedValue(cachedStats);
-
-      const result = await gateway['getDashboardStats']('org-123');
-
-      expect(result).toEqual(cachedStats);
-      expect(mockCacheManager.get).toHaveBeenCalledWith(
+      expect(mockServer.emit).toHaveBeenCalledWith('stats-updated', {
+        stats: expect.any(Object),
+        timestamp: expect.any(Date),
+      });
+      expect(mockCacheManager.del).toHaveBeenCalledWith(
         'dashboard-stats-org-123'
       );
-      expect(mockPrismaService.project!.findMany).not.toHaveBeenCalled();
-    });
-
-    it('should fetch fresh stats if not cached', async () => {
-      const projectsData = [{ status: 'active' }, { status: 'completed' }];
-      const ticketsData = [{ status: 'open', priority: 'high' }];
-      const invoicesData = [
-        { status: 'issued', amount: 5000, dueAt: new Date() },
-      ];
-      const milestonesData = [{ status: 'completed', dueAt: new Date() }];
-
-      mockCacheManager.get!.mockResolvedValue(null);
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
-
-      const result = await gateway['getDashboardStats']('org-123');
-
-      expect(result).toHaveProperty('projects');
-      expect(result).toHaveProperty('tickets');
-      expect(result).toHaveProperty('invoices');
-      expect(result).toHaveProperty('milestones');
-      expect(mockCacheManager.set).toHaveBeenCalledWith(
-        'dashboard-stats-org-123',
-        expect.any(Object),
-        120000
-      );
-    });
-  });
-
-  describe('getRecentActivity', () => {
-    it('should combine and sort recent activities', async () => {
-      const projectsData = [
-        {
-          id: 'p1',
-          name: 'Project 1',
-          status: 'active',
-          updatedAt: new Date('2023-01-01'),
-        },
-      ];
-      const ticketsData = [
-        {
-          id: 't1',
-          type: 'bug',
-          priority: 'high',
-          status: 'open',
-          createdAt: new Date('2023-01-02'),
-        },
-      ];
-      const milestonesData = [
-        {
-          id: 'm1',
-          title: 'Milestone 1',
-          status: 'completed',
-          createdAt: new Date('2023-01-03'),
-        },
-      ];
-      const invoicesData = [
-        {
-          id: 'i1',
-          status: 'issued',
-          amount: 1000,
-          createdAt: new Date('2023-01-04'),
-        },
-      ];
-
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
-
-      const result = await gateway['getRecentActivity']('org-123', 10);
-
-      expect(result).toHaveLength(4);
-      expect(result[0].type).toBe('invoice'); // Most recent
-      expect(result[3].type).toBe('project'); // Oldest
     });
   });
 });

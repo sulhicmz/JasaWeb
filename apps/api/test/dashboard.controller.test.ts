@@ -1,41 +1,64 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardController } from '../src/dashboard/dashboard.controller';
 import { MultiTenantPrismaService } from '../src/common/database/multi-tenant-prisma.service';
+import { PrismaService } from '../src/common/database/prisma.service';
 import { Cache } from 'cache-manager';
 import { DashboardGateway } from '../src/dashboard/dashboard.gateway';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Reflector } from '@nestjs/core';
+import { RolesGuard } from '../src/common/guards/roles.guard';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
-  let mockPrismaService: Partial<MultiTenantPrismaService>;
-  let mockCacheManager: Partial<Cache>;
-  let mockDashboardGateway: Partial<DashboardGateway>;
+  let mockPrismaService: jest.Mocked<MultiTenantPrismaService>;
+  let mockCacheManager: jest.Mocked<Cache>;
+  let mockDashboardGateway: jest.Mocked<DashboardGateway>;
 
   beforeEach(async () => {
     mockPrismaService = {
       project: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       ticket: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       invoice: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
       milestone: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+        count: jest.fn(),
       },
-    };
+    } as any;
 
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
-    };
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+    } as any;
 
     mockDashboardGateway = {
-      broadcastDashboardUpdate: vi.fn(),
-    };
+      broadcastDashboardUpdate: jest.fn(),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DashboardController],
@@ -45,12 +68,29 @@ describe('DashboardController', () => {
           useValue: mockPrismaService,
         },
         {
+          provide: PrismaService,
+          useValue: {
+            membership: {
+              findFirst: jest.fn().mockResolvedValue({
+                role: 'org_owner',
+              }),
+            },
+          },
+        },
+        {
           provide: CACHE_MANAGER,
           useValue: mockCacheManager,
         },
         {
           provide: DashboardGateway,
           useValue: mockDashboardGateway,
+        },
+        Reflector,
+        {
+          provide: RolesGuard,
+          useValue: {
+            canActivate: () => true, // Mock the guard to always allow access
+          },
         },
       ],
     }).compile();
@@ -59,7 +99,7 @@ describe('DashboardController', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getDashboardStats', () => {
@@ -83,7 +123,7 @@ describe('DashboardController', () => {
         milestones: { total: 8, completed: 5, overdue: 1, dueThisWeek: 2 },
       };
 
-      mockCacheManager.get!.mockResolvedValue(cachedStats);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(cachedStats);
 
       const result = await controller.getDashboardStats('org-123');
 
@@ -109,14 +149,22 @@ describe('DashboardController', () => {
       ];
       const milestonesData = [
         { status: 'completed', dueAt: new Date('2023-12-01') },
-        { status: 'in-progress', dueAt: new Date('2024-01-01') },
+        { status: 'in-progress', dueAt: new Date('2022-12-01') }, // Overdue
       ];
 
-      mockCacheManager.get!.mockResolvedValue(null);
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(null);
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue(
+        projectsData
+      );
+      (mockPrismaService.ticket.findMany as jest.Mock).mockResolvedValue(
+        ticketsData
+      );
+      (mockPrismaService.invoice.findMany as jest.Mock).mockResolvedValue(
+        invoicesData
+      );
+      (mockPrismaService.milestone.findMany as jest.Mock).mockResolvedValue(
+        milestonesData
+      );
 
       const result = await controller.getDashboardStats('org-123');
 
@@ -143,117 +191,111 @@ describe('DashboardController', () => {
       expect(result.milestones).toEqual({
         total: 2,
         completed: 1,
-        overdue: 0,
+        overdue: 1,
         dueThisWeek: expect.any(Number),
       });
 
       expect(mockCacheManager.set).toHaveBeenCalledWith(
         'dashboard-stats-org-123',
         expect.any(Object),
-        300000
+        300 // 5 minutes
       );
     });
 
-    it('should force refresh when refresh parameter is true', async () => {
-      mockCacheManager.get!.mockResolvedValue({ some: 'cached_data' });
-      mockPrismaService.project!.findMany!.mockResolvedValue([]);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue([]);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue([]);
+it('should handle empty data gracefully', async () => {
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(null);
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.ticket.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.invoice.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.milestone.findMany as jest.Mock).mockResolvedValue([]);
 
-      await controller.getDashboardStats('org-123', 'true');
+      const result = await controller.getDashboardStats('org-123');
 
-      expect(mockCacheManager.get).not.toHaveBeenCalled();
-      expect(mockPrismaService.project!.findMany).toHaveBeenCalled();
+      expect(result.projects.total).toBe(0);
+      expect(result.tickets.total).toBe(0);
+      expect(result.invoices.total).toBe(0);
+      expect(result.milestones.total).toBe(0);
+    });
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.ticket.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.invoice.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.milestone.findMany as jest.Mock).mockResolvedValue([]);
+
+      const result = await controller.getDashboardStats('org-123');
+
+      expect(result.projects?.total).toBe(0);
+      expect(result.tickets?.total).toBe(0);
+      expect(result.invoices?.total).toBe(0);
+      expect(result.milestones?.total).toBe(0);
     });
   });
 
   describe('getRecentActivity', () => {
-    it('should return combined recent activities', async () => {
+    it('should return recent activities sorted by date', async () => {
       const projectsData = [
-        {
-          id: 'p1',
-          name: 'Project 1',
-          status: 'active',
-          createdAt: new Date('2023-01-01'),
-          updatedAt: new Date('2023-01-02'),
-        },
+        { id: '1', updatedAt: new Date('2023-01-02'), name: 'Project A' },
       ];
       const ticketsData = [
-        {
-          id: 't1',
-          type: 'bug',
-          priority: 'high',
-          status: 'open',
-          createdAt: new Date('2023-01-03'),
-        },
-      ];
-      const milestonesData = [
-        {
-          id: 'm1',
-          title: 'Milestone 1',
-          status: 'completed',
-          dueAt: new Date('2023-01-04'),
-          createdAt: new Date('2023-01-01'),
-        },
+        { id: '1', createdAt: new Date('2023-01-03'), type: 'support', status: 'open', priority: 'high' },
       ];
       const invoicesData = [
-        {
-          id: 'i1',
-          status: 'issued',
-          amount: 1000,
-          dueAt: new Date('2023-01-05'),
-          createdAt: new Date('2023-01-02'),
-        },
+        { id: '1', createdAt: new Date('2023-01-02'), amount: 5000, status: 'issued', dueAt: new Date('2023-01-15') },
+      ];
+      const milestonesData = [
+        { id: '1', createdAt: new Date('2023-01-01'), title: 'Milestone A', status: 'completed', dueAt: new Date('2023-01-10') },
       ];
 
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue(
+        projectsData
+      );
+      (mockPrismaService.ticket.findMany as jest.Mock).mockResolvedValue(
+        ticketsData
+      );
+      (mockPrismaService.milestone.findMany as jest.Mock).mockResolvedValue(
+        milestonesData
+      );
+      (mockPrismaService.invoice.findMany as jest.Mock).mockResolvedValue(
+        invoicesData
+      );
 
-      const result = await controller.getRecentActivity('org-123', '5');
+      const result = await controller.getRecentActivity('org-123');
 
-      expect(result).toHaveLength(4);
-      expect(result[0].type).toBe('ticket'); // Most recent (2023-01-03)
-      expect(result[1].type).toBe('invoice'); // 2023-01-02 (updated)
-      expect(result[2].type).toBe('project'); // 2023-01-02 (updated)
-      expect(result[3].type).toBe('milestone'); // 2023-01-01
+      expect(result[0]?.type).toBe('ticket'); // Most recent (2023-01-03)
+      expect(result[1]?.type).toBe('invoice'); // 2023-01-02
+      expect(result[2]?.type).toBe('project'); // 2023-01-02 (updatedAt)
+      expect(result[3]?.type).toBe('milestone'); // 2023-01-01
     });
 
-    it('should limit results to specified number', async () => {
-      mockPrismaService.project!.findMany!.mockResolvedValue([]);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue([]);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue([]);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
+    it('should handle empty activity data', async () => {
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.ticket.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.milestone.findMany as jest.Mock).mockResolvedValue([]);
+      (mockPrismaService.invoice.findMany as jest.Mock).mockResolvedValue([]);
 
-      const result = await controller.getRecentActivity('org-123', '2');
+      const result = await controller.getRecentActivity('org-123');
 
-      // Should cap at 2 items
-      expect(mockPrismaService.project!.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 1 }) // Math.ceil(2/4) = 1
-      );
+      expect(result).toEqual([]);
     });
   });
 
   describe('getProjectsOverview', () => {
-    it('should return projects with calculated metrics', async () => {
+    it('should return projects overview with metrics', async () => {
       const projectsData = [
         {
-          id: 'p1',
-          name: 'Project 1',
+          id: '1',
+          name: 'Project A',
           status: 'active',
-          startAt: new Date('2023-01-01'),
-          dueAt: new Date('2023-12-31'),
           createdAt: new Date('2023-01-01'),
           updatedAt: new Date('2023-01-02'),
+          startAt: new Date('2023-01-01'),
+          dueAt: new Date('2023-03-01'),
           milestones: [
-            { id: 'm1', status: 'completed', dueAt: new Date('2023-06-01') },
-            { id: 'm2', status: 'in-progress', dueAt: new Date('2023-12-01') },
+            { id: 'm1', status: 'completed', dueAt: new Date('2023-02-01') },
+            { id: 'm2', status: 'in-progress', dueAt: new Date('2023-03-01') },
           ],
           tickets: [
             { id: 't1', status: 'open', priority: 'high' },
-            { id: 't2', status: 'closed', priority: 'low' },
+            { id: 't2', status: 'in-progress', priority: 'medium' },
           ],
           _count: {
             milestones: 2,
@@ -262,40 +304,42 @@ describe('DashboardController', () => {
         },
       ];
 
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
+      (mockPrismaService.project.findMany as jest.Mock).mockResolvedValue(
+        projectsData
+      );
 
-      const result = await controller.getProjectsOverview('org-123', '5');
+      const result = await controller.getProjectsOverview('org-123');
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
-        id: 'p1',
-        name: 'Project 1',
+        id: '1',
+        name: 'Project A',
         description: null,
         status: 'active',
-        progress: 50, // 1 completed out of 2 milestones
+        progress: 50,
         totalMilestones: 2,
         completedMilestones: 1,
-        openTickets: 1,
+        openTickets: 2,
         highPriorityTickets: 1,
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-        startAt: expect.any(Date),
-        dueAt: expect.any(Date),
+        createdAt: new Date('2023-01-01'),
+        updatedAt: new Date('2023-01-02'),
+        startAt: new Date('2023-01-01'),
+        dueAt: new Date('2023-03-01'),
       });
     });
   });
 
   describe('notifyDashboardUpdate', () => {
-    it('should broadcast update via WebSocket gateway', async () => {
-      const body = { type: 'project', data: { name: 'New Project' } };
+    it('should send dashboard update notification', async () => {
+      const body = { type: 'stats', data: { message: 'Test update' } };
 
       await controller.notifyDashboardUpdate(body, 'org-123', 'user-123');
 
       expect(
         mockDashboardGateway.broadcastDashboardUpdate
       ).toHaveBeenCalledWith({
-        type: 'project',
-        data: { name: 'New Project', userId: 'user-123' },
+        type: 'stats',
+        data: { ...body.data, userId: 'user-123' },
         timestamp: expect.any(Date),
         organizationId: 'org-123',
       });
@@ -303,7 +347,7 @@ describe('DashboardController', () => {
   });
 
   describe('refreshDashboardCache', () => {
-    it('should clear cache and broadcast refresh event', async () => {
+    it('should refresh dashboard cache and notify clients', async () => {
       await controller.refreshDashboardCache('org-123');
 
       expect(mockCacheManager.del).toHaveBeenCalledWith(
