@@ -1,5 +1,5 @@
-import React from 'react';
 import type { ButtonHTMLAttributes, DetailedHTMLProps } from 'react';
+import React from 'react';
 
 export interface ButtonProps
   extends DetailedHTMLProps<

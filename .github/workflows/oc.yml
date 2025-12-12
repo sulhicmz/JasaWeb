@@ -99,7 +99,23 @@ jobs:
             **Context**: JasaWeb - Web Development Service Platform (Astro, NestJS, PostgreSQL, Prisma, Tailwind).
 
             **Objective**:
-            Execute the **Highest Priority** task for JasaWeb's business model OR continue enhancing the service platform.
+            Choose **ONE** high-impact, clearly scoped task for JasaWeb:
+            1. Execute the priority task in `task.md`
+            2. Standardize and consolidate
+            3. Improve stability
+            4. Enhance security
+            5. Improve integrations
+            6. Identify optimization opportunities
+            7. Find and fix TypeError/bugs/errors
+            8. Update documentation
+            9. Optimize features
+            10. Identify opportunities to add new features/functions
+            11. Improve modularization
+            12. Improve scalability
+            13. Improve performance
+            14. Improve content/seo
+            15. Find hardcoded and change with dynamic 
+            16. Improve UI/UX or DX
 
             **Strict Standards**:
             1. **Type Safety**: TypeScript Strict Mode. No `any` types permitted.
@@ -111,6 +127,55 @@ jobs:
             - This runs in a temporary GitHub Action runner. **ALL CHANGES WILL BE LOST** if you do not push.
             - **YOU MUST** execute the following commands at the end of your work:
               1. `git config --global user.name "bug fixer"`
+              2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
+              3. `git add .`
+              4. `git commit -m "feat: [Task Name] implementation"`
+              5. `git push origin main` (OR create a PR if you cannot push directly)
+
+            **Execution Protocol**:
+            1. **Analysis**: Understand JasaWeb's business model (web development services).
+            2. **Implementation**: Incremental changes respecting monorepo structure.
+            3. **Verification**: Code MUST build and pass quality checks.
+            4. **Persistence**: **EXECUTE GIT PUSH**.
+
+            **Deliverables**:
+            - Clearly state the selected task and business impact.
+            - Provide the code changes with proper documentation.
+            - Update relevant documentation and tests.
+            - **SUCCESSFUL GIT PUSH TO MAIN**.
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false
+      - name: Run OpenCode2
+        id: run_oc2
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            **Role**: Senior Software Architect & Developer
+            **Context**: JasaWeb - Web Development Service Platform (Astro, NestJS, PostgreSQL, Prisma, Tailwind).
+
+            **Objective**:
+            Choose **ONE** high-impact, clearly scoped task for JasaWeb:
+            - Standardize and consolidate
+            - Improve stability
+            - Enhance security
+            - Improve modularization
+            - Improve scalability
+            - Improve performance
+            - Find hardcoded and change with dynamic 
+            - Improve UI/UX or DX
+
+            **Strict Standards**:
+            1. **Type Safety**: TypeScript Strict Mode. No `any` types permitted.
+            2. **UI/UX**: Mobile-First responsiveness (Tailwind). Professional service platform aesthetic.
+            3. **Architecture**: Monorepo structure with apps/ and packages/. Use Prisma for data access. Respect packages/ for shared utilities.
+            4. **Security**: Validate inputs. Implement proper authentication and multi-tenancy.
+
+            **CRITICAL: EPHEMERAL ENVIRONMENT WARNING**:
+            - This runs in a temporary GitHub Action runner. **ALL CHANGES WILL BE LOST** if you do not push.
+            - **YOU MUST** execute the following commands at the end of your work:
+              1. `git config --global user.name "standarizer"`
               2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
               3. `git add .`
               4. `git commit -m "feat: [Task Name] implementation"`
