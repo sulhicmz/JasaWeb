@@ -327,8 +327,8 @@ export class KnowledgeBaseService {
       data: {
         query,
         userId: user?.id,
-        ipAddress: '127.0.0.1', // Would get from request in real implementation
-        userAgent: 'Mozilla/5.0', // Would get from request in real implementation
+        ipAddress: process.env.DEFAULT_IP_ADDRESS || '127.0.0.1',
+        userAgent: process.env.DEFAULT_USER_AGENT || 'Mozilla/5.0',
       },
     });
 

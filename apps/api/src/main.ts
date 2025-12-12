@@ -54,7 +54,8 @@ async function bootstrap() {
 
   // Enhanced CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321'],
+    origin: process.env.CORS_ORIGIN?.split(',') ||
+      process.env.CORS_ORIGIN || ['http://localhost:4321'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
     exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
@@ -96,6 +97,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
   await app.listen(port, '0.0.0.0');
-  logger.log(`Application is running on: http://localhost:${port}`);
+  const host = process.env.HOST || 'localhost';
+  logger.log(`Application is running on: http://${host}:${port}`);
 }
 bootstrap();

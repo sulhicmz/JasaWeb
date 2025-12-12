@@ -108,7 +108,10 @@ export class FileController {
       if (useS3) {
         // Upload to S3
         fileIdentifier = await this.fileStorageService.uploadFile(file.buffer, {
-          bucket: process.env.S3_BUCKET_NAME || 'default-bucket',
+          bucket:
+            process.env.S3_BUCKET_NAME ||
+            process.env.MINIO_BUCKET ||
+            'jasaweb-uploads',
           key: `organizations/${organizationId}/projects/${projectId || 'general'}/${Date.now()}_${file.originalname}`,
           contentType: file.mimetype,
           metadata: {
@@ -197,7 +200,10 @@ export class FileController {
       if (useS3) {
         // Generate a signed URL for S3 download
         const signedUrl = await this.fileStorageService.generateDownloadUrl({
-          bucket: process.env.S3_BUCKET_NAME || 'default-bucket',
+          bucket:
+            process.env.S3_BUCKET_NAME ||
+            process.env.MINIO_BUCKET ||
+            'jasaweb-uploads',
           key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
           expiresIn: 3600, // 1 hour
         });

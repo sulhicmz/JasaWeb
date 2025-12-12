@@ -97,7 +97,8 @@ export default registerAs('security', () => ({
 
   // CORS Configuration
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321'],
+    origin: process.env.CORS_ORIGIN?.split(',') ||
+      process.env.CORS_ORIGIN || ['http://localhost:4321'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
