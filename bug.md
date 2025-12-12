@@ -4,8 +4,8 @@
 
 ### HIGH
 
-- [ ] **BUG-001**: `pnpm` command not recognized in environment - prevents build verification
-  - **Workaround**: Run `pnpm install` manually in a terminal with pnpm installed
+- [x] **BUG-001**: `pnpm` command not recognized in environment - prevents build verification
+  - **Fix**: Enabled corepack and ensured pnpm is available in build environment
 
 ### MEDIUM
 

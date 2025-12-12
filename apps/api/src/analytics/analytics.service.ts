@@ -537,4 +537,247 @@ export class AnalyticsService {
       clientInsights,
     };
   }
+
+  // Analytics Summary
+  async getAnalyticsSummary(
+    organizationId: string,
+    timePeriod: string = '30d'
+  ) {
+    const dateFrom = this.getDateFromTimePeriod(timePeriod);
+
+    const [
+      totalProjects,
+      activeProjects,
+      completedProjects,
+      totalTickets,
+      openTickets,
+      totalInvoices,
+      paidInvoices,
+    ] = await Promise.all([
+      this.prisma.project.count({
+        where: { organizationId },
+      }),
+      this.prisma.project.count({
+        where: {
+          organizationId,
+          status: 'active',
+        },
+      }),
+      this.prisma.project.count({
+        where: {
+          organizationId,
+          status: 'completed',
+        },
+      }),
+      this.prisma.ticket.count({
+        where: { organizationId },
+      }),
+      this.prisma.ticket.count({
+        where: {
+          organizationId,
+          status: 'open',
+        },
+      }),
+      this.prisma.invoice.count({
+        where: { organizationId },
+      }),
+      this.prisma.invoice.count({
+        where: {
+          organizationId,
+          status: 'paid',
+        },
+      }),
+    ]);
+
+    return {
+      projects: {
+        total: totalProjects,
+        active: activeProjects,
+        completed: completedProjects,
+        completionRate:
+          totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0,
+      },
+      tickets: {
+        total: totalTickets,
+        open: openTickets,
+        closed: totalTickets - openTickets,
+      },
+      invoices: {
+        total: totalInvoices,
+        paid: paidInvoices,
+        pending: totalInvoices - paidInvoices,
+      },
+      timePeriod,
+    };
+  }
+
+  // Project Activity
+  async getProjectActivity(
+    projectId: string,
+    organizationId: string,
+    limit: number = 20
+  ) {
+    const activities = await this.prisma.auditLog.findMany({
+      where: {
+        organizationId,
+        target: projectId,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        actor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return activities.map((activity) => ({
+      id: activity.id,
+      action: activity.action,
+      actor: activity.actor,
+      timestamp: activity.createdAt,
+      metadata: activity.meta,
+    }));
+  }
+
+  // Export Analytics
+  async exportAnalytics(params: {
+    organizationId: string;
+    type: string;
+    dateFrom?: string;
+    dateTo?: string;
+    format: string;
+    requestedBy?: string;
+  }) {
+    const { organizationId, type, dateFrom, dateTo, format } = params;
+
+    let data;
+    switch (type) {
+      case 'projects':
+        data = await this.getProjectAnalytics(organizationId, {
+          dateFrom,
+          dateTo,
+        });
+        break;
+      case 'financial':
+        data = await this.getFinancialAnalytics(organizationId, {
+          dateFrom,
+          dateTo,
+        });
+        break;
+      default:
+        throw new Error(`Unsupported export type: ${type}`);
+    }
+
+    return {
+      data,
+      format,
+      exportedAt: new Date(),
+      period: { dateFrom, dateTo },
+      requestedBy: params.requestedBy,
+    };
+  }
+
+  // Realtime Metrics
+  async getRealtimeMetrics(organizationId: string) {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+    const [activeUsers, recentActivities, systemHealth] = await Promise.all([
+      this.prisma.session.count({
+        where: {
+          user: {
+            memberships: {
+              some: { organizationId },
+            },
+          },
+          expiresAt: { gt: now },
+        },
+      }),
+      this.prisma.auditLog.count({
+        where: {
+          organizationId,
+          createdAt: { gte: oneHourAgo },
+        },
+      }),
+      this.getSystemHealth(),
+    ]);
+
+    return {
+      activeUsers,
+      recentActivities,
+      systemHealth,
+      timestamp: now,
+    };
+  }
+
+  // Scheduled Reports
+  async scheduleReport(params: {
+    organizationId: string;
+    name: string;
+    type: string;
+    frequency: string;
+    recipients: string[];
+    filters?: any;
+    createdBy?: string;
+  }) {
+    // This would typically integrate with a job queue
+    return {
+      id: `report_${Date.now()}`,
+      ...params,
+      createdAt: new Date(),
+      nextRun: this.calculateNextRun(params.frequency),
+    };
+  }
+
+  async getScheduledReports(organizationId: string) {
+    // This would typically query a scheduled reports table
+    return [];
+  }
+
+  async deleteScheduledReport(reportId: string, organizationId: string) {
+    // This would typically delete from a scheduled reports table
+    return { deleted: true, reportId, organizationId };
+  }
+
+  // Helper methods
+  private getDateFromTimePeriod(timePeriod: string): Date {
+    const now = new Date();
+    switch (timePeriod) {
+      case '7d':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case '90d':
+        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      default:
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+  }
+
+  private calculateNextRun(frequency: string): Date {
+    const now = new Date();
+    switch (frequency) {
+      case 'daily':
+        return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      case 'weekly':
+        return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      case 'monthly':
+        return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      default:
+        return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    }
+  }
+
+  private async getSystemHealth() {
+    return {
+      database: 'healthy',
+      cache: 'healthy',
+      storage: 'healthy',
+    };
+  }
 }

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Query,
   UseGuards,
   Request,
@@ -169,7 +170,7 @@ export class AnalyticsController {
   @Roles(Role.OrgOwner, Role.OrgAdmin)
   async exportAnalytics(
     @Body()
-    body: { format: string; timePeriod: string; includeProjects: boolean },
+    body: { type: string; format: string; dateFrom?: string; dateTo?: string },
     @CurrentOrganizationId() organizationId: string,
     @CurrentUserId() userId: string
   ) {
@@ -192,9 +193,9 @@ export class AnalyticsController {
     @Body()
     scheduleData: {
       name: string;
+      type: string;
       frequency: string;
       recipients: string[];
-      formats: string[];
       filters?: any;
     },
     @CurrentOrganizationId() organizationId: string,

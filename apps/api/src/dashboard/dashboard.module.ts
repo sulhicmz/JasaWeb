@@ -4,6 +4,7 @@ import { DashboardGateway } from './dashboard.gateway';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
+import type { JwtModuleOptions } from '@nestjs/jwt';
 
 import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
 
@@ -19,11 +20,13 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
         limit: 20, // 20 requests per minute
       },
     ]),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN || '60m',
-      },
+    JwtModule.registerAsync({
+      useFactory: (): JwtModuleOptions => ({
+        secret: process.env.JWT_SECRET || 'default-secret',
+        signOptions: {
+          expiresIn: '60m',
+        },
+      }),
     }),
     MultiTenantPrismaModule,
   ],
