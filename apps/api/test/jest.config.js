@@ -2,7 +2,7 @@ module.exports = {
   displayName: 'API',
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/../src'],
+  roots: ['<rootDir>/../src', '<rootDir>'],
   testMatch: ['**/?(*.)+(spec|test).ts'],
   transform: {
     '^.+\\.ts$': 'ts-jest',
@@ -18,4 +18,5 @@ module.exports = {
   coverageDirectory: '../coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   testTimeout: 10000,
+  setupFilesAfterEnv: ['<rootDir>/setup.ts'],
 };

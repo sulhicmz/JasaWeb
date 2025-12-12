@@ -1,3 +1,5 @@
+/// <reference types="@types/jest" />
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   ProjectService,

@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+/// <reference types="@types/jest" />
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardController } from '../src/dashboard/dashboard.controller';
 import { MultiTenantPrismaService } from '../src/common/database/multi-tenant-prisma.service';
 import { Cache } from 'cache-manager';
 import { DashboardGateway } from '../src/dashboard/dashboard.gateway';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
@@ -14,28 +16,28 @@ describe('DashboardController', () => {
   beforeEach(async () => {
     mockPrismaService = {
       project: {
-        findMany: vi.fn(),
-      },
+        findMany: jest.fn(),
+      } as any,
       ticket: {
-        findMany: vi.fn(),
-      },
+        findMany: jest.fn(),
+      } as any,
       invoice: {
-        findMany: vi.fn(),
-      },
+        findMany: jest.fn(),
+      } as any,
       milestone: {
-        findMany: vi.fn(),
-      },
-    };
+        findMany: jest.fn(),
+      } as any,
+    } as any;
 
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
     };
 
     mockDashboardGateway = {
-      broadcastDashboardUpdate: vi.fn(),
-    };
+      broadcastDashboardUpdate: jest.fn(),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DashboardController],
@@ -59,7 +61,7 @@ describe('DashboardController', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getDashboardStats', () => {
@@ -83,7 +85,7 @@ describe('DashboardController', () => {
         milestones: { total: 8, completed: 5, overdue: 1, dueThisWeek: 2 },
       };
 
-      mockCacheManager.get!.mockResolvedValue(cachedStats);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(cachedStats);
 
       const result = await controller.getDashboardStats('org-123');
 
@@ -112,11 +114,17 @@ describe('DashboardController', () => {
         { status: 'in-progress', dueAt: new Date('2024-01-01') },
       ];
 
-      mockCacheManager.get!.mockResolvedValue(null);
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(null);
+      (mockPrismaService.project as any).findMany.mockResolvedValue(
+        projectsData
+      );
+      (mockPrismaService.ticket as any).findMany.mockResolvedValue(ticketsData);
+      (mockPrismaService.invoice as any).findMany.mockResolvedValue(
+        invoicesData
+      );
+      (mockPrismaService.milestone as any).findMany.mockResolvedValue(
+        milestonesData
+      );
 
       const result = await controller.getDashboardStats('org-123');
 
@@ -155,16 +163,18 @@ describe('DashboardController', () => {
     });
 
     it('should force refresh when refresh parameter is true', async () => {
-      mockCacheManager.get!.mockResolvedValue({ some: 'cached_data' });
-      mockPrismaService.project!.findMany!.mockResolvedValue([]);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue([]);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue([]);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue({
+        some: 'cached_data',
+      });
+      (mockPrismaService.project as any).findMany.mockResolvedValue([]);
+      (mockPrismaService.ticket as any).findMany.mockResolvedValue([]);
+      (mockPrismaService.invoice as any).findMany.mockResolvedValue([]);
+      (mockPrismaService.milestone as any).findMany.mockResolvedValue([]);
 
       await controller.getDashboardStats('org-123', 'true');
 
       expect(mockCacheManager.get).not.toHaveBeenCalled();
-      expect(mockPrismaService.project!.findMany).toHaveBeenCalled();
+      expect((mockPrismaService.project as any).findMany).toHaveBeenCalled();
     });
   });
 
@@ -207,30 +217,36 @@ describe('DashboardController', () => {
         },
       ];
 
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
+      (mockPrismaService.project as any).findMany.mockResolvedValue(
+        projectsData
+      );
+      (mockPrismaService.ticket as any).findMany.mockResolvedValue(ticketsData);
+      (mockPrismaService.milestone as any).findMany.mockResolvedValue(
+        milestonesData
+      );
+      (mockPrismaService.invoice as any).findMany.mockResolvedValue(
+        invoicesData
+      );
 
       const result = await controller.getRecentActivity('org-123', '5');
 
       expect(result).toHaveLength(4);
-      expect(result[0].type).toBe('ticket'); // Most recent (2023-01-03)
-      expect(result[1].type).toBe('invoice'); // 2023-01-02 (updated)
-      expect(result[2].type).toBe('project'); // 2023-01-02 (updated)
-      expect(result[3].type).toBe('milestone'); // 2023-01-01
+      expect(result[0]?.type).toBe('ticket'); // Most recent (2023-01-03)
+      expect(result[1]?.type).toBe('invoice'); // 2023-01-02 (updated)
+      expect(result[2]?.type).toBe('project'); // 2023-01-02 (updated)
+      expect(result[3]?.type).toBe('milestone'); // 2023-01-01
     });
 
     it('should limit results to specified number', async () => {
-      mockPrismaService.project!.findMany!.mockResolvedValue([]);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue([]);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue([]);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
+      (mockPrismaService.project as any).findMany.mockResolvedValue([]);
+      (mockPrismaService.ticket as any).findMany.mockResolvedValue([]);
+      (mockPrismaService.milestone as any).findMany.mockResolvedValue([]);
+      (mockPrismaService.invoice as any).findMany.mockResolvedValue([]);
 
       const result = await controller.getRecentActivity('org-123', '2');
 
       // Should cap at 2 items
-      expect(mockPrismaService.project!.findMany).toHaveBeenCalledWith(
+      expect((mockPrismaService.project as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1 }) // Math.ceil(2/4) = 1
       );
     });
@@ -262,7 +278,9 @@ describe('DashboardController', () => {
         },
       ];
 
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
+      (mockPrismaService.project as any).findMany.mockResolvedValue(
+        projectsData
+      );
 
       const result = await controller.getProjectsOverview('org-123', '5');
 
