@@ -1,4 +1,8 @@
 // Projects Overview Component
+import { SkeletonLoader } from '../ui/skeleton-loader.js';
+import { offlineCache } from '../../services/offline-cache.js';
+import { realtimeService } from '../../services/realtime.js';
+
 interface Project {
   id: string;
   name: string;
@@ -18,34 +22,72 @@ class ProjectsOverviewComponent extends HTMLElement {
   private projects: Project[] = [];
   private loading = false;
   private error: string | null = null;
+  private unsubscribeRealtime: (() => void) | null = null;
+  private isOnline = navigator.onLine;
 
   connectedCallback() {
     this.render();
     this.fetchProjects();
+    this.setupRealtime();
+    this.setupOfflineDetection();
 
     // Listen for refresh events
     window.addEventListener('refresh-dashboard', () => {
-      this.fetchProjects();
+      this.fetchProjects(true);
     });
   }
 
-  async fetchProjects() {
+  disconnectedCallback() {
+    if (this.unsubscribeRealtime) {
+      this.unsubscribeRealtime();
+    }
+  }
+
+  private setupRealtime() {
+    this.unsubscribeRealtime = realtimeService.subscribe(
+      'project-update',
+      () => {
+        this.fetchProjects(true);
+      }
+    );
+  }
+
+  private setupOfflineDetection() {
+    window.addEventListener('offline-status-changed', (event: any) => {
+      this.isOnline = event.detail.isOnline;
+      if (this.isOnline) {
+        this.fetchProjects(true);
+      }
+    });
+  }
+
+  async fetchProjects(forceRefresh = false) {
     this.loading = true;
     this.error = null;
     this.render();
 
     try {
-      const response = await fetch('/api/dashboard/projects-overview?limit=6');
+      const cacheKey = 'projects-overview';
+      const ttl = forceRefresh ? 0 : 5 * 60 * 1000; // 5 minutes
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      this.projects = await response.json();
+      this.projects = await offlineCache.fetchWithCache<Project[]>(
+        '/api/dashboard/projects-overview?limit=6',
+        {},
+        cacheKey,
+        ttl
+      );
     } catch (err) {
       this.error =
         err instanceof Error ? err.message : 'Failed to fetch projects';
       console.error('Error fetching projects overview:', err);
+
+      // Try cache as fallback
+      if (!this.projects) {
+        const cached = offlineCache.get<Project[]>('projects-overview');
+        if (cached) {
+          this.projects = cached;
+        }
+      }
     } finally {
       this.loading = false;
       this.render();
@@ -93,23 +135,7 @@ class ProjectsOverviewComponent extends HTMLElement {
 
   render() {
     if (this.loading) {
-      this.innerHTML = `
-        <div class="glass-panel p-6 rounded-xl">
-          <h2 class="text-xl font-bold text-white mb-6">Projects Overview</h2>
-          <div class="space-y-4">
-            ${Array.from(
-              { length: 4 },
-              () => `
-              <div class="p-4 bg-slate-800/50 rounded-lg animate-pulse">
-                <div class="h-4 bg-slate-700 rounded mb-2 w-3/4"></div>
-                <div class="h-3 bg-slate-700 rounded mb-3 w-1/2"></div>
-                <div class="h-2 bg-slate-700 rounded w-full"></div>
-              </div>
-            `
-            ).join('')}
-          </div>
-        </div>
-      `;
+      this.innerHTML = SkeletonLoader.createProjectsSkeleton();
       return;
     }
 

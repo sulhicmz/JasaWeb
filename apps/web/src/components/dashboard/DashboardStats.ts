@@ -1,4 +1,8 @@
 // Dashboard Stats Component
+import { realtimeService } from '../../services/realtime.js';
+import { offlineCache } from '../../services/offline-cache.js';
+import { SkeletonLoader } from '../ui/skeleton-loader.js';
+
 interface DashboardStats {
   projects: {
     total: number;
@@ -32,35 +36,114 @@ class DashboardStatsComponent extends HTMLElement {
   private stats: DashboardStats | null = null;
   private loading = false;
   private error: string | null = null;
+  private unsubscribeRealtime: (() => void) | null = null;
+  private isOnline = navigator.onLine;
+  private lastFetchTime = 0;
+  private cacheExpiry = 5 * 60 * 1000; // 5 minutes
 
   connectedCallback() {
     this.render();
     this.fetchStats();
+    this.setupRealtime();
+    this.setupOfflineDetection();
 
     // Listen for refresh events
     window.addEventListener('refresh-dashboard', () => {
-      this.fetchStats();
+      this.fetchStats(true); // Force refresh
     });
   }
 
-  async fetchStats() {
+  disconnectedCallback() {
+    if (this.unsubscribeRealtime) {
+      this.unsubscribeRealtime();
+    }
+  }
+
+  private setupRealtime() {
+    // Subscribe to dashboard updates
+    this.unsubscribeRealtime = realtimeService.subscribe(
+      'dashboard-update',
+      (data) => {
+        console.log('Dashboard update received:', data);
+        // Auto-refresh stats when dashboard update is received
+        this.fetchStats(true);
+      }
+    );
+
+    // Subscribe to connection status changes
+    realtimeService.subscribe('connection', (data) => {
+      console.log('Connection status:', data.status);
+      if (data.status === 'connected' && this.isOnline) {
+        // Refresh data when reconnected
+        this.fetchStats(true);
+      }
+    });
+  }
+
+  private setupOfflineDetection() {
+    // Listen for offline status changes from the service
+    window.addEventListener('offline-status-changed', (event: any) => {
+      this.isOnline = event.detail.isOnline;
+      this.render(); // Update UI to show online status
+      
+      if (this.isOnline && this.stats) {
+        // Refresh data when coming back online
+        this.fetchStats(true);
+      }
+    });
+
+    // Also listen to native events as backup
+    window.addEventListener('online', () => {
+      if (!this.isOnline) {
+        this.isOnline = true;
+        this.render();
+        if (this.stats) {
+          this.fetchStats(true);
+        }
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      if (this.isOnline) {
+        this.isOnline = false;
+        this.render();
+      }
+    });
+  }
+
+async fetchStats(forceRefresh = false) {
+    // Check if we can use cached data
+    const now = Date.now();
+    if (!forceRefresh && 
+        this.stats && 
+        this.isOnline && 
+        (now - this.lastFetchTime) < this.cacheExpiry) {
+      return; // Use cached data
+    }
+
     this.loading = true;
     this.error = null;
     this.render();
 
     try {
-      const response = await fetch('/api/dashboard/stats', {
-        headers: {
-          'Cache-Control': 'no-cache',
-          'X-Requested-With': 'XMLHttpRequest',
+      // Use offline cache service for better reliability
+      const cacheKey = 'dashboard-stats';
+      const ttl = forceRefresh ? 0 : 5 * 60 * 1000; // 5 minutes or immediate expiry
+      
+      this.stats = await offlineCache.fetchWithCache<DashboardStats>(
+        '/api/dashboard/stats',
+        {
+          headers: {
+            'Cache-Control': forceRefresh ? 'no-cache' : 'max-age=300',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Force-Refresh': forceRefresh.toString(),
+          },
         },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      this.stats = await response.json();
+        cacheKey,
+        ttl
+      );
+      
+      this.lastFetchTime = now;
 
       // Dispatch success event for parent components
       this.dispatchEvent(
@@ -72,15 +155,109 @@ class DashboardStatsComponent extends HTMLElement {
       this.error = err instanceof Error ? err.message : 'Failed to fetch stats';
       console.error('Error fetching dashboard stats:', err);
 
+      // Try to load from cache as fallback
+      if (!this.stats) {
+        const cachedStats = offlineCache.get<DashboardStats>('dashboard-stats');
+        if (cachedStats) {
+          this.stats = cachedStats;
+          this.lastFetchTime = Date.now() - (4 * 60 * 1000); // Show as 4 minutes old
+          console.log('Loaded dashboard stats from offline cache');
+        }
+      }
+
       // Dispatch error event
       this.dispatchEvent(
         new CustomEvent('stats-error', {
-          detail: { error: this.error },
+          detail: { error: this.error, isOnline: this.isOnline },
         })
       );
     } finally {
       this.loading = false;
       this.render();
+    }
+  }
+
+    this.loading = true;
+    this.error = null;
+    this.render();
+
+    try {
+      const cacheControl = forceRefresh ? 'no-cache' : 'max-age=300';
+      const response = await fetch('/api/dashboard/stats', {
+        headers: {
+          'Cache-Control': cacheControl,
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-Force-Refresh': forceRefresh.toString(),
+        },
+        signal: AbortSignal.timeout(10000), // 10 second timeout
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
+      }
+
+      this.stats = await response.json();
+      this.lastFetchTime = now;
+
+      // Store in localStorage for offline fallback
+      if (this.isOnline) {
+        try {
+          localStorage.setItem(
+            'dashboard-stats-cache',
+            JSON.stringify({
+              data: this.stats,
+              timestamp: this.lastFetchTime,
+            })
+          );
+        } catch (e) {
+          console.warn('Failed to cache stats data:', e);
+        }
+      }
+
+      // Dispatch success event for parent components
+      this.dispatchEvent(
+        new CustomEvent('stats-updated', {
+          detail: { stats: this.stats, timestamp: new Date() },
+        })
+      );
+    } catch (err) {
+      this.error = err instanceof Error ? err.message : 'Failed to fetch stats';
+      console.error('Error fetching dashboard stats:', err);
+
+      // Try to load from cache if online request failed
+      if (!this.stats && this.isOnline) {
+        this.loadFromCache();
+      }
+
+      // Dispatch error event
+      this.dispatchEvent(
+        new CustomEvent('stats-error', {
+          detail: { error: this.error, isOnline: this.isOnline },
+        })
+      );
+    } finally {
+      this.loading = false;
+      this.render();
+    }
+  }
+
+  private loadFromCache() {
+    try {
+      const cached = localStorage.getItem('dashboard-stats-cache');
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+
+        // Use cache if it's less than 30 minutes old
+        if (age < 30 * 60 * 1000) {
+          this.stats = data;
+          this.lastFetchTime = timestamp;
+          console.log('Loaded dashboard stats from cache');
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load cached stats:', e);
     }
   }
 
@@ -95,30 +272,46 @@ class DashboardStatsComponent extends HTMLElement {
 
   render() {
     if (this.loading) {
-      this.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          ${Array.from(
-            { length: 4 },
-            () => `
-            <div class="glass-panel p-6 rounded-xl animate-pulse">
-              <div class="h-4 bg-slate-700 rounded mb-4 w-1/2"></div>
-              <div class="h-8 bg-slate-700 rounded mb-2"></div>
-              <div class="h-3 bg-slate-700 rounded w-3/4"></div>
-            </div>
-          `
-          ).join('')}
-        </div>
-      `;
+      this.innerHTML = SkeletonLoader.createStatsSkeleton();
       return;
     }
 
     if (this.error) {
+      const isOffline = !this.isOnline;
+      const canRetry = this.isOnline;
+
       this.innerHTML = `
-        <div class="glass-panel p-6 rounded-xl border border-red-500/20">
-          <div class="flex items-center space-x-3 text-red-400">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>Failed to load dashboard stats. Please try again.</span>
+        <div class="glass-panel p-6 rounded-xl border ${isOffline ? 'border-yellow-500/20' : 'border-red-500/20'}">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3 ${isOffline ? 'text-yellow-400' : 'text-red-400'}">
+              <i class="fas ${isOffline ? 'fa-wifi-slash' : 'fa-exclamation-triangle'}"></i>
+              <span>
+                ${isOffline ? 'Offline - showing cached data' : 'Failed to load dashboard stats'}
+                ${!this.stats ? '. Please try again.' : ''}
+              </span>
+            </div>
+            ${
+              canRetry
+                ? `
+              <button 
+                onclick="this.closest('dashboard-stats').fetchStats(true)"
+                class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors"
+              >
+                <i class="fas fa-redo"></i> Retry
+              </button>
+            `
+                : ''
+            }
           </div>
+          ${
+            this.isOnline
+              ? `
+            <div class="text-xs text-gray-400 mt-2">
+              Error: ${this.error}
+            </div>
+          `
+              : ''
+          }
         </div>
       `;
       return;
@@ -126,7 +319,21 @@ class DashboardStatsComponent extends HTMLElement {
 
     if (!this.stats) return;
 
+    // Add connection status indicator
+    const connectionIndicator = this.isOnline
+      ? '<span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-2"></span>'
+      : '<span class="w-2 h-2 bg-yellow-400 rounded-full inline-block mr-2 animate-pulse"></span>';
+
     this.innerHTML = `
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-white flex items-center">
+          ${connectionIndicator}
+          Dashboard Overview
+        </h2>
+        <div class="text-xs text-gray-400">
+          ${this.isOnline ? 'Live' : 'Offline'} • Updated ${this.formatRelativeTime(this.lastFetchTime)}
+        </div>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Projects Stats -->
         <div class="glass-panel p-6 rounded-xl hover:bg-slate-800/60 transition-colors duration-300">
@@ -261,6 +468,28 @@ class DashboardStatsComponent extends HTMLElement {
         </div>
       </div>
     `;
+  }
+}
+
+formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  formatRelativeTime(timestamp: number): string {
+    if (!timestamp) return 'never';
+    
+    const now = Date.now();
+    const diff = now - timestamp;
+    
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
   }
 }
 

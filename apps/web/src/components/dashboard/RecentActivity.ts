@@ -1,4 +1,8 @@
 // Recent Activity Component
+import { SkeletonLoader } from '../ui/skeleton-loader.js';
+import { offlineCache } from '../../services/offline-cache.js';
+import { realtimeService } from '../../services/realtime.js';
+
 interface RecentActivity {
   id: string;
   type: 'project' | 'ticket' | 'milestone' | 'invoice';
@@ -14,34 +18,77 @@ class RecentActivityComponent extends HTMLElement {
   private activities: RecentActivity[] = [];
   private loading = false;
   private error: string | null = null;
+  private unsubscribeRealtime: (() => void) | null = null;
+  private isOnline = navigator.onLine;
 
   connectedCallback() {
     this.render();
     this.fetchActivities();
+    this.setupRealtime();
+    this.setupOfflineDetection();
 
     // Listen for refresh events
     window.addEventListener('refresh-dashboard', () => {
-      this.fetchActivities();
+      this.fetchActivities(true);
     });
   }
 
-  async fetchActivities() {
+  disconnectedCallback() {
+    if (this.unsubscribeRealtime) {
+      this.unsubscribeRealtime();
+    }
+  }
+
+  private setupRealtime() {
+    // Subscribe to relevant updates
+    this.unsubscribeRealtime = realtimeService.subscribe(
+      'dashboard-update',
+      (data) => {
+        if (
+          ['project', 'ticket', 'milestone', 'invoice'].includes(data.model)
+        ) {
+          this.fetchActivities(true);
+        }
+      }
+    );
+  }
+
+  private setupOfflineDetection() {
+    window.addEventListener('offline-status-changed', (event: any) => {
+      this.isOnline = event.detail.isOnline;
+      if (this.isOnline) {
+        this.fetchActivities(true);
+      }
+    });
+  }
+
+  async fetchActivities(forceRefresh = false) {
     this.loading = true;
     this.error = null;
     this.render();
 
     try {
-      const response = await fetch('/api/dashboard/recent-activity?limit=10');
+      const cacheKey = 'recent-activity';
+      const ttl = forceRefresh ? 0 : 2 * 60 * 1000; // 2 minutes
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      this.activities = await response.json();
+      this.activities = await offlineCache.fetchWithCache<RecentActivity[]>(
+        '/api/dashboard/recent-activity?limit=10',
+        {},
+        cacheKey,
+        ttl
+      );
     } catch (err) {
       this.error =
         err instanceof Error ? err.message : 'Failed to fetch activities';
       console.error('Error fetching recent activities:', err);
+
+      // Try cache as fallback
+      if (!this.activities) {
+        const cached = offlineCache.get<RecentActivity[]>('recent-activity');
+        if (cached) {
+          this.activities = cached;
+        }
+      }
     } finally {
       this.loading = false;
       this.render();
@@ -111,25 +158,7 @@ class RecentActivityComponent extends HTMLElement {
 
   render() {
     if (this.loading) {
-      this.innerHTML = `
-        <div class="glass-panel p-6 rounded-xl">
-          <h2 class="text-xl font-bold text-white mb-6">Recent Activity</h2>
-          <div class="space-y-4">
-            ${Array.from(
-              { length: 5 },
-              () => `
-              <div class="flex items-start space-x-3 animate-pulse">
-                <div class="w-10 h-10 bg-slate-700 rounded-lg flex-shrink-0"></div>
-                <div class="flex-1">
-                  <div class="h-4 bg-slate-700 rounded mb-2 w-3/4"></div>
-                  <div class="h-3 bg-slate-700 rounded w-1/2"></div>
-                </div>
-              </div>
-            `
-            ).join('')}
-          </div>
-        </div>
-      `;
+      this.innerHTML = SkeletonLoader.createActivitySkeleton();
       return;
     }
 
