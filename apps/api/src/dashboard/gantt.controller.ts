@@ -40,12 +40,16 @@ export class GanttController {
     }
 
     // Fetch projects with their milestones and tasks
-    const projects = await this.multiTenantPrisma.project.findMany({
+    const projects = (await this.multiTenantPrisma.project.findMany({
       where: whereClause,
       include: {
         milestones: {
           include: {
-            dependencies: true,
+            dependencies: {
+              include: {
+                dependentOn: true,
+              },
+            },
           },
           orderBy: {
             dueAt: 'asc',
@@ -69,7 +73,7 @@ export class GanttController {
       orderBy: {
         createdAt: 'asc',
       },
-    });
+    })) as any[];
 
     const ganttTasks: GanttTask[] = [];
 
@@ -118,7 +122,7 @@ export class GanttController {
           status: taskStatus,
           dependencies:
             milestone.dependencies?.map(
-              (dep) => `milestone-${dep.dependentOnId}`
+              (dep: any) => `milestone-${dep.dependentOn.id}`
             ) || [],
           assignee: milestone.assignedTo || undefined,
           priority: (milestone.priority as GanttTask['priority']) || 'medium',
@@ -179,7 +183,7 @@ export class GanttController {
             .split('T')[0],
           progress,
           status: taskStatus,
-          assignee: ticket.assignedTo || undefined,
+          assignee: ticket.assigneeId || undefined,
           priority: (ticket.priority as GanttTask['priority']) || 'medium',
           type: 'task',
           projectId: project.id,
@@ -194,7 +198,7 @@ export class GanttController {
       }
 
       // Add project deliverables based on milestones
-      const deliverables = this.generateProjectDeliverables(project);
+      const deliverables = this.generateProjectDeliverables(project as any);
       for (const deliverable of deliverables) {
         // Apply filters
         if (status && deliverable.status !== status) continue;
@@ -222,12 +226,12 @@ export class GanttController {
       deliverables.push({
         id: `deliverable-design-${project.id}`,
         title: 'Design Assets & Mockups',
-        startDate: project.createdAt.toISOString().split('T')[0],
+        startDate: project.createdAt.toISOString().split('T')[0] as string,
         endDate: new Date(
           project.createdAt.getTime() + 14 * 24 * 60 * 60 * 1000
         )
           .toISOString()
-          .split('T')[0],
+          .split('T')[0] as string,
         progress:
           project.status === 'completed'
             ? 100
@@ -254,12 +258,12 @@ export class GanttController {
           project.createdAt.getTime() + 10 * 24 * 60 * 60 * 1000
         )
           .toISOString()
-          .split('T')[0],
+          .split('T')[0] as string,
         endDate: project.dueAt
-          ? new Date(project.dueAt).toISOString().split('T')[0]
-          : new Date(project.createdAt.getTime() + 30 * 24 * 60 * 60 * 1000)
+          ? (new Date(project.dueAt).toISOString().split('T')[0] as string)
+          : (new Date(project.createdAt.getTime() + 30 * 24 * 60 * 60 * 1000)
               .toISOString()
-              .split('T')[0],
+              .split('T')[0] as string),
         progress:
           project.status === 'completed'
             ? 100
@@ -286,12 +290,12 @@ export class GanttController {
           project.createdAt.getTime() + 20 * 24 * 60 * 60 * 1000
         )
           .toISOString()
-          .split('T')[0],
+          .split('T')[0] as string,
         endDate: project.dueAt
-          ? new Date(project.dueAt).toISOString().split('T')[0]
-          : new Date(project.createdAt.getTime() + 35 * 24 * 60 * 60 * 1000)
+          ? (new Date(project.dueAt).toISOString().split('T')[0] as string)
+          : (new Date(project.createdAt.getTime() + 35 * 24 * 60 * 60 * 1000)
               .toISOString()
-              .split('T')[0],
+              .split('T')[0] as string),
         progress:
           project.status === 'completed'
             ? 100
