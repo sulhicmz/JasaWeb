@@ -1,12 +1,14 @@
-import { Controller, Get, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
+import { DashboardGateway } from './dashboard.gateway';
 
 interface DashboardStats {
   projects: {
@@ -53,7 +55,8 @@ interface RecentActivity {
 export class DashboardController {
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly dashboardGateway: DashboardGateway
   ) {}
 
   @Get('stats')
@@ -404,5 +407,55 @@ export class DashboardController {
       createdAt: invoice.createdAt,
       dueDate: invoice.dueAt,
     }));
+  }
+
+  @Post('notify-update')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
+  async notifyDashboardUpdate(
+    @Body() body: { type: string; data: any },
+    @CurrentOrganizationId() organizationId: string,
+    @CurrentUserId() userId: string
+  ) {
+    try {
+      await this.dashboardGateway.broadcastDashboardUpdate({
+        type: body.type as 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice',
+        data: { ...body.data, userId },
+        timestamp: new Date(),
+        organizationId,
+      });
+
+      return { success: true, message: 'Update notification sent' };
+    } catch (error) {
+      throw new Error(
+        `Failed to send notification: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  @Post('refresh-cache')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
+  async refreshDashboardCache(@CurrentOrganizationId() organizationId: string) {
+    try {
+      // Clear all dashboard-related cache keys for this organization
+      await Promise.all([
+        this.cacheManager.del(`dashboard-stats-${organizationId}`),
+        this.cacheManager.del(`dashboard-activity-${organizationId}`),
+        this.cacheManager.del(`dashboard-projects-${organizationId}`),
+      ]);
+
+      // Broadcast refresh event to all connected clients
+      await this.dashboardGateway.broadcastDashboardUpdate({
+        type: 'stats',
+        data: { action: 'refresh' },
+        timestamp: new Date(),
+        organizationId,
+      });
+
+      return { success: true, message: 'Cache refreshed and clients notified' };
+    } catch (error) {
+      throw new Error(
+        `Failed to refresh cache: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 }

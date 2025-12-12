@@ -1,236 +1,589 @@
 ---
-// DashboardCharts.astro - Analytics charts component
+// DashboardCharts.astro - Enhanced Analytics charts with Chart.js
 ---
 
 <div class="glass-panel p-6 rounded-xl">
-  <h2 class="text-xl font-bold text-white mb-6">Analytics Overview</h2>
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Analytics Overview</h2>
+    <div class="flex items-center space-x-2">
+      <button id="chartRefreshBtn" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200">
+        <i class="fas fa-sync-alt mr-1"></i> Refresh
+      </button>
+      <select id="chartTimeRange" class="px-3 py-1 bg-slate-700 text-white rounded-lg text-sm border border-slate-600 focus:border-blue-500 focus:outline-none">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </div>
+  </div>
   
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Project Status Chart -->
     <div class="bg-slate-800/50 p-4 rounded-lg">
       <h3 class="text-white font-medium mb-4">Project Status Distribution</h3>
-      <canvas id="projectStatusChart" width="200" height="200"></canvas>
+      <div class="relative" style="height: 250px;">
+        <canvas id="projectStatusChart"></canvas>
+      </div>
+      <div id="projectStatusLegend" class="mt-3 flex flex-wrap gap-2 justify-center"></div>
     </div>
     
     <!-- Ticket Priority Chart -->
     <div class="bg-slate-800/50 p-4 rounded-lg">
       <h3 class="text-white font-medium mb-4">Ticket Priority Breakdown</h3>
-      <canvas id="ticketPriorityChart" width="200" height="200"></canvas>
+      <div class="relative" style="height: 250px;">
+        <canvas id="ticketPriorityChart"></canvas>
+      </div>
+      <div id="ticketPriorityLegend" class="mt-3 flex flex-wrap gap-2 justify-center"></div>
+    </div>
+  </div>
+  
+  <!-- Revenue Trend Chart -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <h3 class="text-white font-medium mb-4">Revenue Trend</h3>
+      <div class="relative" style="height: 250px;">
+        <canvas id="revenueTrendChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Project Completion Rate -->
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <h3 class="text-white font-medium mb-4">Project Completion Rate</h3>
+      <div class="relative" style="height: 250px;">
+        <canvas id="completionRateChart"></canvas>
+      </div>
     </div>
   </div>
   
   <!-- Milestone Timeline -->
-  <div class="mt-6 bg-slate-800/50 p-4 rounded-lg">
+  <div class="bg-slate-800/50 p-4 rounded-lg">
     <h3 class="text-white font-medium mb-4">Weekly Milestone Progress</h3>
-    <canvas id="milestoneTimelineChart" width="800" height="200"></canvas>
+    <div class="relative" style="height: 300px;">
+      <canvas id="milestoneTimelineChart"></canvas>
+    </div>
   </div>
 </div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
   class DashboardCharts {
     constructor() {
       this.charts = {};
+      this.currentTimeRange = 30;
       this.init();
     }
 
     init() {
-      this.drawProjectStatusChart();
-      this.drawTicketPriorityChart();
-      this.drawMilestoneTimelineChart();
+      this.initCharts();
+      this.setupEventListeners();
       
       // Listen for data updates
       window.addEventListener('stats-updated', (e) => {
         this.updateCharts(e.detail.stats);
       });
-    }
 
-    drawProjectStatusChart(data = null) {
-      const canvas = document.getElementById('projectStatusChart');
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = 80;
-      
-      // Default data
-      const chartData = data || {
-        active: 3,
-        completed: 5,
-        onHold: 1,
-        planning: 2
-      };
-      
-      const total = Object.values(chartData).reduce((sum, val) => sum + val, 0);
-      const colors = {
-        active: '#10b981',
-        completed: '#3b82f6',
-        onHold: '#f59e0b',
-        planning: '#6b7280'
-      };
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw pie chart
-      let currentAngle = -Math.PI / 2;
-      
-      Object.entries(chartData).forEach(([status, count]) => {
-        if (count === 0) return;
-        
-        const sliceAngle = (count / total) * 2 * Math.PI;
-        
-        // Draw slice
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-        ctx.lineTo(centerX, centerY);
-        ctx.fillStyle = colors[status];
-        ctx.fill();
-        
-        // Draw label
-        const labelAngle = currentAngle + sliceAngle / 2;
-        const labelX = centerX + Math.cos(labelAngle) * (radius + 20);
-        const labelY = centerY + Math.sin(labelAngle) * (radius + 20);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${status} (${count})`, labelX, labelY);
-        
-        currentAngle += sliceAngle;
+      // Listen for real-time updates
+      window.addEventListener('dashboard-update', (e) => {
+        this.handleRealtimeUpdate(e.detail);
       });
     }
 
-    drawTicketPriorityChart(data = null) {
-      const canvas = document.getElementById('ticketPriorityChart');
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      
-      // Default data
-      const chartData = data || {
-        low: 2,
-        medium: 5,
-        high: 3,
-        critical: 1
-      };
-      
-      const colors = {
-        low: '#6b7280',
-        medium: '#f59e0b',
-        high: '#f97316',
-        critical: '#ef4444'
-      };
-      
-      const barWidth = 40;
-      const barSpacing = 20;
-      const maxValue = Math.max(...Object.values(chartData));
-      const chartHeight = 150;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw bars
-      let x = 30;
-      Object.entries(chartData).forEach(([priority, count]) => {
-        const barHeight = (count / maxValue) * chartHeight;
-        const y = canvas.height - barHeight - 30;
-        
-        // Draw bar
-        ctx.fillStyle = colors[priority];
-        ctx.fillRect(x, y, barWidth, barHeight);
-        
-        // Draw label
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '11px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(priority, x + barWidth / 2, canvas.height - 10);
-        ctx.fillText(count.toString(), x + barWidth / 2, y - 5);
-        
-        x += barWidth + barSpacing;
+    setupEventListeners() {
+      // Refresh button
+      document.getElementById('chartRefreshBtn')?.addEventListener('click', () => {
+        this.refreshAllCharts();
+      });
+
+      // Time range selector
+      document.getElementById('chartTimeRange')?.addEventListener('change', (e) => {
+        this.currentTimeRange = parseInt(e.target.value);
+        this.refreshAllCharts();
       });
     }
 
-    drawMilestoneTimelineChart() {
-      const canvas = document.getElementById('milestoneTimelineChart');
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      
-      // Sample data for weekly milestone progress
-      const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-      const completed = [2, 3, 5, 4];
-      const planned = [3, 4, 6, 5];
-      
-      const chartWidth = canvas.width - 60;
-      const chartHeight = 150;
-      const barWidth = chartWidth / (weeks.length * 2 + weeks.length - 1);
-      const maxValue = Math.max(...planned);
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw axes
-      ctx.strokeStyle = '#4b5563';
-      ctx.beginPath();
-      ctx.moveTo(30, 20);
-      ctx.lineTo(30, canvas.height - 30);
-      ctx.lineTo(canvas.width - 30, canvas.height - 30);
-      ctx.stroke();
-      
-      // Draw bars
-      weeks.forEach((week, index) => {
-        const x = 40 + index * (barWidth * 2 + barWidth);
-        
-        // Completed milestones
-        const completedHeight = (completed[index] / maxValue) * chartHeight;
-        ctx.fillStyle = '#10b981';
-        ctx.fillRect(x, canvas.height - 30 - completedHeight, barWidth, completedHeight);
-        
-        // Planned milestones
-        const plannedHeight = (planned[index] / maxValue) * chartHeight;
-        ctx.fillStyle = '#3b82f6';
-        ctx.fillRect(x + barWidth, canvas.height - 30 - plannedHeight, barWidth, plannedHeight);
-        
-        // Week label
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '11px Inter';
-        ctx.textAlign = 'center';
-        ctx.fillText(week, x + barWidth, canvas.height - 10);
+    initCharts() {
+      this.initProjectStatusChart();
+      this.initTicketPriorityChart();
+      this.initRevenueTrendChart();
+      this.initCompletionRateChart();
+      this.initMilestoneTimelineChart();
+    }
+
+    initProjectStatusChart() {
+      const ctx = document.getElementById('projectStatusChart')?.getContext('2d');
+      if (!ctx) return;
+
+      this.charts.projectStatus = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Active', 'Completed', 'On Hold', 'Planning'],
+          datasets: [{
+            data: [3, 5, 1, 2],
+            backgroundColor: [
+              '#10b981',
+              '#3b82f6', 
+              '#f59e0b',
+              '#6b7280'
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              borderColor: '#333',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((context.parsed / total) * 100).toFixed(1);
+                  return `${context.label}: ${context.parsed} (${percentage}%)`;
+                }
+              }
+            }
+          },
+          cutout: '60%'
+        }
       });
+
+      this.createCustomLegend('projectStatusChart', ['Active', 'Completed', 'On Hold', 'Planning'], ['#10b981', '#3b82f6', '#f59e0b', '#6b7280']);
+    }
+
+    initTicketPriorityChart() {
+      const ctx = document.getElementById('ticketPriorityChart')?.getContext('2d');
+      if (!ctx) return;
+
+      this.charts.ticketPriority = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Low', 'Medium', 'High', 'Critical'],
+          datasets: [{
+            label: 'Tickets',
+            data: [2, 5, 3, 1],
+            backgroundColor: [
+              '#6b7280',
+              '#f59e0b',
+              '#f97316',
+              '#ef4444'
+            ],
+            borderRadius: 6,
+            borderSkipped: false,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af',
+                stepSize: 1
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af'
+              }
+            }
+          }
+        }
+      });
+
+      this.createCustomLegend('ticketPriorityChart', ['Low', 'Medium', 'High', 'Critical'], ['#6b7280', '#f59e0b', '#f97316', '#ef4444']);
+    }
+
+    initRevenueTrendChart() {
+      const ctx = document.getElementById('revenueTrendChart')?.getContext('2d');
+      if (!ctx) return;
+
+      // Generate sample data for the selected time range
+      const labels = this.generateTimeLabels();
+      const revenueData = this.generateRevenueData(labels.length);
+
+      this.charts.revenueTrend = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Revenue',
+            data: revenueData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: function(context) {
+                  return `Revenue: $${context.parsed.y.toLocaleString()}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af',
+                callback: function(value) {
+                  return '$' + value.toLocaleString();
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    initCompletionRateChart() {
+      const ctx = document.getElementById('completionRateChart')?.getContext('2d');
+      if (!ctx) return;
+
+      const labels = this.generateTimeLabels();
+      const completionData = labels.map(() => Math.floor(Math.random() * 30) + 70);
+
+      this.charts.completionRate = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Completion Rate',
+            data: completionData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff',
+              callbacks: {
+                label: function(context) {
+                  return `Completion: ${context.parsed.y}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 0,
+              max: 100,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af',
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    initMilestoneTimelineChart() {
+      const ctx = document.getElementById('milestoneTimelineChart')?.getContext('2d');
+      if (!ctx) return;
+
+      this.charts.milestoneTimeline = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          datasets: [
+            {
+              label: 'Completed',
+              data: [2, 3, 5, 4],
+              backgroundColor: '#10b981',
+              borderRadius: 4,
+              borderSkipped: false,
+            },
+            {
+              label: 'Planned',
+              data: [3, 4, 6, 5],
+              backgroundColor: '#3b82f6',
+              borderRadius: 4,
+              borderSkipped: false,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#9ca3af',
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af',
+                stepSize: 1
+              }
+            },
+            x: {
+              grid: {
+                display: false,
+                drawBorder: false
+              },
+              ticks: {
+                color: '#9ca3af'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    createCustomLegend(chartId, labels, colors) {
+      const legendContainer = document.getElementById(`${chartId}Legend`);
+      if (!legendContainer) return;
+
+      legendContainer.innerHTML = labels.map((label, index) => `
+        <div class="flex items-center space-x-2">
+          <div class="w-3 h-3 rounded-full" style="background-color: ${colors[index]}"></div>
+          <span class="text-xs text-gray-400">${label}</span>
+        </div>
+      `).join('');
+    }
+
+    generateTimeLabels() {
+      const labels = [];
+      const now = new Date();
       
-      // Legend
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(canvas.width - 150, 10, 15, 15);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '11px Inter';
-      ctx.textAlign = 'left';
-      ctx.fillText('Completed', canvas.width - 130, 22);
+      if (this.currentTimeRange === 7) {
+        // Last 7 days
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(date.getDate() - i);
+          labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+        }
+      } else if (this.currentTimeRange === 30) {
+        // Last 30 days (weekly)
+        for (let i = 4; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(date.getDate() - (i * 7));
+          labels.push(`Week ${5 - i}`);
+        }
+      } else {
+        // Last 90 days (monthly)
+        for (let i = 3; i >= 0; i--) {
+          const date = new Date(now);
+          date.setMonth(date.getMonth() - i);
+          labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+        }
+      }
       
-      ctx.fillStyle = '#3b82f6';
-      ctx.fillRect(canvas.width - 150, 30, 15, 15);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('Planned', canvas.width - 130, 42);
+      return labels;
+    }
+
+    generateRevenueData(length) {
+      // Generate realistic revenue data
+      const baseRevenue = 50000;
+      return Array.from({ length }, () => 
+        baseRevenue + Math.floor(Math.random() * 30000) - 10000
+      );
     }
 
     updateCharts(stats) {
-      if (stats.projects) {
-        this.drawProjectStatusChart({
-          active: stats.projects.active,
-          completed: stats.projects.completed,
-          onHold: stats.projects.onHold,
-          planning: 0 // Calculate from total - others
-        });
+      if (stats.projects && this.charts.projectStatus) {
+        const planningCount = stats.projects.total - stats.projects.active - stats.projects.completed - stats.projects.onHold;
+        this.charts.projectStatus.data.datasets[0].data = [
+          stats.projects.active,
+          stats.projects.completed,
+          stats.projects.onHold,
+          Math.max(0, planningCount)
+        ];
+        this.charts.projectStatus.update('none');
       }
+
+      if (stats.tickets && this.charts.ticketPriority) {
+        // Estimate priority distribution
+        const total = stats.tickets.total;
+        const critical = stats.tickets.critical;
+        const high = Math.max(0, stats.tickets.highPriority - critical);
+        const medium = Math.floor(total * 0.4);
+        const low = Math.max(0, total - critical - high - medium);
+
+        this.charts.ticketPriority.data.datasets[0].data = [low, medium, high, critical];
+        this.charts.ticketPriority.update('none');
+      }
+    }
+
+    handleRealtimeUpdate(update) {
+      // Add animation for real-time updates
+      Object.values(this.charts).forEach(chart => {
+        if (chart) {
+          chart.update('active');
+        }
+      });
+
+      // Show notification
+      this.showUpdateNotification(update.type);
+    }
+
+    showUpdateNotification(type) {
+      // Create a subtle notification for real-time updates
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse';
+      notification.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} data updated`;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    refreshAllCharts() {
+      const refreshBtn = document.getElementById('chartRefreshBtn');
+      const icon = refreshBtn?.querySelector('i');
       
-      if (stats.tickets) {
-        // Estimate priority distribution from ticket stats
-        this.drawTicketPriorityChart({
-          low: Math.floor(stats.tickets.total * 0.2),
-          medium: Math.floor(stats.tickets.total * 0.4),
-          high: stats.tickets.highPriority - stats.tickets.critical,
-          critical: stats.tickets.critical
+      if (icon) {
+        icon.classList.add('fa-spin');
+      }
+
+      // Fetch fresh data and update all charts
+      fetch('/api/dashboard/stats')
+        .then(response => response.json())
+        .then(stats => {
+          this.updateCharts(stats);
+          
+          // Update time-based charts with new data
+          this.updateTimeBasedCharts();
+        })
+        .catch(error => {
+          console.error('Error refreshing charts:', error);
+        })
+        .finally(() => {
+          if (icon) {
+            setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+          }
         });
+    }
+
+    updateTimeBasedCharts() {
+      // Update revenue trend chart
+      if (this.charts.revenueTrend) {
+        const labels = this.generateTimeLabels();
+        const revenueData = this.generateRevenueData(labels.length);
+        
+        this.charts.revenueTrend.data.labels = labels;
+        this.charts.revenueTrend.data.datasets[0].data = revenueData;
+        this.charts.revenueTrend.update('none');
+      }
+
+      // Update completion rate chart
+      if (this.charts.completionRate) {
+        const labels = this.generateTimeLabels();
+        const completionData = labels.map(() => Math.floor(Math.random() * 30) + 70);
+        
+        this.charts.completionRate.data.labels = labels;
+        this.charts.completionRate.data.datasets[0].data = completionData;
+        this.charts.completionRate.update('none');
       }
     }
   }

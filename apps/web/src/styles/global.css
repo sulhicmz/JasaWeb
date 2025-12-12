@@ -1,10 +1,17 @@
-/* src/styles/global.css */
+/* src/styles/global.css - Performance Optimized */
 @import 'tailwindcss';
 @source "../../../packages/ui";
 
+/* Critical CSS - loaded first */
 body {
   @apply bg-slate-950 text-gray-200 antialiased selection:bg-blue-500/30;
-  font-family: 'Inter', sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   overflow-x: hidden;
   /* Optimize font rendering */
   text-rendering: optimizeLegibility;
@@ -14,6 +21,9 @@ body {
   scroll-behavior: smooth;
   /* Enable GPU acceleration for transforms */
   transform: translateZ(0);
+  /* Optimize for mobile */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Custom premium utilities */
@@ -37,37 +47,82 @@ body {
   @apply bg-slate-950/80 backdrop-blur-md border-b border-white/5;
 }
 
-/* Performance-optimized animations */
+/* Performance-optimized animations with GPU acceleration */
 @keyframes float {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-10px) translateZ(0);
   }
 }
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
   will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 @keyframes pulse-glow {
   0%,
   100% {
     opacity: 0.5;
-    transform: scale(1);
+    transform: scale(1) translateZ(0);
   }
   50% {
     opacity: 0.8;
-    transform: scale(1.05);
+    transform: scale(1.05) translateZ(0);
   }
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 4s ease-in-out infinite;
   will-change: opacity, transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize images for performance */
+img {
+  max-width: 100%;
+  height: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Loading states for images */
+img.lazy {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+img.loaded {
+  opacity: 1;
+}
+
+img.error {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+/* Optimize iframes */
+iframe {
+  max-width: 100%;
+  border: none;
+}
+
+/* Preload critical fonts */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Inter'),
+    url('https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2')
+      format('woff2');
 }
 
 /* Reduce motion for users who prefer it */
