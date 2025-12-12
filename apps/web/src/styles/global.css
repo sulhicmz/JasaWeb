@@ -1,44 +1,62 @@
 /* src/styles/global.css */
 @import 'tailwindcss';
+@source "../../../packages/ui";
 
 body {
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Open Sans',
-    'Helvetica Neue',
-    sans-serif;
+  @apply bg-slate-950 text-gray-200 antialiased selection:bg-blue-500/30;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
 }
 
-/* Custom styles for the application */
+/* Custom premium utilities */
 .container {
-  @apply max-w-6xl mx-auto;
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+.text-glow {
+  text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
-/* Custom scrollbar */
+.bg-glow {
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+}
+
+.glass-panel {
+  @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl;
+}
+
+.glass-header {
+  @apply bg-slate-950/80 backdrop-blur-md border-b border-white/5;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-slate-950;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-md;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
 }

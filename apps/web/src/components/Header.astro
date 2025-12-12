@@ -12,10 +12,12 @@ const navigationItems = [
 ];
 ---
 
-<header class="bg-white shadow-md">
-  <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+<header class="fixed top-0 w-full z-50 transition-all duration-300 glass-header">
+  <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
     <div class="flex items-center">
-      <a href="/" class="text-xl font-bold text-blue-600">JasaWeb</a>
+      <a href="/" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300 hover:opacity-80 transition-opacity">
+        JasaWeb
+      </a>
     </div>
 
     <div class="hidden md:block">
@@ -23,7 +25,7 @@ const navigationItems = [
     </div>
 
     <div class="md:hidden">
-      <button id="mobile-menu-button" class="text-gray-700">
+      <button id="mobile-menu-button" class="text-gray-300 hover:text-white transition-colors focus:outline-none">
         <i class="fas fa-bars text-2xl"></i>
       </button>
     </div>

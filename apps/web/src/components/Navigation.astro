@@ -19,7 +19,7 @@ const { items, className = '', isMobile = false } = Astro.props;
   <ul class={`flex flex-col space-y-4 px-4 ${className}`}>
     {items.map((item) => (
       <li>
-        <a href={item.href} class="block text-gray-700 hover:text-blue-600" id={item.id}>
+        <a href={item.href} class="block text-gray-300 hover:text-white hover:text-glow transition-all duration-300 font-medium" id={item.id}>
           {item.label}
         </a>
       </li>
@@ -29,7 +29,7 @@ const { items, className = '', isMobile = false } = Astro.props;
   <ul class={`flex space-x-6 ${className}`}>
     {items.map((item) => (
       <li>
-        <a href={item.href} class="text-gray-700 hover:text-blue-600" id={item.id}>
+        <a href={item.href} class="text-gray-300 hover:text-white hover:text-glow transition-all duration-300 font-medium" id={item.id}>
           {item.label}
         </a>
       </li>

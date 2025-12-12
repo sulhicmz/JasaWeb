@@ -49,593 +49,597 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
-      
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
-          
+
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-          
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-          
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        
+
       - name: Analyze Project State
         id: analyze-project
         timeout-minutes: 15
         run: |
           DEVELOPMENT_TYPE="${{ github.event.inputs.development_type || 'comprehensive' }}"
           PRIORITY="${{ github.event.inputs.priority || 'balanced' }}"
-          
+
           echo "Starting autonomous development cycle..."
           echo "Development Type: $DEVELOPMENT_TYPE"
           echo "Priority: $PRIORITY"
-          
+
           opencode run "$(cat <<'PROMPT'
-            Perform comprehensive project analysis for JasaWeb autonomous development:
-            
+            **ROLE**: Senior Full-Stack Developer for JasaWeb
+            **PROJECT**: Web Development Service Platform - Monorepo (pnpm)
+            **TECH STACK**: Astro (apps/web), NestJS (apps/api), PostgreSQL + Prisma, Tailwind CSS
+            **CODEBASE**: packages/ui (shared components), packages/config (shared configs)
+
+            Perform comprehensive project analysis for JasaWeb:
+
             Analysis Parameters:
             - Development Type: '$DEVELOPMENT_TYPE'
             - Priority Level: '$PRIORITY'
-            
+
             Analysis Areas:
-            1. Codebase Health Assessment:
-               - Identify technical debt and code smells
-               - Analyze code complexity and maintainability
-               - Review test coverage and quality
-               - Check for performance bottlenecks
-               - Identify security vulnerabilities
-               - Assess documentation completeness
-            
-            2. Feature Gap Analysis:
-               - Review project roadmap and requirements
-               - Identify missing features or functionality
-               - Analyze user feedback and issues
-               - Check for incomplete implementations
-               - Identify opportunities for innovation
-               - Assess competitive landscape
-            
-            3. Bug and Issue Analysis:
-               - Review open issues and bug reports
-               - Identify recurring problems
-               - Analyze error logs and crash reports
-               - Check for performance issues
-               - Review user complaints and feedback
-               - Prioritize by impact and frequency
-            
-            4. Optimization Opportunities:
-               - Performance optimization opportunities
-               - Code refactoring opportunities
-               - Database optimization potential
-               - Frontend optimization opportunities
-               - Infrastructure improvements
-               - Cost reduction opportunities
-            
-            5. Documentation and Quality:
-               - Documentation gaps and improvements
-               - Code quality enhancements
-               - Testing improvements needed
-               - Developer experience enhancements
-               - Onboarding improvements
-               - Knowledge sharing opportunities
-            
+            1. JasaWeb Business Model Analysis:
+               - Analyze service offerings (School Websites, News Portals, Company Profiles)
+               - Review lead generation and conversion funnels
+               - Assess client portal functionality for project management
+               - Evaluate billing and invoicing systems
+
+            2. Codebase Health Assessment:
+               - Identify technical debt in Astro/NestJS monorepo
+               - Analyze PostgreSQL/Prisma data layer performance
+               - Review Tailwind CSS implementation consistency
+               - Check for TypeScript errors (strict mode required)
+
+            3. Feature Gap Analysis:
+               - Review client portal project management capabilities
+               - Identify missing CRM features for lead tracking
+               - Analyze admin dashboard functionality gaps
+
+            4. Technical Infrastructure:
+               - Optimize Astro build performance and SEO
+               - Enhance NestJS API performance and caching
+               - Improve PostgreSQL query optimization
+
             Output Requirements:
-            1. Prioritized development tasks list
-            2. Impact assessment for each task
-            3. Resource requirements estimation
-            4. Dependencies and prerequisites
-            5. Risk assessment and mitigation
-            6. Implementation roadmap
-            
-            Focus on high-impact, achievable improvements.
-            Consider current team capacity and project priorities.
-            Balance between new features, bug fixes, and optimizations.
+            1. Prioritized development tasks aligned with business goals
+            2. Impact assessment for client experience and revenue
+            3. Dependencies and technical prerequisites
+
+            **CRITICAL: EPHEMERAL ENVIRONMENT - YOU MUST PERSIST ALL CHANGES**
+            After completing your work, execute these Git commands:
+            ```bash
+            git config --global user.name "autonomous-developer"
+            git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+            git add -A
+            git commit -m "chore(auto): project analysis and improvements"
+            git push origin main || gh pr create --title "Auto: Project Improvements" --body "Automated improvements from autonomous developer" --base main
+            ```
           PROMPT
           )" \
             --model iflowcn/qwen3-max \
             --share false \
             --non-interactive \
-            
+
       - name: Implement High-Impact Features
         id: implement-features
         timeout-minutes: 20
         run: |
           opencode run "$(cat <<'PROMPT'
-            Implement high-impact features for JasaWeb project based on analysis:
-            
+            Implement high-impact features for JasaWeb - Web Development Service Platform:
+
             Implementation Strategy:
             1. Feature Selection:
-               - Choose 1-2 high-impact features
-               - Prioritize by business value and feasibility
-               - Consider current project needs
-               - Balance complexity and impact
-               - Ensure alignment with project goals
-            
+               - Choose 1-2 features that enhance client experience or service delivery
+               - Prioritize by impact on lead conversion and client retention
+               - Consider JasaWeb's B2B service model
+               - Balance complexity with business value
+               - Ensure alignment with web development service offerings
+
             2. Feature Implementation:
-               - Design feature architecture
-               - Implement core functionality
-               - Add proper error handling
-               - Include comprehensive testing
-               - Update documentation
-               - Ensure backward compatibility
-            
+               - Design feature architecture respecting monorepo structure
+               - Implement using Astro (frontend) and NestJS (backend)
+               - Add proper error handling and validation
+               - Include comprehensive testing with Jest/Playwright
+               - Update Prisma schemas if database changes needed
+               - Ensure multi-tenant data isolation
+
             3. Quality Assurance:
                - Unit tests for all new code
-               - Integration tests for feature workflows
-               - E2E tests for user scenarios
-               - Performance testing if applicable
-               - Security testing for new endpoints
-               - Accessibility testing for UI changes
-            
+               - Integration tests for API endpoints
+               - E2E tests for client workflows
+               - Performance testing for client portal
+               - Security testing for authentication and data
+               - Accessibility testing for marketing pages
+
             4. Integration and Deployment:
-               - Ensure proper integration with existing code
-               - Update configuration files if needed
-               - Add migration scripts if required
+               - Ensure proper integration with existing client portal
+               - Update Tailwind CSS configurations if needed
+               - Add database migrations if required
                - Update API documentation
-               - Create user documentation
-               - Prepare deployment notes
-            
+               - Create client-facing documentation
+               - Prepare deployment notes for Cloudflare Pages
+
             Feature Categories to Consider:
             1. Client Portal Enhancements:
-               - Improved dashboard functionality
-               - Better project management features
-               - Enhanced file management
-               - Improved notification system
-               - Better reporting capabilities
-            
-            2. API Improvements:
-               - New endpoints for missing functionality
-               - Performance optimizations
-               - Better error handling
-               - Improved authentication
-               - Enhanced security features
-            
-            3. Frontend Enhancements:
-               - Improved user interface
-               - Better responsive design
-               - Performance optimizations
-               - Accessibility improvements
-               - Better user experience
-            
-            4. Developer Experience:
-               - Better development tools
-               - Improved documentation
-               - Better testing infrastructure
-               - Enhanced debugging capabilities
-               - Better deployment processes
-            
+               - Real-time project progress tracking
+               - Automated milestone notifications
+               - Enhanced file versioning and approval workflows
+               - Integrated video calls for consultations
+               - Client satisfaction surveys and feedback
+
+            2. Lead Generation & CRM:
+               - Automated lead scoring and qualification
+               - Integration with popular CRM platforms
+               - Proposal generation templates
+               - Automated follow-up sequences
+               - Analytics dashboard for conversion tracking
+
+            3. Service Delivery Automation:
+               - Automated project kickoff workflows
+               - Template-based website generation
+               - Content management for client sites
+               - Automated testing and deployment pipelines
+               - Client training and onboarding modules
+
+            4. Marketing & Portfolio:
+               - Dynamic portfolio showcase with case studies
+               - Client testimonials and success stories
+               - Service comparison and pricing calculators
+               - SEO optimization for service pages
+               - Integration with social media and review platforms
+
             Actions to Take:
-            1. Create feature branches for each implementation
-            2. Implement features following best practices
+            1. Create feature branches following GitFlow
+            2. Implement features using TypeScript best practices
             3. Add comprehensive tests and documentation
-            4. Create pull requests with detailed descriptions
-            5. Ensure all quality checks pass
-            6. Request reviews and merge if approved
-            
-            Focus on delivering complete, tested features.
-            Ensure minimal disruption to existing functionality.
+            4. Create pull requests with business impact descriptions
+            5. Ensure all quality checks and CI/CD pass
+            6. Request reviews from team members
+
+            Focus on features that directly improve client acquisition and retention.
+            Ensure all implementations enhance JasaWeb's competitive advantage.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
-            
+
       - name: Fix Critical Bugs
         id: fix-bugs
         timeout-minutes: 15
         run: |
           opencode run "$(cat <<'PROMPT'
-            Identify and fix critical bugs for JasaWeb project:
-            
+            Identify and fix critical bugs for JasaWeb - Web Development Service Platform:
+
             Bug Analysis and Fix Strategy:
             1. Bug Identification:
-               - Review open issues and bug reports
-               - Analyze error logs and crash reports
-               - Check for performance issues
-               - Review user feedback and complaints
-               - Identify security vulnerabilities
-               - Check for integration issues
-            
+               - Review client-reported issues and support tickets
+               - Analyze error logs from client portal and admin dashboard
+               - Check for performance issues in project management workflows
+               - Review billing and payment processing errors
+               - Identify multi-tenant data isolation vulnerabilities
+               - Check for integration issues with deployment pipelines
+
             2. Bug Prioritization:
-               - Critical: Security issues, data loss, system crashes
-               - High: Major functionality broken, performance degradation
-               - Medium: Minor functionality issues, usability problems
-               - Low: Cosmetic issues, minor improvements
-            
+               - Critical: Client data breaches, payment failures, service downtime
+               - High: Project management failures, file upload issues, login problems
+               - Medium: UI inconsistencies, notification delays, reporting errors
+               - Low: Cosmetic issues, minor UX improvements, documentation gaps
+
             3. Bug Fix Implementation:
-               - Identify root cause of each bug
-               - Implement comprehensive fix
-               - Add regression tests
-               - Ensure no side effects
-               - Update documentation if needed
-               - Test thoroughly before deployment
-            
+               - Identify root cause in Astro/NestJS/PostgreSQL stack
+               - Implement comprehensive fix with proper error handling
+               - Add regression tests using Jest/Playwright
+               - Ensure no impact on other client workflows
+               - Update Prisma schemas if database changes needed
+               - Test thoroughly across different client scenarios
+
             4. Quality Assurance:
                - Unit tests for fixed code
-               - Integration tests for affected workflows
-               - E2E tests for user scenarios
-               - Performance testing for fixes
-               - Security testing for vulnerabilities
-               - Regression testing for related features
-            
+               - Integration tests for client portal workflows
+               - E2E tests for project management scenarios
+               - Performance testing for client portal responsiveness
+               - Security testing for multi-tenant data access
+               - Regression testing for related client features
+
             Common Bug Categories to Address:
-            1. Authentication and Authorization:
-               - Login issues and session management
-               - Permission and access control problems
-               - Token handling and refresh issues
-               - Multi-tenant isolation issues
-            
-            2. Data Management:
-               - Database connection issues
-               - Data integrity problems
-               - File upload/download issues
-               - Data synchronization problems
-               - Backup and recovery issues
-            
-            3. API and Integration:
-               - API endpoint failures
-               - Request/response handling issues
-               - Third-party integration problems
-               - Rate limiting and throttling issues
-               - Error handling and logging
-            
-            4. User Interface:
-               - Display and rendering issues
-               - Responsive design problems
-               - Browser compatibility issues
-               - Accessibility problems
-               - Performance and loading issues
-            
+            1. Client Portal Authentication:
+               - Multi-tenant login and session management
+               - Role-based access control for team members
+               - JWT token handling and refresh mechanisms
+               - Client data isolation and security
+
+            2. Project Management System:
+               - File upload/download and version control
+               - Milestone tracking and notification systems
+               - Real-time collaboration features
+               - Project template and workflow automation
+
+            3. Billing and Payments:
+               - Invoice generation and payment processing
+               - Subscription management and renewals
+               - Tax calculation and reporting
+               - Integration with payment gateways
+
+            4. Marketing Website:
+               - Lead capture form functionality
+               - Portfolio showcase and case study displays
+               - SEO optimization and page load performance
+               - Contact form and inquiry routing
+
             Actions to Take:
-            1. Create bug fix branches for critical issues
-            2. Implement comprehensive fixes with proper testing
-            3. Add regression tests to prevent future occurrences
-            4. Update documentation and error messages
-            5. Create pull requests with detailed fix descriptions
-            6. Ensure all quality checks pass before merge
-            
-            Focus on critical and high-impact bugs first.
-            Ensure fixes are thorough and well-tested.
+            1. Create bug fix branches following GitFlow
+            2. Implement fixes using TypeScript best practices
+            3. Add comprehensive tests for client scenarios
+            4. Update client documentation and help articles
+            5. Create pull requests with client impact assessments
+            6. Ensure all quality checks pass before deployment
+
+            Focus on bugs that directly impact client satisfaction and revenue.
+            Ensure fixes maintain data security and service reliability.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
             --non-interactive \
-            
+
       - name: Optimize Performance
         id: optimize-performance
         timeout-minutes: 15
         run: |
           opencode run "$(cat <<'PROMPT'
-            Optimize performance for JasaWeb project:
-            
+            Optimize performance for JasaWeb - Web Development Service Platform:
+
             Performance Optimization Strategy:
             1. Performance Analysis:
-               - Identify slow database queries
-               - Analyze API response times
-               - Check frontend bundle sizes
-               - Review memory usage patterns
-               - Analyze CPU utilization
-               - Check network request efficiency
-            
+               - Analyze client portal load times and responsiveness
+               - Review NestJS API response times for client workflows
+               - Check PostgreSQL query performance for multi-tenant data
+               - Analyze Astro build times and SEO scores
+               - Review memory usage in concurrent client sessions
+               - Check file upload/download performance
+
             2. Backend Optimizations:
-               - Database query optimization
-               - Caching implementation improvements
-               - API endpoint performance
-               - Background job optimization
-               - Memory usage optimization
-               - Connection pooling improvements
-            
+               - PostgreSQL query optimization with proper indexing
+               - Prisma query optimization and N+1 prevention
+               - NestJS API caching and response optimization
+               - Background job processing for client notifications
+               - Multi-tenant query optimization
+               - Database connection pooling improvements
+
             3. Frontend Optimizations:
-               - Bundle size reduction
-               - Code splitting implementation
-               - Image and asset optimization
-               - Caching strategies
-               - Lazy loading implementation
-               - Rendering performance improvements
-            
-            4. Infrastructure Optimizations:
-               - Server configuration improvements
-               - CDN optimization
-               - Load balancing improvements
-               - Database server optimization
-               - Network optimization
-               - Monitoring and alerting improvements
-            
+               - Astro build optimization and bundle analysis
+               - Tailwind CSS purging and optimization
+               - Client portal code splitting and lazy loading
+               - Image optimization for portfolio and case studies
+               - PWA implementation for mobile client access
+               - SEO optimization for marketing pages
+
+            4. Client Experience Optimizations:
+               - Real-time collaboration performance
+               - File upload/download speed improvements
+               - Project dashboard loading optimization
+               - Notification system performance
+               - Billing and payment processing speed
+               - Mobile responsiveness and performance
+
             Specific Optimization Areas:
-            1. Database Performance:
-               - Query optimization and indexing
-               - Connection pooling improvements
-               - Query result caching
-               - Database schema optimization
-               - Slow query analysis and fixes
-            
+            1. Client Portal Performance:
+               - Dashboard load time optimization
+               - Real-time updates via WebSocket optimization
+               - File management system performance
+               - Project timeline and milestone loading
+               - Client search and filtering performance
+
             2. API Performance:
-               - Response time optimization
-               - Request payload optimization
-               - Pagination implementation
-               - Rate limiting optimization
-               - API endpoint caching
-            
-            3. Frontend Performance:
-               - JavaScript bundle optimization
-               - CSS optimization and minification
-               - Image optimization and compression
-               - Font loading optimization
-               - Critical path optimization
-            
-            4. Caching Strategies:
-               - Application-level caching
-               - Database query caching
-               - CDN caching optimization
-               - Browser caching improvements
-               - Edge caching implementation
-            
+               - Client authentication and authorization speed
+               - Project data retrieval optimization
+               - File upload/download streaming
+               - Billing calculation and invoice generation
+               - Multi-tenant data access optimization
+
+            3. Marketing Website Performance:
+               - Landing page load speed optimization
+               - Portfolio gallery performance
+               - Contact form submission speed
+               - SEO score and Core Web Vitals improvement
+               - Mobile page speed optimization
+
+            4. Infrastructure Performance:
+               - Cloudflare Pages deployment optimization
+               - Database query caching strategies
+               - CDN optimization for static assets
+               - Monitoring and alerting for performance degradation
+               - Auto-scaling for client portal traffic
+
             Actions to Take:
-            1. Implement performance improvements with measurable impact
-            2. Add performance monitoring and alerting
-            3. Create performance benchmarks and tests
-            4. Document optimization decisions and trade-offs
-            5. Create pull requests with performance metrics
-            6. Ensure optimizations don't break functionality
-            
-            Focus on optimizations with measurable performance gains.
-            Ensure improvements don't introduce new bugs or complexity.
+            1. Implement performance improvements with client impact metrics
+            2. Add performance monitoring for client workflows
+            3. Create performance benchmarks for client scenarios
+            4. Document optimization decisions and client benefits
+            5. Create pull requests with performance improvements
+            6. Ensure optimizations enhance client satisfaction
+
+            Focus on optimizations that directly improve client experience and service delivery.
+            Ensure improvements maintain data security and system reliability.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
-            
+
       - name: Improve Documentation
         id: improve-documentation
         timeout-minutes: 10
         run: |
           opencode run "$(cat <<'PROMPT'
-            Improve documentation for JasaWeb project:
-            
+            Improve documentation for JasaWeb - Web Development Service Platform:
+
             Documentation Improvement Strategy:
             1. Documentation Audit:
-               - Review existing documentation completeness
-               - Identify outdated information
-               - Check for missing sections
-               - Analyze documentation quality
-               - Review user feedback on docs
-               - Check for consistency and accuracy
-            
-            2. Documentation Enhancement:
-               - Update API documentation
-               - Improve getting started guides
-               - Add more code examples
-               - Create troubleshooting guides
-               - Enhance developer documentation
-               - Improve user documentation
-            
-            3. Documentation Types:
-               - Technical documentation (API, architecture)
-               - User documentation (guides, tutorials)
-               - Developer documentation (setup, contribution)
-               - Operations documentation (deployment, monitoring)
-               - Security documentation (policies, procedures)
-               - Legal documentation (licenses, compliance)
-            
-            4. Documentation Quality:
-               - Clear and concise writing
-               - Comprehensive examples
-               - Proper formatting and structure
-               - Accurate and up-to-date information
-               - Easy navigation and search
-               - Multiple formats (markdown, HTML)
-            
+               - Review client-facing documentation for clarity
+               - Identify outdated service descriptions
+               - Check for missing client onboarding guides
+               - Analyze developer documentation completeness
+               - Review API documentation for client portal
+               - Check for consistency in service descriptions
+
+            2. Client-Focused Documentation:
+               - Update service descriptions (School Websites, News Portals, Company Profiles)
+               - Improve client onboarding guides
+               - Add client portal user guides
+               - Create project management workflow documentation
+               - Enhance billing and payment documentation
+               - Improve troubleshooting guides for clients
+
+            3. Developer Documentation:
+               - Update Astro/NestJS/PostgreSQL stack documentation
+               - Improve monorepo structure documentation
+               - Add Prisma schema and migration guides
+               - Enhance API documentation for client portal
+               - Update deployment and CI/CD documentation
+               - Add multi-tenant architecture documentation
+
+            4. Business Documentation:
+               - Service offering documentation
+               - Pricing and package descriptions
+               - Case study and portfolio documentation
+               - Client success story templates
+               - Sales and marketing collateral
+               - Service delivery process documentation
+
             Documentation Areas to Improve:
-            1. API Documentation:
-               - Complete endpoint documentation
-               - Request/response examples
-               - Error handling documentation
-               - Authentication and authorization
-               - Rate limiting and quotas
-            
-            2. Developer Documentation:
-               - Setup and installation guides
-               - Development workflow documentation
-               - Testing guidelines and examples
-               - Contribution guidelines
-               - Code style and conventions
-            
-            3. User Documentation:
-               - Getting started guides
-               - Feature documentation
-               - Troubleshooting guides
-               - FAQ and common issues
-               - Video tutorials and screenshots
-            
-            4. Operations Documentation:
-               - Deployment guides
-               - Monitoring and alerting
-               - Backup and recovery
-               - Security procedures
-               - Performance tuning
-            
+            1. Client Portal Documentation:
+               - Complete user guides for project management
+               - File upload and collaboration workflows
+               - Milestone tracking and approval processes
+               - Billing and payment guides
+               - Team member and permission management
+
+            2. Service Documentation:
+               - Detailed service descriptions and features
+               - Pricing tiers and package comparisons
+               - Technology stack explanations for clients
+               - Portfolio and case study documentation
+               - Client onboarding and offboarding guides
+
+            3. Developer Documentation:
+               - Monorepo structure and package organization
+               - Astro frontend development guidelines
+               - NestJS backend API documentation
+               - PostgreSQL/Prisma data layer documentation
+               - Testing and quality assurance processes
+               - Deployment and infrastructure documentation
+
+            4. Business Operations:
+               - Lead generation and conversion processes
+               - Project management and delivery workflows
+               - Client communication and support procedures
+               - Quality assurance and testing processes
+               - Service level agreements and guarantees
+
             Actions to Take:
-            1. Update existing documentation with accurate information
-            2. Add missing documentation sections
-            3. Improve documentation quality and examples
-            4. Create interactive documentation if possible
-            5. Add documentation testing and validation
+            1. Update client documentation with service focus
+            2. Add comprehensive developer onboarding guides
+            3. Improve API documentation for client portal
+            4. Create interactive documentation and tutorials
+            5. Add video guides for client workflows
             6. Create pull requests for documentation improvements
-            
-            Focus on making documentation comprehensive and user-friendly.
-            Ensure documentation is always accurate and up-to-date.
+
+            Focus on documentation that enhances client acquisition and retention.
+            Ensure documentation reflects JasaWeb's professional service offerings.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
             --non-interactive \
-            
+
       - name: Generate Development Report
         id: development-report
         timeout-minutes: 10
         run: |
           opencode run "$(cat <<'PROMPT'
-            Generate comprehensive autonomous development report for JasaWeb project:
-            
+            Generate comprehensive autonomous development report for JasaWeb - Web Development Service Platform:
+
             Report Components:
             1. Development Summary:
-               - Features implemented and their impact
-               - Bugs fixed and their severity
-               - Performance improvements and metrics
-               - Documentation enhancements made
-               - Code quality improvements
-               - Testing improvements implemented
-            
-            2. Impact Assessment:
-               - Business value delivered
-               - User experience improvements
-               - Developer productivity gains
-               - System reliability improvements
-               - Security enhancements
-               - Cost savings achieved
-            
+               - Client-facing features implemented and business impact
+               - Client portal enhancements and user experience improvements
+               - Lead generation and conversion optimization features
+               - Service delivery automation improvements
+               - Performance optimizations for client workflows
+               - Documentation enhancements for clients and developers
+
+            2. Business Impact Assessment:
+               - Client acquisition and retention improvements
+               - Service delivery efficiency gains
+               - Lead conversion rate improvements
+               - Client satisfaction and NPS improvements
+               - Operational cost reductions
+               - Competitive advantage enhancements
+
             3. Technical Metrics:
-               - Code coverage improvements
-               - Performance benchmarks
-               - Bug reduction metrics
-               - Code quality metrics
-               - Documentation completeness
-               - Test automation improvements
-            
-            4. Development Process:
-               - Development time and efficiency
-               - Code review process improvements
-               - Testing automation enhancements
-               - Deployment process improvements
-               - Monitoring and alerting improvements
-               - Team productivity improvements
-            
-            5. Future Recommendations:
-               - Next development priorities
-               - Technical debt reduction plan
-               - Performance optimization roadmap
-               - Security improvement roadmap
-               - Documentation enhancement plan
-               - Team skill development needs
-            
+               - Client portal performance improvements
+               - API response time optimizations
+               - Database query performance gains
+               - Frontend load time improvements
+               - SEO score and Core Web Vitals improvements
+               - System reliability and uptime improvements
+
+            4. Client Experience Metrics:
+               - Client portal usability improvements
+               - Project management workflow efficiency
+               - File upload/download performance
+               - Billing and payment processing speed
+               - Mobile responsiveness and accessibility
+               - Support ticket resolution times
+
+            5. Service Delivery Enhancements:
+               - Automated project kickoff improvements
+               - Template-based development acceleration
+               - Quality assurance and testing automation
+               - Deployment and delivery speed improvements
+               - Client communication and collaboration tools
+               - Reporting and analytics capabilities
+
+            6. Future Business Recommendations:
+               - Next service offering enhancements
+               - Client experience improvement roadmap
+               - Lead generation optimization priorities
+               - Service delivery automation opportunities
+               - Competitive differentiation strategies
+               - Technology stack evolution plans
+
             Report Format:
-            1. Executive summary with key achievements
-            2. Detailed technical implementation summary
-            3. Metrics and performance improvements
-            4. Challenges faced and solutions
-            5. Recommendations for next cycle
-            
+            1. Executive summary with business impact highlights
+            2. Client-facing feature implementation summary
+            3. Performance and business metrics dashboard
+            4. Client satisfaction and retention analysis
+            5. Competitive positioning and market impact
+
             Create this report as:
-            - GitHub issue with development labels
-            - Detailed report in docs/development-report.html
-            - Summary in workflow artifacts
-            - Update development dashboard
-            
-            Include actionable next steps and assign to appropriate team.
+            - GitHub issue with business impact labels
+            - Detailed report in docs/business-development-report.html
+            - Client-centric summary in workflow artifacts
+            - Update business metrics dashboard
+
+            Include actionable next steps focused on client value and business growth.
           PROMPT
           )" \
             --model iflowcn/qwen3-max \
             --share false \
-            
+
       - name: Schedule Next Development Cycle
         id: schedule-next
         timeout-minutes: 5
         run: |
           opencode run "$(cat <<'PROMPT'
-            Schedule next autonomous development cycle for JasaWeb project:
-            
-            Based on current development results, determine:
-            
-            1. Next Cycle Planning:
-               - Recommended development focus areas
-               - Priority level for next cycle
-               - Resource requirements estimation
-               - Timeline and milestones
-               - Success criteria definition
-            
-            2. Development Roadmap:
-               - Short-term development goals (1-2 weeks)
-               - Medium-term objectives (1-2 months)
-               - Long-term vision (3-6 months)
-               - Feature prioritization matrix
-               - Resource allocation plan
-            
-            3. Process Improvements:
-               - Development workflow enhancements
-               - Testing automation improvements
-               - Code review process improvements
-               - Documentation process improvements
-               - Monitoring and alerting enhancements
-            
-            4. Team and Skills:
-               - Skill development needs
-               - Training requirements
-               - Tool and technology upgrades
-               - Collaboration improvements
-               - Knowledge sharing initiatives
-            
+            Schedule next autonomous development cycle for JasaWeb - Web Development Service Platform:
+
+            Based on current development results and business impact, determine:
+
+            1. Next Business Cycle Planning:
+               - Recommended client experience focus areas
+               - Priority level for client acquisition features
+               - Service delivery enhancement requirements
+               - Competitive differentiation opportunities
+               - Client retention and satisfaction goals
+
+            2. Service Development Roadmap:
+               - Short-term client portal improvements (1-2 weeks)
+               - Medium-term service delivery enhancements (1-2 months)
+               - Long-term market expansion strategies (3-6 months)
+               - Feature prioritization by client impact
+               - Resource allocation for service excellence
+
+            3. Client-Centric Process Improvements:
+               - Client onboarding and onboarding workflow enhancements
+               - Project management and collaboration improvements
+               - Billing and payment process optimizations
+               - Support and communication system upgrades
+               - Quality assurance and client satisfaction metrics
+
+            4. Business Growth Initiatives:
+               - Lead generation and conversion optimization
+               - Service offering expansion opportunities
+               - Client success story development
+               - Competitive analysis and positioning
+               - Partnership and integration opportunities
+
+            5. Technology and Infrastructure:
+               - Scalability planning for client growth
+               - Performance optimization for client workflows
+               - Security enhancements for client data
+               - Monitoring and alerting for service reliability
+               - Automation opportunities for service delivery
+
             Create GitHub issue with:
-               - Next development cycle schedule
-               - Development roadmap and priorities
-               - Resource requirements and timeline
-               - Process improvement recommendations
-               
-            Label appropriately and assign to development team.
+               - Next business development cycle schedule
+               - Client experience enhancement roadmap
+               - Service delivery improvement priorities
+               - Business growth and competitive strategies
+
+            Label with business impact and assign to product and development teams.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
-            
+
       - name: Create Development Summary
         if: always()
         run: |
-          echo "## 🚀 Autonomous Developer Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 JasaWeb Autonomous Developer Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📋 Development Cycle Details" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Business Development Cycle Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Development Type**: $DEVELOPMENT_TYPE" >> $GITHUB_STEP_SUMMARY
           echo "- **Priority Level**: $PRIORITY" >> $GITHUB_STEP_SUMMARY
           echo "- **Cycle Duration**: 60 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Focus**: Web Development Service Platform Enhancement" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎯 Development Activities" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Project state analysis completed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ High-impact features implemented" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Critical bugs identified and fixed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Performance optimizations applied" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Documentation improvements made" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Development report generated" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Next development cycle scheduled" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 Business Development Activities" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ JasaWeb business model analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Client portal features implemented" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Client experience bugs identified and fixed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Service delivery performance optimizations applied" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Client and developer documentation improved" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Business impact report generated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Next business development cycle scheduled" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Development Impact" >> $GITHUB_STEP_SUMMARY
-          echo "- **Features**: New functionality delivered" >> $GITHUB_STEP_SUMMARY
-          echo "- **Bugs**: Issues resolved and prevented" >> $GITHUB_STEP_SUMMARY
-          echo "- **Performance**: System optimizations implemented" >> $GITHUB_STEP_SUMMARY
-          echo "- **Documentation**: Knowledge base enhanced" >> $GITHUB_STEP_SUMMARY
-          echo "- **Quality**: Code standards improved" >> $GITHUB_STEP_SUMMARY
-          echo "- **Automation**: Development processes enhanced" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Business Impact" >> $GITHUB_STEP_SUMMARY
+          echo "- **Client Experience**: Enhanced portal functionality and usability" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service Delivery**: Improved project management and collaboration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance**: Optimized client workflows and responsiveness" >> $GITHUB_STEP_SUMMARY
+          echo "- **Documentation**: Better client onboarding and support materials" >> $GITHUB_STEP_SUMMARY
+          echo "- **Competitive Edge**: Enhanced service offerings and automation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Growth**: Improved lead conversion and client retention" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "- Review development report and metrics" >> $GITHUB_STEP_SUMMARY
-          echo "- Monitor implemented features and fixes" >> $GITHUB_STEP_SUMMARY
-          echo "- Prepare for next development cycle" >> $GITHUB_STEP_SUMMARY
-          echo "- Address any issues or feedback" >> $GITHUB_STEP_SUMMARY
-          echo "- Continue continuous improvement process" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Business Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Review business impact report and client metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor client portal enhancements and satisfaction" >> $GITHUB_STEP_SUMMARY
+          echo "- Prepare for next business development cycle" >> $GITHUB_STEP_SUMMARY
+          echo "- Address client feedback and service improvements" >> $GITHUB_STEP_SUMMARY
+          echo "- Continue competitive differentiation and growth initiatives" >> $GITHUB_STEP_SUMMARY

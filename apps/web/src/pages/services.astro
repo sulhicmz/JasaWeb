@@ -1,113 +1,138 @@
 ---
 // src/pages/services.astro
 import Layout from '../layouts/Layout.astro';
+
+const services = [
+  {
+    title: 'Website Sekolah',
+    icon: 'fas fa-school',
+    color: 'blue',
+    features: [
+      'Profil sekolah dan informasi penting',
+      'Berita dan agenda sekolah',
+      'Profil guru dan staff',
+      'Gallery kegiatan',
+      'PPDB (Penerimaan Peserta Didik Baru)',
+      'Integrasi dengan sistem LMS'
+    ]
+  },
+  {
+    title: 'Portal Berita',
+    icon: 'fas fa-newspaper',
+    color: 'green',
+    features: [
+      'Manajemen artikel dan kategori',
+      'Alur editorial (draft-review-publish)',
+      'Editor konten WYSIWYG',
+      'Optimasi untuk mesin pencari',
+      'Newsletter dan RSS feed',
+      'Integrasi social media'
+    ]
+  },
+  {
+    title: 'Company Profile',
+    icon: 'fas fa-building',
+    color: 'purple',
+    features: [
+      'Halaman produk dan layanan',
+      'Tentang perusahaan dan tim',
+      'Testimoni klien',
+      'Portofolio dan case study',
+      'Form kontak dan lokasi',
+      'Integrasi media sosial'
+    ]
+  }
+];
+
+const pricing = [
+  { name: 'Starter', price: '2.500.000', features: ['Website statis', '5 halaman', 'Desain responsif', 'Optimasi SEO dasar', 'Masa aktif 1 tahun'], popular: false },
+  { name: 'Professional', price: '5.000.000', features: ['Website dinamis', 'Unlimited halaman', 'Fitur admin CMS', 'Optimasi SEO lanjut', 'Integrasi media sosial', 'Masa aktif 1 tahun'], popular: true },
+  { name: 'Enterprise', price: '10.000.000', features: ['Website custom', 'Fitur sesuai kebutuhan', 'Integrasi sistem', 'Fitur e-commerce', 'Analitik lanjut', 'Masa aktif 1 tahun'], popular: false }
+];
 ---
 
 <Layout title="Layanan">
-  <section class="py-16">
+  <!-- Page Header -->
+  <section class="relative pt-32 pb-20 overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <div class="absolute top-1/2 left-1/4 w-72 h-72 bg-indigo-600/10 rounded-full blur-[100px]"></div>
+      <div class="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Layanan Kami</h1>
+      <p class="text-gray-400 max-w-2xl mx-auto text-lg">Solusi website profesional untuk berbagai kebutuhan bisnis Anda dengan teknologi terkini.</p>
+    </div>
+  </section>
+
+  <!-- Services Grid -->
+  <section class="pb-24">
     <div class="container mx-auto px-4">
-      <h1 class="text-3xl font-bold text-center mb-4">Layanan Kami</h1>
-      <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">Kami menyediakan layanan pembuatan website profesional untuk berbagai kebutuhan bisnis Anda.</p>
-      
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-2xl font-bold mb-4 text-blue-600">
-            <i class="fas fa-school mr-2"></i>
-            Website Sekolah
-          </h2>
-          <p class="mb-4">Solusi lengkap untuk kebutuhan website sekolah dengan fitur-fitur penting seperti:</p>
-          <ul class="list-disc pl-6 mb-4 space-y-2">
-            <li>Profil sekolah dan informasi penting</li>
-            <li>Berita dan agenda sekolah</li>
-            <li>Profil guru dan staff</li>
-            <li>Galery kegiatan</li>
-            <li>PPDB (Penerimaan Peserta Didik Baru)</li>
-            <li>Integrasi dengan sistem LMS</li>
-          </ul>
-          <a href="/contact" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition">Konsultasi Gratis</a>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-2xl font-bold mb-4 text-green-600">
-            <i class="fas fa-newspaper mr-2"></i>
-            Portal Berita
-          </h2>
-          <p class="mb-4">Platform berita yang cepat, SEO friendly, dan mudah dikelola dengan fitur-fitur:</p>
-          <ul class="list-disc pl-6 mb-4 space-y-2">
-            <li>Manajemen artikel dan kategori</li>
-            <li>Alur editorial (draft-review-publish)</li>
-            <li>Editor konten WYSIWYG</li>
-            <li>Optimasi untuk mesin pencari</li>
-            <li>Newsletter dan RSS feed</li>
-            <li>Integrasi social media</li>
-          </ul>
-          <a href="/contact" class="inline-block bg-green-600 text-white py-2 px-6 rounded-lg hover:bg-green-700 transition">Konsultasi Gratis</a>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6">
-          <h2 class="text-2xl font-bold mb-4 text-purple-600">
-            <i class="fas fa-building mr-2"></i>
-            Company Profile
-          </h2>
-          <p class="mb-4">Website perusahaan yang profesional dan menampilkan brand Anda secara elegan dengan:</p>
-          <ul class="list-disc pl-6 mb-4 space-y-2">
-            <li>Halaman produk dan layanan</li>
-            <li>Tentang perusahaan dan tim</li>
-            <li>Testimoni klien</li>
-            <li>Portofolio dan case study</li>
-            <li>Form kontak dan lokasi</li>
-            <li>Integrasi media sosial</li>
-          </ul>
-          <a href="/contact" class="inline-block bg-purple-600 text-white py-2 px-6 rounded-lg hover:bg-purple-700 transition">Konsultasi Gratis</a>
-        </div>
+        {services.map(service => (
+          <div class="glass-panel p-8 rounded-2xl hover:bg-slate-800/60 transition-colors duration-300 group">
+            <div class={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-${service.color}-500/10 border border-${service.color}-500/20 mb-6 group-hover:scale-110 transition-transform`}>
+              <i class={`${service.icon} text-2xl text-${service.color}-400`}></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-4 text-white">{service.title}</h2>
+            <ul class="space-y-3 mb-8">
+              {service.features.map(feature => (
+                <li class="flex items-start text-gray-400">
+                  <i class="fas fa-check text-blue-400 mr-3 mt-1 text-sm"></i>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <a href="/contact" class="inline-flex items-center text-blue-400 font-semibold hover:text-blue-300 transition-colors group-hover:translate-x-1">
+              Konsultasi Gratis <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   </section>
 
-  <section class="py-16 bg-gray-100">
-    <div class="container mx-auto px-4">
-      <h2 class="text-3xl font-bold text-center mb-12">Paket Harga</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-          <h3 class="text-xl font-bold mb-2">Starter</h3>
-          <div class="text-3xl font-bold mb-4">Rp 2.500.000</div>
-          <ul class="list-disc pl-6 mb-4 space-y-2 text-left">
-            <li>Website statis</li>
-            <li>5 halaman</li>
-            <li>Desain responsif</li>
-            <li>Optimasi SEO dasar</li>
-            <li>Masa aktif 1 tahun</li>
-          </ul>
-          <a href="/contact" class="inline-block bg-gray-200 text-gray-800 py-2 px-6 rounded-lg">Pesan Sekarang</a>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center border-2 border-blue-500">
-          <h3 class="text-xl font-bold mb-2">Professional</h3>
-          <div class="text-3xl font-bold mb-4 text-blue-600">Rp 5.000.000</div>
-          <ul class="list-disc pl-6 mb-4 space-y-2 text-left">
-            <li>Website dinamis</li>
-            <li>Unlimited halaman</li>
-            <li>Fitur admin CMS</li>
-            <li>Optimasi SEO lanjut</li>
-            <li>Integrasi media sosial</li>
-            <li>Masa aktif 1 tahun</li>
-          </ul>
-          <a href="/contact" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-lg">Pesan Sekarang</a>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-          <h3 class="text-xl font-bold mb-2">Enterprise</h3>
-          <div class="text-3xl font-bold mb-4">Rp 10.000.000</div>
-          <ul class="list-disc pl-6 mb-4 space-y-2 text-left">
-            <li>Website custom</li>
-            <li>Fitur sesuai kebutuhan</li>
-            <li>Integrasi sistem</li>
-            <li>Fitur e-commerce</li>
-            <li>Analitik lanjut</li>
-            <li>Masa aktif 1 tahun</li>
-          </ul>
-          <a href="/contact" class="inline-block bg-gray-200 text-gray-800 py-2 px-6 rounded-lg">Pesan Sekarang</a>
-        </div>
+  <!-- Pricing Section -->
+  <section class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-slate-900/50"></div>
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4 text-white">Paket Harga</h2>
+        <p class="text-gray-400 max-w-2xl mx-auto">Pilih paket yang sesuai dengan kebutuhan dan budget Anda.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {pricing.map(plan => (
+          <div class={`glass-panel p-8 rounded-2xl text-center relative ${plan.popular ? 'border-2 border-blue-500/50 shadow-blue-500/10' : ''}`}>
+            {plan.popular && (
+              <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full text-sm font-medium text-white">
+                Populer
+              </div>
+            )}
+            <h3 class="text-xl font-bold mb-2 text-white">{plan.name}</h3>
+            <div class="mb-6">
+              <span class="text-4xl font-bold text-white">Rp {plan.price}</span>
+            </div>
+            <ul class="space-y-3 mb-8 text-left">
+              {plan.features.map(feature => (
+                <li class="flex items-center text-gray-400">
+                  <i class="fas fa-check text-blue-400 mr-3 text-sm"></i>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <a
+              href="/contact"
+              class={`inline-block w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
+                plan.popular
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5'
+                  : 'border border-white/10 text-gray-300 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              Pesan Sekarang
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   </section>

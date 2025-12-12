@@ -47,104 +47,97 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
-      
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
-          
+
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-          
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
-          
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        
+
       - name: Database Performance Analysis
         id: performance-analysis
         timeout-minutes: 15
         run: |
           OPTIMIZATION_TYPE="${{ github.event.inputs.optimization_type || 'comprehensive' }}"
           TARGET_DATABASE="${{ github.event.inputs.target_database || 'staging' }}"
-          
+
           echo "Starting database optimization cycle..."
           echo "Optimization Type: $OPTIMIZATION_TYPE"
           echo "Target Database: $TARGET_DATABASE"
-          
+
           opencode run "$(cat <<'PROMPT'
-            Perform comprehensive database optimization for JasaWeb project:
-            
-            Optimization Parameters:
+            **ROLE**: Database Engineer for JasaWeb
+            **PROJECT**: Web Development Service Platform
+            **DATABASE**: PostgreSQL with Prisma ORM
+            **SCHEMA**: Multi-tenant architecture (organization_id)
+
+            Perform database optimization:
+
+            Parameters:
             - Type: '$OPTIMIZATION_TYPE'
             - Target: '$TARGET_DATABASE'
-            
-            Database Optimization Strategy:
+
+            Optimization Strategy:
             1. Performance Analysis:
-               - Analyze slow query logs
-               - Check query execution plans
+               - Analyze slow Prisma queries via query logs
+               - Check for N+1 problems
                - Identify missing indexes
-               - Review table statistics
-               - Analyze connection pool usage
-               - Check for deadlocks and locks
-            
+
             2. Schema Optimization:
-               - Review table structures for efficiency
-               - Check for proper data types
+               - Review Prisma schema (apps/api/prisma/schema.prisma)
+               - Check multi-tenant isolation patterns
                - Analyze foreign key constraints
-               - Review partitioning opportunities
-               - Check for normalization issues
-               - Identify denormalization opportunities
-            
+
             3. Index Optimization:
-               - Identify missing indexes
-               - Review existing index usage
-               - Check for duplicate or redundant indexes
-               - Analyze index fragmentation
-               - Review composite index opportunities
-               - Optimize index order and columns
-            
+               - Identify missing indexes on organization_id
+               - Review composite indexes for common queries
+
             4. Query Optimization:
-               - Analyze slow queries
-               - Review N+1 query problems
-               - Check for inefficient joins
-               - Review pagination queries
-               - Analyze subquery performance
-               - Check for query caching opportunities
-            
-            Actions to Take:
-            1. Generate optimization recommendations
-            2. Create migration scripts for schema changes
-            3. Implement index optimizations
-            4. Optimize problematic queries
-            5. Create performance monitoring setup
-            6. Document optimization decisions
-            
-            Focus on measurable performance improvements.
-            Ensure backward compatibility and data integrity.
-            Create PRs for all optimization changes.
+               - Review NestJS service files for inefficient queries
+               - Check pagination implementations
+
+            Actions:
+            - Generate Prisma migration scripts for schema changes
+            - Create index optimization recommendations
+            - Update prisma/schema.prisma if needed
+
+            **CRITICAL: EPHEMERAL ENVIRONMENT - PERSIST ALL CHANGES**
+            ```bash
+            git config --global user.name "database-optimizer"
+            git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+            git add -A
+            git commit -m "perf(db): database optimization improvements"
+            git push origin main || gh pr create --title "Auto: DB Optimization" --body "Automated database optimizations" --base main
+            ```
           PROMPT
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
             --non-interactive
-            
+
       - name: Create Database Optimization Summary
         if: always()
         run: |

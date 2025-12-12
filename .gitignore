@@ -77,6 +77,9 @@ secrets/
 .project
 .classpath
 .settings/
+.factory
+.kilocode
+.vscode
 
 # OS
 .DS_Store
