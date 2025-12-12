@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DashboardGateway } from './dashboard.gateway';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import {
+  ProjectWithRelations,
+  Milestone,
+  Ticket,
+} from '../projects/interfaces/project.interface';
 
 @Injectable()
 export class DashboardService {
@@ -12,12 +17,13 @@ export class DashboardService {
   // Real-time update triggers for different events
 
   async notifyProjectUpdate(organizationId: string, projectId: string) {
-    const project = await this.multiTenantPrisma.project.findUnique({
+    const project = (await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
       include: {
         milestones: {
           select: {
             id: true,
+            title: true,
             status: true,
             dueAt: true,
           },
@@ -25,6 +31,7 @@ export class DashboardService {
         tickets: {
           select: {
             id: true,
+            title: true,
             status: true,
             priority: true,
           },
@@ -36,24 +43,24 @@ export class DashboardService {
           },
         },
       },
-    });
+    })) as ProjectWithRelations | null;
 
     if (project) {
       // Calculate project metrics
-      const totalMilestones = (project as any).milestones?.length || 0;
-      const completedMilestones =
-        (project as any).milestones?.filter(
-          (m: any) => m.status === 'completed'
-        ).length || 0;
+      const milestones = project.milestones || [];
+      const totalMilestones = milestones.length;
+      const completedMilestones = milestones.filter(
+        (m: Milestone) => m.status === 'completed'
+      ).length;
       const progress =
         totalMilestones > 0
           ? Math.round((completedMilestones / totalMilestones) * 100)
           : 0;
 
-      const openTickets =
-        (project as any).tickets?.filter(
-          (t: any) => t.status === 'open' || t.status === 'in-progress'
-        ).length || 0;
+      const tickets = project.tickets || [];
+      const openTickets = tickets.filter(
+        (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
+      ).length;
 
       const projectData = {
         id: project.id,

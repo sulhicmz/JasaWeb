@@ -291,10 +291,11 @@ export class AnalyticsService {
     const byCurrency = invoices.reduce(
       (acc, inv) => {
         const currency = inv.currency;
-        if (!acc[currency]) {
-          acc[currency] = { count: 0, amount: 0, paid: 0 };
+        const safeCurrency = currency || 'UNKNOWN';
+        if (!acc[safeCurrency]) {
+          acc[safeCurrency] = { count: 0, amount: 0, paid: 0 };
         }
-        const currencyData = acc[currency]!;
+        const currencyData = acc[safeCurrency]!;
         currencyData.count++;
         currencyData.amount += inv.amount;
         if (inv.status === 'paid') {
@@ -312,10 +313,11 @@ export class AnalyticsService {
         if (!acc[month]) {
           acc[month] = { count: 0, amount: 0, paid: 0 };
         }
-        acc[month].count++;
-        acc[month].amount += inv.amount;
+        const monthData = acc[month];
+        monthData.count++;
+        monthData.amount += inv.amount;
         if (inv.status === 'paid') {
-          acc[month].paid += inv.amount;
+          monthData.paid += inv.amount;
         }
         return acc;
       },
@@ -499,9 +501,17 @@ export class AnalyticsService {
           };
         }
 
-        acc[key].total++;
-        if (acc[key][log.action] !== undefined) {
-          acc[key][log.action]++;
+        const keyData = acc[key];
+        keyData.total++;
+        const validActions = [
+          'user_login',
+          'file_upload',
+          'approval_request',
+          'project_created',
+          'task_completed',
+        ] as const;
+        if (validActions.includes(log.action as any)) {
+          (keyData as any)[log.action]++;
         }
 
         return acc;

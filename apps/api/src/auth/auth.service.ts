@@ -9,6 +9,12 @@ import * as bcrypt from 'bcrypt';
 import { RefreshTokenService } from './refresh-token.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import {
+  AuthResponse,
+  JwtPayload,
+  RefreshTokenPayload,
+  CreateUserResponse,
+} from './interfaces/auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -18,14 +24,7 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService
   ) {}
 
-  async register(
-    createUserDto: CreateUserDto
-  ): Promise<{
-    access_token: string;
-    refreshToken: string;
-    expiresAt: Date;
-    user: { id: any; email: any; name: any; profilePicture: any };
-  }> {
+  async register(createUserDto: CreateUserDto): Promise<AuthResponse> {
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(
       createUserDto.email
@@ -60,14 +59,7 @@ export class AuthService {
     };
   }
 
-  async login(
-    loginUserDto: LoginUserDto
-  ): Promise<{
-    access_token: string;
-    refreshToken: string;
-    expiresAt: Date;
-    user: { id: any; email: any; name: any; profilePicture: any };
-  }> {
+  async login(loginUserDto: LoginUserDto): Promise<AuthResponse> {
     const user = await this.usersService.findByEmail(loginUserDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -98,7 +90,10 @@ export class AuthService {
     };
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(
+    email: string,
+    pass: string
+  ): Promise<CreateUserResponse | null> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(pass, user.password))) {
       const { password, ...result } = user;
@@ -107,7 +102,7 @@ export class AuthService {
     return null;
   }
 
-  async verifyToken(token: string): Promise<any> {
+  async verifyToken(token: string): Promise<JwtPayload | null> {
     try {
       const payload = this.jwtService.verify(token);
       const user = await this.usersService.findOne(payload.sub);

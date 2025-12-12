@@ -6,14 +6,12 @@ import {
   Param,
   UseGuards,
   BadRequestException,
-  Req,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import type { Request } from 'express';
 
 interface CreateApprovalDto {
   projectId: string;
@@ -38,7 +36,7 @@ export class ApprovalController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Allow multiple roles to create approvals
   async create(
     @Body() createApprovalDto: CreateApprovalDto,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     // Validate that the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
@@ -46,7 +44,9 @@ export class ApprovalController {
     });
 
     if (!project) {
-      throw new BadRequestException('Project does not exist or does not belong to your organization');
+      throw new BadRequestException(
+        'Project does not exist or does not belong to your organization'
+      );
     }
 
     return await this.multiTenantPrisma.approval.create({
@@ -59,9 +59,7 @@ export class ApprovalController {
 
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed to read
-  async findAll(
-    @CurrentOrganizationId() organizationId: string,
-  ) {
+  async findAll(@CurrentOrganizationId() organizationId: string) {
     return await this.multiTenantPrisma.approval.findMany({
       where: {
         project: {
@@ -78,10 +76,10 @@ export class ApprovalController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed to read
   async findOne(
     @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     const approval = await this.multiTenantPrisma.approval.findUnique({
-      where: { 
+      where: {
         id,
         project: {
           organizationId: organizationId, // Filter by organization ID
@@ -90,7 +88,9 @@ export class ApprovalController {
     });
 
     if (!approval) {
-      throw new BadRequestException('Approval not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Approval not found or does not belong to your organization'
+      );
     }
 
     return approval;
@@ -102,7 +102,7 @@ export class ApprovalController {
   async approve(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string,
-    @Body() approveDto: ApproveRejectDto,
+    @Body() approveDto: ApproveRejectDto
   ) {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
@@ -115,7 +115,9 @@ export class ApprovalController {
     });
 
     if (!approval) {
-      throw new BadRequestException('Approval not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Approval not found or does not belong to your organization'
+      );
     }
 
     // Check if the approval is already processed
@@ -140,7 +142,7 @@ export class ApprovalController {
   async reject(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string,
-    @Body() rejectDto: ApproveRejectDto,
+    @Body() rejectDto: ApproveRejectDto
   ) {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
@@ -153,7 +155,9 @@ export class ApprovalController {
     });
 
     if (!approval) {
-      throw new BadRequestException('Approval not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Approval not found or does not belong to your organization'
+      );
     }
 
     // Check if the approval is already processed
