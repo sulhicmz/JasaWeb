@@ -199,6 +199,11 @@ export class DashboardController {
         updatedAt: project.updatedAt,
         startAt: project.startAt,
         dueAt: project.dueAt,
+        // TODO: Add these fields to Project model and implement logic
+        stagingUrl: null, // Will be implemented when project URLs are added to schema
+        productionUrl: null, // Will be implemented when project URLs are added to schema
+        repositoryUrl: null, // Will be implemented when project URLs are added to schema
+        documentationUrl: null, // Will be implemented when project URLs are added to schema
       };
     });
 

@@ -177,71 +177,6 @@ async fetchStats(forceRefresh = false) {
     }
   }
 
-    this.loading = true;
-    this.error = null;
-    this.render();
-
-    try {
-      const cacheControl = forceRefresh ? 'no-cache' : 'max-age=300';
-      const response = await fetch('/api/dashboard/stats', {
-        headers: {
-          'Cache-Control': cacheControl,
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-Force-Refresh': forceRefresh.toString(),
-        },
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
-      }
-
-      this.stats = await response.json();
-      this.lastFetchTime = now;
-
-      // Store in localStorage for offline fallback
-      if (this.isOnline) {
-        try {
-          localStorage.setItem(
-            'dashboard-stats-cache',
-            JSON.stringify({
-              data: this.stats,
-              timestamp: this.lastFetchTime,
-            })
-          );
-        } catch (e) {
-          console.warn('Failed to cache stats data:', e);
-        }
-      }
-
-      // Dispatch success event for parent components
-      this.dispatchEvent(
-        new CustomEvent('stats-updated', {
-          detail: { stats: this.stats, timestamp: new Date() },
-        })
-      );
-    } catch (err) {
-      this.error = err instanceof Error ? err.message : 'Failed to fetch stats';
-      console.error('Error fetching dashboard stats:', err);
-
-      // Try to load from cache if online request failed
-      if (!this.stats && this.isOnline) {
-        this.loadFromCache();
-      }
-
-      // Dispatch error event
-      this.dispatchEvent(
-        new CustomEvent('stats-error', {
-          detail: { error: this.error, isOnline: this.isOnline },
-        })
-      );
-    } finally {
-      this.loading = false;
-      this.render();
-    }
-  }
-
   private loadFromCache() {
     try {
       const cached = localStorage.getItem('dashboard-stats-cache');
@@ -471,7 +406,7 @@ async fetchStats(forceRefresh = false) {
   }
 }
 
-formatCurrency(amount: number): string {
+private formatCurrency(amount: number): string {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -480,7 +415,7 @@ formatCurrency(amount: number): string {
     }).format(amount);
   }
 
-  formatRelativeTime(timestamp: number): string {
+  private formatRelativeTime(timestamp: number): string {
     if (!timestamp) return 'never';
     
     const now = Date.now();

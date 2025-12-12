@@ -16,6 +16,10 @@ interface Project {
   updatedAt: string;
   startAt?: string;
   dueAt?: string;
+  stagingUrl?: string;
+  productionUrl?: string;
+  repositoryUrl?: string;
+  documentationUrl?: string;
 }
 
 class ProjectsOverviewComponent extends HTMLElement {
@@ -210,29 +214,84 @@ class ProjectsOverviewComponent extends HTMLElement {
                     </div>
                   </div>
                   
-                  <!-- Project Metrics -->
-                  <div class="flex items-center justify-between text-xs">
-                    <div class="flex items-center space-x-4">
-                      <span class="text-gray-400">
-                        <i class="fas fa-flag-checkered"></i> 
-                        ${project.completedMilestones}/${project.totalMilestones} milestones
-                      </span>
-                      <span class="${project.openTickets > 0 ? 'text-yellow-400' : 'text-gray-400'}">
-                        <i class="fas fa-ticket-alt"></i> 
-                        ${project.openTickets} tickets
-                      </span>
-                    </div>
-                    ${
-                      project.highPriorityTickets > 0
-                        ? `
-                      <span class="text-red-400">
-                        <i class="fas fa-exclamation-triangle"></i> 
-                        ${project.highPriorityTickets} high priority
-                      </span>
-                    `
-                        : ''
-                    }
-                  </div>
+<!-- Project Metrics -->
+                   <div class="flex items-center justify-between text-xs mb-3">
+                     <div class="flex items-center space-x-4">
+                       <span class="text-gray-400">
+                         <i class="fas fa-flag-checkered"></i> 
+                         ${project.completedMilestones}/${project.totalMilestones} milestones
+                       </span>
+                       <span class="${project.openTickets > 0 ? 'text-yellow-400' : 'text-gray-400'}">
+                         <i class="fas fa-ticket-alt"></i> 
+                         ${project.openTickets} tickets
+                       </span>
+                     </div>
+                     ${
+                       project.highPriorityTickets > 0
+                         ? `
+                       <span class="text-red-400">
+                         <i class="fas fa-exclamation-triangle"></i> 
+                         ${project.highPriorityTickets} high priority
+                       </span>
+                     `
+                         : ''
+                     }
+                   </div>
+
+                   <!-- Quick Links -->
+                   <div class="flex items-center space-x-2 text-xs">
+                     ${
+                       project.stagingUrl
+                         ? `
+                       <a href="${project.stagingUrl}" target="_blank" rel="noopener noreferrer" 
+                          class="px-2 py-1 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition-colors flex items-center space-x-1">
+                         <i class="fas fa-external-link-alt"></i>
+                         <span>Staging</span>
+                       </a>
+                     `
+                         : ''
+                     }
+                     ${
+                       project.productionUrl
+                         ? `
+                       <a href="${project.productionUrl}" target="_blank" rel="noopener noreferrer" 
+                          class="px-2 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition-colors flex items-center space-x-1">
+                         <i class="fas fa-globe"></i>
+                         <span>Live</span>
+                       </a>
+                     `
+                         : ''
+                     }
+                     ${
+                       project.repositoryUrl
+                         ? `
+                       <a href="${project.repositoryUrl}" target="_blank" rel="noopener noreferrer" 
+                          class="px-2 py-1 bg-purple-500/20 text-purple-300 rounded hover:bg-purple-500/30 transition-colors flex items-center space-x-1">
+                         <i class="fab fa-github"></i>
+                         <span>Repo</span>
+                       </a>
+                     `
+                         : ''
+                     }
+                     ${
+                       project.documentationUrl
+                         ? `
+                       <a href="${project.documentationUrl}" target="_blank" rel="noopener noreferrer" 
+                          class="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded hover:bg-yellow-500/30 transition-colors flex items-center space-x-1">
+                         <i class="fas fa-book"></i>
+                         <span>Docs</span>
+                       </a>
+                     `
+                         : ''
+                     }
+                     {
+                       !project.stagingUrl && !project.productionUrl && !project.repositoryUrl && !project.documentationUrl
+                         ? `
+                       <span class="text-gray-500 italic">No links available</span>
+                     `
+                         : ''
+                     }
+                   </div>
                 </div>
               `;
               })
