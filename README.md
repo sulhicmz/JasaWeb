@@ -40,10 +40,8 @@ jasaweb/
 │   └── api/           # 🔧 NestJS client portal API
 ├── packages/
 │   ├── ui/            # 🎭 Shared UI components
-│   ├── config/        # ⚙️ Shared configurations
-│   └── testing/       # 🧪 Testing utilities
+│   └── config/        # ⚙️ Shared configurations
 ├── docs/              # 📚 Project documentation
-│   ├── archive/       # 📦 Historical documentation
 │   └── deployment/    # 🚀 Deployment guides
 ├── scripts/           # 🔧 Development and setup scripts
 ├── .github/           # 🤖 GitHub workflows & templates
@@ -528,9 +526,11 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 - [📄 Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
 - [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
 
-### Documentation Archive
+### Documentation Structure
 
-Historical documentation and implementation notes are available in [docs/archive/](./docs/archive/) for reference.
+- **Core Documentation**: Project specifications, implementation guides, and policies
+- **Deployment Guides**: Step-by-step deployment instructions for various platforms
+- **Security Documentation**: Comprehensive security policies and best practices
 
 ## 🐛 Troubleshooting
 
