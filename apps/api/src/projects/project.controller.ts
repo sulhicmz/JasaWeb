@@ -9,12 +9,10 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import {
-  ProjectService,
-  CreateProjectDto,
-  UpdateProjectDto,
-} from './project.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
+import { ProjectService } from './project.service';
+import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';

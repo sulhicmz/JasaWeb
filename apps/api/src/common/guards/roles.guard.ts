@@ -6,7 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '../decorators/roles.decorator';
+import { Role } from '../enums';
 import { PrismaService } from '../database/prisma.service';
 import { RequestWithAuth } from '../types/request';
 

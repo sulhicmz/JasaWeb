@@ -9,7 +9,8 @@ import {
   Req,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';

@@ -1,6 +1,7 @@
 import { Controller, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role, ProjectStatus, TicketStatus } from '../common/enums';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
@@ -185,7 +186,8 @@ export class DashboardController {
         project.tickets?.filter(
           (t: any) =>
             (t.priority === 'high' || t.priority === 'critical') &&
-            (t.status === 'open' || t.status === 'in-progress')
+            (t.status === TicketStatus.Open ||
+              t.status === TicketStatus.InProgress)
         ).length || 0;
 
       return {
@@ -216,10 +218,14 @@ export class DashboardController {
 
     const total = projects.length;
     const active = projects.filter(
-      (p) => p.status === 'active' || p.status === 'in-progress'
+      (p) => p.status === ProjectStatus.InProgress
     ).length;
-    const completed = projects.filter((p) => p.status === 'completed').length;
-    const onHold = projects.filter((p) => p.status === 'on-hold').length;
+    const completed = projects.filter(
+      (p) => p.status === ProjectStatus.Completed
+    ).length;
+    const onHold = projects.filter(
+      (p) => p.status === ProjectStatus.Paused
+    ).length;
 
     return { total, active, completed, onHold };
   }
@@ -232,16 +238,18 @@ export class DashboardController {
 
     const total = tickets.length;
     const open = tickets.filter((t) => t.status === 'open').length;
-    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
+    const inProgress = tickets.filter(
+      (t) => t.status === TicketStatus.InProgress
+    ).length;
     const highPriority = tickets.filter(
       (t) =>
         (t.priority === 'high' || t.priority === 'critical') &&
-        (t.status === 'open' || t.status === 'in-progress')
+        (t.status === TicketStatus.Open || t.status === TicketStatus.InProgress)
     ).length;
     const critical = tickets.filter(
       (t) =>
         t.priority === 'critical' &&
-        (t.status === 'open' || t.status === 'in-progress')
+        (t.status === TicketStatus.Open || t.status === TicketStatus.InProgress)
     ).length;
 
     return { total, open, inProgress, highPriority, critical };
@@ -418,7 +426,13 @@ export class DashboardController {
   ) {
     try {
       await this.dashboardGateway.broadcastDashboardUpdate({
-        type: body.type as 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice',
+        type: body.type as
+          | 'stats'
+          | 'activity'
+          | 'project'
+          | 'ticket'
+          | 'milestone'
+          | 'invoice',
         data: { ...body.data, userId },
         timestamp: new Date(),
         organizationId,

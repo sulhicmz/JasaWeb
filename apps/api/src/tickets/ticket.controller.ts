@@ -12,32 +12,17 @@ import {
   Logger,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { EmailService } from '../common/services/email.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
-
-// Define DTO for ticket creation/update
-interface CreateTicketDto {
-  title: string;
-  description: string;
-  type: string; // bug, feature, improvement, question, task
-  priority: string; // low, medium, high, critical
-  projectId?: string;
-}
-
-interface UpdateTicketDto {
-  title?: string;
-  description?: string;
-  type?: string;
-  priority?: string;
-  status?: string; // open, in-progress, in-review, resolved, closed
-  assigneeId?: string;
-}
+import { CreateTicketDto, UpdateTicketDto } from './dto/ticket.dto';
+import { TicketStatus } from '../common/enums';
 
 @Controller('tickets')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(RolesGuard)
 export class TicketController {
   private readonly logger = new Logger(TicketController.name);
 
@@ -48,12 +33,11 @@ export class TicketController {
 
   @UseGuards(ThrottlerGuard)
   @Post()
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance, Role.Member) // Allow multiple roles to create
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance, Role.Member)
   async create(
     @Body() createTicketDto: CreateTicketDto,
     @CurrentOrganizationId() organizationId: string
   ) {
-    // If a project is specified, validate that it belongs to the organization
     if (createTicketDto.projectId) {
       const project = await this.multiTenantPrisma.project.findUnique({
         where: { id: createTicketDto.projectId },
@@ -66,13 +50,11 @@ export class TicketController {
       }
     }
 
-    // Create the ticket
     const ticket = await this.multiTenantPrisma.ticket.create({
       data: {
         ...createTicketDto,
         organizationId,
-        status: 'open', // Default status
-        // Calculate SLA due date based on priority
+        status: TicketStatus.Open,
         slaDueAt: this.calculateSlaDueDate(createTicketDto.priority),
       },
       include: {
@@ -98,7 +80,6 @@ export class TicketController {
       },
     });
 
-    // Send notification email to the assigned user if any
     if ((ticket as any).assignee) {
       await this.emailService.sendTicketCreatedNotification(
         (ticket as any).assignee?.email,
@@ -116,15 +97,14 @@ export class TicketController {
   }
 
   @Get()
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed to read
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async findAll(
     @Query('projectId') projectId?: string,
-    @Query('status') status?: string,
+    @Query('status') status?: TicketStatus,
     @Query('assigneeId') assigneeId?: string,
     @CurrentOrganizationId() organizationId: string = ''
   ) {
-    // Build query based on filters
-    const whereClause: any = { organizationId }; // Ensure multi-tenant isolation
+    const whereClause: any = { organizationId };
 
     if (projectId) {
       whereClause.projectId = projectId;
@@ -138,7 +118,7 @@ export class TicketController {
       whereClause.assigneeId = assigneeId;
     }
 
-    return await this.multiTenantPrisma.ticket.findMany({
+    const tickets = await this.multiTenantPrisma.ticket.findMany({
       where: whereClause,
       include: {
         organization: {
@@ -161,12 +141,19 @@ export class TicketController {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
+
+    return {
+      tickets,
+      total: tickets.length,
+    };
   }
 
   @Get(':id')
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed to read
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async findOne(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
@@ -197,16 +184,7 @@ export class TicketController {
     });
 
     if (!ticket) {
-      throw new BadRequestException(
-        'Ticket not found or does not belong to your organization'
-      );
-    }
-
-    // Verify that the ticket belongs to the current organization
-    if (ticket.organizationId !== organizationId) {
-      throw new BadRequestException(
-        'Ticket does not belong to your organization'
-      );
+      throw new BadRequestException('Ticket not found');
     }
 
     return ticket;
@@ -214,45 +192,23 @@ export class TicketController {
 
   @UseGuards(ThrottlerGuard)
   @Patch(':id')
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Allow multiple roles to update
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async update(
     @Param('id') id: string,
     @Body() updateTicketDto: UpdateTicketDto,
     @CurrentOrganizationId() organizationId: string
   ) {
-    // Check if ticket exists and belongs to the organization
     const existingTicket = await this.multiTenantPrisma.ticket.findUnique({
       where: { id },
     });
 
     if (!existingTicket) {
-      throw new BadRequestException(
-        'Ticket not found or does not belong to your organization'
-      );
+      throw new BadRequestException('Ticket not found');
     }
 
-    // If updating the assignee, validate that the user exists
-    if (updateTicketDto.assigneeId) {
-      const assignee = await this.multiTenantPrisma.user.findUnique({
-        where: { id: updateTicketDto.assigneeId },
-      });
-
-      if (!assignee) {
-        throw new BadRequestException('Assignee user does not exist');
-      }
-    }
-
-    // Update the ticket
     const updatedTicket = await this.multiTenantPrisma.ticket.update({
       where: { id },
-      data: {
-        ...updateTicketDto,
-        // Update SLA due date if priority changed
-        ...(updateTicketDto.priority &&
-          existingTicket.priority !== updateTicketDto.priority && {
-            slaDueAt: this.calculateSlaDueDate(updateTicketDto.priority),
-          }),
-      },
+      data: updateTicketDto,
       include: {
         organization: {
           select: {
@@ -276,46 +232,6 @@ export class TicketController {
       },
     });
 
-    // If the assignee was updated, send notification email
-    if (
-      updateTicketDto.assigneeId &&
-      existingTicket.assigneeId !== updateTicketDto.assigneeId
-    ) {
-      const assigneeUser = await this.multiTenantPrisma.user.findUnique({
-        where: { id: updateTicketDto.assigneeId },
-      });
-
-      if (assigneeUser) {
-        await this.emailService.sendTicketCreatedNotification(
-          assigneeUser.email,
-          (updatedTicket as any).title,
-          (updatedTicket as any).project?.name || 'General',
-          (updatedTicket as any).description
-        );
-      }
-    }
-
-    // If the status was updated, send notification email
-    if (
-      updateTicketDto.status &&
-      existingTicket.status !== updateTicketDto.status
-    ) {
-      if (existingTicket.assigneeId) {
-        const assigneeUser = await this.multiTenantPrisma.user.findUnique({
-          where: { id: existingTicket.assigneeId },
-        });
-
-        if (assigneeUser) {
-          await this.emailService.sendTicketStatusChangedNotification(
-            assigneeUser.email,
-            updatedTicket.id,
-            (updatedTicket as any).title,
-            updatedTicket.status
-          );
-        }
-      }
-    }
-
     this.logger.log(
       `Ticket updated: ${(updatedTicket as any).title} for organization ${organizationId}`
     );
@@ -325,57 +241,38 @@ export class TicketController {
 
   @UseGuards(ThrottlerGuard)
   @Delete(':id')
-  @Roles(Role.OrgOwner, Role.OrgAdmin) // Only org owners and admins can delete
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
   async remove(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
   ) {
-    const ticket = await this.multiTenantPrisma.ticket.findUnique({
+    const existingTicket = await this.multiTenantPrisma.ticket.findUnique({
       where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-      },
     });
 
-    if (!ticket) {
-      throw new BadRequestException(
-        'Ticket not found or does not belong to your organization'
-      );
+    if (!existingTicket) {
+      throw new BadRequestException('Ticket not found');
     }
 
-    const deletedTicket = await this.multiTenantPrisma.ticket.delete({
+    await this.multiTenantPrisma.ticket.delete({
       where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-      },
     });
 
-    this.logger.log(
-      `Ticket deleted: ${(deletedTicket as any).title} for organization ${organizationId}`
-    );
+    this.logger.log(`Ticket deleted: ${id} for organization ${organizationId}`);
 
     return { message: 'Ticket deleted successfully' };
   }
 
-  /**
-   * Calculate SLA due date based on ticket priority
-   */
-  private calculateSlaDueDate(priority: string): Date {
+  private calculateSlaDueDate(priority: any): Date {
     const now = new Date();
-
-    // Define SLA timeframes (in hours) based on priority
-    const slaTimeframes: { [key: string]: number } = {
-      critical: 4, // 4 hours
-      high: 24, // 1 day
-      medium: 72, // 3 days
-      low: 168, // 1 week
+    const slaTimeframes: Record<any, number> = {
+      critical: 4,
+      high: 24,
+      medium: 72,
+      low: 168,
     };
 
-    const hoursToAdd = slaTimeframes[priority] || 168; // Default to 1 week for low priority
+    const hoursToAdd = slaTimeframes[priority] || 168;
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

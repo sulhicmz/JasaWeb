@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service';
 import { DateTime } from 'luxon';
+import {
+  ProjectStatus,
+  MilestoneStatus,
+  TaskStatus,
+  TicketPriority,
+  InvoiceStatus,
+} from '../common/enums';
 
 @Injectable()
 export class AnalyticsService {
@@ -46,14 +53,16 @@ export class AnalyticsService {
 
     const totalProjects = projects.length;
     const completedProjects = projects.filter(
-      (p: any) => p.status === 'completed'
+      (p: any) => p.status === ProjectStatus.Completed
     ).length;
     const inProgressProjects = projects.filter(
-      (p: any) => p.status === 'progress'
+      (p: any) => p.status === ProjectStatus.InProgress
     ).length;
     const overdueProjects = projects.filter(
       (p: any) =>
-        p.dueAt && new Date(p.dueAt) < new Date() && p.status !== 'completed'
+        p.dueAt &&
+        new Date(p.dueAt) < new Date() &&
+        p.status !== ProjectStatus.Completed
     ).length;
 
     // Calculate milestone completion
@@ -63,7 +72,9 @@ export class AnalyticsService {
     );
     const completedMilestones = projects.reduce(
       (sum: number, p: any) =>
-        sum + p.milestones.filter((m: any) => m.status === 'completed').length,
+        sum +
+        p.milestones.filter((m: any) => m.status === MilestoneStatus.Completed)
+          .length,
       0
     );
 
@@ -74,14 +85,17 @@ export class AnalyticsService {
     );
     const completedTasks = projects.reduce(
       (sum: number, p: any) =>
-        sum + p.tasks.filter((t: any) => t.status === 'completed').length,
+        sum +
+        p.tasks.filter((t: any) => t.status === TaskStatus.Completed).length,
       0
     );
 
     // Timeline adherence (projects completed on time)
     const completedOnTime = projects.filter(
       (p: any) =>
-        p.status === 'completed' && p.dueAt && p.updatedAt <= new Date(p.dueAt)
+        p.status === ProjectStatus.Completed &&
+        p.dueAt &&
+        p.updatedAt <= new Date(p.dueAt)
     ).length;
 
     return {
@@ -196,7 +210,7 @@ export class AnalyticsService {
     return users.map((user: any) => {
       const totalTasks = user.Task.length;
       const completedTasks = user.Task.filter(
-        (t: any) => t.status === 'completed'
+        (t: any) => t.status === TaskStatus.Completed
       ).length;
       const totalApprovals = user.approvals.length;
       const completedApprovals = user.approvals.filter(
@@ -374,11 +388,17 @@ export class AnalyticsService {
 
     // Calculate average resolution time (simplified - in real implementation, track resolution time)
     const criticalTickets = tickets.filter(
-      (t: any) => t.priority === 'critical'
+      (t: any) => t.priority === TicketPriority.Critical
     );
-    const highTickets = tickets.filter((t: any) => t.priority === 'high');
-    const mediumTickets = tickets.filter((t: any) => t.priority === 'medium');
-    const lowTickets = tickets.filter((t: any) => t.priority === 'low');
+    const highTickets = tickets.filter(
+      (t: any) => t.priority === TicketPriority.High
+    );
+    const mediumTickets = tickets.filter(
+      (t: any) => t.priority === TicketPriority.Medium
+    );
+    const lowTickets = tickets.filter(
+      (t: any) => t.priority === TicketPriority.Low
+    );
 
     // SLA compliance (tickets resolved within SLA)
     const slaCompliantTickets = resolvedTickets.filter(
@@ -560,13 +580,13 @@ export class AnalyticsService {
       this.prisma.project.count({
         where: {
           organizationId,
-          status: 'active',
+          status: ProjectStatus.InProgress,
         },
       }),
       this.prisma.project.count({
         where: {
           organizationId,
-          status: 'completed',
+          status: ProjectStatus.Completed,
         },
       }),
       this.prisma.ticket.count({

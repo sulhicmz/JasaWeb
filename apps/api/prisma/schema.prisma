@@ -10,6 +10,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums for type safety
+enum Role {
+  owner
+  admin
+  finance
+  reviewer
+  member
+  guest
+}
+
+enum ProjectStatus {
+  draft
+  progress
+  review
+  completed
+  paused
+  cancelled
+}
+
+enum MilestoneStatus {
+  todo
+  in_progress
+  completed
+  overdue
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  review
+  completed
+}
+
+enum TicketType {
+  bug
+  feature
+  improvement
+  question
+  task
+}
+
+enum TicketPriority {
+  low
+  medium
+  high
+  critical
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  in_review
+  resolved
+  closed
+}
+
+enum InvoiceStatus {
+  draft
+  issued
+  paid
+  overdue
+  cancelled
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ApprovalItemType {
+  page
+  content
+  design
+  feature
+}
+
+enum KbArticleStatus {
+  draft
+  published
+  archived
+}
+
 model User {
   id             String         @id @default(cuid())
   email          String         @unique
@@ -49,7 +132,7 @@ model Organization {
 
 model Membership {
   id             String       @id @default(cuid())
-  role           String // owner, admin, reviewer, finance, member
+  role           Role
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   userId         String
@@ -65,7 +148,7 @@ model Project {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   name           String
-  status         String // draft, progress, review, completed, paused, cancelled
+  status         ProjectStatus @default(draft)
   startAt        DateTime?
   dueAt          DateTime?
   createdAt      DateTime     @default(now())
@@ -79,14 +162,14 @@ model Project {
 }
 
 model Milestone {
-  id        String    @id @default(cuid())
+  id        String          @id @default(cuid())
   projectId String
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title     String
   dueAt     DateTime?
-  status    String // todo, in-progress, completed, overdue
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  status    MilestoneStatus @default(todo)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }
 
 model File {
@@ -105,65 +188,65 @@ model File {
 }
 
 model Approval {
-  id          String    @id @default(cuid())
+  id          String           @id @default(cuid())
   projectId   String
-  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  itemType    String // page, content, design, feature, etc.
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  itemType    ApprovalItemType
   itemId      String
-  status      String // pending, approved, rejected
+  status      ApprovalStatus   @default(pending)
   decidedById String?
-  decidedBy   User?     @relation(fields: [decidedById], references: [id])
+  decidedBy   User?            @relation(fields: [decidedById], references: [id])
   decidedAt   DateTime?
   note        String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model Task {
-  id         String    @id @default(cuid())
+  id         String      @id @default(cuid())
   projectId  String
-  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title      String
   assigneeId String?
-  assignee   User?     @relation(fields: [assigneeId], references: [id])
-  status     String // todo, in-progress, review, completed
+  assignee   User?       @relation(fields: [assigneeId], references: [id])
+  status     TaskStatus  @default(todo)
   dueAt      DateTime?
-  labels     String[]  @default([])
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  labels     String[]    @default([])
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 }
 
 model Ticket {
-  id             String       @id @default(cuid())
+  id             String           @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   projectId      String?
-  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  type           String // bug, feature, improvement, question, task
-  priority       String // low, medium, high, critical
-  status         String // open, in-progress, in-review, resolved, closed
+  project        Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type           TicketType
+  priority       TicketPriority
+  status         TicketStatus     @default(open)
   assigneeId     String?
-  assignee       User?        @relation(fields: [assigneeId], references: [id])
+  assignee       User?            @relation(fields: [assigneeId], references: [id])
   slaDueAt       DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model Invoice {
-  id             String       @id @default(cuid())
+  id             String         @id @default(cuid())
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   projectId      String?
-  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project        Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
   userId         String?
-  issuedBy       User?        @relation(fields: [userId], references: [id])
+  issuedBy       User?          @relation(fields: [userId], references: [id])
   amount         Float
-  currency       String // USD, EUR, etc.
+  currency       String         @default("USD")
   issuedAt       DateTime
   dueAt          DateTime
-  status         String // draft, issued, paid, overdue, cancelled
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  status         InvoiceStatus  @default(draft)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Session {
@@ -222,22 +305,22 @@ model KnowledgeBaseCategory {
 }
 
 model KbArticle {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   title       String
-  slug        String   @unique
-  content     String   // Rich text content
-  excerpt     String?  // Brief description for search results
-  status      String   // draft, published, archived
-  featured    Boolean  @default(false)
-  viewCount   Int      @default(0)
+  slug        String           @unique
+  content     String           // Rich text content
+  excerpt     String?          // Brief description for search results
+  status      KbArticleStatus  @default(draft)
+  featured    Boolean          @default(false)
+  viewCount   Int              @default(0)
   categoryId  String
   category    KnowledgeBaseCategory @relation(fields: [categoryId], references: [id])
   authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
+  author      User             @relation(fields: [authorId], references: [id])
   tags        KbTag[]
   feedback    KbFeedback[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   publishedAt DateTime?
 
   @@index([status])

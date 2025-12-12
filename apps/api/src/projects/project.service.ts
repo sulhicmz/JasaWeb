@@ -1,5 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import {
+  ProjectStatus,
+  MilestoneStatus,
+  ApprovalStatus,
+  TaskStatus,
+} from '../common/enums';
+import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 
 const projectRelationsInclude = {
   milestones: true,
@@ -42,20 +49,6 @@ const buildProjectQuery = (view: ProjectViewMode): ProjectQueryArgs =>
     ? { include: projectRelationsInclude }
     : { select: projectSummarySelect };
 
-export interface CreateProjectDto {
-  name: string;
-  status?: string;
-  startAt?: Date;
-  dueAt?: Date;
-}
-
-export interface UpdateProjectDto {
-  name?: string;
-  status?: string;
-  startAt?: Date;
-  dueAt?: Date;
-}
-
 @Injectable()
 export class ProjectService {
   constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
@@ -65,7 +58,7 @@ export class ProjectService {
       data: {
         ...createProjectDto,
         organizationId,
-        status: createProjectDto.status || 'draft',
+        status: createProjectDto.status || ProjectStatus.Draft,
       },
     });
   }
@@ -117,7 +110,7 @@ export class ProjectService {
     });
   }
 
-  async findByStatus(status: string, view: ProjectViewMode = 'summary') {
+  async findByStatus(status: ProjectStatus, view: ProjectViewMode = 'summary') {
     return this.multiTenantPrisma.project.findMany({
       where: { status },
       ...buildProjectQuery(view),
@@ -148,19 +141,19 @@ export class ProjectService {
         this.multiTenantPrisma.milestone.count({
           where: {
             projectId: id,
-            status: 'completed',
+            status: MilestoneStatus.Completed,
           },
         }),
         this.multiTenantPrisma.approval.count({
           where: {
             projectId: id,
-            status: 'pending',
+            status: ApprovalStatus.Pending,
           },
         }),
         this.multiTenantPrisma.task.count({
           where: {
             projectId: id,
-            status: 'completed',
+            status: TaskStatus.Completed,
           },
         }),
       ]);

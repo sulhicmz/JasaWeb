@@ -16,7 +16,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role, ProjectStatus, TicketStatus } from '../common/enums';
 import { RolesGuard } from '../common/guards/roles.guard';
 
 interface AuthenticatedSocket extends Socket {
@@ -288,10 +289,12 @@ export class DashboardGateway
 
     const total = projects.length;
     const active = projects.filter(
-      (p) => p.status === 'active' || p.status === 'in-progress'
+      (p) => p.status === ProjectStatus.InProgress
     ).length;
     const completed = projects.filter((p) => p.status === 'completed').length;
-    const onHold = projects.filter((p) => p.status === 'on-hold').length;
+    const onHold = projects.filter(
+      (p) => p.status === ProjectStatus.Paused
+    ).length;
 
     return { total, active, completed, onHold };
   }
@@ -304,16 +307,18 @@ export class DashboardGateway
 
     const total = tickets.length;
     const open = tickets.filter((t) => t.status === 'open').length;
-    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
+    const inProgress = tickets.filter(
+      (t) => t.status === TicketStatus.InProgress
+    ).length;
     const highPriority = tickets.filter(
       (t) =>
         (t.priority === 'high' || t.priority === 'critical') &&
-        (t.status === 'open' || t.status === 'in-progress')
+        (t.status === TicketStatus.Open || t.status === TicketStatus.InProgress)
     ).length;
     const critical = tickets.filter(
       (t) =>
         t.priority === 'critical' &&
-        (t.status === 'open' || t.status === 'in-progress')
+        (t.status === TicketStatus.Open || t.status === TicketStatus.InProgress)
     ).length;
 
     return { total, open, inProgress, highPriority, critical };
