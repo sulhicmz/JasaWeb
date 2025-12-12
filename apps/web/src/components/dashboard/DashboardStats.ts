@@ -49,16 +49,35 @@ class DashboardStatsComponent extends HTMLElement {
     this.render();
 
     try {
-      const response = await fetch('/api/dashboard/stats');
+      const response = await fetch('/api/dashboard/stats', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       this.stats = await response.json();
+
+      // Dispatch success event for parent components
+      this.dispatchEvent(
+        new CustomEvent('stats-updated', {
+          detail: { stats: this.stats, timestamp: new Date() },
+        })
+      );
     } catch (err) {
       this.error = err instanceof Error ? err.message : 'Failed to fetch stats';
       console.error('Error fetching dashboard stats:', err);
+
+      // Dispatch error event
+      this.dispatchEvent(
+        new CustomEvent('stats-error', {
+          detail: { error: this.error },
+        })
+      );
     } finally {
       this.loading = false;
       this.render();
