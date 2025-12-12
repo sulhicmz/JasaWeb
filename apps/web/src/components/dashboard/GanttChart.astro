@@ -1,0 +1,679 @@
+---
+interface GanttTask {
+  id: string;
+  title: string;
+  startDate: Date;
+  endDate: Date;
+  progress: number;
+  status: 'pending' | 'in-progress' | 'completed' | 'overdue';
+  dependencies?: string[];
+  assignee?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  type: 'milestone' | 'task' | 'deliverable';
+  projectId: string;
+  projectName: string;
+}
+
+interface GanttViewOptions {
+  timespan: 'week' | 'month' | 'quarter';
+  showWeekends: boolean;
+  groupBy: 'project' | 'assignee' | 'priority';
+  filterStatus: string[];
+}
+
+const { data, loading } = Astro.props;
+---
+
+<div class="gantt-chart-container bg-slate-900 rounded-xl p-6 border border-slate-800">
+  <!-- Header with Controls -->
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 space-y-4 lg:space-y-0">
+    <div>
+      <h2 class="text-xl font-bold text-white mb-2">Project Timeline</h2>
+      <p class="text-slate-400 text-sm">Visualize project schedules and dependencies</p>
+    </div>
+    
+    <!-- View Controls -->
+    <div class="flex flex-wrap gap-2">
+      <!-- Timespan Selector -->
+      <select id="timespanSelector" class="px-3 py-2 bg-slate-800 text-white rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="week">Week View</option>
+        <option value="month" selected>Month View</option>
+        <option value="quarter">Quarter View</option>
+      </select>
+      
+      <!-- Group By Selector -->
+      <select id="groupBySelector" class="px-3 py-2 bg-slate-800 text-white rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="project" selected>Group by Project</option>
+        <option value="assignee">Group by Assignee</option>
+        <option value="priority">Group by Priority</option>
+      </select>
+      
+      <!-- Filter Toggle -->
+      <button id="filterToggle" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-700 transition-colors">
+        <i class="fas fa-filter mr-2"></i>Filter
+      </button>
+      
+      <!-- Export Button -->
+      <button id="exportGantt" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+        <i class="fas fa-download mr-2"></i>Export
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Panel (Hidden by default) -->
+  <div id="filterPanel" class="hidden mb-6 p-4 bg-slate-800 rounded-lg border border-slate-700">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Status Filter</label>
+        <div class="space-y-2">
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="pending" class="mr-2 rounded text-blue-600" checked>
+            Pending
+          </label>
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="in-progress" class="mr-2 rounded text-blue-600" checked>
+            In Progress
+          </label>
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="completed" class="mr-2 rounded text-blue-600" checked>
+            Completed
+          </label>
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="overdue" class="mr-2 rounded text-blue-600" checked>
+            Overdue
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Priority Filter</label>
+        <div class="space-y-2">
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="critical" class="mr-2 rounded text-red-600" checked>
+            Critical
+          </label>
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="high" class="mr-2 rounded text-orange-600" checked>
+            High
+          </label>
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="medium" class="mr-2 rounded text-yellow-600" checked>
+            Medium
+          </label>
+          <label class="flex items-center text-sm text-slate-400">
+            <input type="checkbox" value="low" class="mr-2 rounded text-green-600" checked>
+            Low
+          </label>
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Date Range</label>
+        <div class="space-y-2">
+          <input type="date" id="startDateFilter" class="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none">
+          <input type="date" id="endDateFilter" class="w-full px-3 py-2 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="ganttLoading" class="hidden flex items-center justify-center h-64">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p class="text-slate-400">Loading project timeline...</p>
+    </div>
+  </div>
+
+  <!-- Gantt Chart -->
+  <div id="ganttChart" class="gantt-chart">
+    <!-- Timeline Header -->
+    <div class="gantt-header flex border-b border-slate-700 pb-2 mb-4">
+      <div class="task-info w-80 pr-4">
+        <h3 class="text-sm font-semibold text-slate-300">Task / Milestone</h3>
+      </div>
+      <div class="timeline-container flex-1 overflow-x-auto">
+        <div id="timelineHeader" class="timeline-header flex min-w-max">
+          <!-- Timeline dates will be generated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Rows -->
+    <div id="ganttRows" class="gantt-rows space-y-2">
+      <!-- Task rows will be generated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="mt-6 flex flex-wrap gap-4 text-xs">
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-blue-600 rounded mr-2"></div>
+      <span class="text-slate-400">In Progress</span>
+    </div>
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-green-600 rounded mr-2"></div>
+      <span class="text-slate-400">Completed</span>
+    </div>
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-yellow-600 rounded mr-2"></div>
+      <span class="text-slate-400">Pending</span>
+    </div>
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-red-600 rounded mr-2"></div>
+      <span class="text-slate-400">Overdue</span>
+    </div>
+    <div class="flex items-center">
+      <div class="w-4 h-4 bg-purple-600 rounded mr-2"></div>
+      <span class="text-slate-400">Milestone</span>
+    </div>
+  </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div id="taskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-slate-800 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-start mb-4">
+      <h3 id="modalTaskTitle" class="text-xl font-bold text-white"></h3>
+      <button id="closeModal" class="text-slate-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div id="modalTaskContent" class="space-y-4">
+      <!-- Task details will be populated by JavaScript -->
+    </div>
+    
+    <div class="mt-6 flex justify-end space-x-3">
+      <button id="editTaskBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+        <i class="fas fa-edit mr-2"></i>Edit Task
+      </button>
+      <button id="closeModalBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Gantt chart functionality
+  class GanttChart {
+    constructor() {
+      this.tasks = [];
+      this.viewOptions = {
+        timespan: 'month',
+        showWeekends: true,
+        groupBy: 'project',
+        filterStatus: ['pending', 'in-progress', 'completed', 'overdue']
+      };
+      this.startDate = new Date();
+      this.endDate = new Date();
+      this.init();
+    }
+
+    async init() {
+      this.setupEventListeners();
+      await this.loadTasks();
+      this.updateDateRange();
+      this.render();
+    }
+
+    setupEventListeners() {
+      // Timespan selector
+      document.getElementById('timespanSelector')?.addEventListener('change', (e) => {
+        this.viewOptions.timespan = e.target.value;
+        this.updateDateRange();
+        this.render();
+      });
+
+      // Group by selector
+      document.getElementById('groupBySelector')?.addEventListener('change', (e) => {
+        this.viewOptions.groupBy = e.target.value;
+        this.render();
+      });
+
+      // Filter toggle
+      document.getElementById('filterToggle')?.addEventListener('click', () => {
+        const panel = document.getElementById('filterPanel');
+        panel?.classList.toggle('hidden');
+      });
+
+      // Export button
+      document.getElementById('exportGantt')?.addEventListener('click', () => {
+        this.exportChart();
+      });
+
+      // Modal controls
+      document.getElementById('closeModal')?.addEventListener('click', () => {
+        this.closeTaskModal();
+      });
+
+      document.getElementById('closeModalBtn')?.addEventListener('click', () => {
+        this.closeTaskModal();
+      });
+
+      // Filter checkboxes
+      document.querySelectorAll('#filterPanel input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          this.updateFilters();
+          this.render();
+        });
+      });
+
+      // Date filters
+      document.getElementById('startDateFilter')?.addEventListener('change', () => {
+        this.updateFilters();
+        this.render();
+      });
+
+      document.getElementById('endDateFilter')?.addEventListener('change', () => {
+        this.updateFilters();
+        this.render();
+      });
+    }
+
+    async loadTasks() {
+      try {
+        // Show loading state
+        document.getElementById('ganttLoading')?.classList.remove('hidden');
+        
+        // Fetch tasks from API
+        const response = await fetch('/api/dashboard/gantt-tasks');
+        if (response.ok) {
+          this.tasks = await response.json();
+        } else {
+          // Fallback to mock data for demo
+          this.tasks = this.generateMockTasks();
+        }
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+        this.tasks = this.generateMockTasks();
+      } finally {
+        document.getElementById('ganttLoading')?.classList.add('hidden');
+      }
+    }
+
+    generateMockTasks() {
+      const now = new Date();
+      const tasks = [];
+
+      // Project 1: Website Development
+      tasks.push({
+        id: '1',
+        title: 'Discovery & Planning',
+        startDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
+        progress: 100,
+        status: 'completed',
+        type: 'milestone',
+        priority: 'high',
+        projectId: 'proj1',
+        projectName: 'Company Website'
+      });
+
+      tasks.push({
+        id: '2',
+        title: 'Design Phase',
+        startDate: new Date(now.getTime() - 19 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+        progress: 80,
+        status: 'in-progress',
+        type: 'task',
+        priority: 'high',
+        projectId: 'proj1',
+        projectName: 'Company Website',
+        dependencies: ['1']
+      });
+
+      tasks.push({
+        id: '3',
+        title: 'Development',
+        startDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000),
+        progress: 30,
+        status: 'in-progress',
+        type: 'task',
+        priority: 'critical',
+        projectId: 'proj1',
+        projectName: 'Company Website',
+        dependencies: ['2']
+      });
+
+      // Project 2: E-commerce Platform
+      tasks.push({
+        id: '4',
+        title: 'Requirements Gathering',
+        startDate: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+        progress: 100,
+        status: 'completed',
+        type: 'milestone',
+        priority: 'medium',
+        projectId: 'proj2',
+        projectName: 'E-commerce Platform'
+      });
+
+      tasks.push({
+        id: '5',
+        title: 'Database Design',
+        startDate: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+        progress: 60,
+        status: 'in-progress',
+        type: 'task',
+        priority: 'high',
+        projectId: 'proj2',
+        projectName: 'E-commerce Platform',
+        dependencies: ['4']
+      });
+
+      return tasks;
+    }
+
+    updateDateRange() {
+      const now = new Date();
+      switch (this.viewOptions.timespan) {
+        case 'week':
+          this.startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          this.endDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          this.startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          this.endDate = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+          break;
+        case 'quarter':
+          const currentQuarter = Math.floor(now.getMonth() / 3);
+          this.startDate = new Date(now.getFullYear(), currentQuarter * 3 - 3, 1);
+          this.endDate = new Date(now.getFullYear(), (currentQuarter + 2) * 3, 0);
+          break;
+      }
+    }
+
+    updateFilters() {
+      // Update status filters
+      const statusCheckboxes = document.querySelectorAll('#filterPanel input[type="checkbox"][value*="pending"], #filterPanel input[type="checkbox"][value*="in-progress"], #filterPanel input[type="checkbox"][value*="completed"], #filterPanel input[type="checkbox"][value*="overdue"]');
+      this.viewOptions.filterStatus = Array.from(statusCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      // Apply date filters if set
+      const startDateFilter = document.getElementById('startDateFilter')?.value;
+      const endDateFilter = document.getElementById('endDateFilter')?.value;
+      
+      if (startDateFilter) {
+        this.startDate = new Date(startDateFilter);
+      }
+      if (endDateFilter) {
+        this.endDate = new Date(endDateFilter);
+      }
+    }
+
+    render() {
+      this.renderTimelineHeader();
+      this.renderTaskRows();
+    }
+
+    renderTimelineHeader() {
+      const header = document.getElementById('timelineHeader');
+      if (!header) return;
+
+      header.innerHTML = '';
+      const totalDays = Math.ceil((this.endDate - this.startDate) / (1000 * 60 * 60 * 24));
+      const dayWidth = Math.max(40, 800 / totalDays);
+
+      for (let d = new Date(this.startDate); d <= this.endDate; d.setDate(d.getDate() + 1)) {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'timeline-day flex-shrink-0 text-center text-xs text-slate-400 border-l border-slate-700';
+        dayElement.style.width = `${dayWidth}px`;
+        dayElement.style.minHeight = '40px';
+        
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        if (isWeekend && !this.viewOptions.showWeekends) {
+          dayElement.classList.add('bg-slate-800/50');
+        }
+        
+        dayElement.innerHTML = `
+          <div class="font-semibold">${d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+          <div>${d.getDate()}</div>
+        `;
+        
+        header.appendChild(dayElement);
+      }
+    }
+
+    renderTaskRows() {
+      const container = document.getElementById('ganttRows');
+      if (!container) return;
+
+      container.innerHTML = '';
+      
+      // Group tasks based on selected grouping
+      const groupedTasks = this.groupTasks(this.getFilteredTasks());
+      
+      Object.entries(groupedTasks).forEach(([groupName, tasks]) => {
+        // Add group header
+        const groupHeader = document.createElement('div');
+        groupHeader.className = 'group-header flex items-center py-2 border-b border-slate-700';
+        groupHeader.innerHTML = `
+          <div class="task-info w-80 pr-4">
+            <h4 class="text-sm font-semibold text-slate-300">${groupName}</h4>
+          </div>
+          <div class="timeline-container flex-1">
+            <div class="text-xs text-slate-500">${tasks.length} tasks</div>
+          </div>
+        `;
+        container.appendChild(groupHeader);
+
+        // Add task rows
+        tasks.forEach(task => {
+          const taskRow = this.createTaskRow(task);
+          container.appendChild(taskRow);
+        });
+      });
+    }
+
+    getFilteredTasks() {
+      return this.tasks.filter(task => {
+        // Status filter
+        if (!this.viewOptions.filterStatus.includes(task.status)) {
+          return false;
+        }
+
+        // Priority filter
+        const priorityCheckboxes = document.querySelectorAll('#filterPanel input[type="checkbox"][value*="critical"], #filterPanel input[type="checkbox"][value*="high"], #filterPanel input[type="checkbox"][value*="medium"], #filterPanel input[type="checkbox"][value*="low"]');
+        const selectedPriorities = Array.from(priorityCheckboxes)
+          .filter(cb => cb.checked)
+          .map(cb => cb.value);
+        
+        if (!selectedPriorities.includes(task.priority)) {
+          return false;
+        }
+
+        // Date range filter
+        if (task.endDate < this.startDate || task.startDate > this.endDate) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    groupTasks(tasks) {
+      const grouped = {};
+      
+      tasks.forEach(task => {
+        let groupKey;
+        switch (this.viewOptions.groupBy) {
+          case 'project':
+            groupKey = task.projectName || 'Unassigned';
+            break;
+          case 'assignee':
+            groupKey = task.assignee || 'Unassigned';
+            break;
+          case 'priority':
+            groupKey = task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
+            break;
+          default:
+            groupKey = 'All Tasks';
+        }
+        
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = [];
+        }
+        grouped[groupKey].push(task);
+      });
+
+      return grouped;
+    }
+
+    createTaskRow(task) {
+      const row = document.createElement('div');
+      row.className = 'task-row flex items-center py-2 hover:bg-slate-800/50 rounded cursor-pointer transition-colors';
+      
+      const totalDays = Math.ceil((this.endDate - this.startDate) / (1000 * 60 * 60 * 24));
+      const dayWidth = Math.max(40, 800 / totalDays);
+      
+      const startOffset = Math.ceil((task.startDate - this.startDate) / (1000 * 60 * 60 * 24));
+      const duration = Math.ceil((task.endDate - task.startDate) / (1000 * 60 * 60 * 24)) + 1;
+      
+      const statusColors = {
+        'pending': 'bg-yellow-600',
+        'in-progress': 'bg-blue-600',
+        'completed': 'bg-green-600',
+        'overdue': 'bg-red-600'
+      };
+
+      const priorityIndicators = {
+        'critical': 'border-red-500',
+        'high': 'border-orange-500',
+        'medium': 'border-yellow-500',
+        'low': 'border-green-500'
+      };
+
+      row.innerHTML = `
+        <div class="task-info w-80 pr-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 rounded-full ${priorityIndicators[task.priority]}"></div>
+            <div>
+              <div class="text-sm font-medium text-white">${task.title}</div>
+              <div class="text-xs text-slate-400">${task.projectName}</div>
+            </div>
+          </div>
+        </div>
+        <div class="timeline-container flex-1 relative">
+          <div class="absolute inset-0 flex items-center">
+            <div 
+              class="task-bar ${statusColors[task.status]} rounded h-6 flex items-center px-2 text-xs text-white font-medium border-l-4 ${priorityIndicators[task.priority]} hover:opacity-80 transition-opacity"
+              style="margin-left: ${startOffset * dayWidth}px; width: ${duration * dayWidth}px; min-width: 60px;"
+            >
+              <span class="truncate">${task.progress}%</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      row.addEventListener('click', () => this.showTaskModal(task));
+      
+      return row;
+    }
+
+    showTaskModal(task) {
+      const modal = document.getElementById('taskModal');
+      const title = document.getElementById('modalTaskTitle');
+      const content = document.getElementById('modalTaskContent');
+
+      if (title && content) {
+        title.textContent = task.title;
+        
+        content.innerHTML = `
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Project</label>
+              <p class="text-white">${task.projectName}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Status</label>
+              <span class="px-2 py-1 bg-slate-700 text-white rounded text-sm">${task.status}</span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Priority</label>
+              <span class="px-2 py-1 bg-slate-700 text-white rounded text-sm">${task.priority}</span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Type</label>
+              <span class="px-2 py-1 bg-slate-700 text-white rounded text-sm">${task.type}</span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">Start Date</label>
+              <p class="text-white">${task.startDate.toLocaleDateString()}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-400 mb-1">End Date</label>
+              <p class="text-white">${task.endDate.toLocaleDateString()}</p>
+            </div>
+            <div class="col-span-2">
+              <label class="block text-sm font-medium text-slate-400 mb-1">Progress</label>
+              <div class="w-full bg-slate-700 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: ${task.progress}%"></div>
+              </div>
+              <p class="text-sm text-slate-400 mt-1">${task.progress}% complete</p>
+            </div>
+            ${task.dependencies && task.dependencies.length > 0 ? `
+              <div class="col-span-2">
+                <label class="block text-sm font-medium text-slate-400 mb-1">Dependencies</label>
+                <p class="text-white">${task.dependencies.join(', ')}</p>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      modal?.classList.remove('hidden');
+    }
+
+    closeTaskModal() {
+      document.getElementById('taskModal')?.classList.add('hidden');
+    }
+
+    exportChart() {
+      // Simple export to CSV functionality
+      const csvContent = this.tasks.map(task => [
+        task.title,
+        task.projectName,
+        task.status,
+        task.priority,
+        task.startDate.toLocaleDateString(),
+        task.endDate.toLocaleDateString(),
+        `${task.progress}%`
+      ].join(',')).join('\n');
+
+      const blob = new Blob([`Title,Project,Status,Priority,Start Date,End Date,Progress\n${csvContent}`], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gantt-chart-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+  }
+
+  // Initialize Gantt chart when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    new GanttChart();
+  });
+
+  // Handle real-time updates
+  if (window.notificationService) {
+    window.notificationService.on({
+      onRealtimeNotification: (notification) => {
+        if (notification.type === 'project-update' || notification.type === 'milestone-update') {
+          // Refresh Gantt chart data
+          const ganttChart = window.ganttChart;
+          if (ganttChart) {
+            ganttChart.loadTasks().then(() => ganttChart.render());
+          }
+        }
+      }
+    });
+  }
+</script>

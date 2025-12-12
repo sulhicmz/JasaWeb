@@ -5,6 +5,7 @@ import {
   HttpHealthIndicator,
 } from '@nestjs/terminus';
 import { PrismaHealthIndicator } from './prisma.health';
+import { DatabaseValidationService } from '../common/services/database-validation.service';
 import { Public } from '../common/decorators/public.decorator';
 
 @Controller('health')
@@ -14,7 +15,8 @@ export class HealthController {
   constructor(
     private health: HealthCheckService,
     private http: HttpHealthIndicator,
-    private prismaHealthIndicator: PrismaHealthIndicator
+    private prismaHealthIndicator: PrismaHealthIndicator,
+    private databaseValidationService: DatabaseValidationService
   ) {}
 
   @Get()
@@ -41,8 +43,16 @@ export class HealthController {
   @Public()
   async databaseCheck() {
     try {
+      const dbHealth = await this.databaseValidationService.getDatabaseHealth();
+
       return await this.health.check([
         () => this.prismaHealthIndicator.isHealthy('database'),
+        () => ({
+          database: {
+            status: dbHealth.status === 'healthy' ? 'up' : 'down',
+            details: dbHealth.details,
+          },
+        }),
       ]);
     } catch (error: unknown) {
       const message = this.getErrorMessage(error);

@@ -17,7 +17,7 @@ export default defineConfig({
       },
     },
   ],
-  testDir: './tests/e2e',
+  testDir: './apps/web/test',
   outputDir: './test-results',
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],

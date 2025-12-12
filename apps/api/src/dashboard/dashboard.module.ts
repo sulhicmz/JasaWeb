@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
+import { GanttController } from './gantt.controller';
 import { DashboardGateway } from './dashboard.gateway';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -22,12 +23,12 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN || '60m',
+        expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
       },
     }),
     MultiTenantPrismaModule,
   ],
-  controllers: [DashboardController],
+  controllers: [DashboardController, GanttController],
   providers: [DashboardGateway],
   exports: [DashboardGateway],
 })
