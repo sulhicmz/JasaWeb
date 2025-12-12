@@ -1,0 +1,178 @@
+---
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import ProjectAnalyticsCharts from '../components/analytics/ProjectAnalyticsCharts.astro';
+import ProjectHealthScore from '../components/analytics/ProjectHealthScore.astro';
+import ProjectForecast from '../components/analytics/ProjectForecast.astro';
+import TeamProductivity from '../components/analytics/TeamProductivity.astro';
+import ProjectRecommendations from '../components/analytics/ProjectRecommendations.astro';
+---
+
+<DashboardLayout title="Project Analytics - Client Portal">
+  <div class="min-h-screen bg-slate-950">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-white">Project Analytics</h1>
+            <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-medium">
+              Advanced Insights
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <!-- Project Selector -->
+            <select id="projectSelector" class="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+              <option value="project1">Website Redesign</option>
+              <option value="project2">Mobile App Development</option>
+              <option value="project3">E-commerce Platform</option>
+            </select>
+            
+            <!-- Time Range Selector -->
+            <select id="timeRangeSelector" class="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+              <option value="7d">Last 7 Days</option>
+              <option value="30d" selected>Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="1y">Last Year</option>
+            </select>
+            
+            <!-- Export Button -->
+            <button id="exportBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+              <i class="fas fa-download"></i>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+      <!-- Health Score Overview -->
+      <section class="mb-8">
+        <ProjectHealthScore client:load />
+      </section>
+
+      <!-- Analytics Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Performance Trends -->
+        <section>
+          <ProjectAnalyticsCharts client:load chartType="performance" />
+        </section>
+
+        <!-- Budget & Timeline -->
+        <section>
+          <ProjectAnalyticsCharts client:load chartType="budget-timeline" />
+        </section>
+      </div>
+
+      <!-- Forecast and Risk Assessment -->
+      <section class="mb-8">
+        <ProjectForecast client:load />
+      </section>
+
+      <!-- Team Productivity and Recommendations -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Team Productivity -->
+        <section>
+          <TeamProductivity client:load />
+        </section>
+
+        <!-- Recommendations -->
+        <section>
+          <ProjectRecommendations client:load />
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Project analytics functionality
+    let currentProject = 'project1';
+    let currentTimeRange = '30d';
+    let analyticsData = null;
+
+    // Load analytics data
+    async function loadAnalyticsData() {
+      try {
+        const response = await fetch(`/api/analytics/projects?projectId=${currentProject}&timeRange=${currentTimeRange}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        
+        if (response.ok) {
+          analyticsData = await response.json();
+          updateAnalyticsDisplay();
+        } else {
+          console.error('Failed to load analytics data');
+        }
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      }
+    }
+
+    // Update display with new data
+    function updateAnalyticsDisplay() {
+      if (!analyticsData) return;
+
+      // Dispatch custom events to update components
+      window.dispatchEvent(new CustomEvent('analytics-updated', {
+        detail: analyticsData
+      }));
+    }
+
+    // Export analytics data
+    async function exportAnalytics() {
+      if (!analyticsData) {
+        await loadAnalyticsData();
+      }
+
+      const exportData = {
+        project: currentProject,
+        timeRange: currentTimeRange,
+        exportedAt: new Date().toISOString(),
+        data: analyticsData,
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json',
+      });
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `project-analytics-${currentProject}-${currentTimeRange}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize analytics page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load initial data
+      loadAnalyticsData();
+
+      // Set up event listeners
+      document.getElementById('projectSelector')?.addEventListener('change', (e) => {
+        currentProject = e.target.value;
+        loadAnalyticsData();
+      });
+
+      document.getElementById('timeRangeSelector')?.addEventListener('change', (e) => {
+        currentTimeRange = e.target.value;
+        loadAnalyticsData();
+      });
+
+      document.getElementById('exportBtn')?.addEventListener('click', exportAnalytics);
+
+      // Auto-refresh every 5 minutes
+      setInterval(loadAnalyticsData, 5 * 60 * 1000);
+    });
+
+    // Listen for real-time updates
+    window.addEventListener('project-updated', () => {
+      loadAnalyticsData();
+    });
+  </script>
+</DashboardLayout>

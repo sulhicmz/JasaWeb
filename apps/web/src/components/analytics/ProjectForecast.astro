@@ -1,0 +1,279 @@
+---
+import { projectAnalyticsService } from '../../services/projectAnalyticsService.ts';
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Project Forecast</h2>
+    <div id="forecastLoading" class="hidden">
+      <i class="fas fa-spinner fa-spin text-blue-400"></i>
+    </div>
+  </div>
+
+  <!-- Forecast Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Expected Completion -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-sm text-gray-400 mb-2">Expected Completion</div>
+      <div id="expectedCompletion" class="text-lg font-bold text-white">--</div>
+      <div id="completionConfidence" class="text-sm mt-1">
+        <span class="text-gray-400">Confidence:</span>
+        <span id="confidenceValue" class="text-white font-medium">--%</span>
+      </div>
+    </div>
+
+    <!-- Timeline Variance -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-sm text-gray-400 mb-2">Timeline Variance</div>
+      <div id="timelineVariance" class="text-lg font-bold text-white">--</div>
+      <div id="varianceDirection" class="text-sm mt-1">
+        <i class="fas fa-minus text-gray-400"></i>
+        <span id="varianceText" class="text-gray-400">On track</span>
+      </div>
+    </div>
+
+    <!-- Budget Projection -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-sm text-gray-400 mb-2">Budget Projection</div>
+      <div id="budgetProjection" class="text-lg font-bold text-white">--</div>
+      <div id="budgetStatus" class="text-sm mt-1">
+        <span id="budgetStatusText" class="text-gray-400">Within budget</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Factors -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+      <i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>
+      Risk Factors
+    </h3>
+    <div id="riskFactors" class="space-y-2">
+      <!-- Risk factors will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Recommended Actions -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+      <i class="fas fa-lightbulb text-blue-400 mr-2"></i>
+      Recommended Actions
+    </h3>
+    <div id="recommendedActions" class="space-y-3">
+      <!-- Recommendations will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Forecast Chart -->
+  <div class="bg-slate-800/30 rounded-lg p-4">
+    <h3 class="text-sm font-semibold text-white mb-3">Completion Probability</h3>
+    <canvas id="forecastChart" width="400" height="200"></canvas>
+  </div>
+</div>
+
+<script>
+  let forecastData = null;
+  let forecastChart = null;
+
+  // Update forecast display
+  function updateForecast(data) {
+    forecastData = data;
+    const forecast = data.forecast;
+
+    // Update expected completion
+    const completionDate = new Date(forecast.expectedCompletion);
+    document.getElementById('expectedCompletion').textContent = projectAnalyticsService.formatDate(forecast.expectedCompletion);
+    
+    // Update confidence
+    const confidenceValue = document.getElementById('confidenceValue');
+    confidenceValue.textContent = `${forecast.confidence}%`;
+    
+    // Color code confidence
+    if (forecast.confidence >= 80) {
+      confidenceValue.className = 'text-green-400 font-medium';
+    } else if (forecast.confidence >= 60) {
+      confidenceValue.className = 'text-yellow-400 font-medium';
+    } else {
+      confidenceValue.className = 'text-red-400 font-medium';
+    }
+
+    // Update timeline variance
+    const varianceEl = document.getElementById('timelineVariance');
+    const varianceDirection = document.getElementById('varianceDirection');
+    const varianceText = document.getElementById('varianceText');
+    
+    varianceEl.textContent = `${Math.abs(forecast.timelineVariance)}%`;
+    
+    if (forecast.timelineVariance > 0) {
+      varianceEl.className = 'text-lg font-bold text-red-400';
+      varianceDirection.innerHTML = '<i class="fas fa-arrow-up text-red-400"></i>';
+      varianceText.textContent = 'Behind schedule';
+      varianceText.className = 'text-red-400';
+    } else if (forecast.timelineVariance < -10) {
+      varianceEl.className = 'text-lg font-bold text-green-400';
+      varianceDirection.innerHTML = '<i class="fas fa-arrow-down text-green-400"></i>';
+      varianceText.textContent = 'Ahead of schedule';
+      varianceText.className = 'text-green-400';
+    } else {
+      varianceEl.className = 'text-lg font-bold text-white';
+      varianceDirection.innerHTML = '<i class="fas fa-minus text-gray-400"></i>';
+      varianceText.textContent = 'On track';
+      varianceText.className = 'text-gray-400';
+    }
+
+    // Update budget projection
+    const budgetProjection = document.getElementById('budgetProjection');
+    const budgetStatus = document.getElementById('budgetStatusText');
+    
+    budgetProjection.textContent = projectAnalyticsService.formatCurrency(forecast.budgetProjection);
+    
+    if (forecast.budgetProjection > 100) {
+      budgetProjection.className = 'text-lg font-bold text-red-400';
+      budgetStatus.textContent = 'Over budget';
+      budgetStatus.className = 'text-red-400';
+    } else if (forecast.budgetProjection > 90) {
+      budgetProjection.className = 'text-lg font-bold text-yellow-400';
+      budgetStatus.textContent = 'Near budget limit';
+      budgetStatus.className = 'text-yellow-400';
+    } else {
+      budgetProjection.className = 'text-lg font-bold text-green-400';
+      budgetStatus.textContent = 'Within budget';
+      budgetStatus.className = 'text-green-400';
+    }
+
+    // Update risk factors
+    updateRiskFactors(forecast.riskFactors);
+    
+    // Update recommended actions
+    updateRecommendedActions(forecast.recommendedActions);
+    
+    // Update forecast chart
+    updateForecastChart(forecast);
+  }
+
+  // Update risk factors display
+  function updateRiskFactors(riskFactors) {
+    const container = document.getElementById('riskFactors');
+    
+    if (riskFactors.length === 0) {
+      container.innerHTML = '<div class="text-green-400 text-sm">✅ No significant risk factors identified</div>';
+      return;
+    }
+
+    container.innerHTML = riskFactors.map(risk => `
+      <div class="flex items-center p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <i class="fas fa-exclamation-circle text-red-400 mr-3"></i>
+        <span class="text-red-300 text-sm">${risk}</span>
+      </div>
+    `).join('');
+  }
+
+  // Update recommended actions display
+  function updateRecommendedActions(actions) {
+    const container = document.getElementById('recommendedActions');
+    
+    if (actions.length === 0) {
+      container.innerHTML = '<div class="text-gray-400 text-sm">No specific actions required at this time</div>';
+      return;
+    }
+
+    container.innerHTML = actions.map((action, index) => `
+      <div class="flex items-start p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+        <div class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3">
+          ${index + 1}
+        </div>
+        <span class="text-blue-300 text-sm">${action}</span>
+      </div>
+    `).join('');
+  }
+
+  // Update forecast chart
+  function updateForecastChart(forecast) {
+    const canvas = document.getElementById('forecastChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear previous chart
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Create simple probability distribution
+    const data = [
+      { date: 'Week 1', probability: 10 },
+      { date: 'Week 2', probability: 25 },
+      { date: 'Week 3', probability: 45 },
+      { date: 'Week 4', probability: 70 },
+      { date: 'Week 5', probability: forecast.confidence },
+      { date: 'Week 6', probability: Math.max(forecast.confidence - 10, 60) },
+      { date: 'Week 7+', probability: Math.max(forecast.confidence - 20, 40) },
+    ];
+
+    // Simple bar chart
+    const barWidth = 40;
+    const barSpacing = 15;
+    const maxHeight = 150;
+    const startX = 30;
+    const startY = 170;
+
+    data.forEach((item, index) => {
+      const x = startX + (index * (barWidth + barSpacing));
+      const height = (item.probability / 100) * maxHeight;
+      const y = startY - height;
+
+      // Draw bar
+      ctx.fillStyle = item.probability >= 70 ? '#10b981' : 
+                     item.probability >= 50 ? '#f59e0b' : '#ef4444';
+      ctx.fillRect(x, y, barWidth, height);
+
+      // Draw label
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.date, x + barWidth / 2, startY + 15);
+
+      // Draw value
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(`${item.probability}%`, x + barWidth / 2, y - 5);
+    });
+
+    // Draw axis
+    ctx.strokeStyle = '#4b5563';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX - 5, startY);
+    ctx.lineTo(startX + (data.length * (barWidth + barSpacing)), startY);
+    ctx.stroke();
+  }
+
+  // Load forecast data
+  async function loadForecast() {
+    const loadingEl = document.getElementById('forecastLoading');
+    loadingEl.classList.remove('hidden');
+
+    try {
+      // Get current project from URL or default
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project') || 'project1';
+      
+      const data = await projectAnalyticsService.getProjectForecast(projectId);
+      updateForecast(data);
+    } catch (error) {
+      console.error('Error loading forecast:', error);
+    } finally {
+      loadingEl.classList.add('hidden');
+    }
+  }
+
+  // Listen for analytics updates
+  window.addEventListener('analytics-updated', (event) => {
+    if (event.detail.forecast) {
+      updateForecast(event.detail);
+    }
+  });
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadForecast();
+  });
+
+  // Refresh every 5 minutes
+  setInterval(loadForecast, 5 * 60 * 1000);
+</script>

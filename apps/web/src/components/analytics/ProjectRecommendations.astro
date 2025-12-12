@@ -1,0 +1,341 @@
+---
+import { projectAnalyticsService } from '../../services/projectAnalyticsService.ts';
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Recommendations</h2>
+    <div id="recommendationsLoading" class="hidden">
+      <i class="fas fa-spinner fa-spin text-blue-400"></i>
+    </div>
+  </div>
+
+  <!-- Priority Actions -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+      <i class="fas fa-fire text-orange-400 mr-2"></i>
+      Priority Actions
+    </h3>
+    <div id="priorityActions" class="space-y-3">
+      <!-- Priority actions will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Improvement Opportunities -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+      <i class="fas fa-chart-line text-green-400 mr-2"></i>
+      Improvement Opportunities
+    </h3>
+    <div id="improvementOpportunities" class="space-y-3">
+      <!-- Opportunities will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Best Practices -->
+  <div class="mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+      <i class="fas fa-graduation-cap text-blue-400 mr-2"></i>
+      Best Practices to Implement
+    </h3>
+    <div id="bestPractices" class="space-y-3">
+      <!-- Best practices will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Action Items -->
+  <div class="bg-slate-800/30 rounded-lg p-4">
+    <h3 class="text-sm font-semibold text-white mb-3">Quick Action Items</h3>
+    <div id="quickActions" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <!-- Quick actions will be populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<script>
+  let recommendationsData = null;
+
+  // Update recommendations display
+  function updateRecommendations(data) {
+    recommendationsData = data;
+    
+    // Update priority actions
+    updatePriorityActions(data.recommendations);
+    
+    // Generate improvement opportunities
+    generateImprovementOpportunities(data.metrics);
+    
+    // Generate best practices
+    generateBestPractices(data.metrics);
+    
+    // Generate quick actions
+    generateQuickActions(data.recommendations, data.metrics);
+  }
+
+  // Update priority actions
+  function updatePriorityActions(recommendations) {
+    const container = document.getElementById('priorityActions');
+    
+    if (recommendations.length === 0) {
+      container.innerHTML = '<div class="text-green-400 text-sm">✅ No priority actions required</div>';
+      return;
+    }
+
+    container.innerHTML = recommendations.slice(0, 3).map((action, index) => `
+      <div class="flex items-start p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <div class="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+          ${index + 1}
+        </div>
+        <div class="flex-1">
+          <p class="text-red-300 text-sm font-medium">${action}</p>
+          <div class="mt-2 flex items-center space-x-3">
+            <button onclick="implementAction('${action}')" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition-colors">
+              Implement Now
+            </button>
+            <button onclick="scheduleAction('${action}')" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded transition-colors">
+              Schedule
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Generate improvement opportunities
+  function generateImprovementOpportunities(metrics) {
+    const container = document.getElementById('improvementOpportunities');
+    const opportunities = [];
+
+    if (metrics.performanceScore < 70) {
+      opportunities.push({
+        title: 'Enhance Team Performance',
+        description: 'Implement performance optimization strategies and provide additional training',
+        impact: 'High',
+        effort: 'Medium',
+      });
+    }
+
+    if (metrics.timelineAdherence < 80) {
+      opportunities.push({
+        title: 'Improve Timeline Management',
+        description: 'Review project scheduling and implement better milestone tracking',
+        impact: 'High',
+        effort: 'Low',
+      });
+    }
+
+    if (metrics.teamProductivity < 75) {
+      opportunities.push({
+        title: 'Boost Team Productivity',
+        description: 'Identify and remove productivity blockers, optimize workflows',
+        impact: 'Medium',
+        effort: 'Medium',
+      });
+    }
+
+    if (metrics.avgResolutionTime > 48) {
+      opportunities.push({
+        title: 'Accelerate Issue Resolution',
+        description: 'Streamline ticket resolution process and improve response times',
+        impact: 'Medium',
+        effort: 'Low',
+      });
+    }
+
+    if (opportunities.length === 0) {
+      container.innerHTML = '<div class="text-gray-400 text-sm">Continue current practices - all metrics are performing well</div>';
+      return;
+    }
+
+    container.innerHTML = opportunities.map(opp => `
+      <div class="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+        <div class="flex items-start justify-between mb-2">
+          <h4 class="text-green-300 font-medium text-sm">${opp.title}</h4>
+          <div class="flex space-x-2">
+            <span class="px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded">
+              Impact: ${opp.impact}
+            </span>
+            <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">
+              Effort: ${opp.effort}
+            </span>
+          </div>
+        </div>
+        <p class="text-gray-300 text-sm mb-3">${opp.description}</p>
+        <button onclick="exploreOpportunity('${opp.title}')" class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition-colors">
+          Explore Solution
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // Generate best practices
+  function generateBestPractices(metrics) {
+    const container = document.getElementById('bestPractices');
+    const practices = [
+      {
+        title: 'Daily Standup Meetings',
+        description: 'Keep team aligned and identify blockers early',
+        implemented: metrics.teamProductivity > 70,
+      },
+      {
+        title: 'Weekly Progress Reviews',
+        description: 'Review milestones and adjust timelines as needed',
+        implemented: metrics.timelineAdherence > 75,
+      },
+      {
+        title: 'Regular Client Updates',
+        description: 'Maintain transparency and manage expectations',
+        implemented: metrics.healthScore > 70,
+      },
+      {
+        title: 'Automated Quality Checks',
+        description: 'Implement automated testing and code reviews',
+        implemented: metrics.performanceScore > 75,
+      },
+    ];
+
+    container.innerHTML = practices.map(practice => `
+      <div class="flex items-center p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+        <div class="flex-shrink-0 mr-3">
+          ${practice.implemented 
+            ? '<i class="fas fa-check-circle text-green-400 text-lg"></i>'
+            : '<i class="far fa-circle text-gray-400 text-lg"></i>'
+          }
+        </div>
+        <div class="flex-1">
+          <h4 class="text-blue-300 font-medium text-sm">${practice.title}</h4>
+          <p class="text-gray-400 text-xs">${practice.description}</p>
+        </div>
+        ${!practice.implemented ? `
+          <button onclick="implementPractice('${practice.title}')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded transition-colors">
+            Implement
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
+  }
+
+  // Generate quick actions
+  function generateQuickActions(recommendations, metrics) {
+    const container = document.getElementById('quickActions');
+    const actions = [
+      {
+        title: 'Schedule Team Meeting',
+        description: 'Discuss current project status',
+        icon: 'fas fa-users',
+        color: 'blue',
+      },
+      {
+        title: 'Review Milestones',
+        description: 'Check upcoming deadlines',
+        icon: 'fas fa-flag',
+        color: 'green',
+      },
+      {
+        title: 'Update Budget',
+        description: 'Review financial status',
+        icon: 'fas fa-dollar-sign',
+        color: 'yellow',
+      },
+      {
+        title: 'Generate Report',
+        description: 'Create progress report',
+        icon: 'fas fa-file-alt',
+        color: 'purple',
+      },
+    ];
+
+    container.innerHTML = actions.map(action => `
+      <button onclick="executeQuickAction('${action.title}')" class="p-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-left transition-colors">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-${action.color}-500/20 rounded-full flex items-center justify-center">
+            <i class="${action.icon} text-${action.color}-400 text-sm"></i>
+          </div>
+          <div>
+            <div class="text-white text-sm font-medium">${action.title}</div>
+            <div class="text-gray-400 text-xs">${action.description}</div>
+          </div>
+        </div>
+      </button>
+    `).join('');
+  }
+
+  // Action handlers
+  function implementAction(action) {
+    console.log('Implementing action:', action);
+    // Show success message
+    showNotification('Action implementation started', 'success');
+  }
+
+  function scheduleAction(action) {
+    console.log('Scheduling action:', action);
+    showNotification('Action scheduled for later', 'info');
+  }
+
+  function exploreOpportunity(title) {
+    console.log('Exploring opportunity:', title);
+    showNotification(`Loading solutions for ${title}...`, 'info');
+  }
+
+  function implementPractice(title) {
+    console.log('Implementing practice:', title);
+    showNotification(`${title} implementation started`, 'success');
+  }
+
+  function executeQuickAction(title) {
+    console.log('Executing quick action:', title);
+    showNotification(`${title} in progress...`, 'info');
+  }
+
+  // Show notification (simple implementation)
+  function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg text-white text-sm z-50 ${
+      type === 'success' ? 'bg-green-500' : 
+      type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 3000);
+  }
+
+  // Load recommendations data
+  async function loadRecommendations() {
+    const loadingEl = document.getElementById('recommendationsLoading');
+    loadingEl.classList.remove('hidden');
+
+    try {
+      // Get current project from URL or default
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project') || 'project1';
+      
+      const data = await projectAnalyticsService.getProjectAnalytics(projectId);
+      updateRecommendations(data);
+    } catch (error) {
+      console.error('Error loading recommendations:', error);
+    } finally {
+      loadingEl.classList.add('hidden');
+    }
+  }
+
+  // Listen for analytics updates
+  window.addEventListener('analytics-updated', (event) => {
+    if (event.detail.recommendations) {
+      updateRecommendations(event.detail);
+    }
+  });
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadRecommendations();
+  });
+
+  // Refresh every 10 minutes
+  setInterval(loadRecommendations, 10 * 60 * 1000);
+</script>

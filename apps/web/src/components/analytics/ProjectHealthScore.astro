@@ -1,0 +1,228 @@
+---
+import { projectAnalyticsService } from '../../services/projectAnalyticsService.ts';
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Project Health Score</h2>
+    <div id="healthScoreLoading" class="hidden">
+      <i class="fas fa-spinner fa-spin text-blue-400"></i>
+    </div>
+  </div>
+
+  <!-- Health Score Display -->
+  <div class="text-center mb-8">
+    <div class="relative inline-flex items-center justify-center">
+      <!-- Circular Progress -->
+      <svg class="w-32 h-32 transform -rotate-90">
+        <circle
+          cx="64"
+          cy="64"
+          r="56"
+          stroke="currentColor"
+          stroke-width="8"
+          fill="none"
+          class="text-slate-700"
+        />
+        <circle
+          id="healthScoreCircle"
+          cx="64"
+          cy="64"
+          r="56"
+          stroke="currentColor"
+          stroke-width="8"
+          fill="none"
+          class="transition-all duration-1000 ease-out"
+          stroke-dasharray="351.86"
+          stroke-dashoffset="351.86"
+          stroke-linecap="round"
+        />
+      </svg>
+      
+      <!-- Score Text -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span id="healthScoreValue" class="text-3xl font-bold text-white">--</span>
+        <span id="healthScoreLabel" class="text-sm text-gray-400">Health Score</span>
+      </div>
+    </div>
+    
+    <!-- Risk Level Badge -->
+    <div id="riskLevelBadge" class="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border">
+      <i class="fas fa-shield-alt mr-2"></i>
+      <span id="riskLevelText">--</span>
+    </div>
+  </div>
+
+  <!-- Health Metrics Grid -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <!-- Performance Score -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-2xl font-bold text-white mb-1">
+        <span id="performanceScore">--</span>
+      </div>
+      <div class="text-xs text-gray-400">Performance</div>
+      <div id="performanceTrend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Timeline Adherence -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-2xl font-bold text-white mb-1">
+        <span id="timelineScore">--</span>%
+      </div>
+      <div class="text-xs text-gray-400">On Schedule</div>
+      <div id="timelineTrend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Budget Utilization -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-2xl font-bold text-white mb-1">
+        <span id="budgetScore">--</span>%
+      </div>
+      <div class="text-xs text-gray-400">Budget Used</div>
+      <div id="budgetTrend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Team Productivity -->
+    <div class="text-center p-4 bg-slate-800/50 rounded-lg">
+      <div class="text-2xl font-bold text-white mb-1">
+        <span id="productivityScore">--</span>
+      </div>
+      <div class="text-xs text-gray-400">Productivity</div>
+      <div id="productivityTrend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Insights -->
+  <div class="mt-6 p-4 bg-slate-800/30 rounded-lg">
+    <h3 class="text-sm font-semibold text-white mb-3">Key Insights</h3>
+    <ul id="healthInsights" class="space-y-2 text-sm text-gray-300">
+      <!-- Insights will be populated dynamically -->
+    </ul>
+  </div>
+
+  <!-- Last Updated -->
+  <div class="mt-4 text-center text-xs text-gray-500">
+    Last updated: <span id="lastUpdated">--</span>
+  </div>
+</div>
+
+<script>
+  let healthData = null;
+
+  // Update health score display
+  function updateHealthScore(data) {
+    healthData = data;
+    const metrics = data.metrics;
+
+    // Update main health score
+    const healthScore = metrics.healthScore;
+    document.getElementById('healthScoreValue').textContent = healthScore;
+    
+    // Update circular progress
+    const circle = document.getElementById('healthScoreCircle');
+    const circumference = 2 * Math.PI * 56;
+    const offset = circumference - (healthScore / 100) * circumference;
+    circle.style.strokeDashoffset = offset;
+    
+    // Update color based on score
+    const colorClass = projectAnalyticsService.getHealthScoreColor(healthScore);
+    circle.className = circle.className.replace(/text-\w+-400/g, colorClass);
+    document.getElementById('healthScoreValue').className = `text-3xl font-bold ${colorClass}`;
+
+    // Update risk level
+    const riskLevel = metrics.riskLevel;
+    const riskBadge = document.getElementById('riskLevelBadge');
+    const riskText = document.getElementById('riskLevelText');
+    
+    riskText.textContent = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
+    riskBadge.className = `mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${projectAnalyticsService.getRiskLevelColor(riskLevel)}`;
+
+    // Update individual metrics
+    document.getElementById('performanceScore').textContent = metrics.performanceScore;
+    document.getElementById('timelineScore').textContent = metrics.timelineAdherence;
+    document.getElementById('budgetScore').textContent = metrics.budgetUtilization;
+    document.getElementById('productivityScore').textContent = metrics.teamProductivity;
+
+    // Update last updated
+    document.getElementById('lastUpdated').textContent = projectAnalyticsService.formatDate(metrics.lastUpdated);
+
+    // Generate insights
+    generateHealthInsights(metrics);
+  }
+
+  // Generate health insights
+  function generateHealthInsights(metrics) {
+    const insights = [];
+    
+    if (metrics.healthScore >= 80) {
+      insights.push('✅ Project is in excellent health with strong performance across all metrics');
+    } else if (metrics.healthScore >= 60) {
+      insights.push('⚠️ Project is performing well but has areas for improvement');
+    } else {
+      insights.push('🚨 Project needs immediate attention to address critical issues');
+    }
+
+    if (metrics.timelineAdherence < 70) {
+      insights.push('📅 Project is behind schedule - consider reassigning resources');
+    }
+
+    if (metrics.budgetUtilization > 90) {
+      insights.push('💰 Budget nearly depleted - review spending and approve additional funds if needed');
+    }
+
+    if (metrics.ticketsOpen > 10) {
+      insights.push('🎫 High number of open tickets may impact project delivery');
+    }
+
+    if (metrics.avgResolutionTime > 72) {
+      insights.push('⏱️ Ticket resolution time is above target - improve response processes');
+    }
+
+    const insightsList = document.getElementById('healthInsights');
+    insightsList.innerHTML = insights.map(insight => 
+      `<li class="flex items-start"><span class="mr-2">${insight}</span></li>`
+    ).join('');
+  }
+
+  // Load health score data
+  async function loadHealthScore() {
+    const loadingEl = document.getElementById('healthScoreLoading');
+    loadingEl.classList.remove('hidden');
+
+    try {
+      // Get current project from URL or default
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project') || 'project1';
+      
+      const data = await projectAnalyticsService.getProjectAnalytics(projectId);
+      updateHealthScore(data);
+    } catch (error) {
+      console.error('Error loading health score:', error);
+    } finally {
+      loadingEl.classList.add('hidden');
+    }
+  }
+
+  // Listen for analytics updates
+  window.addEventListener('analytics-updated', (event) => {
+    if (event.detail.metrics) {
+      updateHealthScore(event.detail);
+    }
+  });
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadHealthScore();
+  });
+
+  // Refresh every 2 minutes
+  setInterval(loadHealthScore, 2 * 60 * 1000);
+</script>

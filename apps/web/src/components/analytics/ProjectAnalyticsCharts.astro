@@ -1,0 +1,314 @@
+---
+import { projectAnalyticsService } from '../../services/projectAnalyticsService.ts';
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">
+      <span id="chartTitle">Performance Trends</span>
+    </h2>
+    <div class="flex items-center space-x-2">
+      <button id="chartTypeBtn" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition-colors">
+        <i class="fas fa-chart-line mr-1"></i>
+        <span id="chartTypeText">Performance</span>
+      </button>
+      <div id="chartLoading" class="hidden">
+        <i class="fas fa-spinner fa-spin text-blue-400"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Container -->
+  <div class="bg-slate-800/30 rounded-lg p-4 mb-4">
+    <canvas id="analyticsChart" width="400" height="250"></canvas>
+  </div>
+
+  <!-- Chart Legend -->
+  <div id="chartLegend" class="flex flex-wrap gap-4 justify-center">
+    <!-- Legend items will be populated dynamically -->
+  </div>
+
+  <!-- Key Metrics Summary -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+    <div class="text-center p-3 bg-slate-800/50 rounded-lg">
+      <div id="metric1Value" class="text-lg font-bold text-white">--</div>
+      <div id="metric1Label" class="text-xs text-gray-400">Average</div>
+      <div id="metric1Trend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+    
+    <div class="text-center p-3 bg-slate-800/50 rounded-lg">
+      <div id="metric2Value" class="text-lg font-bold text-white">--</div>
+      <div id="metric2Label" class="text-xs text-gray-400">Peak</div>
+      <div id="metric2Trend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+    
+    <div class="text-center p-3 bg-slate-800/50 rounded-lg">
+      <div id="metric3Value" class="text-lg font-bold text-white">--</div>
+      <div id="metric3Label" class="text-xs text-gray-400">Current</div>
+      <div id="metric3Trend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+    
+    <div class="text-center p-3 bg-slate-800/50 rounded-lg">
+      <div id="metric4Value" class="text-lg font-bold text-white">--</div>
+      <div id="metric4Label" class="text-xs text-gray-400">Trend</div>
+      <div id="metric4Trend" class="mt-1">
+        <i class="fas fa-minus text-gray-400 text-xs"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let chartData = null;
+  let currentChartType = 'performance';
+  let chart = null;
+
+  // Chart types configuration
+  const chartTypes = {
+    performance: {
+      title: 'Performance Trends',
+      datasets: [
+        { key: 'healthScore', label: 'Health Score', color: '#10b981' },
+        { key: 'progress', label: 'Progress', color: '#3b82f6' },
+      ],
+      metrics: {
+        metric1: { label: 'Avg Health', key: 'healthScore', format: 'number' },
+        metric2: { label: 'Peak Health', key: 'healthScore', format: 'max' },
+        metric3: { label: 'Current', key: 'healthScore', format: 'last' },
+        metric4: { label: 'Trend', key: 'healthScore', format: 'trend' },
+      },
+    },
+    'budget-timeline': {
+      title: 'Budget & Timeline Analysis',
+      datasets: [
+        { key: 'budgetBurn', label: 'Budget Burn', color: '#f59e0b' },
+        { key: 'teamCapacity', label: 'Team Capacity', color: '#8b5cf6' },
+      ],
+      metrics: {
+        metric1: { label: 'Avg Budget', key: 'budgetBurn', format: 'number' },
+        metric2: { label: 'Peak Burn', key: 'budgetBurn', format: 'max' },
+        metric3: { label: 'Current', key: 'budgetBurn', format: 'last' },
+        metric4: { label: 'Trend', key: 'budgetBurn', format: 'trend' },
+      },
+    },
+  };
+
+  // Update chart display
+  function updateChart(data, chartType = 'performance') {
+    chartData = data;
+    currentChartType = chartType;
+    
+    const config = chartTypes[chartType];
+    const trends = data.trends;
+    
+    // Update title
+    document.getElementById('chartTitle').textContent = config.title;
+    document.getElementById('chartTypeText').textContent = 
+      chartType === 'performance' ? 'Performance' : 'Budget & Timeline';
+    
+    // Update chart
+    drawChart(trends, config);
+    
+    // Update metrics
+    updateMetrics(trends, config.metrics);
+    
+    // Update legend
+    updateLegend(config.datasets);
+  }
+
+  // Draw chart on canvas
+  function drawChart(trends, config) {
+    const canvas = document.getElementById('analyticsChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (trends.length === 0) return;
+    
+    const padding = 40;
+    const chartWidth = canvas.width - (padding * 2);
+    const chartHeight = canvas.height - (padding * 2);
+    
+    // Draw axes
+    ctx.strokeStyle = '#4b5563';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+    
+    // Draw grid lines
+    ctx.strokeStyle = '#374151';
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= 5; i++) {
+      const y = padding + (chartHeight / 5) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(canvas.width - padding, y);
+      ctx.stroke();
+      
+      // Y-axis labels
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${100 - (i * 20)}`, padding - 5, y + 3);
+    }
+    
+    // Draw data lines
+    config.datasets.forEach(dataset => {
+      const values = trends.map(trend => trend[dataset.key]);
+      const maxValue = Math.max(...values, 100);
+      
+      ctx.strokeStyle = dataset.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      trends.forEach((trend, index) => {
+        const x = padding + (chartWidth / (trends.length - 1)) * index;
+        const y = canvas.height - padding - ((trend[dataset.key] / maxValue) * chartHeight);
+        
+        if (index === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+        
+        // Draw data points
+        ctx.fillStyle = dataset.color;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+      
+      ctx.stroke();
+    });
+    
+    // Draw X-axis labels (dates)
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    
+    const labelInterval = Math.ceil(trends.length / 8); // Show max 8 labels
+    trends.forEach((trend, index) => {
+      if (index % labelInterval === 0 || index === trends.length - 1) {
+        const x = padding + (chartWidth / (trends.length - 1)) * index;
+        const date = new Date(trend.date);
+        const label = `${date.getMonth() + 1}/${date.getDate()}`;
+        ctx.fillText(label, x, canvas.height - padding + 15);
+      }
+    });
+  }
+
+  // Update metrics display
+  function updateMetrics(trends, metricsConfig) {
+    Object.keys(metricsConfig).forEach(metricKey => {
+      const config = metricsConfig[metricKey];
+      const values = trends.map(trend => trend[config.key]);
+      
+      let value;
+      switch (config.format) {
+        case 'number':
+          value = Math.round(values.reduce((sum, val) => sum + val, 0) / values.length);
+          break;
+        case 'max':
+          value = Math.round(Math.max(...values));
+          break;
+        case 'last':
+          value = Math.round(values[values.length - 1]);
+          break;
+        case 'trend':
+          if (values.length < 2) {
+            value = '--';
+          } else {
+            const recent = values.slice(-3);
+            const earlier = values.slice(0, 3);
+            const recentAvg = recent.reduce((sum, val) => sum + val, 0) / recent.length;
+            const earlierAvg = earlier.reduce((sum, val) => sum + val, 0) / earlier.length;
+            const trend = projectAnalyticsService.getTrendDirection(recentAvg, earlierAvg);
+            value = trend.charAt(0).toUpperCase() + trend.slice(1);
+          }
+          break;
+        default:
+          value = '--';
+      }
+      
+      document.getElementById(`${metricKey}Value`).textContent = value;
+      document.getElementById(`${metricKey}Label`).textContent = config.label;
+      
+      // Update trend icon for numeric values
+      if (config.format !== 'trend' && values.length >= 2) {
+        const current = values[values.length - 1];
+        const previous = values[values.length - 2];
+        const trend = projectAnalyticsService.getTrendDirection(current, previous);
+        const icon = projectAnalyticsService.getTrendIcon(trend);
+        document.getElementById(`${metricKey}Trend`).innerHTML = `<i class="${icon}"></i>`;
+      }
+    });
+  }
+
+  // Update legend
+  function updateLegend(datasets) {
+    const container = document.getElementById('chartLegend');
+    
+    container.innerHTML = datasets.map(dataset => `
+      <div class="flex items-center space-x-2">
+        <div class="w-3 h-3 rounded-full" style="background-color: ${dataset.color}"></div>
+        <span class="text-sm text-gray-300">${dataset.label}</span>
+      </div>
+    `).join('');
+  }
+
+  // Toggle chart type
+  function toggleChartType() {
+    const newType = currentChartType === 'performance' ? 'budget-timeline' : 'performance';
+    if (chartData) {
+      updateChart(chartData, newType);
+    }
+  }
+
+  // Load chart data
+  async function loadChartData() {
+    const loadingEl = document.getElementById('chartLoading');
+    loadingEl.classList.remove('hidden');
+
+    try {
+      // Get current project and time range from URL or defaults
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project') || 'project1';
+      const timeRange = urlParams.get('timeRange') || '30d';
+      
+      const data = await projectAnalyticsService.getProjectTrends(projectId, timeRange as any);
+      updateChart({ trends: data.trends }, currentChartType);
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+    } finally {
+      loadingEl.classList.add('hidden');
+    }
+  }
+
+  // Listen for analytics updates
+  window.addEventListener('analytics-updated', (event) => {
+    if (event.detail.trends) {
+      updateChart(event.detail, currentChartType);
+    }
+  });
+
+  // Event listeners
+  document.getElementById('chartTypeBtn')?.addEventListener('click', toggleChartType);
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadChartData();
+  });
+
+  // Refresh every 5 minutes
+  setInterval(loadChartData, 5 * 60 * 1000);
+</script>

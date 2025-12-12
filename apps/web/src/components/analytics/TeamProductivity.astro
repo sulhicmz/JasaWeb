@@ -1,0 +1,299 @@
+---
+import { projectAnalyticsService } from '../../services/projectAnalyticsService.ts';
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Team Productivity</h2>
+    <div id="productivityLoading" class="hidden">
+      <i class="fas fa-spinner fa-spin text-blue-400"></i>
+    </div>
+  </div>
+
+  <!-- Overall Productivity Score -->
+  <div class="text-center mb-6">
+    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 mb-3">
+      <span id="overallProductivity" class="text-2xl font-bold text-white">--</span>
+    </div>
+    <div class="text-sm text-gray-400">Overall Team Productivity</div>
+  </div>
+
+  <!-- Team Members List -->
+  <div id="teamMembersList" class="space-y-4">
+    <!-- Team members will be populated dynamically -->
+  </div>
+
+  <!-- Productivity Insights -->
+  <div class="mt-6 p-4 bg-slate-800/30 rounded-lg">
+    <h3 class="text-sm font-semibold text-white mb-3">Productivity Insights</h3>
+    <div id="productivityInsights" class="space-y-2 text-sm text-gray-300">
+      <!-- Insights will be populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Team Capacity Chart -->
+  <div class="mt-6 bg-slate-800/30 rounded-lg p-4">
+    <h3 class="text-sm font-semibold text-white mb-3">Team Capacity Distribution</h3>
+    <canvas id="capacityChart" width="400" height="200"></canvas>
+  </div>
+</div>
+
+<script>
+  let productivityData = null;
+
+  // Update productivity display
+  function updateProductivity(data) {
+    productivityData = data;
+    
+    // Update overall productivity
+    document.getElementById('overallProductivity').textContent = data.overallProductivity;
+    
+    // Update team members list
+    updateTeamMembersList(data.teamProductivity);
+    
+    // Generate insights
+    generateProductivityInsights(data.teamProductivity, data.overallProductivity);
+    
+    // Update capacity chart
+    updateCapacityChart(data.teamProductivity);
+  }
+
+  // Update team members list
+  function updateTeamMembersList(teamMembers) {
+    const container = document.getElementById('teamMembersList');
+    
+    container.innerHTML = teamMembers.map(member => `
+      <div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">
+              ${member.userName.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div class="font-medium text-white">${member.userName}</div>
+              <div class="text-xs text-gray-400">Team Member</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-bold text-white">${member.contributionScore}</div>
+            <div class="text-xs text-gray-400">Contribution</div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+          <!-- Tasks Completed -->
+          <div class="text-center">
+            <div class="text-white font-medium">${member.tasksCompleted}</div>
+            <div class="text-gray-400 text-xs">Tasks Done</div>
+          </div>
+          
+          <!-- Avg Duration -->
+          <div class="text-center">
+            <div class="text-white font-medium">${member.avgTaskDuration}h</div>
+            <div class="text-gray-400 text-xs">Avg Time</div>
+          </div>
+          
+          <!-- Availability -->
+          <div class="text-center">
+            <div class="text-white font-medium">${member.availability}%</div>
+            <div class="text-gray-400 text-xs">Available</div>
+          </div>
+          
+          <!-- Workload -->
+          <div class="text-center">
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getWorkloadClass(member.workload)}">
+              ${member.workload}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Contribution Bar -->
+        <div class="mt-3">
+          <div class="flex justify-between text-xs text-gray-400 mb-1">
+            <span>Contribution Score</span>
+            <span>${member.contributionScore}/100</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2">
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500" 
+                 style="width: ${member.contributionScore}%"></div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Get workload styling class
+  function getWorkloadClass(workload) {
+    switch (workload) {
+      case 'optimal':
+        return 'bg-green-500/20 text-green-300 border border-green-500/30';
+      case 'overloaded':
+        return 'bg-red-500/20 text-red-300 border border-red-500/30';
+      case 'underutilized':
+        return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+      default:
+        return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+    }
+  }
+
+  // Generate productivity insights
+  function generateProductivityInsights(teamMembers, overallScore) {
+    const insights = [];
+    
+    // Overall assessment
+    if (overallScore >= 80) {
+      insights.push('🎯 Team is performing at excellent productivity levels');
+    } else if (overallScore >= 60) {
+      insights.push('📈 Team productivity is good with room for improvement');
+    } else {
+      insights.push('⚠️ Team productivity needs attention and optimization');
+    }
+
+    // Workload analysis
+    const overloaded = teamMembers.filter(m => m.workload === 'overloaded').length;
+    const underutilized = teamMembers.filter(m => m.workload === 'underutilized').length;
+    
+    if (overloaded > 0) {
+      insights.push(`🔥 ${overloaded} team member(s) are overloaded - consider redistributing tasks`);
+    }
+    
+    if (underutilized > 0) {
+      insights.push(`💪 ${underutilized} team member(s) can take on more responsibility`);
+    }
+
+    // Top performer
+    const topPerformer = teamMembers.reduce((prev, current) => 
+      prev.contributionScore > current.contributionScore ? prev : current
+    );
+    insights.push(`🏆 ${topPerformer.userName} is the top performer with ${topPerformer.contributionScore} contribution score`);
+
+    // Task completion analysis
+    const avgTasksCompleted = teamMembers.reduce((sum, m) => sum + m.tasksCompleted, 0) / teamMembers.length;
+    if (avgTasksCompleted > 15) {
+      insights.push('✅ High task completion rate across the team');
+    } else if (avgTasksCompleted < 8) {
+      insights.push('📊 Task completion rate could be improved');
+    }
+
+    // Availability analysis
+    const avgAvailability = teamMembers.reduce((sum, m) => sum + m.availability, 0) / teamMembers.length;
+    if (avgAvailability < 70) {
+      insights.push('🕐 Team availability is low - may impact project timeline');
+    }
+
+    const container = document.getElementById('productivityInsights');
+    container.innerHTML = insights.map(insight => 
+      `<li class="flex items-start"><span class="mr-2">${insight}</span></li>`
+    ).join('');
+  }
+
+  // Update capacity chart
+  function updateCapacityChart(teamMembers) {
+    const canvas = document.getElementById('capacityChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear previous chart
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Prepare data
+    const data = teamMembers.map(member => ({
+      name: member.userName.split(' ')[0],
+      availability: member.availability,
+      contribution: member.contributionScore,
+    }));
+
+    const barWidth = 30;
+    const barSpacing = 40;
+    const maxHeight = 120;
+    const startX = 40;
+    const startY = 150;
+
+    data.forEach((item, index) => {
+      const x = startX + (index * (barWidth * 2 + barSpacing));
+      
+      // Availability bar
+      const availabilityHeight = (item.availability / 100) * maxHeight;
+      const availabilityY = startY - availabilityHeight;
+      
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillRect(x, availabilityY, barWidth, availabilityHeight);
+      
+      // Contribution bar
+      const contributionHeight = (item.contribution / 100) * maxHeight;
+      const contributionY = startY - contributionHeight;
+      
+      ctx.fillStyle = '#8b5cf6';
+      ctx.fillRect(x + barWidth + 5, contributionY, barWidth, contributionHeight);
+      
+      // Labels
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(item.name, x + barWidth, startY + 15);
+      
+      // Values
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '9px sans-serif';
+      ctx.fillText(`${item.availability}%`, x + barWidth / 2, availabilityY - 3);
+      ctx.fillText(`${item.contribution}`, x + barWidth + 5 + barWidth / 2, contributionY - 3);
+    });
+
+    // Draw axis
+    ctx.strokeStyle = '#4b5563';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(startX - 5, startY);
+    ctx.lineTo(startX + (data.length * (barWidth * 2 + barSpacing)), startY);
+    ctx.stroke();
+
+    // Legend
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(startX, 10, 15, 10);
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Availability', startX + 20, 18);
+
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillRect(startX + 100, 10, 15, 10);
+    ctx.fillStyle = '#9ca3af';
+    ctx.fillText('Contribution', startX + 120, 18);
+  }
+
+  // Load productivity data
+  async function loadProductivity() {
+    const loadingEl = document.getElementById('productivityLoading');
+    loadingEl.classList.remove('hidden');
+
+    try {
+      // Get current project from URL or default
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('project') || 'project1';
+      
+      const data = await projectAnalyticsService.getTeamProductivity(projectId);
+      updateProductivity(data);
+    } catch (error) {
+      console.error('Error loading productivity data:', error);
+    } finally {
+      loadingEl.classList.add('hidden');
+    }
+  }
+
+  // Listen for analytics updates
+  window.addEventListener('analytics-updated', (event) => {
+    if (event.detail.teamProductivity) {
+      updateProductivity({
+        teamProductivity: event.detail.teamProductivity,
+        overallProductivity: event.detail.metrics.teamProductivity,
+      });
+    }
+  });
+
+  // Initialize on load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadProductivity();
+  });
+
+  // Refresh every 3 minutes
+  setInterval(loadProductivity, 3 * 60 * 1000);
+</script>
