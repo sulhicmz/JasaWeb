@@ -9,6 +9,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
+import { SECURITY_CONFIG } from '@jasaweb/config';
 
 enum Environment {
   Development = 'development',
@@ -42,7 +43,7 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  CORS_ORIGIN: string = 'http://localhost:4321';
+  CORS_ORIGIN: string = SECURITY_CONFIG.CORS.ORIGINS.join(',');
 
   @IsNumber()
   @Min(1)

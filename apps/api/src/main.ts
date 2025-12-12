@@ -1,12 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exception.filter';
-import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
-import { ErrorHandlingService } from './common/services/error-handling.service';
 import helmet from 'helmet';
 import compression from 'compression';
+import { SECURITY_CONFIG } from '@jasaweb/config';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -74,11 +72,11 @@ async function bootstrap() {
 
   // Enhanced CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+    origin: process.env.CORS_ORIGIN?.split(',') || SECURITY_CONFIG.CORS.ORIGINS,
+    methods: SECURITY_CONFIG.CORS.METHODS,
+    allowedHeaders: SECURITY_CONFIG.CORS.ALLOWED_HEADERS,
     exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
-    credentials: true,
+    credentials: SECURITY_CONFIG.CORS.CREDENTIALS,
     maxAge: 3600,
   });
 

@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
+import { API_CONFIG, WS_CONFIG, getApiUrl } from '@jasaweb/config';
 
 export interface Notification {
   id: string;
@@ -76,17 +77,15 @@ class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
-
-    this.socket = io(`${apiUrl}/notifications`, {
+    this.socket = io(getApiUrl('/notifications'), {
       auth: {
         token: token,
       },
       transports: ['websocket', 'polling'],
-      timeout: 20000,
-      reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: this.reconnectDelay,
+      timeout: WS_CONFIG.OPTIONS.timeout,
+      reconnection: WS_CONFIG.OPTIONS.reconnection,
+      reconnectionAttempts: WS_CONFIG.OPTIONS.reconnectionAttempts,
+      reconnectionDelay: WS_CONFIG.OPTIONS.reconnectionDelay,
     });
 
     this.setupEventListeners();
@@ -103,17 +102,15 @@ class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
-
-    this.dashboardSocket = io(`${apiUrl}/dashboard`, {
+    this.dashboardSocket = io(getApiUrl('/dashboard'), {
       auth: {
         token: token,
       },
       transports: ['websocket', 'polling'],
-      timeout: 20000,
-      reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: this.reconnectDelay,
+      timeout: WS_CONFIG.OPTIONS.timeout,
+      reconnection: WS_CONFIG.OPTIONS.reconnection,
+      reconnectionAttempts: WS_CONFIG.OPTIONS.reconnectionAttempts,
+      reconnectionDelay: WS_CONFIG.OPTIONS.reconnectionDelay,
     });
 
     this.setupDashboardEventListeners();

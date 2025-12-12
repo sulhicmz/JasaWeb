@@ -1,4 +1,5 @@
 import { registerAs } from '@nestjs/config';
+import { SECURITY_CONFIG } from '@jasaweb/config';
 
 const parseNumber = (value: string | undefined, fallback: number): number => {
   const parsed = Number.parseInt(value ?? '', 10);
@@ -97,10 +98,10 @@ export default registerAs('security', () => ({
 
   // CORS Configuration
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+    origin: process.env.CORS_ORIGIN?.split(',') || SECURITY_CONFIG.CORS.ORIGINS,
+    credentials: SECURITY_CONFIG.CORS.CREDENTIALS,
+    methods: SECURITY_CONFIG.CORS.METHODS,
+    allowedHeaders: SECURITY_CONFIG.CORS.ALLOWED_HEADERS,
     exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
     maxAge: 3600,
   },

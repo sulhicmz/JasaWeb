@@ -1,5 +1,5 @@
 ---
-// DashboardCharts.astro - Enhanced Analytics charts with Chart.js
+import Chart from 'chart.js/auto';
 ---
 
 <div class="glass-panel p-6 rounded-xl">
@@ -121,12 +121,7 @@
           labels: ['Active', 'Completed', 'On Hold', 'Planning'],
           datasets: [{
             data: [3, 5, 1, 2],
-            backgroundColor: [
-              '#10b981',
-              '#3b82f6', 
-              '#f59e0b',
-              '#6b7280'
-            ],
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6b7280'],
             borderWidth: 0,
             hoverOffset: 4
           }]

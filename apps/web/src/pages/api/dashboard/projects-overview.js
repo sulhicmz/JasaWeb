@@ -1,11 +1,13 @@
 // API endpoint for projects overview
+import { getApiUrl } from '@jasaweb/config';
+
 export async function GET({ request, url }) {
   try {
     // Get query parameters
     const limit = url.searchParams.get('limit') || '6';
 
     // Forward the request to the backend API
-    const backendUrl = `http://localhost:3001/dashboard/projects-overview?limit=${limit}`;
+    const backendUrl = getApiUrl(`/dashboard/projects-overview?limit=${limit}`);
 
     const response = await fetch(backendUrl, {
       method: 'GET',
