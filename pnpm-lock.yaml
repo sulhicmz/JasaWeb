@@ -252,12 +252,18 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.17
         version: 4.1.17(vite@7.2.4)
+      '@types/nodemailer':
+        specifier: ^7.0.3
+        version: 7.0.3
       astro:
         specifier: 5.15.9
         version: 5.15.9(@types/node@24.10.1)(typescript@5.9.3)
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
+      nodemailer:
+        specifier: ^7.0.7
+        version: 7.0.7
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -695,7 +701,6 @@ packages:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
-    dev: true
 
   /@aws-sdk/client-sso@3.932.0:
     resolution: {integrity: sha512-XHqHa5iv2OQsKoM2tUQXs7EAyryploC00Wg0XSFra/KAKqyGizUb5XxXsGlyqhebB29Wqur+zwiRwNmejmN0+Q==}
@@ -6312,10 +6317,9 @@ packages:
     resolution: {integrity: sha512-fC8w49YQ868IuPWRXqPfLf+MuTRex5Z1qxMoG8rr70riqqbOp2F5xgOKE9fODEBPzpnvjkJXFgK6IL2xgMSTnA==}
     dependencies:
       '@aws-sdk/client-sesv2': 3.932.0
-      '@types/node': 20.19.25
+      '@types/node': 24.10.1
     transitivePeerDependencies:
       - aws-crt
-    dev: true
 
   /@types/passport-jwt@4.0.1:
     resolution: {integrity: sha512-Y0Ykz6nWP4jpxgEUYq8NoVZeCQPo1ZndJLfapI249g1jHChvRfZRO/LS3tqu26YgAS/laI1qx98sYGz0IalRXQ==}
