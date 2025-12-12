@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
+import { DashboardGateway } from './dashboard.gateway';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { JwtModule } from '@nestjs/jwt';
+import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
 
 @Module({
   imports: [
@@ -15,9 +18,14 @@ import { ThrottlerModule } from '@nestjs/throttler';
         limit: 20, // 20 requests per minute
       },
     ]),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key',
+      signOptions: { expiresIn: '1d' },
+    }),
+    MultiTenantPrismaModule,
   ],
   controllers: [DashboardController],
-  providers: [],
-  exports: [],
+  providers: [DashboardGateway],
+  exports: [DashboardGateway],
 })
 export class DashboardModule {}

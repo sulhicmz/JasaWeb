@@ -41,6 +41,16 @@ class DashboardStatsComponent extends HTMLElement {
     window.addEventListener('refresh-dashboard', () => {
       this.fetchStats();
     });
+
+    // Listen for real-time stats updates
+    window.addEventListener('stats-updated', (e: any) => {
+      this.handleRealtimeUpdate(e.detail);
+    });
+
+    // Listen for dashboard initial data
+    window.addEventListener('dashboard-initial-data', (e: any) => {
+      this.handleInitialData(e.detail);
+    });
   }
 
   async fetchStats() {
@@ -82,6 +92,37 @@ class DashboardStatsComponent extends HTMLElement {
       this.loading = false;
       this.render();
     }
+  }
+
+  handleRealtimeUpdate(data: any) {
+    if (data.stats) {
+      this.stats = data.stats;
+      this.render();
+
+      // Add visual feedback for real-time update
+      this.addUpdateAnimation();
+    }
+  }
+
+  handleInitialData(data: any) {
+    if (data.stats) {
+      this.stats = data.stats;
+      this.loading = false;
+      this.render();
+    }
+  }
+
+  addUpdateAnimation() {
+    // Add subtle animation to indicate real-time update
+    const statsCards = this.querySelectorAll('.glass-panel');
+    statsCards.forEach((card, index) => {
+      setTimeout(() => {
+        card.classList.add('ring-2', 'ring-green-500', 'ring-opacity-50');
+        setTimeout(() => {
+          card.classList.remove('ring-2', 'ring-green-500', 'ring-opacity-50');
+        }, 1000);
+      }, index * 100);
+    });
   }
 
   formatCurrency(amount: number): string {

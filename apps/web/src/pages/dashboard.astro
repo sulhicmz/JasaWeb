@@ -6,6 +6,9 @@ import ProjectsOverview from '../components/dashboard/ProjectsOverview.astro';
 import NotificationToast from '../components/dashboard/NotificationToast.astro';
 import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
 import DashboardExport from '../components/dashboard/DashboardExport.astro';
+import NotificationPreferences from '../components/dashboard/NotificationPreferences.astro';
+// Import notification service
+import '../services/notificationService.ts';
 ---
 
 <DashboardLayout title="Dashboard - Client Portal">
@@ -20,11 +23,20 @@ import DashboardExport from '../components/dashboard/DashboardExport.astro';
             <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
               Client Portal
             </span>
+            <!-- Connection Status Indicator -->
+            <div id="connectionStatus" class="flex items-center space-x-2">
+              <div id="statusIndicator" class="w-2 h-2 bg-gray-500 rounded-full"></div>
+              <span id="statusText" class="text-xs text-gray-400">Connecting...</span>
+            </div>
           </div>
           <div class="flex items-center space-x-4">
             <button id="refreshBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
               <i class="fas fa-sync-alt"></i>
               <span>Refresh</span>
+            </button>
+            <button id="realtimeToggle" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+              <i class="fas fa-bolt"></i>
+              <span>Real-time</span>
             </button>
             <div class="relative">
               <button class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -61,8 +73,8 @@ import DashboardExport from '../components/dashboard/DashboardExport.astro';
         </section>
       </div>
 
-      <!-- Quick Actions and Export -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+      <!-- Quick Actions, Export, and Settings -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         <!-- Quick Actions -->
         <section>
           <div class="glass-panel p-6 rounded-xl">
@@ -92,18 +104,26 @@ import DashboardExport from '../components/dashboard/DashboardExport.astro';
         <section>
           <DashboardExport client:load />
         </section>
+
+        <!-- Notification Settings -->
+        <section>
+          <NotificationPreferences client:load />
+        </section>
       </div>
     </main>
   </div>
 
   <script>
-    // Auto-refresh functionality
+    // Enhanced dashboard functionality with real-time updates
     let refreshInterval;
+    let realtimeEnabled = true;
     
     function startAutoRefresh() {
       refreshInterval = setInterval(() => {
-        refreshData();
-      }, 30000); // Refresh every 30 seconds
+        if (!realtimeEnabled) {
+          refreshData();
+        }
+      }, 30000); // Refresh every 30 seconds when real-time is disabled
     }
 
     function refreshData() {
@@ -113,8 +133,13 @@ import DashboardExport from '../components/dashboard/DashboardExport.astro';
       // Add spinning animation
       icon.classList.add('fa-spin');
       
-      // Dispatch custom event to refresh components
-      window.dispatchEvent(new CustomEvent('refresh-dashboard'));
+      // Use real-time refresh if available and enabled
+      if (realtimeEnabled && window.notificationService) {
+        window.notificationService.refreshDashboardStats();
+      } else {
+        // Fallback to HTTP refresh
+        window.dispatchEvent(new CustomEvent('refresh-dashboard'));
+      }
       
       // Remove spinning animation after 1 second
       setTimeout(() => {
@@ -122,18 +147,100 @@ import DashboardExport from '../components/dashboard/DashboardExport.astro';
       }, 1000);
     }
 
-    // Manual refresh button handler
-    document.getElementById('refreshBtn')?.addEventListener('click', refreshData);
+    function updateConnectionStatus(connected: boolean) {
+      const indicator = document.getElementById('statusIndicator');
+      const text = document.getElementById('statusText');
+      const toggle = document.getElementById('realtimeToggle');
+      
+      if (connected) {
+        indicator?.classList.remove('bg-gray-500', 'bg-red-500');
+        indicator?.classList.add('bg-green-500');
+        if (text) text.textContent = 'Connected';
+        if (toggle) {
+          toggle.classList.remove('bg-gray-600');
+          toggle.classList.add('bg-green-600');
+        }
+      } else {
+        indicator?.classList.remove('bg-green-500', 'bg-gray-500');
+        indicator?.classList.add('bg-red-500');
+        if (text) text.textContent = 'Disconnected';
+        if (toggle) {
+          toggle.classList.remove('bg-green-600');
+          toggle.classList.add('bg-gray-600');
+        }
+      }
+    }
 
-    // Start auto-refresh when page loads
+    function toggleRealtime() {
+      realtimeEnabled = !realtimeEnabled;
+      const toggle = document.getElementById('realtimeToggle');
+      const icon = toggle?.querySelector('i');
+      
+      if (realtimeEnabled) {
+        if (toggle) {
+          toggle.classList.remove('bg-gray-600');
+          toggle.classList.add('bg-green-600');
+        }
+        if (icon) icon.classList.remove('fa-pause');
+        if (icon) icon.classList.add('fa-bolt');
+        
+        // Reconnect notification service
+        if (window.notificationService) {
+          window.notificationService.reconnect();
+        }
+      } else {
+        if (toggle) {
+          toggle.classList.remove('bg-green-600');
+          toggle.classList.add('bg-gray-600');
+        }
+        if (icon) icon.classList.remove('fa-bolt');
+        if (icon) icon.classList.add('fa-pause');
+      }
+    }
+
+    // Initialize dashboard when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
       startAutoRefresh();
+      
+      // Set up real-time connection monitoring
+      if (window.notificationService) {
+        // Update connection status
+        const checkConnection = () => {
+          const status = window.notificationService.getDashboardConnectionStatus();
+          updateConnectionStatus(status.connected);
+        };
+        
+        // Check connection status periodically
+        setInterval(checkConnection, 5000);
+        checkConnection(); // Initial check
+        
+        // Listen to notification service events
+        window.notificationService.on({
+          onConnect: () => updateConnectionStatus(true),
+          onDisconnect: () => updateConnectionStatus(false),
+          onError: () => updateConnectionStatus(false),
+          onRealtimeNotification: (notification) => {
+            console.log('Real-time notification:', notification);
+          }
+        });
+      }
+      
+      // Manual refresh button handler
+      document.getElementById('refreshBtn')?.addEventListener('click', refreshData);
+      
+      // Real-time toggle handler
+      document.getElementById('realtimeToggle')?.addEventListener('click', toggleRealtime);
     });
 
     // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
       if (refreshInterval) {
         clearInterval(refreshInterval);
+      }
+      
+      // Disconnect notification service
+      if (window.notificationService) {
+        window.notificationService.disconnect();
       }
     });
   </script>
