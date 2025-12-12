@@ -160,6 +160,19 @@ export class MultiTenantPrismaService {
       });
     },
 
+    findFirst: (args: any) => {
+      return this.prisma.milestone.findFirst({
+        ...args,
+        where: {
+          ...args.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args.where?.project,
+          },
+        },
+      });
+    },
+
     count: (args?: any) => {
       return this.prisma.milestone.count({
         ...args,
@@ -613,6 +626,51 @@ export class MultiTenantPrismaService {
             organizationId: this.organizationId,
             ...args?.where?.project,
           },
+        },
+      });
+    },
+  };
+
+  /**
+   * AuditLog service methods
+   */
+  auditLog = {
+    create: (args: any) => {
+      return this.prisma.auditLog.create({
+        ...args,
+        data: {
+          ...args.data,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    findMany: (args?: any) => {
+      return this.prisma.auditLog.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.auditLog.findUnique({
+        ...args,
+        where: {
+          ...args.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    count: (args?: any) => {
+      return this.prisma.auditLog.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
         },
       });
     },

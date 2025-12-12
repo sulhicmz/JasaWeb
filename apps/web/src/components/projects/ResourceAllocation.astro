@@ -1,0 +1,358 @@
+---
+// Resource Allocation Component
+---
+
+<div class="space-y-6">
+  <!-- Resource Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="glass-panel p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-white font-medium">Team Members</h3>
+        <span class="text-sm text-slate-400" id="totalTeamMembers">0</span>
+      </div>
+      <div class="space-y-2" id="teamMembersList">
+        <!-- Team members will be populated here -->
+      </div>
+    </div>
+
+    <div class="glass-panel p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-white font-medium">Workload Distribution</h3>
+        <button class="text-sm text-blue-400 hover:text-blue-300" onclick="resourceAllocation.showDetails()">Details</button>
+      </div>
+      <div class="space-y-2" id="workloadDistribution">
+        <!-- Workload distribution will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Resource Allocation Chart -->
+  <div class="glass-panel p-6 rounded-xl">
+    <h3 class="text-white font-medium mb-4">Resource Allocation Timeline</h3>
+    <div class="relative h-64" id="resourceChart">
+      <canvas id="resourceAllocationChart" class="w-full h-full"></canvas>
+    </div>
+  </div>
+
+  <!-- Resource Conflicts -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-white font-medium">Resource Conflicts & Warnings</h3>
+      <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded-full text-xs" id="conflictCount">0</span>
+    </div>
+    <div class="space-y-3" id="resourceConflicts">
+      <!-- Conflicts will be populated here -->
+    </div>
+  </div>
+</div>
+
+<script>
+  class ResourceAllocation {
+    private teamMembers: any[] = [];
+    private projects: any[] = [];
+    private allocations: any[] = [];
+
+    constructor() {
+      this.loadData();
+      this.initializeChart();
+      this.setupEventListeners();
+    }
+
+    private async loadData() {
+      try {
+        // Load projects
+        const projectsResponse = await fetch('/api/dashboard/projects-overview');
+        this.projects = await projectsResponse.json();
+
+        // Mock team members data (in real implementation, this would come from API)
+        this.teamMembers = [
+          { id: '1', name: 'John Doe', role: 'Developer', capacity: 40, currentLoad: 32 },
+          { id: '2', name: 'Jane Smith', role: 'Designer', capacity: 40, currentLoad: 28 },
+          { id: '3', name: 'Mike Johnson', role: 'Project Manager', capacity: 40, currentLoad: 36 },
+          { id: '4', name: 'Sarah Wilson', role: 'Developer', capacity: 40, currentLoad: 24 },
+          { id: '5', name: 'Tom Brown', role: 'QA Engineer', capacity: 40, currentLoad: 30 }
+        ];
+
+        // Generate mock allocations based on projects
+        this.generateAllocations();
+        
+        this.updateUI();
+      } catch (error) {
+        console.error('Failed to load resource data:', error);
+        this.loadMockData();
+      }
+    }
+
+    private generateAllocations() {
+      this.allocations = this.projects.map((project, index) => ({
+        projectId: project.id,
+        projectName: project.name,
+        teamMemberId: this.teamMembers[index % this.teamMembers.length].id,
+        allocation: Math.floor(Math.random() * 20) + 10, // 10-30 hours per week
+        startDate: project.startAt,
+        endDate: project.dueAt,
+        priority: project.priority || 'medium'
+      }));
+    }
+
+    private updateUI() {
+      this.updateTeamMembers();
+      this.updateWorkloadDistribution();
+      this.updateResourceConflicts();
+      this.updateChart();
+    }
+
+    private updateTeamMembers() {
+      const container = document.getElementById('teamMembersList');
+      const totalElement = document.getElementById('totalTeamMembers');
+      
+      if (!container || !totalElement) return;
+
+      totalElement.textContent = this.teamMembers.length.toString();
+      
+      container.innerHTML = this.teamMembers.map(member => `
+        <div class="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              ${member.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div>
+              <div class="text-white text-sm">${member.name}</div>
+              <div class="text-slate-400 text-xs">${member.role}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-white text-sm">${member.currentLoad}h</div>
+            <div class="text-slate-400 text-xs">/ ${member.capacity}h</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    private updateWorkloadDistribution() {
+      const container = document.getElementById('workloadDistribution');
+      if (!container) return;
+
+      const workloadData = this.teamMembers.map(member => ({
+        name: member.name,
+        utilization: Math.round((member.currentLoad / member.capacity) * 100)
+      }));
+
+      container.innerHTML = workloadData.map(member => `
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-white text-sm">${member.name}</span>
+            <span class="text-slate-400 text-xs">${member.utilization}%</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2">
+            <div class="h-2 rounded-full transition-all duration-500 ${
+              member.utilization > 90 ? 'bg-red-500' :
+              member.utilization > 75 ? 'bg-yellow-500' :
+              member.utilization > 50 ? 'bg-blue-500' : 'bg-green-500'
+            }" style="width: ${member.utilization}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    private updateResourceConflicts() {
+      const container = document.getElementById('resourceConflicts');
+      const countElement = document.getElementById('conflictCount');
+      
+      if (!container || !countElement) return;
+
+      const conflicts = this.identifyConflicts();
+      countElement.textContent = conflicts.length.toString();
+
+      if (conflicts.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8">
+            <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+            <p class="text-slate-400">No resource conflicts detected</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = conflicts.map(conflict => `
+        <div class="flex items-start space-x-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <i class="fas fa-exclamation-triangle text-red-400 mt-1"></i>
+          <div class="flex-1">
+            <div class="text-white text-sm font-medium">${conflict.type}</div>
+            <div class="text-slate-400 text-xs mt-1">${conflict.description}</div>
+            <div class="flex items-center space-x-2 mt-2">
+              <button class="text-xs text-blue-400 hover:text-blue-300" onclick="resourceAllocation.resolveConflict('${conflict.id}')">
+                Resolve
+              </button>
+              <button class="text-xs text-slate-400 hover:text-slate-300" onclick="resourceAllocation.ignoreConflict('${conflict.id}')">
+                Ignore
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    private identifyConflicts() {
+      const conflicts: any[] = [];
+
+      // Check for over-allocated team members
+      this.teamMembers.forEach(member => {
+        const utilization = (member.currentLoad / member.capacity) * 100;
+        if (utilization > 90) {
+          conflicts.push({
+            id: `overload-${member.id}`,
+            type: 'Over Allocation',
+            description: `${member.name} is at ${Math.round(utilization)}% capacity`,
+            severity: 'high'
+          });
+        }
+      });
+
+      // Check for overlapping high-priority projects
+      const highPriorityAllocations = this.allocations.filter(a => a.priority === 'critical');
+      const memberAllocations = new Map();
+      
+      highPriorityAllocations.forEach(allocation => {
+        if (!memberAllocations.has(allocation.teamMemberId)) {
+          memberAllocations.set(allocation.teamMemberId, []);
+        }
+        memberAllocations.get(allocation.teamMemberId).push(allocation);
+      });
+
+      memberAllocations.forEach((allocs, memberId) => {
+        if (allocs.length > 1) {
+          const member = this.teamMembers.find(m => m.id === memberId);
+          conflicts.push({
+            id: `priority-conflict-${memberId}`,
+            type: 'Priority Conflict',
+            description: `${member.name} assigned to multiple high-priority projects`,
+            severity: 'medium'
+          });
+        }
+      });
+
+      return conflicts;
+    }
+
+    private initializeChart() {
+      const canvas = document.getElementById('resourceAllocationChart') as HTMLCanvasElement;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Set canvas size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      this.drawResourceChart(ctx, canvas.width, canvas.height);
+    }
+
+    private drawResourceChart(ctx: CanvasRenderingContext2D, width: number, height: number) {
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw grid
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      
+      // Horizontal grid lines
+      for (let i = 0; i <= 4; i++) {
+        const y = (height / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Draw team member allocations
+      const barWidth = width / (this.teamMembers.length * 2);
+      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+      this.teamMembers.forEach((member, index) => {
+        const x = barWidth + (index * barWidth * 2);
+        const utilization = (member.currentLoad / member.capacity) * 100;
+        const barHeight = (utilization / 100) * height * 0.8;
+        const y = height - barHeight - 20;
+
+        // Draw bar
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fillRect(x - barWidth/2, y, barWidth, barHeight);
+
+        // Draw label
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(member.name.split(' ')[0], x, height - 5);
+        
+        // Draw percentage
+        ctx.fillText(`${Math.round(utilization)}%`, x, y - 5);
+      });
+    }
+
+    private updateChart() {
+      this.initializeChart();
+    }
+
+    private loadMockData() {
+      // Mock data for demonstration
+      this.teamMembers = [
+        { id: '1', name: 'John Doe', role: 'Developer', capacity: 40, currentLoad: 32 },
+        { id: '2', name: 'Jane Smith', role: 'Designer', capacity: 40, currentLoad: 28 },
+        { id: '3', name: 'Mike Johnson', role: 'Project Manager', capacity: 40, currentLoad: 36 },
+        { id: '4', name: 'Sarah Wilson', role: 'Developer', capacity: 40, currentLoad: 24 },
+        { id: '5', name: 'Tom Brown', role: 'QA Engineer', capacity: 40, currentLoad: 30 }
+      ];
+
+      this.projects = [
+        { id: '1', name: 'E-commerce Website', startAt: '2024-01-01', dueAt: '2024-03-01', priority: 'high' },
+        { id: '2', name: 'Mobile App', startAt: '2024-02-01', dueAt: '2024-04-01', priority: 'medium' },
+        { id: '3', name: 'Dashboard Redesign', startAt: '2024-01-15', dueAt: '2024-02-15', priority: 'critical' }
+      ];
+
+      this.generateAllocations();
+      this.updateUI();
+    }
+
+    private setupEventListeners() {
+      // Listen for window resize
+      window.addEventListener('resize', () => {
+        this.initializeChart();
+      });
+
+      // Listen for project updates
+      window.addEventListener('projects-data-updated', (event: any) => {
+        this.projects = event.detail.projects;
+        this.generateAllocations();
+        this.updateUI();
+      });
+    }
+
+    // Public methods
+    showDetails() {
+      // Show detailed resource allocation modal
+      alert('Detailed resource allocation view would open here');
+    }
+
+    resolveConflict(conflictId: string) {
+      console.log('Resolving conflict:', conflictId);
+      // Implement conflict resolution logic
+      this.updateUI();
+    }
+
+    ignoreConflict(conflictId: string) {
+      console.log('Ignoring conflict:', conflictId);
+      // Implement conflict ignoring logic
+      this.updateUI();
+    }
+  }
+
+  // Initialize resource allocation when component loads
+  document.addEventListener('DOMContentLoaded', () => {
+    (window as any).resourceAllocation = new ResourceAllocation();
+  });
+</script>
+
+
+---

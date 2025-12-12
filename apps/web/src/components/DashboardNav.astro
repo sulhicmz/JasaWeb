@@ -1,0 +1,165 @@
+---
+// Dashboard Navigation Component
+interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+  badge?: number;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Dashboard', href: '/dashboard', icon: 'fas fa-tachometer-alt' },
+  { label: 'Projects', href: '/projects', icon: 'fas fa-project-diagram' },
+  { label: 'Gantt Chart', href: '/projects/gantt', icon: 'fas fa-chart-gantt' },
+  { label: 'Tickets', href: '/tickets', icon: 'fas fa-ticket-alt' },
+  { label: 'Files', href: '/files', icon: 'fas fa-folder' },
+  { label: 'Approvals', href: '/approvals', icon: 'fas fa-check-circle' },
+  { label: 'Invoices', href: '/invoices', icon: 'fas fa-file-invoice' },
+  { label: 'Reports', href: '/reports', icon: 'fas fa-chart-bar' },
+  { label: 'Settings', href: '/settings', icon: 'fas fa-cog' }
+];
+---
+
+<!-- Desktop Sidebar -->
+<aside class="hidden lg:flex lg:flex-shrink-0">
+  <div class="flex flex-col w-64">
+    <!-- Sidebar Header -->
+    <div class="flex items-center h-16 flex-shrink-0 px-6 bg-slate-900 border-b border-slate-800">
+      <a href="/dashboard" class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+        JasaWeb
+      </a>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-4 py-6 space-y-2 bg-slate-900/50">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class={`flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors group ${
+            Astro.url.pathname === item.href
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <div class="flex items-center space-x-3">
+            <i class={`${item.icon} w-5 text-center`}></i>
+            <span>{item.label}</span>
+          </div>
+          {item.badge && (
+            <span class="px-2 py-1 text-xs bg-red-500 text-white rounded-full">
+              {item.badge}
+            </span>
+          )}
+        </a>
+      ))}
+    </nav>
+
+    <!-- User Section -->
+    <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+      <div class="flex items-center space-x-3 px-4 py-3">
+        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+          U
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium text-white truncate">User Name</div>
+          <div class="text-xs text-slate-400 truncate">user@example.com</div>
+        </div>
+        <button class="p-1 hover:bg-slate-800 rounded transition-colors">
+          <i class="fas fa-sign-out-alt text-slate-400 text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Navigation -->
+<aside class="lg:hidden fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 transform -translate-x-full transition-transform duration-300 ease-in-out" id="mobile-sidebar">
+  <!-- Mobile Sidebar Header -->
+  <div class="flex items-center justify-between h-16 px-6 border-b border-slate-800">
+    <a href="/dashboard" class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+      JasaWeb
+    </a>
+    <button id="close-mobile-sidebar" class="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+      <i class="fas fa-times text-slate-400"></i>
+    </button>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+    {navItems.map((item) => (
+      <a
+        href={item.href}
+        class={`flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors group ${
+          Astro.url.pathname === item.href
+            ? 'bg-blue-600 text-white'
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+        }`}
+      >
+        <div class="flex items-center space-x-3">
+          <i class={`${item.icon} w-5 text-center`}></i>
+          <span>{item.label}</span>
+        </div>
+        {item.badge && (
+          <span class="px-2 py-1 text-xs bg-red-500 text-white rounded-full">
+            {item.badge}
+          </span>
+        )}
+      </a>
+    ))}
+  </nav>
+
+  <!-- Mobile User Section -->
+  <div class="p-4 border-t border-slate-800">
+    <div class="flex items-center space-x-3 px-4 py-3">
+      <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+        U
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium text-white truncate">User Name</div>
+        <div class="text-xs text-slate-400 truncate">user@example.com</div>
+      </div>
+      <button class="p-1 hover:bg-slate-800 rounded transition-colors">
+        <i class="fas fa-sign-out-alt text-slate-400 text-sm"></i>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- Mobile Overlay -->
+<div id="mobile-sidebar-overlay" class="lg:hidden fixed inset-0 z-40 bg-black/50 transform -translate-x-full transition-transform duration-300 ease-in-out"></div>
+
+<script>
+  // Mobile sidebar functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const mobileSidebarOverlay = document.getElementById('mobile-sidebar-overlay');
+    const closeMobileSidebar = document.getElementById('close-mobile-sidebar');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+
+    // Open mobile sidebar
+    const openMobileSidebar = () => {
+      mobileSidebar?.classList.remove('-translate-x-full');
+      mobileSidebarOverlay?.classList.remove('-translate-x-full');
+      document.body.style.overflow = 'hidden';
+    };
+
+    // Close mobile sidebar
+    const closeMobileSidebarFunc = () => {
+      mobileSidebar?.classList.add('-translate-x-full');
+      mobileSidebarOverlay?.classList.add('-translate-x-full');
+      document.body.style.overflow = '';
+    };
+
+    // Event listeners
+    mobileMenuButton?.addEventListener('click', openMobileSidebar);
+    closeMobileSidebar?.addEventListener('click', closeMobileSidebarFunc);
+    mobileSidebarOverlay?.addEventListener('click', closeMobileSidebarFunc);
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeMobileSidebarFunc();
+      }
+    });
+  });
+</script>

@@ -1,0 +1,270 @@
+---
+import Layout from '../../layouts/DashboardLayoutWithNav.astro';
+import GanttChart from '../../components/projects/GanttChart.astro';
+import ProjectTimeline from '../../components/projects/ProjectTimeline.astro';
+import ResourceAllocation from '../../components/projects/ResourceAllocation.astro';
+import MilestoneTracker from '../../components/projects/MilestoneTracker.astro';
+import ProjectMetrics from '../../components/projects/ProjectMetrics.astro';
+---
+
+<Layout title="Project Management - Client Portal">
+  <div class="min-h-screen bg-slate-950">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-white">Project Management</h1>
+            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
+              Gantt View
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <select id="projectFilter" class="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+              <option value="all">All Projects</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="on-hold">On Hold</option>
+            </select>
+            <select id="timeRange" class="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+              <option value="30">Next 30 Days</option>
+              <option value="60">Next 60 Days</option>
+              <option value="90">Next 90 Days</option>
+              <option value="all">All Time</option>
+            </select>
+            <button id="exportGantt" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+              <i class="fas fa-download"></i>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+      <!-- Project Metrics Overview -->
+      <section class="mb-8">
+        <ProjectMetrics client:load />
+      </section>
+
+      <!-- Gantt Chart Section -->
+      <section class="mb-8">
+        <div class="glass-panel p-6 rounded-xl">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-white">Project Timeline & Gantt Chart</h2>
+            <div class="flex items-center space-x-4">
+              <button id="zoomIn" class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-search-plus"></i>
+              </button>
+              <button id="zoomOut" class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-search-minus"></i>
+              </button>
+              <button id="toggleView" class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                <i class="fas fa-calendar-alt"></i>
+              </button>
+            </div>
+          </div>
+          <GanttChart client:load />
+        </div>
+      </section>
+
+      <!-- Resource Allocation and Timeline -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Resource Allocation -->
+        <section>
+          <div class="glass-panel p-6 rounded-xl">
+            <h2 class="text-xl font-bold text-white mb-6">Resource Allocation</h2>
+            <ResourceAllocation client:load />
+          </div>
+        </section>
+
+        <!-- Project Timeline -->
+        <section>
+          <div class="glass-panel p-6 rounded-xl">
+            <h2 class="text-xl font-bold text-white mb-6">Upcoming Milestones</h2>
+            <ProjectTimeline client:load />
+          </div>
+        </section>
+      </div>
+
+      <!-- Milestone Tracker -->
+      <section>
+        <div class="glass-panel p-6 rounded-xl">
+          <h2 class="text-xl font-bold text-white mb-6">Milestone Progress Tracker</h2>
+          <MilestoneTracker client:load />
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Project management dashboard functionality
+    let currentZoom = 1;
+    let currentView = 'gantt'; // 'gantt' or 'calendar'
+    
+    function initializeProjectManagement() {
+      // Set up event listeners
+      document.getElementById('projectFilter')?.addEventListener('change', filterProjects);
+      document.getElementById('timeRange')?.addEventListener('change', updateTimeRange);
+      document.getElementById('exportGantt')?.addEventListener('click', exportGanttChart);
+      document.getElementById('zoomIn')?.addEventListener('click', () => zoomChart(0.1));
+      document.getElementById('zoomOut')?.addEventListener('click', () => zoomChart(-0.1));
+      document.getElementById('toggleView')?.addEventListener('click', toggleChartView);
+      
+      // Initialize tooltips and interactions
+      initializeTooltips();
+      initializeDragAndDrop();
+    }
+
+    function filterProjects(event) {
+      const filter = event.target.value;
+      // Emit event to Gantt chart component
+      window.dispatchEvent(new CustomEvent('filter-projects', { 
+        detail: { filter } 
+      }));
+    }
+
+    function updateTimeRange(event) {
+      const days = event.target.value;
+      // Emit event to update time range
+      window.dispatchEvent(new CustomEvent('update-time-range', { 
+        detail: { days } 
+      }));
+    }
+
+    function exportGanttChart() {
+      // Export functionality
+      const exportBtn = document.getElementById('exportGantt');
+      const icon = exportBtn.querySelector('i');
+      
+      icon.classList.add('fa-spin');
+      
+      // Simulate export process
+      setTimeout(() => {
+        icon.classList.remove('fa-spin');
+        
+        // Create download
+        const dataStr = JSON.stringify({
+          exportDate: new Date().toISOString(),
+          projects: window.currentProjectsData || [],
+          view: currentView,
+          zoom: currentZoom
+        }, null, 2);
+        
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `gantt-chart-${new Date().toISOString().split('T')[0]}.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+      }, 1500);
+    }
+
+    function zoomChart(delta) {
+      currentZoom = Math.max(0.5, Math.min(2, currentZoom + delta));
+      
+      // Emit zoom event
+      window.dispatchEvent(new CustomEvent('zoom-chart', { 
+        detail: { zoom: currentZoom } 
+      }));
+    }
+
+    function toggleChartView() {
+      currentView = currentView === 'gantt' ? 'calendar' : 'gantt';
+      const toggleBtn = document.getElementById('toggleView');
+      const icon = toggleBtn.querySelector('i');
+      
+      if (currentView === 'calendar') {
+        icon.classList.remove('fa-calendar-alt');
+        icon.classList.add('fa-chart-gantt');
+      } else {
+        icon.classList.remove('fa-chart-gantt');
+        icon.classList.add('fa-calendar-alt');
+      }
+      
+      // Emit view change event
+      window.dispatchEvent(new CustomEvent('toggle-chart-view', { 
+        detail: { view: currentView } 
+      }));
+    }
+
+    function initializeTooltips() {
+      // Add hover tooltips for project information
+      const tooltipElements = document.querySelectorAll('[data-tooltip]');
+      
+      tooltipElements.forEach(element => {
+        element.addEventListener('mouseenter', (e) => {
+          const tooltip = document.createElement('div');
+          tooltip.className = 'absolute z-50 p-2 bg-slate-800 text-white text-sm rounded-lg shadow-lg';
+          tooltip.textContent = e.target.getAttribute('data-tooltip');
+          tooltip.style.top = `${e.pageY + 10}px`;
+          tooltip.style.left = `${e.pageX + 10}px`;
+          tooltip.id = 'tooltip';
+          document.body.appendChild(tooltip);
+        });
+        
+        element.addEventListener('mouseleave', () => {
+          const tooltip = document.getElementById('tooltip');
+          if (tooltip) {
+            tooltip.remove();
+          }
+        });
+      });
+    }
+
+    function initializeDragAndDrop() {
+      // Enable drag and drop for Gantt chart items
+      const draggableItems = document.querySelectorAll('.draggable-milestone');
+      
+      draggableItems.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/html', e.target.innerHTML);
+          e.target.classList.add('opacity-50');
+        });
+        
+        item.addEventListener('dragend', (e) => {
+          e.target.classList.remove('opacity-50');
+        });
+      });
+      
+      const dropZones = document.querySelectorAll('.drop-zone');
+      
+      dropZones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          zone.classList.add('bg-blue-500/20');
+        });
+        
+        zone.addEventListener('dragleave', (e) => {
+          zone.classList.remove('bg-blue-500/20');
+        });
+        
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('bg-blue-500/20');
+          
+          // Handle milestone rescheduling
+          const milestoneData = e.dataTransfer.getData('text/html');
+          const newDate = zone.getAttribute('data-date');
+          
+          window.dispatchEvent(new CustomEvent('reschedule-milestone', {
+            detail: { milestoneData, newDate }
+          }));
+        });
+      });
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', initializeProjectManagement);
+
+    // Listen for project data updates
+    window.addEventListener('projects-data-updated', (event) => {
+      window.currentProjectsData = event.detail.projects;
+    });
+  </script>
+</Layout>

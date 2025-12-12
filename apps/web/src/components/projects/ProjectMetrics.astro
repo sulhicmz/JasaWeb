@@ -1,0 +1,338 @@
+---
+// Project Metrics Component
+---
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <!-- Total Projects Metric -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-blue-500/20 rounded-lg">
+        <i class="fas fa-project-diagram text-blue-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Total</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="totalProjects">0</div>
+      <div class="text-sm text-slate-400">Projects</div>
+    </div>
+    <div class="mt-4 flex items-center space-x-2">
+      <div class="flex-1 bg-slate-700 rounded-full h-2">
+        <div id="totalProjectsProgress" class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      <span class="text-xs text-slate-400" id="totalProjectsPercentage">0%</span>
+    </div>
+  </div>
+
+  <!-- Active Projects Metric -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-green-500/20 rounded-lg">
+        <i class="fas fa-play-circle text-green-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Active</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="activeProjects">0</div>
+      <div class="text-sm text-slate-400">In Progress</div>
+    </div>
+    <div class="mt-4 flex items-center space-x-2">
+      <div class="flex-1 bg-slate-700 rounded-full h-2">
+        <div id="activeProjectsProgress" class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      <span class="text-xs text-slate-400" id="activeProjectsPercentage">0%</span>
+    </div>
+  </div>
+
+  <!-- Completed Projects Metric -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-purple-500/20 rounded-lg">
+        <i class="fas fa-check-circle text-purple-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Completed</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="completedProjects">0</div>
+      <div class="text-sm text-slate-400">This Month</div>
+    </div>
+    <div class="mt-4 flex items-center space-x-2">
+      <div class="flex-1 bg-slate-700 rounded-full h-2">
+        <div id="completedProjectsProgress" class="bg-purple-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      <span class="text-xs text-slate-400" id="completedProjectsPercentage">0%</span>
+    </div>
+  </div>
+
+  <!-- Overdue Projects Metric -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-red-500/20 rounded-lg">
+        <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Overdue</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="overdueProjects">0</div>
+      <div class="text-sm text-slate-400">Need Attention</div>
+    </div>
+    <div class="mt-4 flex items-center space-x-2">
+      <div class="flex-1 bg-slate-700 rounded-full h-2">
+        <div id="overdueProjectsProgress" class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      <span class="text-xs text-slate-400" id="overdueProjectsPercentage">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- Additional Metrics Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+  <!-- Average Project Duration -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-yellow-500/20 rounded-lg">
+        <i class="fas fa-clock text-yellow-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Average</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="avgDuration">0</div>
+      <div class="text-sm text-slate-400">Days Duration</div>
+    </div>
+  </div>
+
+  <!-- Team Utilization -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-cyan-500/20 rounded-lg">
+        <i class="fas fa-users text-cyan-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Team</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="teamUtilization">0%</div>
+      <div class="text-sm text-slate-400">Utilization</div>
+    </div>
+    <div class="mt-4 flex items-center space-x-2">
+      <div class="flex-1 bg-slate-700 rounded-full h-2">
+        <div id="teamUtilizationProgress" class="bg-cyan-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Utilization -->
+  <div class="glass-panel p-6 rounded-xl">
+    <div class="flex items-center justify-between mb-4">
+      <div class="p-3 bg-emerald-500/20 rounded-lg">
+        <i class="fas fa-dollar-sign text-emerald-400 text-xl"></i>
+      </div>
+      <span class="text-sm text-slate-400">Budget</span>
+    </div>
+    <div class="space-y-1">
+      <div class="text-2xl font-bold text-white" id="budgetUtilization">0%</div>
+      <div class="text-sm text-slate-400">Utilized</div>
+    </div>
+    <div class="mt-4 flex items-center space-x-2">
+      <div class="flex-1 bg-slate-700 rounded-full h-2">
+        <div id="budgetUtilizationProgress" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  class ProjectMetrics {
+    private metrics = {
+      total: 0,
+      active: 0,
+      completed: 0,
+      overdue: 0,
+      avgDuration: 0,
+      teamUtilization: 0,
+      budgetUtilization: 0
+    };
+
+    constructor() {
+      this.loadMetrics();
+      this.setupRealTimeUpdates();
+    }
+
+    private async loadMetrics() {
+      try {
+        const response = await fetch('/api/dashboard/stats');
+        const stats = await response.json();
+        
+        // Update metrics with real data
+        this.metrics.total = stats.projects.total;
+        this.metrics.active = stats.projects.active;
+        this.metrics.completed = stats.projects.completed;
+        
+        // Calculate overdue projects
+        this.metrics.overdue = await this.calculateOverdueProjects();
+        
+        // Calculate additional metrics
+        this.metrics.avgDuration = await this.calculateAverageDuration();
+        this.metrics.teamUtilization = await this.calculateTeamUtilization();
+        this.metrics.budgetUtilization = await this.calculateBudgetUtilization();
+        
+        this.updateUI();
+      } catch (error) {
+        console.error('Failed to load project metrics:', error);
+        this.loadMockData();
+      }
+    }
+
+    private async calculateOverdueProjects(): Promise<number> {
+      try {
+        const response = await fetch('/api/dashboard/projects-overview');
+        const projects = await response.json();
+        
+        const now = new Date();
+        return projects.filter((project: any) => 
+          project.status !== 'completed' && 
+          project.dueAt && 
+          new Date(project.dueAt) < now
+        ).length;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    private async calculateAverageDuration(): Promise<number> {
+      try {
+        const response = await fetch('/api/dashboard/projects-overview');
+        const projects = await response.json();
+        
+        const completedProjects = projects.filter((p: any) => p.status === 'completed');
+        if (completedProjects.length === 0) return 0;
+        
+        const totalDays = completedProjects.reduce((sum: number, project: any) => {
+          if (project.startAt && project.updatedAt) {
+            const start = new Date(project.startAt);
+            const end = new Date(project.updatedAt);
+            return sum + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+          }
+          return sum;
+        }, 0);
+        
+        return Math.round(totalDays / completedProjects.length);
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    private async calculateTeamUtilization(): Promise<number> {
+      // Mock calculation - in real implementation, this would consider team capacity
+      const activeProjects = this.metrics.active;
+      const teamCapacity = 10; // Assume team can handle 10 projects simultaneously
+      return Math.min(100, Math.round((activeProjects / teamCapacity) * 100));
+    }
+
+    private async calculateBudgetUtilization(): Promise<number> {
+      // Mock calculation - in real implementation, this would use actual budget data
+      return 75; // Mock 75% budget utilization
+    }
+
+    private updateUI() {
+      // Update total projects
+      this.animateValue('totalProjects', 0, this.metrics.total, 1000);
+      this.updateProgressBar('totalProjectsProgress', 'totalProjectsPercentage', this.metrics.total, 50);
+
+      // Update active projects
+      this.animateValue('activeProjects', 0, this.metrics.active, 1000);
+      this.updateProgressBar('activeProjectsProgress', 'activeProjectsPercentage', this.metrics.active, this.metrics.total);
+
+      // Update completed projects
+      this.animateValue('completedProjects', 0, this.metrics.completed, 1000);
+      this.updateProgressBar('completedProjectsProgress', 'completedProjectsPercentage', this.metrics.completed, this.metrics.total);
+
+      // Update overdue projects
+      this.animateValue('overdueProjects', 0, this.metrics.overdue, 1000);
+      this.updateProgressBar('overdueProjectsProgress', 'overdueProjectsPercentage', this.metrics.overdue, this.metrics.total);
+
+      // Update additional metrics
+      this.animateValue('avgDuration', 0, this.metrics.avgDuration, 1000);
+      this.animateValue('teamUtilization', 0, this.metrics.teamUtilization, 1000, '%');
+      this.animateValue('budgetUtilization', 0, this.metrics.budgetUtilization, 1000, '%');
+
+      // Update progress bars for additional metrics
+      this.updateProgressBar('teamUtilizationProgress', null, this.metrics.teamUtilization, 100);
+      this.updateProgressBar('budgetUtilizationProgress', null, this.metrics.budgetUtilization, 100);
+    }
+
+    private animateValue(elementId: string, start: number, end: number, duration: number, suffix: string = '') {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+
+      const range = end - start;
+      const increment = range / (duration / 16);
+      let current = start;
+
+      const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+          current = end;
+          clearInterval(timer);
+        }
+        element.textContent = Math.round(current) + suffix;
+      }, 16);
+    }
+
+    private updateProgressBar(progressId: string, percentageId: string | null, value: number, total: number) {
+      const progressBar = document.getElementById(progressId);
+      const percentageElement = percentageId ? document.getElementById(percentageId) : null;
+      
+      if (progressBar) {
+        const percentage = total > 0 ? Math.min(100, (value / total) * 100) : 0;
+        progressBar.style.width = `${percentage}%`;
+        
+        if (percentageElement) {
+          percentageElement.textContent = `${Math.round(percentage)}%`;
+        }
+      }
+    }
+
+    private loadMockData() {
+      // Load mock data for demonstration
+      this.metrics = {
+        total: 24,
+        active: 8,
+        completed: 12,
+        overdue: 3,
+        avgDuration: 45,
+        teamUtilization: 80,
+        budgetUtilization: 75
+      };
+      
+      this.updateUI();
+    }
+
+    private setupRealTimeUpdates() {
+      // Listen for real-time updates
+      window.addEventListener('projects-data-updated', (event: any) => {
+        const projects = event.detail.projects;
+        this.recalculateMetrics(projects);
+      });
+
+      // Refresh metrics every 30 seconds
+      setInterval(() => {
+        this.loadMetrics();
+      }, 30000);
+    }
+
+    private recalculateMetrics(projects: any[]) {
+      this.metrics.total = projects.length;
+      this.metrics.active = projects.filter(p => p.status === 'active' || p.status === 'in-progress').length;
+      this.metrics.completed = projects.filter(p => p.status === 'completed').length;
+      
+      this.updateUI();
+    }
+  }
+
+  // Initialize metrics when component loads
+  document.addEventListener('DOMContentLoaded', () => {
+    new ProjectMetrics();
+  });
+</script>
+
+
+---

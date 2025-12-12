@@ -1,0 +1,19 @@
+---
+// Gantt Chart Astro Component
+---
+
+<div id="ganttChartContainer" class="w-full"></div>
+
+<script>
+  import GanttChartManager from './GanttChart.ts';
+  
+  // Initialize the Gantt chart when the component loads
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window.ganttChart) {
+      window.ganttChart = new GanttChartManager('ganttChartContainer');
+    }
+  });
+</script>
+
+
+---
