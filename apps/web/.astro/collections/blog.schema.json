@@ -42,9 +42,14 @@
           "type": "string"
         }
       },
-      "required": ["title", "description", "date", "author"],
+      "required": [
+        "title",
+        "description",
+        "date",
+        "author"
+      ],
       "additionalProperties": false
     }
   },
-  "$schema": "https://json-schema.org/draft-07/schema#"
+  "$schema": "http://json-schema.org/draft-07/schema#"
 }

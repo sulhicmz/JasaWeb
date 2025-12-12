@@ -27,6 +27,7 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 const parseEnvNumber = (
   value: string | undefined,
@@ -71,6 +72,7 @@ const parseEnvNumber = (
     HealthModule,
     AnalyticsModule,
     KnowledgeBaseModule,
+    DashboardModule,
     PrismaModule,
     MultiTenantPrismaModule,
   ],

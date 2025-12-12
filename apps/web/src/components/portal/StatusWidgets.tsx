@@ -44,28 +44,51 @@ const StatusWidgets: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
 
-      const [projectsResponse, ticketsResponse, invoicesResponse] =
-        await Promise.all([
-          fetch('http://localhost:3001/projects', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('http://localhost:3001/tickets', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('http://localhost:3001/invoices', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+      const response = await fetch('http://localhost:3001/dashboard/stats', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-      const projects = projectsResponse.ok ? await projectsResponse.json() : [];
-      const tickets = ticketsResponse.ok ? await ticketsResponse.json() : [];
-      const invoices = invoicesResponse.ok ? await invoicesResponse.json() : [];
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard stats');
+      }
 
-      setStatusData({ projects, tickets, invoices });
+      const stats = await response.json();
+
+      // Transform the stats data to match the expected interface
+      setStatusData({
+        projects: Array(stats.projects.total)
+          .fill(null)
+          .map((_, i) => ({
+            id: `project-${i}`,
+            status: i < stats.projects.active ? 'active' : 'completed',
+          })),
+        tickets: Array(stats.tickets.open + stats.tickets.inProgress)
+          .fill(null)
+          .map((_, i) => ({
+            id: `ticket-${i}`,
+            status: i < stats.tickets.open ? 'open' : 'in-progress',
+            priority: i < stats.tickets.highPriority ? 'high' : 'medium',
+          })),
+        invoices: Array(stats.invoices.pending)
+          .fill(null)
+          .map((_, i) => ({
+            id: `invoice-${i}`,
+            status: 'pending',
+            amount:
+              Math.floor(
+                stats.invoices.pendingAmount / stats.invoices.pending
+              ) || 0,
+          })),
+      });
     } catch (error) {
       if (import.meta.env.DEV) {
         console.debug('Error loading status data:', error);
       }
+      // Set empty data on error to prevent infinite loading
+      setStatusData({ projects: [], tickets: [], invoices: [] });
     } finally {
       setLoading(false);
     }
