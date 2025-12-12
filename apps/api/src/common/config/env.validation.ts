@@ -8,6 +8,8 @@ import {
   IsOptional,
   Min,
   Max,
+  MinLength,
+  Matches,
 } from 'class-validator';
 
 enum Environment {
@@ -28,12 +30,15 @@ class EnvironmentVariables {
   PORT: number = 3000;
 
   @IsString()
+  @IsUrl({ protocols: ['postgresql'], require_protocol: true })
   DATABASE_URL!: string;
 
   @IsString()
+  @MinLength(32)
   JWT_SECRET!: string;
 
   @IsString()
+  @MinLength(32)
   JWT_REFRESH_SECRET!: string;
 
   @IsString()
@@ -75,6 +80,28 @@ class EnvironmentVariables {
   @IsNumber()
   @IsOptional()
   REDIS_PORT: number = 6379;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^[a-fA-F0-9]{32}$/, {
+    message: 'ENCRYPTION_KEY must be a 32-character hexadecimal string',
+  })
+  ENCRYPTION_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^[a-fA-F0-9]{32}$/, {
+    message: 'SESSION_SECRET must be a 32-character hexadecimal string',
+  })
+  SESSION_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  @MinLength(32)
+  @Matches(/^(?!.*CHANGE_THIS).*$/, {
+    message: 'SMTP_FROM must not contain placeholder values',
+  })
+  SMTP_FROM?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
@@ -89,19 +116,40 @@ export function validateEnv(config: Record<string, unknown>) {
     throw new Error(`Environment validation failed: ${errors.toString()}`);
   }
 
-  // Custom validation for JWT secret lengths
+  // Enhanced security validations
   const jwtSecret = config.JWT_SECRET as string;
-  if (jwtSecret && jwtSecret.length < 32) {
+  if (jwtSecret && jwtSecret.includes('CHANGE_THIS')) {
     throw new Error(
-      `JWT_SECRET must be at least 32 characters long for security. Current length: ${jwtSecret.length}`
+      'JWT_SECRET appears to be using the default/example value. Please generate a secure random string.'
     );
   }
 
   const jwtRefreshSecret = config.JWT_REFRESH_SECRET as string;
-  if (jwtRefreshSecret && jwtRefreshSecret.length < 32) {
+  if (jwtRefreshSecret && jwtRefreshSecret.includes('CHANGE_THIS')) {
     throw new Error(
-      `JWT_REFRESH_SECRET must be at least 32 characters long for security. Current length: ${jwtRefreshSecret.length}`
+      'JWT_REFRESH_SECRET appears to be using the default/example value. Please generate a secure random string.'
     );
+  }
+
+  // Validate database URL doesn't contain obvious insecure values
+  const databaseUrl = config.DATABASE_URL as string;
+  if (databaseUrl && databaseUrl.includes('user:password')) {
+    throw new Error(
+      'DATABASE_URL appears to contain default credentials. Please configure proper database credentials.'
+    );
+  }
+
+  // Production-specific security checks
+  if (config.NODE_ENV === 'production') {
+    if (databaseUrl && databaseUrl.includes('localhost')) {
+      throw new Error(
+        'DATABASE_URL should not use localhost in production environment'
+      );
+    }
+
+    if (!config.ENCRYPTION_KEY) {
+      throw new Error('ENCRYPTION_KEY is required in production environment');
+    }
   }
 
   return validatedConfig;
