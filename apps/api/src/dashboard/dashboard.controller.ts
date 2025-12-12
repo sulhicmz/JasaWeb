@@ -418,7 +418,7 @@ export class DashboardController {
   ) {
     try {
       await this.dashboardGateway.broadcastDashboardUpdate({
-        type: body.type as any,
+        type: body.type as 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice',
         data: { ...body.data, userId },
         timestamp: new Date(),
         organizationId,
