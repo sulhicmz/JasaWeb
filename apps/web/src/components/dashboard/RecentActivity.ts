@@ -130,8 +130,9 @@ class RecentActivityComponent extends HTMLElement {
     return colors[priority as keyof typeof colors] || '';
   }
 
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
+  formatDate(dateInput: string | Date): string {
+    const date =
+      typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

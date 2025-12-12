@@ -284,13 +284,16 @@ class ProjectsOverviewComponent extends HTMLElement {
                      `
                          : ''
                      }
-                     {
-                       !project.stagingUrl && !project.productionUrl && !project.repositoryUrl && !project.documentationUrl
-                         ? `
+                      ${
+                        !project.stagingUrl &&
+                        !project.productionUrl &&
+                        !project.repositoryUrl &&
+                        !project.documentationUrl
+                          ? `
                        <span class="text-gray-500 italic">No links available</span>
                      `
-                         : ''
-                     }
+                          : ''
+                      }
                    </div>
                 </div>
               `;

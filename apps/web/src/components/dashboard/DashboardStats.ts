@@ -85,7 +85,7 @@ class DashboardStatsComponent extends HTMLElement {
     window.addEventListener('offline-status-changed', (event: any) => {
       this.isOnline = event.detail.isOnline;
       this.render(); // Update UI to show online status
-      
+
       if (this.isOnline && this.stats) {
         // Refresh data when coming back online
         this.fetchStats(true);
@@ -111,13 +111,15 @@ class DashboardStatsComponent extends HTMLElement {
     });
   }
 
-async fetchStats(forceRefresh = false) {
+  async fetchStats(forceRefresh = false) {
     // Check if we can use cached data
     const now = Date.now();
-    if (!forceRefresh && 
-        this.stats && 
-        this.isOnline && 
-        (now - this.lastFetchTime) < this.cacheExpiry) {
+    if (
+      !forceRefresh &&
+      this.stats &&
+      this.isOnline &&
+      now - this.lastFetchTime < this.cacheExpiry
+    ) {
       return; // Use cached data
     }
 
@@ -129,7 +131,7 @@ async fetchStats(forceRefresh = false) {
       // Use offline cache service for better reliability
       const cacheKey = 'dashboard-stats';
       const ttl = forceRefresh ? 0 : 5 * 60 * 1000; // 5 minutes or immediate expiry
-      
+
       this.stats = await offlineCache.fetchWithCache<DashboardStats>(
         '/api/dashboard/stats',
         {
@@ -142,7 +144,7 @@ async fetchStats(forceRefresh = false) {
         cacheKey,
         ttl
       );
-      
+
       this.lastFetchTime = now;
 
       // Dispatch success event for parent components
@@ -160,7 +162,7 @@ async fetchStats(forceRefresh = false) {
         const cachedStats = offlineCache.get<DashboardStats>('dashboard-stats');
         if (cachedStats) {
           this.stats = cachedStats;
-          this.lastFetchTime = Date.now() - (4 * 60 * 1000); // Show as 4 minutes old
+          this.lastFetchTime = Date.now() - 4 * 60 * 1000; // Show as 4 minutes old
           console.log('Loaded dashboard stats from offline cache');
         }
       }
@@ -404,23 +406,13 @@ async fetchStats(forceRefresh = false) {
       </div>
     `;
   }
-}
-
-private formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
 
   private formatRelativeTime(timestamp: number): string {
     if (!timestamp) return 'never';
-    
+
     const now = Date.now();
     const diff = now - timestamp;
-    
+
     if (diff < 60000) return 'just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
