@@ -147,8 +147,8 @@ jobs:
           )" \
             --model iflowcn/glm-4.6 \
             --share false
-      - name: Run OpenCode1
-        id: run_oc1
+      - name: Run OpenCode2
+        id: run_oc2
         timeout-minutes: 60
         run: |
           opencode run "$(cat <<'PROMPT'

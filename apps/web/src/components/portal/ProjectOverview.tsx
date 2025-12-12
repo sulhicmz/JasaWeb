@@ -5,10 +5,15 @@ interface Project {
   name: string;
   description?: string;
   status?: string;
-  milestones?: number;
-  tickets?: number;
+  progress: number;
+  totalMilestones: number;
+  completedMilestones: number;
+  openTickets: number;
+  highPriorityTickets: number;
   createdAt?: string;
   updatedAt?: string;
+  startAt?: string;
+  dueAt?: string;
 }
 
 const ProjectOverview: React.FC = () => {
@@ -30,15 +35,18 @@ const ProjectOverview: React.FC = () => {
       setError(null);
 
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/projects', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        'http://localhost:3001/dashboard/projects-overview?limit=6',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch projects');
+        throw new Error('Failed to fetch projects overview');
       }
 
       const projectsData = await response.json();
@@ -68,10 +76,7 @@ const ProjectOverview: React.FC = () => {
     }
   };
 
-  const calculateProgress = () => {
-    // Mock progress calculation - in real implementation this would be based on milestones
-    return Math.floor(Math.random() * 100);
-  };
+  // Progress is now calculated on the backend and included in the project data
 
   if (loading) {
     return (
@@ -170,91 +175,95 @@ const ProjectOverview: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map((project) => {
-            const progress = calculateProgress();
-            return (
-              <div
-                key={project.id}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-medium text-gray-900">
-                      {project.name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {project.description || 'No description'}
-                    </p>
-                  </div>
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}
-                  >
-                    {project.status || 'Active'}
-                  </span>
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-medium text-gray-900">{project.name}</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {project.description || 'No description'}
+                  </p>
                 </div>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}
+                >
+                  {project.status || 'Active'}
+                </span>
+              </div>
 
-                <div className="mb-3">
-                  <div className="flex justify-between text-sm text-gray-600 mb-1">
-                    <span>Progress</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
+              <div className="mb-3">
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Progress</span>
+                  <span>{project.progress}%</span>
                 </div>
-
-                <div className="flex justify-between items-center text-sm">
-                  <div className="flex space-x-4">
-                    <span className="text-gray-500">
-                      <svg
-                        className="inline h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      {project.milestones || 0} milestones
-                    </span>
-                    <span className="text-gray-500">
-                      <svg
-                        className="inline h-4 w-4 mr-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                        />
-                      </svg>
-                      {project.tickets || 0} tickets
-                    </span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      alert(
-                        `Viewing project ${project.id} - Details page coming soon!`
-                      )
-                    }
-                    className="text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    View →
-                  </button>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${project.progress}%` }}
+                  ></div>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex space-x-4">
+                  <span className="text-gray-500">
+                    <svg
+                      className="inline h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {project.completedMilestones}/{project.totalMilestones}{' '}
+                    milestones
+                  </span>
+                  <span className="text-gray-500">
+                    <svg
+                      className="inline h-4 w-4 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                      />
+                    </svg>
+                    {project.openTickets} tickets
+                  </span>
+                </div>
+                <button
+                  onClick={() =>
+                    alert(
+                      `Viewing project ${project.id} - Details page coming soon!`
+                    )
+                  }
+                  className="text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  View →
+                </button>
+              </div>
+
+              {/* Show high priority tickets indicator */}
+              {project.highPriorityTickets > 0 && (
+                <div className="mt-2 text-xs text-red-600">
+                  ⚠️ {project.highPriorityTickets} high priority ticket
+                  {project.highPriorityTickets > 1 ? 's' : ''}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
