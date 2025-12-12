@@ -1,9 +1,9 @@
 ---
-title: "Keuntungan Menggunakan Portal Berita Modern"
-description: "Mengapa portal berita modern lebih efektif daripada platform tradisional dalam menyampaikan informasi."
+title: 'Keuntungan Menggunakan Portal Berita Modern'
+description: 'Mengapa portal berita modern lebih efektif daripada platform tradisional dalam menyampaikan informasi.'
 date: 2023-09-22
-author: "Admin JasaWeb"
-tags: ["berita", "portal", "teknologi"]
+author: 'Admin JasaWeb'
+tags: ['berita', 'portal', 'teknologi']
 ---
 
 Dalam dunia informasi yang serba cepat, kebutuhan akan platform penyampaian berita yang efektif dan efisien semakin meningkat. Portal berita modern menawarkan berbagai keuntungan yang tidak dimiliki oleh platform tradisional.

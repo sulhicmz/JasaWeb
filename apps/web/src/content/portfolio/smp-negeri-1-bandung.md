@@ -1,11 +1,11 @@
 ---
-title: "Website SMP Negeri 1 Bandung"
-description: "Website resmi Sekolah Menengah Pertama Negeri 1 Bandung dengan fitur lengkap untuk manajemen akademik dan komunikasi."
+title: 'Website SMP Negeri 1 Bandung'
+description: 'Website resmi Sekolah Menengah Pertama Negeri 1 Bandung dengan fitur lengkap untuk manajemen akademik dan komunikasi.'
 date: 2023-08-15
-client: "SMP Negeri 1 Bandung"
-category: "Website Sekolah"
-tags: ["sekolah", "education", "akademik"]
-url: "https://smpn1bdg.sch.id"
+client: 'SMP Negeri 1 Bandung'
+category: 'Website Sekolah'
+tags: ['sekolah', 'education', 'akademik']
+url: 'https://smpn1bdg.sch.id'
 ---
 
 ## Deskripsi Proyek

@@ -45,17 +45,17 @@ export class SecurityAuditInterceptor implements NestInterceptor {
         next: (data) => {
           const duration = Date.now() - now;
           this.logger.log(
-            `Security Event Completed: ${method} ${url} - ${duration}ms - Success`,
+            `Security Event Completed: ${method} ${url} - ${duration}ms - Success`
           );
         },
         error: (error) => {
           const duration = Date.now() - now;
           this.logger.error(
             `Security Event Failed: ${method} ${url} - ${duration}ms - ${error.message}`,
-            error.stack,
+            error.stack
           );
         },
-      }),
+      })
     );
   }
 

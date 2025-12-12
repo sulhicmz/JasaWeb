@@ -1,4 +1,9 @@
-import { Injectable, NestMiddleware, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { SessionService } from '../services/session.service';
 
@@ -18,7 +23,7 @@ export class SessionMiddleware implements NestMiddleware {
     // Here we'll check for it in the Authorization header as a Bearer token
     // or in a custom header
     let sessionToken = req.headers.authorization?.split(' ')[1]; // Bearer <token>
-    
+
     if (!sessionToken) {
       // Also check for it in a custom header
       sessionToken = req.headers['x-session-token'] as string;
@@ -34,7 +39,7 @@ export class SessionMiddleware implements NestMiddleware {
     try {
       // Verify the session token
       const sessionData = await this.sessionService.verifySession(sessionToken);
-      
+
       if (!sessionData) {
         this.logger.warn(`Invalid session token for IP: ${req.ip}`);
         throw new UnauthorizedException('Invalid or expired session');
@@ -45,7 +50,7 @@ export class SessionMiddleware implements NestMiddleware {
       req.userId = sessionData.userId;
 
       this.logger.log(`Session validated for user ${sessionData.userId}`);
-      
+
       // Continue with the request
       next();
     } catch (error: any) {

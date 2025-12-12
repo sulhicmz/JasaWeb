@@ -41,6 +41,7 @@ Authorization: Bearer {accessToken}
 Register a new user account.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -50,6 +51,7 @@ Register a new user account.
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "clx1234567890",
@@ -64,6 +66,7 @@ Register a new user account.
 Authenticate and receive access tokens.
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -72,6 +75,7 @@ Authenticate and receive access tokens.
 ```
 
 **Response (200):**
+
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -89,6 +93,7 @@ Authenticate and receive access tokens.
 Refresh access token using refresh token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -96,6 +101,7 @@ Refresh access token using refresh token.
 ```
 
 **Response (200):**
+
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -108,11 +114,13 @@ Refresh access token using refresh token.
 Invalidate current session.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "message": "Logged out successfully"
@@ -128,11 +136,13 @@ Authorization: Bearer {accessToken}
 List all organizations for the current user.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 [
   {
@@ -151,11 +161,13 @@ Authorization: Bearer {accessToken}
 Create a new organization.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "New Company",
@@ -165,6 +177,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "org-456",
@@ -180,11 +193,13 @@ Authorization: Bearer {accessToken}
 Get organization details.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "org-123",
@@ -205,11 +220,13 @@ Authorization: Bearer {accessToken}
 Update organization details.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "Acme Corp Updated",
@@ -225,6 +242,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "org-123",
@@ -248,6 +266,7 @@ Authorization: Bearer {accessToken}
 Delete an organization (owner only).
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -264,14 +283,17 @@ No content
 List organization members.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `role` (optional): Filter by role (owner, admin, finance, reviewer, member, guest)
 
 **Response (200):**
+
 ```json
 [
   {
@@ -293,11 +315,13 @@ Authorization: Bearer {accessToken}
 Invite a user to the organization.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "email": "newuser@example.com",
@@ -307,6 +331,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "invitation-789",
@@ -323,11 +348,13 @@ Authorization: Bearer {accessToken}
 Update member role.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "role": "admin"
@@ -335,6 +362,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "membership-123",
@@ -348,6 +376,7 @@ Authorization: Bearer {accessToken}
 Remove a member from organization.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -364,17 +393,20 @@ No content
 List all projects for the current organization.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `view` (optional): `summary` (default) or `detail`
 - `status` (optional): Filter by status (draft, progress, review, completed, paused, cancelled)
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Items per page (default: 20)
 
 **Response (200) - Summary View:**
+
 ```json
 {
   "items": [
@@ -411,11 +443,13 @@ Authorization: Bearer {accessToken}
 Create a new project.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "News Portal Redesign",
@@ -426,6 +460,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "project-789",
@@ -444,11 +479,13 @@ Authorization: Bearer {accessToken}
 Get project details.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "project-123",
@@ -473,11 +510,13 @@ Authorization: Bearer {accessToken}
 Get project statistics.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "milestoneCount": 5,
@@ -495,11 +534,13 @@ Authorization: Bearer {accessToken}
 Update project details.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "School Website Redesign v2",
@@ -509,6 +550,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "project-123",
@@ -525,6 +567,7 @@ Authorization: Bearer {accessToken}
 Delete a project.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -541,14 +584,17 @@ No content
 List project milestones.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (todo, in-progress, completed, overdue)
 
 **Response (200):**
+
 ```json
 [
   {
@@ -568,11 +614,13 @@ Authorization: Bearer {accessToken}
 Create a milestone.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "Development Phase Complete",
@@ -582,6 +630,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "milestone-456",
@@ -598,11 +647,13 @@ Authorization: Bearer {accessToken}
 Update milestone.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "status": "completed"
@@ -610,6 +661,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "milestone-456",
@@ -623,6 +675,7 @@ Authorization: Bearer {accessToken}
 Delete a milestone.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -639,15 +692,18 @@ No content
 List project files.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `folder` (optional): Filter by folder path
 - `version` (optional): Filter by version
 
 **Response (200):**
+
 ```json
 [
   {
@@ -672,17 +728,20 @@ Authorization: Bearer {accessToken}
 Upload a file.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 Content-Type: multipart/form-data
 ```
 
 **Form Data:**
+
 - `file`: File binary
 - `folder` (optional): Folder path
 - `version` (optional): Version string
 
 **Response (201):**
+
 ```json
 {
   "id": "file-456",
@@ -702,6 +761,7 @@ Content-Type: multipart/form-data
 Download a file.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -714,6 +774,7 @@ Binary file content with appropriate Content-Type header
 Delete a file.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -730,15 +791,18 @@ No content
 List project approvals.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (pending, approved, rejected)
 - `itemType` (optional): Filter by type (design, content, feature, page, deployment)
 
 **Response (200):**
+
 ```json
 [
   {
@@ -760,11 +824,13 @@ Authorization: Bearer {accessToken}
 Request approval.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "itemType": "design",
@@ -774,6 +840,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "approval-456",
@@ -791,11 +858,13 @@ Authorization: Bearer {accessToken}
 Approve or reject.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "status": "approved",
@@ -804,6 +873,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "approval-456",
@@ -820,11 +890,13 @@ Authorization: Bearer {accessToken}
 Get approval history.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 [
   {
@@ -851,15 +923,18 @@ Authorization: Bearer {accessToken}
 List project tasks.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (todo, in-progress, review, completed)
 - `assigneeId` (optional): Filter by assignee
 
 **Response (200):**
+
 ```json
 [
   {
@@ -883,11 +958,13 @@ Authorization: Bearer {accessToken}
 Create a task.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "Implement contact form",
@@ -899,6 +976,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "task-456",
@@ -917,11 +995,13 @@ Authorization: Bearer {accessToken}
 Update task.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "status": "completed"
@@ -929,6 +1009,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "task-456",
@@ -942,6 +1023,7 @@ Authorization: Bearer {accessToken}
 Delete a task.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -958,17 +1040,20 @@ No content
 List tickets for the current organization.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (open, in-progress, in-review, resolved, closed)
 - `priority` (optional): Filter by priority (low, medium, high, critical)
 - `type` (optional): Filter by type (bug, feature, improvement, question, task)
 - `projectId` (optional): Filter by project
 
 **Response (200):**
+
 ```json
 [
   {
@@ -991,11 +1076,13 @@ Authorization: Bearer {accessToken}
 Create a ticket.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "type": "bug",
@@ -1007,6 +1094,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "ticket-456",
@@ -1026,11 +1114,13 @@ Authorization: Bearer {accessToken}
 Get ticket details.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "ticket-456",
@@ -1056,11 +1146,13 @@ Authorization: Bearer {accessToken}
 Update ticket.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "status": "in-progress",
@@ -1069,6 +1161,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "ticket-456",
@@ -1083,11 +1176,13 @@ Authorization: Bearer {accessToken}
 Resolve a ticket.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "resolution": "Fixed authentication service configuration. Issue resolved.",
@@ -1096,6 +1191,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "ticket-456",
@@ -1114,15 +1210,18 @@ Authorization: Bearer {accessToken}
 List invoices for the current organization.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (draft, issued, paid, overdue, cancelled)
 - `projectId` (optional): Filter by project
 
 **Response (200):**
+
 ```json
 [
   {
@@ -1144,11 +1243,13 @@ Authorization: Bearer {accessToken}
 Create an invoice.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "projectId": "project-123",
@@ -1161,6 +1262,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "invoice-456",
@@ -1180,11 +1282,13 @@ Authorization: Bearer {accessToken}
 Get invoice details.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 {
   "id": "invoice-456",
@@ -1205,11 +1309,13 @@ Authorization: Bearer {accessToken}
 Record a payment.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Request Body:**
+
 ```json
 {
   "amount": 5000000,
@@ -1220,6 +1326,7 @@ Authorization: Bearer {accessToken}
 ```
 
 **Response (201):**
+
 ```json
 {
   "id": "payment-789",
@@ -1237,6 +1344,7 @@ Authorization: Bearer {accessToken}
 Download invoice PDF.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
@@ -1253,11 +1361,13 @@ PDF file with Content-Type: application/pdf
 Query audit logs.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Query Parameters:**
+
 - `action` (optional): Filter by action type
 - `actorId` (optional): Filter by actor
 - `startDate` (optional): Filter by start date (ISO 8601)
@@ -1266,6 +1376,7 @@ Authorization: Bearer {accessToken}
 - `limit` (optional): Items per page
 
 **Response (200):**
+
 ```json
 {
   "items": [
@@ -1301,11 +1412,13 @@ Authorization: Bearer {accessToken}
 Get user activity logs.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 [
   {
@@ -1326,11 +1439,13 @@ Authorization: Bearer {accessToken}
 Get organization activity logs.
 
 **Headers:**
+
 ```http
 Authorization: Bearer {accessToken}
 ```
 
 **Response (200):**
+
 ```json
 [
   {
@@ -1359,6 +1474,7 @@ Authorization: Bearer {accessToken}
 Check API health status.
 
 **Response (200):**
+
 ```json
 {
   "status": "ok",
@@ -1382,6 +1498,7 @@ Check API health status.
 All endpoints may return the following error responses:
 
 ### 400 Bad Request
+
 ```json
 {
   "statusCode": 400,
@@ -1396,6 +1513,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "statusCode": 401,
@@ -1404,6 +1522,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "statusCode": 403,
@@ -1412,6 +1531,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "statusCode": 404,
@@ -1420,6 +1540,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 429 Too Many Requests
+
 ```json
 {
   "statusCode": 429,
@@ -1428,6 +1549,7 @@ All endpoints may return the following error responses:
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "statusCode": 500,
@@ -1491,6 +1613,7 @@ Many list endpoints support filtering via query parameters. Common filters inclu
 - `endDate`: Filter by end date
 
 Example:
+
 ```http
 GET /api/tickets?status=open&priority=high&type=bug
 ```

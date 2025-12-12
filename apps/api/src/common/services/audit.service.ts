@@ -28,10 +28,15 @@ export class AuditService {
         },
       });
 
-      this.logger.log(`Audit log created: ${entry.action} by user ${entry.actorId} in org ${entry.organizationId}`);
+      this.logger.log(
+        `Audit log created: ${entry.action} by user ${entry.actorId} in org ${entry.organizationId}`
+      );
       // We don't throw an error here because failing to log shouldn't break the main functionality
     } catch (error: any) {
-      this.logger.error(`Failed to create audit log: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to create audit log: ${error.message}`,
+        error.stack
+      );
       // We don't throw an error here because failing to log shouldn't break the main functionality
     }
   }
@@ -52,7 +57,12 @@ export class AuditService {
   /**
    * Log file upload event
    */
-  async logFileUpload(userId: string, organizationId: string, fileId: string, fileName: string): Promise<void> {
+  async logFileUpload(
+    userId: string,
+    organizationId: string,
+    fileId: string,
+    fileName: string
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -68,7 +78,12 @@ export class AuditService {
   /**
    * Log file deletion event
    */
-  async logFileDeletion(userId: string, organizationId: string, fileId: string, fileName: string): Promise<void> {
+  async logFileDeletion(
+    userId: string,
+    organizationId: string,
+    fileId: string,
+    fileName: string
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -84,7 +99,12 @@ export class AuditService {
   /**
    * Log project creation event
    */
-  async logProjectCreation(userId: string, organizationId: string, projectId: string, projectName: string): Promise<void> {
+  async logProjectCreation(
+    userId: string,
+    organizationId: string,
+    projectId: string,
+    projectName: string
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -100,7 +120,12 @@ export class AuditService {
   /**
    * Log project update event
    */
-  async logProjectUpdate(userId: string, organizationId: string, projectId: string, changes: Record<string, any>): Promise<void> {
+  async logProjectUpdate(
+    userId: string,
+    organizationId: string,
+    projectId: string,
+    changes: Record<string, any>
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -116,7 +141,12 @@ export class AuditService {
   /**
    * Log approval request event
    */
-  async logApprovalRequest(userId: string, organizationId: string, approvalId: string, itemType: string): Promise<void> {
+  async logApprovalRequest(
+    userId: string,
+    organizationId: string,
+    approvalId: string,
+    itemType: string
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -132,7 +162,12 @@ export class AuditService {
   /**
    * Log approval decision event
    */
-  async logApprovalDecision(userId: string, organizationId: string, approvalId: string, decision: string): Promise<void> {
+  async logApprovalDecision(
+    userId: string,
+    organizationId: string,
+    approvalId: string,
+    decision: string
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -148,7 +183,12 @@ export class AuditService {
   /**
    * Log ticket creation event
    */
-  async logTicketCreation(userId: string, organizationId: string, ticketId: string, title: string): Promise<void> {
+  async logTicketCreation(
+    userId: string,
+    organizationId: string,
+    ticketId: string,
+    title: string
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -164,7 +204,12 @@ export class AuditService {
   /**
    * Log ticket update event
    */
-  async logTicketUpdate(userId: string, organizationId: string, ticketId: string, changes: Record<string, any>): Promise<void> {
+  async logTicketUpdate(
+    userId: string,
+    organizationId: string,
+    ticketId: string,
+    changes: Record<string, any>
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -180,7 +225,12 @@ export class AuditService {
   /**
    * Log invoice creation event
    */
-  async logInvoiceCreation(userId: string, organizationId: string, invoiceId: string, amount: number): Promise<void> {
+  async logInvoiceCreation(
+    userId: string,
+    organizationId: string,
+    invoiceId: string,
+    amount: number
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,
@@ -196,7 +246,12 @@ export class AuditService {
   /**
    * Log invoice payment event
    */
-  async logInvoicePayment(userId: string, organizationId: string, invoiceId: string, amount: number): Promise<void> {
+  async logInvoicePayment(
+    userId: string,
+    organizationId: string,
+    invoiceId: string,
+    amount: number
+  ): Promise<void> {
     await this.log({
       actorId: userId,
       organizationId,

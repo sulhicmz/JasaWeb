@@ -1,5 +1,9 @@
 import { Controller, Get, Logger } from '@nestjs/common';
-import { HealthCheck, HealthCheckService, HttpHealthIndicator } from '@nestjs/terminus';
+import {
+  HealthCheck,
+  HealthCheckService,
+  HttpHealthIndicator,
+} from '@nestjs/terminus';
 import { PrismaHealthIndicator } from './prisma.health';
 import { Public } from '../common/decorators/public.decorator';
 
@@ -10,7 +14,7 @@ export class HealthController {
   constructor(
     private health: HealthCheckService,
     private http: HttpHealthIndicator,
-    private prismaHealthIndicator: PrismaHealthIndicator,
+    private prismaHealthIndicator: PrismaHealthIndicator
   ) {}
 
   @Get()
@@ -21,7 +25,7 @@ export class HealthController {
       return await this.health.check([
         // Check HTTP connectivity
         () => this.http.pingCheck('http', 'https://httpbin.org/get'),
-        
+
         // Check database connectivity
         () => this.prismaHealthIndicator.isHealthy('database'),
       ]);

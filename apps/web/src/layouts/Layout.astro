@@ -3,32 +3,119 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import '../styles/global.css';
 
 export interface Props {
   title?: string;
+  description?: string;
+  image?: string;
+  url?: string;
 }
 
-const { title } = Astro.props;
+const { title, description, image, url } = Astro.props;
+
+// SEO defaults
+const siteTitle = title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website Profesional';
+const siteDescription = description || 'Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile. Dapatkan website premium dengan performa tinggi.';
+const siteImage = image || '/og-image.jpg';
+const siteUrl = url || Astro.url.href;
+
+
 ---
 
 <!DOCTYPE html>
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>{title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website'}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    
+    <!-- Primary Meta Tags -->
+    <title>{siteTitle}</title>
+    <meta name="description" content={siteDescription} />
+    <meta name="author" content="JasaWeb" />
+    <meta name="keywords" content="jasa pembuatan website, website sekolah, portal berita, company profile, web development Indonesia" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:title" content={siteTitle} />
+    <meta property="og:description" content={siteDescription} />
+    <meta property="og:image" content={siteImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={siteUrl} />
+    <meta property="twitter:title" content={siteTitle} />
+    <meta property="twitter:description" content={siteDescription} />
+    <meta property="twitter:image" content={siteImage} />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" /></noscript>
+    
+    <!-- Load Font Awesome asynchronously -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /></noscript>
+    
+    <!-- DNS prefetch for performance -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+    
+    <!-- Critical CSS inlined -->
+    <style>
+      body{font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0f172a; color:#e2e8f0; margin:0; padding:0; overflow-x:hidden}
+      .container{max-width:1280px;margin:0 auto;padding:0 1rem}
+      @media (min-width:640px){.container{padding:0 1.5rem}}
+      @media (min-width:1024px){.container{padding:0 2rem}}
+      .glass-panel{background:rgba(15,23,42,0.6);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:0.75rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
+    </style>
   </head>
-  <body class="min-h-screen flex flex-col bg-slate-950 text-white overflow-x-hidden">
-    <div class="fixed inset-0 z-[-1] pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80"></div>
-    <div class="fixed top-0 left-0 w-full h-[500px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 opacity-20"></div>
+<body class="min-h-screen flex flex-col bg-slate-950 text-white overflow-x-hidden">
+    <!-- Optimized background gradients -->
+    <div class="fixed inset-0 z-[-1] pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black opacity-80 will-change-transform"></div>
+    <div class="fixed top-0 left-0 w-full h-[500px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none -translate-y-1/2 opacity-20 will-change-transform"></div>
+    
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded">Skip to main content</a>
+    
     <Header />
-    <main class="flex-grow">
+    <main id="main-content" class="flex-grow">
       <slot />
     </main>
     <Footer />
+    
+    <!-- Performance monitoring script -->
+    <script is:inline>
+      // Measure Core Web Vitals
+      if ('PerformanceObserver' in window) {
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.entryType === 'largest-contentful-paint') {
+              console.log('LCP:', entry.startTime);
+            }
+            // Simplified FID and CLS logging
+            if (entry.entryType === 'first-input' || entry.entryType === 'layout-shift') {
+              console.log(entry.entryType.toUpperCase(), ':', entry.startTime);
+            }
+          }
+        });
+        observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
+      }
+    </script>
   </body>
 </html>

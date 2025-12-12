@@ -25,6 +25,6 @@ const portfolioCollection = defineCollection({
 });
 
 export const collections = {
-  'blog': blogCollection,
-  'portfolio': portfolioCollection,
+  blog: blogCollection,
+  portfolio: portfolioCollection,
 };

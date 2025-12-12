@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
-import { ProjectService, CreateProjectDto, UpdateProjectDto } from './project.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ProjectService,
+  CreateProjectDto,
+  UpdateProjectDto,
+} from './project.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -13,14 +27,18 @@ export class ProjectController {
   @UseGuards(ThrottlerGuard)
   @Post()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only these roles can create projects
-  create(@Body() createProjectDto: CreateProjectDto, @CurrentOrganizationId() organizationId: string) {
+  create(
+    @Body() createProjectDto: CreateProjectDto,
+    @CurrentOrganizationId() organizationId: string
+  ) {
     return this.projectService.create(createProjectDto, organizationId);
   }
 
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
   findAll(@Query('view') view?: string) {
-    const normalizedView = view?.toLowerCase() === 'detail' ? 'detail' : 'summary';
+    const normalizedView =
+      view?.toLowerCase() === 'detail' ? 'detail' : 'summary';
     return this.projectService.findAll(normalizedView);
   }
 

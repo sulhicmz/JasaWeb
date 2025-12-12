@@ -4,6 +4,8 @@ import Layout from '../layouts/Layout.astro';
 import ServiceCard from '../components/ServiceCard.astro';
 
 const pageTitle = 'Jasa Pembuatan Website Profesional - JasaWeb';
+const pageDescription = 'Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile. Dapatkan website premium dengan performa tinggi dan desain elegan.';
+
 const services = [
   {
     title: 'Website Sekolah',
@@ -24,14 +26,34 @@ const services = [
     url: '/services#company'
   }
 ];
+
+// Structured data for SEO
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": pageTitle,
+  "description": pageDescription,
+  "url": Astro.url.href,
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "JasaWeb",
+    "description": "Professional web development services",
+    "url": "https://jasaweb.com",
+    "serviceType": ["Web Design", "Web Development", "SEO Services"]
+  }
+};
 ---
 
-<Layout title="Beranda">
-  <!-- Hero Section -->
-  <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
-    <div class="absolute inset-0 z-0">
-      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] animate-pulse-glow"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] animate-pulse-glow" style="animation-delay: 2s"></div>
+<Layout title="Beranda" description={pageDescription}>
+  <!-- Structured Data for SEO -->
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  
+<!-- Hero Section -->
+  <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20" aria-labelledby="hero-heading">
+    <!-- Optimized background animations with containment -->
+    <div class="absolute inset-0 z-0 contain-layout" style="contain: layout style paint">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] animate-pulse-glow will-change-transform opacity-20"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] animate-pulse-glow will-change-transform opacity-20" style="animation-delay: 2s"></div>
     </div>
 
     <div class="container relative z-10 text-center px-4">
@@ -39,7 +61,7 @@ const services = [
         🚀 Solusi Website Terdepan
       </div>
 
-      <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
+<h1 id="hero-heading" class="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
         Jasa Pembuatan Website <br/>
         <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 text-glow">Profesional & Elegan</span>
       </h1>
@@ -48,31 +70,33 @@ const services = [
         Tingkatkan kredibilitas bisnis Anda dengan website premium yang cepat, aman, dan memukau.
       </p>
 
-      <div class="flex flex-col sm:flex-row justify-center items-center gap-6">
-        <a href="/contact" class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+<div class="flex flex-col sm:flex-row justify-center items-center gap-6">
+        <a href="/contact" class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden transform-gpu" aria-label="Mulai konsultasi dengan JasaWeb">
           <div class="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-500 skew-x-12 -translate-x-full"></div>
           <span class="relative flex items-center">
-            Mulai Konsultasi <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            Mulai Konsultasi <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
           </span>
         </a>
-        <a href="/services" class="px-8 py-4 rounded-lg font-bold text-gray-300 border border-white/10 hover:bg-white/5 hover:text-white hover:border-white/30 transition-all duration-300 backdrop-blur-sm">
+        <a href="/services" class="px-8 py-4 rounded-lg font-bold text-gray-300 border border-white/10 hover:bg-white/5 hover:text-white hover:border-white/30 transition-all duration-300 backdrop-blur-sm transform-gpu" aria-label="Lihat portfolio JasaWeb">
           Lihat Portfolio
         </a>
       </div>
     </div>
   </section>
 
-  <!-- Services Section -->
-  <section class="py-24 relative">
+<!-- Services Section -->
+  <section class="py-24 relative" aria-labelledby="services-heading">
     <div class="container mx-auto px-4 relative z-10">
       <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Layanan Unggulan</h2>
+        <h2 id="services-heading" class="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Layanan Unggulan</h2>
         <p class="text-gray-400 max-w-2xl mx-auto">Solusi digital yang dirancang khusus untuk memenuhi kebutuhan spesifik industri Anda.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {services.map(service => (
-          <ServiceCard service={service} />
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8" role="list">
+        {services.map((service, index) => (
+          <div role="listitem" class={`transform-gpu ${index > 2 ? 'lazy-load' : ''}`}>
+            <ServiceCard service={service} />
+          </div>
         ))}
       </div>
     </div>
@@ -120,6 +144,54 @@ const services = [
         </a>
       </div>
     </div>
-  </section>
+</section>
+
+  <!-- Performance Optimization Script -->
+  <script is:inline>
+    // Lazy loading implementation
+    const lazyElements = document.querySelectorAll('.lazy-load');
+    
+    if ('IntersectionObserver' in window) {
+      const lazyObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('loaded');
+            lazyObserver.unobserve(entry.target);
+          }
+        });
+      }, {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+      });
+      
+      lazyElements.forEach(el => lazyObserver.observe(el));
+    } else {
+      // Fallback for older browsers
+      lazyElements.forEach(el => el.classList.add('loaded'));
+    }
+
+    // Optimize images loading - simplified version
+    const images = document.querySelectorAll('img[data-src]');
+    if (images.length > 0) {
+      console.log('Found', images.length, 'lazy images to optimize');
+      // Basic lazy loading without complex type checking
+      images.forEach(img => {
+        const src = img.getAttribute('data-src');
+        if (src) {
+          img.src = src;
+          img.classList.remove('lazy');
+        }
+      });
+    }
+
+    // Preload critical resources
+    const criticalLinks = ['/services', '/contact', '/portfolio'];
+    criticalLinks.forEach(href => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = href;
+      document.head.appendChild(link);
+    });
+  </script>
 </Layout>
 

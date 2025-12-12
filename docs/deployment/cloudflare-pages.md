@@ -47,6 +47,7 @@ The `_routes.json` file is automatically generated during the build process to o
 ```
 
 This configuration ensures that:
+
 - All static assets are served directly by Cloudflare CDN
 - API routes are properly excluded (handled by the client portal API)
 - Astro assets are served efficiently

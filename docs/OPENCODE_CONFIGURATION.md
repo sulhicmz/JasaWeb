@@ -11,6 +11,7 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
 **Purpose**: Authentication for GitHub API operations
 
 **Required Permissions**:
+
 - `contents: write` - Modify repository contents
 - `issues: write` - Create and manage issues
 - `pull-requests: write` - Create and manage pull requests
@@ -21,6 +22,7 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
 **Setup Steps**:
 
 1. **Generate Personal Access Token**:
+
    ```bash
    # Go to GitHub Settings > Developer settings > Personal access tokens
    # Click "Generate new token (classic)"
@@ -56,6 +58,7 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
 **Setup Steps**:
 
 1. **Get OpenCode API Key**:
+
    ```bash
    # Login to OpenCode CLI dashboard
    # Navigate to API Keys section
@@ -77,6 +80,7 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
 ### Self-Hosted Runner Setup
 
 **Requirements**:
+
 - Linux, macOS, or Windows
 - Node.js 20+
 - Docker (optional but recommended)
@@ -85,13 +89,14 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
 **Setup Steps**:
 
 1. **Download and Configure Runner**:
+
    ```bash
    # Linux/macOS
    mkdir actions-runner && cd actions-runner
    curl -o actions-runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
    tar xzf ./actions-runner.tar.gz
    ./config.sh --url https://github.com/[owner]/[repo] --token [RUNNER_TOKEN]
-   
+
    # Windows
    mkdir actions-runner && cd actions-runner
    Invoke-WebRequest -Uri https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-win-x64-2.311.0.zip -OutFile actions-runner.zip
@@ -101,11 +106,12 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
    ```
 
 2. **Install and Start Runner**:
+
    ```bash
    # Linux/macOS
    sudo ./svc.sh install
    sudo ./svc.sh start
-   
+
    # Windows
    ./svc.cmd install
    ./svc.cmd start
@@ -123,12 +129,12 @@ This guide provides comprehensive configuration instructions for OpenCode CLI wo
 
 ```yaml
 permissions:
-  id-token: write          # Required for OIDC authentication
-  contents: write           # Required for code modifications
-  issues: write             # Required for issue management
-  pull-requests: write     # Required for PR management
-  actions: write           # Required for workflow management
-  security-events: write    # Required for security findings
+  id-token: write # Required for OIDC authentication
+  contents: write # Required for code modifications
+  issues: write # Required for issue management
+  pull-requests: write # Required for PR management
+  actions: write # Required for workflow management
+  security-events: write # Required for security findings
 ```
 
 **Repository Settings**:
@@ -139,6 +145,7 @@ permissions:
    - Allow "GitHub Actions" to create and approve pull requests
 
 2. **Branch Protection Rules**:
+
    ```bash
    # Go to Settings > Branches > Add branch protection rule
    # Branch name pattern: main
@@ -161,6 +168,7 @@ permissions:
 ### Development Environment
 
 **`.env.local`** (for local development):
+
 ```bash
 # GitHub Configuration
 GH_TOKEN=your_personal_access_token
@@ -178,6 +186,7 @@ VERBOSE=true
 ```
 
 **`.env.example`** (template for team):
+
 ```bash
 # GitHub Configuration
 GH_TOKEN=your_github_token_here
@@ -197,6 +206,7 @@ VERBOSE=false
 ### Production Environment
 
 **Repository Secrets** (for production):
+
 ```bash
 # Required Secrets
 GH_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
@@ -213,6 +223,7 @@ SMTP_PASSWORD=your_smtp_password_here
 ### Model Selection
 
 **Available Models**:
+
 - `iflowcn/qwen3-max` - Best for complex analysis and planning
 - `iflowcn/qwen3-coder-plus` - Best for code implementation
 - `iflowcn/qwen3-coder` - Best for simple fixes and optimizations
@@ -220,6 +231,7 @@ SMTP_PASSWORD=your_smtp_password_here
 - `iflowcn/deepseek-v3.2` - Alternative for code tasks
 
 **Model Selection Guidelines**:
+
 ```yaml
 # For complex analysis and planning
 --model iflowcn/qwen3-max
@@ -237,6 +249,7 @@ SMTP_PASSWORD=your_smtp_password_here
 ### Schedule Configuration
 
 **Workflow Schedules**:
+
 ```yaml
 # Maintenance & Monitoring - Every 6 hours
 schedule:
@@ -258,6 +271,7 @@ schedule:
 ### Timeout Configuration
 
 **Recommended Timeouts**:
+
 ```yaml
 # Simple tasks (linting, formatting)
 timeout-minutes: 10
@@ -274,6 +288,7 @@ timeout-minutes: 60
 ### Secret Management
 
 **Best Practices**:
+
 1. **Rotate secrets regularly** (every 90 days)
 2. **Use least privilege principle**
 3. **Monitor secret usage**
@@ -281,6 +296,7 @@ timeout-minutes: 60
 5. **Use repository secrets, not environment variables**
 
 **Secret Rotation**:
+
 ```bash
 # GitHub Token Rotation
 # 1. Generate new token
@@ -298,21 +314,22 @@ timeout-minutes: 60
 ### Security Scanning
 
 **Security Workflow Configuration**:
+
 ```yaml
 # Security scan levels
 scan_level:
-  - quick      # Basic security checks
-  - standard   # Comprehensive security analysis
+  - quick # Basic security checks
+  - standard # Comprehensive security analysis
   - comprehensive # Full security assessment
-  - deep       # In-depth security review
+  - deep # In-depth security review
 
 # Focus areas
 focus_area:
-  - all           # Complete security scan
-  - dependencies  # Dependency vulnerability scan
-  - code          # Code security analysis
+  - all # Complete security scan
+  - dependencies # Dependency vulnerability scan
+  - code # Code security analysis
   - infrastructure # Infrastructure security review
-  - secrets       # Secrets detection
+  - secrets # Secrets detection
 ```
 
 ## Monitoring and Alerting
@@ -320,6 +337,7 @@ focus_area:
 ### Workflow Monitoring
 
 **Metrics to Track**:
+
 - Workflow success rate
 - Average execution time
 - Token usage and cost
@@ -327,6 +345,7 @@ focus_area:
 - Performance improvements
 
 **Alert Configuration**:
+
 ```yaml
 # Success rate alerts
 - Alert if success rate < 95%
@@ -338,24 +357,25 @@ focus_area:
 ### Dashboard Configuration
 
 **Performance Dashboard**:
+
 ```html
 <!-- docs/dashboard.html -->
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>JasaWeb OpenCode Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <h1>OpenCode Automation Dashboard</h1>
     <div id="metrics"></div>
     <script>
-        // Dashboard JavaScript code
-        // Real-time metrics display
-        // Performance charts
-        // Alert notifications
+      // Dashboard JavaScript code
+      // Real-time metrics display
+      // Performance charts
+      // Alert notifications
     </script>
-</body>
+  </body>
 </html>
 ```
 
@@ -364,6 +384,7 @@ focus_area:
 ### Common Issues
 
 **1. Authentication Failures**:
+
 ```bash
 # Check token validity
 gh auth status
@@ -376,6 +397,7 @@ gh auth status --show-token
 ```
 
 **2. Runner Issues**:
+
 ```bash
 # Check runner status
 sudo ./svc.sh status
@@ -388,6 +410,7 @@ sudo journalctl -u actions.runner
 ```
 
 **3. Workflow Failures**:
+
 ```bash
 # Check workflow logs
 gh run list --limit 10
@@ -400,6 +423,7 @@ gh run rerun [run-id]
 ```
 
 **4. OpenCode CLI Issues**:
+
 ```bash
 # Check CLI version
 opencode --version
@@ -414,6 +438,7 @@ opencode run "test" --model iflowcn/qwen3-coder
 ### Debug Mode
 
 **Enable Debug Logging**:
+
 ```yaml
 env:
   DEBUG: true
@@ -422,6 +447,7 @@ env:
 ```
 
 **Debug Workflow**:
+
 ```yaml
 # Add debug steps
 - name: Debug Environment
@@ -437,6 +463,7 @@ env:
 ### Development Workflow
 
 **1. Local Development**:
+
 ```bash
 # Use environment file for local development
 cp .env.example .env.local
@@ -445,6 +472,7 @@ cp .env.example .env.local
 ```
 
 **2. Testing Workflows**:
+
 ```bash
 # Test workflows locally
 act -j issue-solver
@@ -453,6 +481,7 @@ act -j autonomous-developer
 ```
 
 **3. Monitoring**:
+
 ```bash
 # Monitor workflow performance
 gh run list --limit 50
@@ -462,6 +491,7 @@ gh run view [run-id] --log
 ### Performance Optimization
 
 **1. Token Usage**:
+
 ```yaml
 # Use appropriate models for tasks
 --model iflowcn/qwen3-coder      # Simple fixes
@@ -470,6 +500,7 @@ gh run view [run-id] --log
 ```
 
 **2. Caching**:
+
 ```yaml
 # Cache dependencies
 - uses: actions/cache@v4
@@ -479,6 +510,7 @@ gh run view [run-id] --log
 ```
 
 **3. Parallel Execution**:
+
 ```yaml
 # Run tasks in parallel where possible
 strategy:
@@ -503,6 +535,7 @@ strategy:
 ### Issue Reporting
 
 For configuration issues:
+
 1. Check this documentation first
 2. Review workflow logs
 3. Create issue with `configuration` label
@@ -510,4 +543,4 @@ For configuration issues:
 
 ---
 
-*This configuration guide is maintained by the OpenCode automation system and updated automatically.*
+_This configuration guide is maintained by the OpenCode automation system and updated automatically._

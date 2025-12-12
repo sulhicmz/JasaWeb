@@ -32,26 +32,44 @@ const navigationItems = [
   </nav>
 </header>
 
-<script>
+<script is:inline>
   // Mobile menu toggle functionality
   document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
+    if (!mobileMenuButton) return;
+    
     const mobileMenu = document.createElement('div');
     mobileMenu.id = 'mobile-menu';
-    mobileMenu.className = 'hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-lg py-4';
+    mobileMenu.className = 'hidden md:hidden absolute top-full left-0 right-0 bg-slate-900 shadow-lg py-4 border-t border-white/10';
 
-    // Use the Navigation component for mobile menu
+    // Create mobile navigation
     mobileMenu.innerHTML = `
-      <div id="mobile-navigation"></div>
+      <div class="container mx-auto px-6">
+        <div class="flex flex-col space-y-4">
+          <a href="/" class="text-gray-300 hover:text-white transition-colors">Beranda</a>
+          <a href="/services" class="text-gray-300 hover:text-white transition-colors">Layanan</a>
+          <a href="/portfolio" class="text-gray-300 hover:text-white transition-colors">Portofolio</a>
+          <a href="/blog" class="text-gray-300 hover:text-white transition-colors">Blog</a>
+          <a href="/contact" class="text-gray-300 hover:text-white transition-colors">Kontak</a>
+          <a href="/login" class="text-gray-300 hover:text-white transition-colors">Login</a>
+        </div>
+      </div>
     `;
 
-    document.querySelector('header').appendChild(mobileMenu);
+    const header = document.querySelector('header');
+    if (header) {
+      header.appendChild(mobileMenu);
+    }
 
-    // Render mobile navigation
-    const mobileNavContainer = document.getElementById('mobile-navigation');
-
-    mobileMenuButton.addEventListener('click', () => {
+    mobileMenuButton?.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (header && !header.contains(e.target)) {
+        mobileMenu.classList.add('hidden');
+      }
     });
   });
 </script>

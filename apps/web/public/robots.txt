@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://jasaweb.com/sitemap.xml
+
+# Block common non-content paths
+Disallow: /api/
+Disallow: /_astro/
+Disallow: /.well-known/
+
+# Allow search engines to crawl the main site
+Crawl-delay: 1

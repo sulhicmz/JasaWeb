@@ -52,7 +52,7 @@ export class FileController {
     private readonly multiTenantPrisma: MultiTenantPrismaService,
     private readonly fileStorageService: FileStorageService,
     private readonly localFileStorageService: LocalFileStorageService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
   @Post()
@@ -61,7 +61,7 @@ export class FileController {
   async uploadFile(
     @UploadedFile() file: UploadedFilePayload,
     @CurrentOrganizationId() organizationId: string,
-    @Query('projectId') projectId?: string,
+    @Query('projectId') projectId?: string
   ) {
     if (!projectId) {
       throw new BadRequestException('Project ID is required for file uploads');
@@ -74,12 +74,16 @@ export class FileController {
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      throw new BadRequestException(`File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+      throw new BadRequestException(
+        `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+      );
     }
 
     // Validate file type
     if (!VALID_MIME_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(`File type ${file.mimetype} is not allowed`);
+      throw new BadRequestException(
+        `File type ${file.mimetype} is not allowed`
+      );
     }
 
     // Validate project ID if provided
@@ -89,16 +93,18 @@ export class FileController {
       });
 
       if (!project) {
-        throw new BadRequestException('Project not found or does not belong to your organization');
+        throw new BadRequestException(
+          'Project not found or does not belong to your organization'
+        );
       }
     }
 
     try {
       // Determine if we're using S3 or local storage based on config
       const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-      
+
       let fileIdentifier: string;
-      
+
       if (useS3) {
         // Upload to S3
         fileIdentifier = await this.fileStorageService.uploadFile(file.buffer, {
@@ -113,12 +119,28 @@ export class FileController {
         });
       } else {
         // Upload to local storage
-        const uploadResult = await this.localFileStorageService.uploadFile(file.buffer, {
-          directory: `./uploads/${organizationId}`,
-          filename: `${Date.now()}_${file.originalname}`,
-          allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'],
-        });
-        
+        const uploadResult = await this.localFileStorageService.uploadFile(
+          file.buffer,
+          {
+            directory: `./uploads/${organizationId}`,
+            filename: `${Date.now()}_${file.originalname}`,
+            allowedExtensions: [
+              '.jpg',
+              '.jpeg',
+              '.png',
+              '.gif',
+              '.pdf',
+              '.txt',
+              '.doc',
+              '.docx',
+              '.ppt',
+              '.pptx',
+              '.xls',
+              '.xlsx',
+            ],
+          }
+        );
+
         fileIdentifier = uploadResult.filename;
       }
 
@@ -133,8 +155,10 @@ export class FileController {
         },
       });
 
-      this.logger.log(`File uploaded: ${file.originalname} for organization ${organizationId}`);
-      
+      this.logger.log(
+        `File uploaded: ${file.originalname} for organization ${organizationId}`
+      );
+
       return {
         id: createdFile.id,
         filename: createdFile.filename,
@@ -155,7 +179,7 @@ export class FileController {
   async downloadFile(
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     try {
       // Find the file in the database (with multi-tenant isolation)
@@ -169,7 +193,7 @@ export class FileController {
 
       // Determine if we're using S3 or local based on config
       const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-      
+
       if (useS3) {
         // Generate a signed URL for S3 download
         const signedUrl = await this.fileStorageService.generateDownloadUrl({
@@ -177,19 +201,22 @@ export class FileController {
           key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
           expiresIn: 3600, // 1 hour
         });
-        
+
         // Redirect to the signed URL
         res.redirect(signedUrl);
       } else {
         // Get file from local storage
         const filePath = `./uploads/${organizationId}/${fileRecord.filename}`;
         const fileBuffer = await this.localFileStorageService.getFile(filePath);
-        
+
         // Set response headers based on file type
         res.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
-        res.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${fileRecord.filename}"`
+        );
         res.setHeader('Content-Length', fileRecord.size || 0);
-        
+
         // Send the file
         res.send(fileBuffer);
       }
@@ -205,7 +232,7 @@ export class FileController {
   @Roles(Role.OrgOwner, Role.OrgAdmin) // Only org owners and admins can delete files
   async deleteFile(
     @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     try {
       // First get the file record to know its details
@@ -219,12 +246,12 @@ export class FileController {
 
       // Determine if we're using S3 or local based on config
       const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-      
+
       if (useS3) {
         // Delete from S3
         await this.fileStorageService.deleteFile(
           process.env.S3_BUCKET_NAME || 'default-bucket',
-          `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
+          `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`
         );
       } else {
         // Delete from local storage
@@ -237,8 +264,10 @@ export class FileController {
         where: { id },
       });
 
-      this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
-      
+      this.logger.log(
+        `File deleted: ${fileRecord.filename} for organization ${organizationId}`
+      );
+
       return { message: 'File deleted successfully' };
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
@@ -252,7 +281,7 @@ export class FileController {
    */
   private getMimeType(filename: string): string {
     const ext = path.extname(filename).toLowerCase();
-    
+
     const mimeTypes: { [key: string]: string } = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
@@ -261,13 +290,16 @@ export class FileController {
       '.pdf': 'application/pdf',
       '.txt': 'text/plain',
       '.doc': 'application/msword',
-      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.docx':
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       '.ppt': 'application/vnd.ms-powerpoint',
-      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      '.pptx':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       '.xls': 'application/vnd.ms-excel',
-      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.xlsx':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
-    
+
     return mimeTypes[ext] || 'application/octet-stream';
   }
 
