@@ -20,7 +20,8 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.2.0",
     "socket.io-client": "^4.8.1",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.1.17",
+    "@jasaweb/ui": "workspace:*"
   },
   "devDependencies": {
     "wrangler": "^4.47.0"

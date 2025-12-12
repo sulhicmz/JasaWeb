@@ -7,14 +7,14 @@ export interface CardProps {
   description?: string;
 }
 
-const Card: React.FC<CardProps> = ({ 
-  children, 
-  className = '', 
-  title, 
-  description 
+const Card: React.FC<CardProps> = ({
+  children,
+  className = '',
+  title,
+  description
 }) => {
   return (
-    <div className={`rounded-xl border bg-card text-card-foreground shadow ${className}`}>
+    <div className={`rounded-xl border border-white/5 bg-slate-900/40 backdrop-blur-md shadow-2xl ${className}`}>
       {(title || description) && (
         <div className="p-6 pb-4">
           {title && <h3 className="font-semibold leading-none tracking-tight mb-1">{title}</h3>}

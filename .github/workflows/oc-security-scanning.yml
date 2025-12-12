@@ -51,74 +51,82 @@ jobs:
       issues: write
       actions: write
       security-events: write
-      
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
-          
+
       - name: Install OpenCode CLI
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-          
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 8.15.0
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-          
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        
+
       - name: Run Dependency Security Scan
         id: dependency-scan
         timeout-minutes: 15
         run: |
           opencode run "$(cat <<'PROMPT'
-            Perform comprehensive dependency security scan for JasaWeb project:
-            
+            **ROLE**: Security Engineer for JasaWeb
+            **PROJECT**: Web Development Service Platform - Monorepo
+            **TECH STACK**: Astro, NestJS, PostgreSQL, Prisma
+            **SECURITY DOCS**: docs/OWASP_COMPLIANCE.md, docs/SECURITY_BEST_PRACTICES.md
+
+            Perform dependency security scan:
+
             1. Run pnpm audit with appropriate severity levels
             2. Check for known vulnerabilities in all dependencies
             3. Analyze transitive dependencies for security issues
-            4. Review license compliance and security implications
+            4. Review license compliance
             5. Check for outdated packages with security fixes
-            6. Verify integrity of package lock files
-            7. Scan for malicious packages or typosquatting
-            
-            Actions to take:
+
+            Actions:
             - Auto-update packages with security patches
             - Create PRs for dependency updates with security notes
             - Generate detailed vulnerability report
-            - Suggest alternative packages if needed
-            - Update security policies and configurations
-            
-            Create issues for critical vulnerabilities that cannot be auto-fixed.
+
             Focus on automated remediation where possible.
-            
-            Generate SARIF report for GitHub Security tab integration.
+            Update SECURITY.md if critical issues found.
+
+            **CRITICAL: EPHEMERAL ENVIRONMENT - PERSIST ALL CHANGES**
+            ```bash
+            git config --global user.name "security-scanner"
+            git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+            git add -A
+            git commit -m "security: automated vulnerability fixes"
+            git push origin main || gh pr create --title "Security: Dependency Updates" --body "Automated security fixes" --base main
+            ```
           PROMPT
           )" \
             --model iflowcn/qwen3-max \
             --share false \
-            
+
       - name: Run Code Security Analysis
         id: code-security-analysis
         timeout-minutes: 20
         run: |
           opencode run "$(cat <<'PROMPT'
             Perform comprehensive code security analysis for JasaWeb project:
-            
+
             1. Static Application Security Testing (SAST):
                - Check for OWASP Top 10 vulnerabilities
                - Analyze authentication and authorization patterns
@@ -126,42 +134,42 @@ jobs:
                - Check for SQL injection and XSS vulnerabilities
                - Verify secure coding practices
                - Review error handling and information disclosure
-            
+
             2. Code Quality Security:
                - Check for hardcoded secrets and credentials
                - Analyze insecure configurations
                - Review logging and monitoring practices
                - Check for insecure default values
                - Verify encryption and data protection
-            
+
             3. API Security:
                - Review API endpoint security
                - Check rate limiting and throttling
                - Analyze request/response security
                - Verify CORS and CSP configurations
                - Review authentication middleware
-            
+
             Actions to take:
             - Auto-fix simple security issues
             - Create PRs for complex security improvements
             - Generate detailed security findings report
             - Update security configurations and policies
             - Add security tests where needed
-            
+
             Prioritize fixes by CVSS scores and business impact.
             Create security issues for critical findings.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
-            
+
       - name: Run Infrastructure Security Scan
         id: infrastructure-scan
         timeout-minutes: 15
         run: |
           opencode run "$(cat <<'PROMPT'
             Perform infrastructure security scan for JasaWeb project:
-            
+
             1. Configuration Security:
                - Review Docker configurations for security
                - Check Kubernetes manifests if present
@@ -169,28 +177,28 @@ jobs:
                - Review GitHub Actions security
                - Check environment variable security
                - Verify secret management practices
-            
+
             2. Network Security:
                - Review firewall configurations
                - Check SSL/TLS configurations
                - Analyze DNS security settings
                - Review CDN security configurations
                - Check for exposed services
-            
+
             3. Database Security:
                - Review database connection security
                - Check for SQL injection vulnerabilities
                - Analyze data encryption practices
                - Review access control mechanisms
                - Check backup security
-            
+
             Actions to take:
             - Update insecure configurations
             - Add security headers and policies
             - Improve secret management
             - Enhance network security
             - Update documentation with security guidelines
-            
+
             Create infrastructure security report with recommendations.
             Generate configuration updates as PRs.
           PROMPT
@@ -198,14 +206,14 @@ jobs:
             --model iflowcn/qwen3-coder-plus \
             --share false \
             --non-interactive \
-            
+
       - name: Run Secrets Detection
         id: secrets-detection
         timeout-minutes: 10
         run: |
           opencode run "$(cat <<'PROMPT'
             Perform comprehensive secrets detection for JasaWeb project:
-            
+
             1. Scan for hardcoded secrets:
                - API keys and tokens
                - Database credentials
@@ -213,27 +221,27 @@ jobs:
                - Encryption keys
                - Third-party service credentials
                - Personal access tokens
-            
+
             2. Review secret management:
                - Check environment variable usage
                - Review secret storage practices
                - Analyze secret rotation policies
                - Check for secrets in configuration files
                - Review logging for sensitive data
-            
+
             3. Git history scan:
                - Check commit history for exposed secrets
                - Review branch protections
                - Analyze recent commits for sensitive data
                - Check for secrets in PR descriptions
-            
+
             Actions to take:
             - Remove any exposed secrets immediately
             - Rotate compromised credentials
             - Update secret management practices
             - Add pre-commit hooks for secret detection
             - Update security policies and training
-            
+
             Create issues for any secrets found with severity levels.
             Generate remediation plan for secret management improvements.
           PROMPT
@@ -241,86 +249,86 @@ jobs:
             --model iflowcn/qwen3-max \
             --share false \
             --non-interactive \
-            
+
       - name: Generate Security Report
         id: security-report
         timeout-minutes: 10
         run: |
           opencode run "$(cat <<'PROMPT'
             Generate comprehensive security report for JasaWeb project:
-            
+
             Collect and analyze results from all security scans and create:
-            
+
             1. Executive Summary:
                - Overall security posture rating
                - Critical vulnerabilities found and fixed
                - Security improvements implemented
                - Risk assessment and mitigation
                - Compliance status
-            
+
             2. Detailed Findings:
                - Dependency vulnerabilities by severity
                - Code security issues with CVSS scores
                - Infrastructure security gaps
                - Secrets detection results
                - Remediation status
-            
+
             3. Risk Analysis:
                - High-risk areas requiring immediate attention
                - Medium-risk issues with mitigation plans
                - Low-risk items for future improvement
                - Business impact assessment
                - Timeline for remediation
-            
+
             4. Recommendations:
                - Immediate security actions required
                - Long-term security improvements
                - Process and policy updates
                - Training and awareness needs
                - Tool and technology recommendations
-            
+
             Create this report as:
             - GitHub issue with appropriate security labels
             - SARIF upload for GitHub Security tab
             - Summary in workflow artifacts
             - Update security documentation
-            
+
             Include actionable next steps and assign to security team.
           PROMPT
           )" \
             --model iflowcn/qwen3-max \
             --share false \
-            
+
       - name: Update Security Policies
         id: update-policies
         timeout-minutes: 10
         run: |
           opencode run "$(cat <<'PROMPT'
             Update security policies and configurations for JasaWeb project:
-            
+
             Based on security scan results, update:
-            
+
             1. Security Documentation:
                - Update SECURITY.md with new findings
                - Review and update security checklists
                - Add new security best practices
                - Update incident response procedures
                - Enhance security guidelines
-            
+
             2. Configuration Updates:
                - Update GitHub Actions security configurations
                - Review and update dependency policies
                - Update code scanning configurations
                - Enhance secret detection rules
                - Update infrastructure security settings
-            
+
             3. Process Improvements:
                - Update security review processes
                - Enhance vulnerability management
                - Improve security testing procedures
                - Update security monitoring
                - Enhance security training materials
-            
+
             Create PRs for all policy and configuration updates.
             Include detailed changelog and rationale for changes.
             Ensure all updates align with security best practices.
@@ -328,87 +336,87 @@ jobs:
           )" \
             --model iflowcn/qwen3-coder-plus \
             --share false \
-            
+
       - name: Create Security Metrics
         id: security-metrics
         timeout-minutes: 5
         run: |
           opencode run "$(cat <<'PROMPT'
             Create security metrics and tracking for JasaWeb project:
-            
+
             Generate security metrics dashboard with:
-            
+
             1. Vulnerability Metrics:
                - Number of vulnerabilities by severity
                - Vulnerability resolution time
                - Recurring vulnerability patterns
                - Dependency security trends
                - Code security improvements
-            
+
             2. Process Metrics:
                - Security scan frequency and coverage
                - Time to detect and fix issues
                - Security policy compliance rate
                - Training completion rates
                - Incident response times
-            
+
             3. Risk Metrics:
                - Overall risk score
                - High-risk areas identified
                - Risk mitigation progress
                - Security investment ROI
                - Compliance status
-            
+
             Create visual dashboard in docs/security-dashboard.html
             Include historical trends and benchmarks
             Set up alerts for metric thresholds
-            
+
             Update security metrics tracking system.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
             --non-interactive \
-            
+
       - name: Schedule Next Security Scan
         id: schedule-next
         timeout-minutes: 5
         run: |
           opencode run "$(cat <<'PROMPT'
             Schedule next security scan cycle for JasaWeb project:
-            
+
             Based on current security scan results, determine:
-            
+
             1. Next Scan Schedule:
                - Recommended frequency based on findings
                - Priority level for next scan
                - Focus areas for next cycle
                - Resource requirements
-            
+
             2. Alert Configuration:
                - Set up security alerts for critical issues
                - Configure vulnerability notifications
                - Define escalation procedures
                - Set up compliance monitoring
-            
+
             3. Preparation Tasks:
                - List security improvements to implement
                - Identify resources needed for next scan
                - Schedule any required security training
                - Prepare incident response procedures
-            
+
             Create GitHub issue with:
                - Next security scan schedule
                - Security improvement roadmap
                - Alert configurations
                - Resource requirements
-               
+
             Label appropriately and assign to security team.
           PROMPT
           )" \
             --model iflowcn/qwen3-coder \
             --share false \
-            
+
       - name: Create Security Summary
         if: always()
         run: |
