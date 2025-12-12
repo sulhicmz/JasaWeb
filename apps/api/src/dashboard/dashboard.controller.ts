@@ -639,10 +639,9 @@ export class DashboardController {
     });
 
     const resolutionTimes = tickets
-      .filter((t) => t.resolvedAt)
+      .filter((t) => t.status === 'resolved')
       .map(
-        (t) =>
-          new Date(t.resolvedAt!).getTime() - new Date(t.createdAt).getTime()
+        (t) => new Date(t.updatedAt).getTime() - new Date(t.createdAt).getTime()
       );
 
     const ticketsByPriority = tickets.reduce((acc: any, ticket) => {
@@ -738,9 +737,9 @@ export class DashboardController {
     });
 
     const completionTimes = milestones
-      .filter((m) => m.completedAt && m.dueAt)
+      .filter((m) => m.status === 'completed' && m.dueAt)
       .map(
-        (m) => new Date(m.completedAt!).getTime() - new Date(m.dueAt).getTime()
+        (m) => new Date(m.updatedAt).getTime() - new Date(m.dueAt!).getTime()
       );
 
     return {
@@ -760,9 +759,8 @@ export class DashboardController {
           ? (milestones.filter(
               (m) =>
                 m.status === 'completed' &&
-                m.completedAt &&
                 m.dueAt &&
-                new Date(m.completedAt) <= new Date(m.dueAt)
+                new Date(m.updatedAt) <= new Date(m.dueAt)
             ).length /
               milestones.filter((m) => m.status === 'completed').length) *
             100
@@ -774,41 +772,35 @@ export class DashboardController {
     const users = await this.multiTenantPrisma.user.findMany({
       where: {
         memberships: {
-          some: { organizationId },
+          some: {
+            organizationId,
+          },
         },
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        assignedTickets: {
+      include: {
+        tickets: {
           where: { createdAt: { gte: startDate } },
-          select: { status: true, resolvedAt: true, createdAt: true },
-        },
-        createdProjects: {
-          where: { createdAt: { gte: startDate } },
-          select: { status: true, createdAt: true },
+          select: { status: true, createdAt: true, updatedAt: true },
         },
       },
     });
 
-    return users.map((user) => {
-      const tickets = user.assignedTickets || [];
-      const projects = user.createdProjects || [];
+    return users.map((user: any) => {
+      const tickets = user.tickets || [];
 
       const resolvedTickets = tickets.filter(
-        (t) => t.status === 'resolved'
+        (t: any) => t.status === 'resolved'
       ).length;
       const avgResolutionTime =
         tickets
-          .filter((t) => t.resolvedAt)
+          .filter((t: any) => t.status === 'resolved')
           .reduce(
-            (sum, t) =>
+            (sum: number, t: any) =>
               sum +
-              (new Date(t.resolvedAt!).getTime() -
+              (new Date(t.updatedAt).getTime() -
                 new Date(t.createdAt).getTime()),
             0
-          ) / (tickets.filter((t) => t.resolvedAt).length || 1);
+          ) / (tickets.filter((t: any) => t.status === 'resolved').length || 1);
 
       return {
         userId: user.id,
@@ -818,10 +810,9 @@ export class DashboardController {
         ticketsResolved: resolvedTickets,
         ticketResolutionRate:
           tickets.length > 0 ? (resolvedTickets / tickets.length) * 100 : 0,
-        averageResolutionTime,
-        projectsCreated: projects.length,
-        projectsCompleted: projects.filter((p) => p.status === 'completed')
-          .length,
+        avgResolutionTime,
+        projectsCreated: 0, // TODO: Add project relation to User model
+        projectsCompleted: 0, // TODO: Add project relation to User model
       };
     });
   }
@@ -881,17 +872,15 @@ export class DashboardController {
     const projects = await this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       include: {
-        milestones: {
-          select: { status: true, dueAt: true, completedAt: true },
-        },
+        milestones: true,
       },
     });
 
-    return projects.map((project) => {
-      const totalMilestones = project.milestones.length;
-      const completedMilestones = project.milestones.filter(
-        (m) => m.status === 'completed'
-      ).length;
+    return projects.map((project: any) => {
+      const totalMilestones = project.milestones?.length || 0;
+      const completedMilestones =
+        project.milestones?.filter((m: any) => m.status === 'completed')
+          .length || 0;
       const progress =
         totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
@@ -1103,7 +1092,7 @@ export class DashboardController {
   }
 
   private async generateAlerts(organizationId: string) {
-    const alerts = [];
+    const alerts: any[] = [];
 
     // Project deadline alerts
     const upcomingDeadlines = await this.multiTenantPrisma.project.findMany({
@@ -1123,7 +1112,7 @@ export class DashboardController {
         type: 'deadline',
         severity: 'warning',
         title: 'Project Deadline Approaching',
-        message: `Project "${project.name}" is due on ${new Date(project.dueAt).toLocaleDateString()}`,
+        message: `Project "${project.name}" is due on ${project.dueAt ? new Date(project.dueAt).toLocaleDateString() : 'TBD'}`,
         entityId: project.id,
         entityType: 'project',
       });
@@ -1144,7 +1133,7 @@ export class DashboardController {
         type: 'milestone',
         severity: 'error',
         title: 'Overdue Milestone',
-        message: `Milestone "${milestone.title}" was due on ${new Date(milestone.dueAt).toLocaleDateString()}`,
+        message: `Milestone "${milestone.title}" was due on ${milestone.dueAt ? new Date(milestone.dueAt).toLocaleDateString() : 'TBD'}`,
         entityId: milestone.id,
         entityType: 'milestone',
       });

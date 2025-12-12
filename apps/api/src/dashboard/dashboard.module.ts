@@ -22,7 +22,7 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN || '60m',
+        expiresIn: Number(process.env.JWT_EXPIRES_IN) || 3600,
       },
     }),
     MultiTenantPrismaModule,
