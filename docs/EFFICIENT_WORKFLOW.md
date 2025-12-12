@@ -1,6 +1,7 @@
 # Efficient Development Workflow - JasaWeb
 
 ## 🎯 Core Principles
+
 - **Speed over perfection** - Ship fast, iterate quickly
 - **Essential over comprehensive** - Do what matters, skip what doesn't
 - **Automation over manual** - Automate repetitive tasks
@@ -9,6 +10,7 @@
 ## 🚀 Daily Workflow
 
 ### Morning Setup (5 minutes)
+
 ```bash
 # 1. Get latest code
 git checkout main
@@ -22,6 +24,7 @@ git checkout -b feature/your-task
 ```
 
 ### During Development
+
 ```bash
 # Frequent small commits
 git add .
@@ -35,6 +38,7 @@ git push origin feature/your-task
 ```
 
 ### Before End of Day (2 minutes)
+
 ```bash
 # Push your work
 git push origin feature/your-task
@@ -46,17 +50,20 @@ git push origin feature/your-task
 ## 📋 Task Management
 
 ### Task Categories
+
 - **🔥 Critical** - Bugs, security, production issues
 - **⚡ High** - Features for current sprint
 - **📝 Medium** - Improvements, refactoring
 - **🔧 Low** - Documentation, cleanup
 
 ### Task Estimation
+
 - **Small** (1-2 hours) - Single component, simple logic
 - **Medium** (4-8 hours) - Multiple components, integration
 - **Large** (1-2 days) - Complex features, new modules
 
 ### Working on Tasks
+
 1. **Understand** the requirement (ask questions)
 2. **Break down** into smaller steps
 3. **Implement** minimum viable version
@@ -67,6 +74,7 @@ git push origin feature/your-task
 ## 🔄 Pull Request Process
 
 ### PR Types
+
 - **🚀 Feature** - New functionality
 - **🐛 Bugfix** - Fixing issues
 - **♻️ Refactor** - Code improvements
@@ -74,21 +82,27 @@ git push origin feature/your-task
 - **🔧 Config** - Configuration changes
 
 ### PR Template (Keep it Simple)
+
 ```markdown
 ## What
+
 Brief description of changes
 
 ## Why
+
 Reason for changes (business value)
 
 ## Testing
+
 How to test these changes
 
 ## Screenshots (if UI changes)
+
 Add screenshots here
 ```
 
 ### PR Review Process
+
 1. **Create PR** with clear description
 2. **Self-review** your own changes first
 3. **Request review** from 1-2 team members
@@ -96,6 +110,7 @@ Add screenshots here
 5. **Merge** when approved
 
 ### Review Guidelines
+
 - **Focus on** logic, business value, security
 - **Skip nitpicks** on formatting/style (automated)
 - **Ask questions** instead of demanding changes
@@ -104,6 +119,7 @@ Add screenshots here
 ## ⚡ Development Commands
 
 ### Quick Start
+
 ```bash
 # Install dependencies (once)
 pnpm install
@@ -116,6 +132,7 @@ pnpm test:quick
 ```
 
 ### Before Commit
+
 ```bash
 # Quick validation (30 seconds)
 pnpm lint && pnpm typecheck && pnpm test:quick
@@ -125,6 +142,7 @@ pnpm lint && pnpm typecheck && pnpm test:run && pnpm build
 ```
 
 ### Common Tasks
+
 ```bash
 # Create new component
 pnpm generate component UserCard
@@ -142,6 +160,7 @@ pnpm clean && pnpm install
 ## 🏗️ Project Structure
 
 ### Working with Apps
+
 ```bash
 # Web app (Astro)
 cd apps/web
@@ -157,6 +176,7 @@ pnpm start:prod   # Production
 ```
 
 ### Database Operations
+
 ```bash
 # Generate Prisma client
 pnpm db:generate
@@ -174,6 +194,7 @@ pnpm db:studio
 ## 🐛 Debugging Process
 
 ### Quick Debug Steps
+
 1. **Check console** for errors
 2. **Check network** tab for API issues
 3. **Run locally** with debug flags
@@ -181,6 +202,7 @@ pnpm db:studio
 5. **Use debugger** for complex issues
 
 ### Common Issues
+
 - **Build fails**: Check TypeScript errors
 - **API errors**: Check database connection
 - **Style issues**: Check Tailwind classes
@@ -189,12 +211,14 @@ pnpm db:studio
 ## 📊 Performance Guidelines
 
 ### Development Performance
+
 - **Hot reload** should be < 2 seconds
 - **Build time** should be < 30 seconds
 - **Test run** should be < 2 minutes
 - **Lint check** should be < 10 seconds
 
 ### Code Performance
+
 - **Components** should render in < 16ms
 - **API calls** should respond in < 200ms
 - **Database queries** should run in < 100ms
@@ -203,12 +227,14 @@ pnpm db:studio
 ## 🔒 Security Practices
 
 ### During Development
+
 - **Never commit** secrets or API keys
 - **Use environment variables** for configuration
 - **Validate inputs** on both client and server
 - **Use HTTPS** in production
 
 ### Before Deploy
+
 ```bash
 # Run security audit
 pnpm security:audit
@@ -223,6 +249,7 @@ pnpm outdated
 ## 🚀 Deployment Process
 
 ### Pre-deployment Checklist
+
 - [ ] All tests pass
 - [ ] Build succeeds
 - [ ] Security audit passed
@@ -230,6 +257,7 @@ pnpm outdated
 - [ ] Documentation updated (if needed)
 
 ### Deployment Steps
+
 1. **Merge** feature to main branch
 2. **CI/CD runs** automatically
 3. **Monitor deployment** for errors
@@ -239,17 +267,20 @@ pnpm outdated
 ## 📞 Communication Guidelines
 
 ### Daily Standup (15 minutes)
+
 - **What I did yesterday**
 - **What I'll do today**
 - **Any blockers or help needed**
 
 ### When to Ask for Help
+
 - **Stuck for more than 30 minutes**
 - **Unsure about requirements**
 - **Need code review**
 - **Production issues**
 
 ### Communication Channels
+
 - **Slack**: Daily chat, quick questions
 - **GitHub**: Code reviews, issues
 - **Email**: Formal announcements
@@ -258,18 +289,21 @@ pnpm outdated
 ## 🎯 Efficiency Tips
 
 ### Work Habits
+
 - **Pomodoro technique**: 25min work, 5min break
 - **Time blocking**: Focus on one task at a time
 - **Deep work**: Minimize distractions
 - **Early feedback**: Share work early
 
 ### Code Habits
+
 - **Small commits**: Easier to review and revert
 - **Clear messages**: Explain why, not what
 - **Consistent style**: Use automated formatting
 - **Delete code**: Remove unused code
 
 ### Tool Usage
+
 - **Keyboard shortcuts**: Learn your IDE shortcuts
 - **Snippets**: Use code snippets for common patterns
 - **Extensions**: Install helpful VS Code extensions
@@ -278,12 +312,14 @@ pnpm outdated
 ## 📈 Metrics and KPIs
 
 ### Development Metrics
+
 - **Cycle time**: From start to deployment
 - **PR size**: Keep PRs small (< 300 lines)
 - **Review time**: Review PRs within 24 hours
 - **Bug rate**: Minimize production bugs
 
 ### Performance Metrics
+
 - **Page load**: < 2 seconds
 - **API response**: < 200ms
 - **Build time**: < 30 seconds
@@ -292,12 +328,14 @@ pnpm outdated
 ## 🔄 Continuous Improvement
 
 ### Weekly Review (30 minutes)
+
 - **What went well** this week
 - **What could be improved**
 - **Process changes to try**
 - **Tool upgrades to consider**
 
 ### Monthly Retrospective (1 hour)
+
 - **Team velocity** and trends
 - **Quality metrics** review
 - **Process optimization**

@@ -22,7 +22,7 @@ type AuthenticatedRequest = ExpressRequest & { user?: unknown };
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private refreshTokenService: RefreshTokenService,
+    private refreshTokenService: RefreshTokenService
   ) {}
 
   @Public()
@@ -49,7 +49,8 @@ export class AuthController {
     }
 
     try {
-      const result = await this.refreshTokenService.rotateRefreshToken(refreshToken);
+      const result =
+        await this.refreshTokenService.rotateRefreshToken(refreshToken);
       if (!result) {
         return {
           statusCode: HttpStatus.UNAUTHORIZED,

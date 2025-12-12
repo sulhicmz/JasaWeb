@@ -145,18 +145,20 @@ const query = `SELECT * FROM users WHERE email = '${userEmail}'`; // SQL Injecti
 
 ```typescript
 // ✅ DO: Implement CSP headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+      },
     },
-  },
-}));
+  })
+);
 
 // ❌ DON'T: Allow unsafe inline scripts
-contentSecurityPolicy: false // Dangerous!
+contentSecurityPolicy: false; // Dangerous!
 ```
 
 ### Sanitize HTML
@@ -394,7 +396,8 @@ async login(@Body() dto: LoginDto, @Request() req) {
 
 The `skipLibCheck` option in `tsconfig.json` can improve compilation speed by skipping type checking of declaration files. However, it may mask potential type conflicts between your application code and third-party dependencies, which could lead to unexpected runtime issues.
 
-**Recommendation**: 
+**Recommendation**:
+
 - Set `skipLibCheck: false` for full type safety across the entire dependency tree
 - Only set `skipLibCheck: true` when there are specific, well-understood compatibility issues with certain libraries
 - Document any decision to use `skipLibCheck: true` with the trade-offs involved
@@ -402,20 +405,24 @@ The `skipLibCheck` option in `tsconfig.json` can improve compilation speed by sk
 ## 🔄 Regular Security Tasks
 
 ### Daily
+
 - Review security alerts from Dependabot
 - Monitor application logs for suspicious activity
 
 ### Weekly
+
 - Run security audit: `pnpm security:audit`
 - Review and update dependencies
 - Check for new security advisories
 
 ### Monthly
+
 - Review and update security policies
 - Conduct security training for team
 - Review access controls and permissions
 
 ### Quarterly
+
 - Conduct penetration testing
 - Review and update threat model
 - Security audit of entire codebase

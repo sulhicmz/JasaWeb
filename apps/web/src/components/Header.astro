@@ -13,45 +13,99 @@ const navigationItems = [
 ---
 
 <header class="fixed top-0 w-full z-50 transition-all duration-300 glass-header">
-  <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+  <nav class="container px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
     <div class="flex items-center">
-      <a href="/" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300 hover:opacity-80 transition-opacity">
+      <a href="/" class="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300 hover:opacity-80 transition-opacity">
         JasaWeb
       </a>
     </div>
 
-    <div class="hidden md:block">
+    <div class="hidden lg:block">
       <Navigation items={navigationItems} />
     </div>
 
-    <div class="md:hidden">
-      <button id="mobile-menu-button" class="text-gray-300 hover:text-white transition-colors focus:outline-none">
-        <i class="fas fa-bars text-2xl"></i>
+    <div class="lg:hidden">
+      <button id="mobile-menu-button" class="text-gray-300 hover:text-white transition-colors focus:outline-none p-2 rounded-lg hover:bg-white/10" aria-label="Toggle mobile menu">
+        <i class="fas fa-bars text-xl sm:text-2xl"></i>
       </button>
     </div>
   </nav>
 </header>
 
 <script>
-  // Mobile menu toggle functionality
+  // Mobile menu toggle functionality (optimized)
   document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
+    
+    // Create mobile menu with proper styling
     const mobileMenu = document.createElement('div');
     mobileMenu.id = 'mobile-menu';
-    mobileMenu.className = 'hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-lg py-4';
+    mobileMenu.className = 'hidden lg:hidden absolute top-full left-0 right-0 glass-header border-t border-white/10';
+    mobileMenu.setAttribute('role', 'navigation');
+    mobileMenu.setAttribute('aria-label', 'Mobile navigation');
 
-    // Use the Navigation component for mobile menu
+    // Add mobile navigation items
+    const mobileNavItems = [
+      { label: 'Beranda', href: '/' },
+      { label: 'Layanan', href: '/services' },
+      { label: 'Portofolio', href: '/portfolio' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Kontak', href: '/contact' },
+      { label: 'Login', href: '/login' }
+    ];
+
     mobileMenu.innerHTML = `
-      <div id="mobile-navigation"></div>
+      <div class="container px-4 py-4 space-y-2">
+        ${mobileNavItems.map(item => `
+          <a href="${item.href}" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+            ${item.label}
+          </a>
+        `).join('')}
+      </div>
     `;
 
     document.querySelector('header').appendChild(mobileMenu);
 
-    // Render mobile navigation
-    const mobileNavContainer = document.getElementById('mobile-navigation');
-
+    // Toggle mobile menu
     mobileMenuButton.addEventListener('click', () => {
+      const isHidden = mobileMenu.classList.contains('hidden');
       mobileMenu.classList.toggle('hidden');
+      
+      // Update button icon and aria-label
+      const icon = mobileMenuButton.querySelector('i');
+      if (isHidden) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+        mobileMenuButton.setAttribute('aria-label', 'Close mobile menu');
+      } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+        mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
+      }
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!mobileMenu.classList.contains('hidden') && 
+          !mobileMenu.contains(e.target as Node) && 
+          !mobileMenuButton.contains(e.target as Node)) {
+        mobileMenu.classList.add('hidden');
+        const icon = mobileMenuButton.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+        mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
+      }
+    });
+
+    // Close mobile menu on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        const icon = mobileMenuButton.querySelector('i');
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+        mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
+      }
     });
   });
 </script>

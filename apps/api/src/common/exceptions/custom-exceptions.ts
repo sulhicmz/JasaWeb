@@ -8,24 +8,24 @@ export class BusinessLogicException extends HttpException {
         error: error_code || 'BUSINESS_LOGIC_ERROR',
         message: message,
       },
-      HttpStatus.UNPROCESSABLE_ENTITY,
+      HttpStatus.UNPROCESSABLE_ENTITY
     );
   }
 }
 
 export class ResourceNotFoundException extends HttpException {
   constructor(resource: string, id?: string) {
-    const message = id 
+    const message = id
       ? `The requested ${resource} with ID ${id} was not found`
       : `The requested ${resource} was not found`;
-      
+
     super(
       {
         status: HttpStatus.NOT_FOUND,
         error: 'RESOURCE_NOT_FOUND',
         message: message,
       },
-      HttpStatus.NOT_FOUND,
+      HttpStatus.NOT_FOUND
     );
   }
 }
@@ -38,7 +38,7 @@ export class UnauthorizedResourceAccessException extends HttpException {
         error: 'UNAUTHORIZED_ACCESS',
         message: `You are not authorized to access this ${resource}`,
       },
-      HttpStatus.FORBIDDEN,
+      HttpStatus.FORBIDDEN
     );
   }
 }

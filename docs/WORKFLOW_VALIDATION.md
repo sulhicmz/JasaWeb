@@ -9,6 +9,7 @@ This guide provides comprehensive testing and validation procedures for all Open
 ### Pre-Validation Requirements
 
 **1. Environment Setup**:
+
 - [ ] GitHub token configured with proper permissions
 - [ ] OpenCode API key configured and valid
 - [ ] Self-hosted runner installed and running
@@ -16,6 +17,7 @@ This guide provides comprehensive testing and validation procedures for all Open
 - [ ] All required secrets added to repository
 
 **2. Dependencies**:
+
 - [ ] Node.js 20+ installed on runner
 - [ ] pnpm 8.15.0+ installed
 - [ ] OpenCode CLI installed and accessible
@@ -23,6 +25,7 @@ This guide provides comprehensive testing and validation procedures for all Open
 - [ ] Internet connectivity available
 
 **3. Repository Configuration**:
+
 - [ ] Branch protection rules configured
 - [ ] Workflow permissions set correctly
 - [ ] Actions enabled in repository
@@ -36,20 +39,22 @@ This guide provides comprehensive testing and validation procedures for all Open
 **Validation Steps**:
 
 1. **Manual Trigger Test**:
+
    ```bash
    # Trigger workflow manually
    gh workflow run oc-maintenance-monitoring \
      --field maintenance_type=quick
-   
+
    # Monitor execution
    gh run view --log
    ```
 
 2. **Schedule Test**:
+
    ```bash
    # Check scheduled execution
    gh run list --workflow=oc-maintenance-monitoring
-   
+
    # Verify timing
    gh run view [run-id] --log
    ```
@@ -72,6 +77,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    - [ ] Issues created for critical findings
 
 **Expected Results**:
+
 - System health status documented
 - Performance metrics collected
 - Dependencies updated and secured
@@ -84,12 +90,13 @@ This guide provides comprehensive testing and validation procedures for all Open
 **Validation Steps**:
 
 1. **Manual Trigger Test**:
+
    ```bash
    # Trigger with different scan levels
    gh workflow run oc-security-scanning \
      --field scan_level=quick \
      --field focus_area=dependencies
-   
+
    # Monitor execution
    gh run view --log
    ```
@@ -112,6 +119,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    - [ ] Critical issues created as GitHub issues
 
 **Expected Results**:
+
 - Comprehensive security assessment completed
 - Vulnerabilities identified and prioritized
 - Security fixes implemented
@@ -124,12 +132,13 @@ This guide provides comprehensive testing and validation procedures for all Open
 **Validation Steps**:
 
 1. **Manual Trigger Test**:
+
    ```bash
    # Trigger with different test levels
    gh workflow run oc-code-quality-testing \
      --field test_level=standard \
      --field focus_area=all
-   
+
    # Monitor execution
    gh run view --log
    ```
@@ -151,6 +160,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    - [ ] Testing standards updated
 
 **Expected Results**:
+
 - Code quality score calculated
 - Test coverage measured and improved
 - Performance benchmarks established
@@ -163,13 +173,14 @@ This guide provides comprehensive testing and validation procedures for all Open
 **Validation Steps**:
 
 1. **Test Issue Creation**:
+
    ```bash
    # Create test issue
    gh issue create \
      --title "Test Issue for Validation" \
      --body "This is a test issue for validating the issue solver workflow." \
      --label "test,validation"
-   
+
    # Monitor workflow trigger
    gh run list --workflow=oc-issue-solver
    ```
@@ -191,6 +202,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    - [ ] Issue closed after merge
 
 **Expected Results**:
+
 - Issue analyzed and categorized
 - Solution implemented correctly
 - Tests added and passing
@@ -203,6 +215,7 @@ This guide provides comprehensive testing and validation procedures for all Open
 **Validation Steps**:
 
 1. **Test PR Creation**:
+
    ```bash
    # Create test branch and PR
    git checkout -b test-pr-validation
@@ -211,7 +224,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    git commit -m "Test PR for validation"
    git push origin test-pr-validation
    gh pr create --title "Test PR Validation" --body "Test PR for workflow validation"
-   
+
    # Monitor workflow trigger
    gh run list --workflow=oc-pr-automator
    ```
@@ -232,6 +245,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    - [ ] Auto-merge executed if conditions met
 
 **Expected Results**:
+
 - PR analyzed and categorized
 - Code quality issues fixed
 - Tests passing
@@ -244,12 +258,13 @@ This guide provides comprehensive testing and validation procedures for all Open
 **Validation Steps**:
 
 1. **Manual Trigger Test**:
+
    ```bash
    # Trigger with different development types
    gh workflow run oc-autonomous-developer \
      --field development_type=comprehensive \
      --field priority=balanced
-   
+
    # Monitor execution
    gh run view --log
    ```
@@ -270,6 +285,7 @@ This guide provides comprehensive testing and validation procedures for all Open
    - [ ] Development metrics collected
 
 **Expected Results**:
+
 - Project analyzed thoroughly
 - Features implemented successfully
 - Bugs identified and fixed
@@ -383,12 +399,12 @@ WORKFLOWS=(
 
 for workflow in "${WORKFLOWS[@]}"; do
     echo "Checking $workflow..."
-    
+
     # Get latest run
     LATEST_RUN=$(gh run list --workflow="$workflow" --limit=1 --json)
     STATUS=$(echo "$LATEST_RUN" | jq -r '.[0].status')
     CONCLUSION=$(echo "$LATEST_RUN" | jq -r '.[0].conclusion')
-    
+
     if [ "$STATUS" = "completed" ] && [ "$CONCLUSION" = "success" ]; then
         echo "✅ $workflow: Healthy"
     elif [ "$STATUS" = "in_progress" ]; then
@@ -459,6 +475,7 @@ fi
 ### Common Issues
 
 **1. Authentication Failures**:
+
 ```bash
 # Check token validity
 gh auth status
@@ -471,6 +488,7 @@ gh auth status --show-token
 ```
 
 **2. Runner Issues**:
+
 ```bash
 # Check runner status
 sudo ./svc.sh status
@@ -483,6 +501,7 @@ sudo journalctl -u actions.runner
 ```
 
 **3. Workflow Failures**:
+
 ```bash
 # Check workflow logs
 gh run list --limit 10
@@ -495,6 +514,7 @@ gh run rerun [run-id]
 ```
 
 **4. OpenCode CLI Issues**:
+
 ```bash
 # Check CLI version
 opencode --version
@@ -537,57 +557,83 @@ Create `docs/monitoring-dashboard.html`:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>OpenCode Workflow Monitoring</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
-        .status { padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .success { background-color: #d4edda; color: #155724; }
-        .warning { background-color: #fff3cd; color: #856404; }
-        .error { background-color: #f8d7da; color: #721c24; }
-        .chart { margin-top: 20px; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .card {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .warning {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .chart {
+        margin-top: 20px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>OpenCode Workflow Monitoring Dashboard</h1>
-    
+
     <div class="dashboard">
-        <div class="card">
-            <h2>Workflow Status</h2>
-            <div id="workflow-status"></div>
-        </div>
-        
-        <div class="card">
-            <h2>Performance Metrics</h2>
-            <div id="performance-metrics"></div>
-        </div>
-        
-        <div class="card">
-            <h2>Success Rate</h2>
-            <canvas id="success-rate-chart" class="chart"></canvas>
-        </div>
-        
-        <div class="card">
-            <h2>Execution Time</h2>
-            <canvas id="execution-time-chart" class="chart"></canvas>
-        </div>
+      <div class="card">
+        <h2>Workflow Status</h2>
+        <div id="workflow-status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Performance Metrics</h2>
+        <div id="performance-metrics"></div>
+      </div>
+
+      <div class="card">
+        <h2>Success Rate</h2>
+        <canvas id="success-rate-chart" class="chart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>Execution Time</h2>
+        <canvas id="execution-time-chart" class="chart"></canvas>
+      </div>
     </div>
-    
+
     <script>
-        // Fetch workflow data from GitHub API
-        async function fetchWorkflowData() {
-            // Implementation for fetching workflow data
-            // Update dashboard with real-time data
-        }
-        
-        // Initialize dashboard
-        fetchWorkflowData();
-        setInterval(fetchWorkflowData, 30000); // Update every 30 seconds
+      // Fetch workflow data from GitHub API
+      async function fetchWorkflowData() {
+        // Implementation for fetching workflow data
+        // Update dashboard with real-time data
+      }
+
+      // Initialize dashboard
+      fetchWorkflowData();
+      setInterval(fetchWorkflowData, 30000); // Update every 30 seconds
     </script>
-</body>
+  </body>
 </html>
 ```
 
@@ -601,7 +647,7 @@ name: Workflow Alerts
 
 on:
   workflow_run:
-    workflows: ["oc-*"]
+    workflows: ['oc-*']
     types: [completed]
 
 jobs:
@@ -634,36 +680,42 @@ Create `docs/validation-report.md`:
 ## Workflow Validation Results
 
 ### 1. Maintenance & Monitoring
+
 - **Status**: [✅/❌]
 - **Execution Time**: [X minutes]
 - **Issues Found**: [Number]
 - **Recommendations**: [List]
 
 ### 2. Security Scanning
+
 - **Status**: [✅/❌]
 - **Vulnerabilities Found**: [Number]
 - **Critical Issues**: [Number]
 - **Fixes Applied**: [Number]
 
 ### 3. Code Quality & Testing
+
 - **Status**: [✅/❌]
 - **Code Quality Score**: [X/10]
 - **Test Coverage**: [X%]
 - **Issues Fixed**: [Number]
 
 ### 4. Issue Solver
+
 - **Status**: [✅/❌]
 - **Issues Processed**: [Number]
 - **Resolution Rate**: [X%]
 - **Average Resolution Time**: [X minutes]
 
 ### 5. PR Automator
+
 - **Status**: [✅/❌]
 - **PRs Processed**: [Number]
 - **Auto-merge Rate**: [X%]
 - **Quality Improvements**: [Number]
 
 ### 6. Autonomous Developer
+
 - **Status**: [✅/❌]
 - **Features Implemented**: [Number]
 - **Bugs Fixed**: [Number]
@@ -674,11 +726,13 @@ Create `docs/validation-report.md`:
 ### Health Score: [X/100]
 
 ### Recommendations
+
 1. [Recommendation 1]
 2. [Recommendation 2]
 3. [Recommendation 3]
 
 ### Next Steps
+
 1. [Next step 1]
 2. [Next step 2]
 3. [Next step 3]
@@ -692,7 +746,7 @@ Create `docs/validation-report.md`:
 
 ---
 
-*This report was generated automatically by the OpenCode validation system.*
+_This report was generated automatically by the OpenCode validation system._
 ```
 
 ## Best Practices
@@ -745,4 +799,4 @@ Create `docs/validation-report.md`:
 
 ---
 
-*This validation guide is maintained by the OpenCode automation system and updated regularly.*
+_This validation guide is maintained by the OpenCode automation system and updated regularly._

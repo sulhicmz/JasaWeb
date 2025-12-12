@@ -38,6 +38,7 @@ Examples of unacceptable behavior by participants include:
 ### Specific Examples
 
 #### Acceptable
+
 ✅ "I think this approach could be improved by considering edge cases. Have you thought about..."
 
 ✅ "Thank you for your contribution! I have a few suggestions that might make it even better."
@@ -47,6 +48,7 @@ Examples of unacceptable behavior by participants include:
 ✅ "I disagree with this approach because of security concerns. Here's an alternative I'd like to propose."
 
 #### Unacceptable
+
 ❌ "That's a stupid idea. Anyone would know that won't work."
 
 ❌ "You're obviously not experienced enough to be working on this."
@@ -64,15 +66,19 @@ Examples of unacceptable behavior by participants include:
 If you experience or witness unacceptable behavior, please report it through one of these channels:
 
 #### **Primary Contact**
+
 - **Email**: conduct@jasaweb.com
 - **Private Message**: Any maintainer on Discord or GitHub
 
 #### **GitHub Issues**
+
 For public issues related to conduct:
+
 - Create an issue with the `conduct` label
 - Mark as private if needed (contact maintainers directly)
 
 #### **Discord**
+
 - Send a direct message to any moderator or maintainer
 - Use the `#moderation` channel (if available)
 
@@ -83,10 +89,10 @@ When reporting, please include:
 1. **Your contact information** (if you want a response)
 2. **The people involved** (names, usernames)
 3. **Description of what happened**
-4 **When and where it occurred** (date, time, location)
-5. **Any evidence** (screenshots, logs, links)
-6. **Witnesses** (if any)
-7. **Desired outcome** (what you would like to happen)
+   4 **When and where it occurred** (date, time, location)
+4. **Any evidence** (screenshots, logs, links)
+5. **Witnesses** (if any)
+6. **Desired outcome** (what you would like to happen)
 
 ### Confidentiality
 
@@ -119,24 +125,28 @@ All reports will be kept confidential to the extent possible. We will:
 Consequences for violating the Code of Conduct may include:
 
 #### **First Offense**
+
 - **Private warning** from maintainers
 - **Request for public apology** (if appropriate)
 - **Temporary suspension** from community spaces (1-7 days)
 - **Required education** or training
 
 #### **Second Offense**
+
 - **Longer suspension** (1-4 weeks)
 - **Loss of privileges** (commit access, moderator status)
 - **Public acknowledgment** of the violation
 - **Mandatory mediation** with affected parties
 
 #### **Severe Offenses**
+
 - **Permanent ban** from all community spaces
 - **Removal from project** (if contributor)
 - **Legal action** (if illegal activities)
 - **Public statement** about the incident
 
 #### **Examples of Severe Offenses**
+
 - Threats of violence or harm
 - Hate speech or discrimination
 - Harassment or bullying
@@ -209,18 +219,21 @@ Maintainers will:
 ### Communication
 
 #### **Be Respectful**
+
 - Use inclusive language
 - Respect different opinions and experiences
 - Assume good intent
 - Avoid making assumptions about others
 
 #### **Be Constructive**
+
 - Focus on ideas, not people
 - Provide helpful feedback
 - Acknowledge good work
 - Suggest improvements
 
 #### **Be Inclusive**
+
 - Welcome newcomers
 - Help others participate
 - Consider different perspectives
@@ -229,18 +242,21 @@ Maintainers will:
 ### Collaboration
 
 #### **Code Reviews**
+
 - Be constructive and specific
 - Explain the "why" behind suggestions
 - Acknowledge effort and good work
 - Help others learn and improve
 
 #### **Discussions**
+
 - Stay on topic
 - Listen to others
 - Share knowledge freely
 - Ask questions respectfully
 
 #### **Decision Making**
+
 - Base decisions on merit
 - Consider community impact
 - Be transparent about process
@@ -307,16 +323,19 @@ We will:
 ## Contact Information
 
 ### For Questions
+
 - **Email**: conduct@jasaweb.com
 - **Discord**: Any maintainer or moderator
 - **GitHub**: Create an issue with `conduct` label
 
 ### For Emergencies
+
 - **Urgent safety concerns**: Contact local authorities
 - **Immediate threats**: Report to platform administrators
 - **Legal issues**: legal@jasaweb.com
 
 ### For Feedback
+
 - **Policy suggestions**: conduct@jasaweb.com
 - **Community feedback**: hello@jasaweb.com
 - **Accessibility needs**: accessibility@jasaweb.com

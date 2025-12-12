@@ -11,13 +11,15 @@ export class UsersService {
   async create(createUserDto: CreateUserDto): Promise<any> {
     // Hash the password before saving
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    
+
     return await this.prisma.user.create({
       data: {
         email: createUserDto.email,
         name: createUserDto.name,
         password: hashedPassword,
-        ...(createUserDto.profilePicture && { profilePicture: createUserDto.profilePicture }),
+        ...(createUserDto.profilePicture && {
+          profilePicture: createUserDto.profilePicture,
+        }),
       },
     });
   }
@@ -40,16 +42,17 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<any> {
     const updateData: any = {};
-    
+
     if (updateUserDto.email) updateData.email = updateUserDto.email;
     if (updateUserDto.name) updateData.name = updateUserDto.name;
-    if (updateUserDto.profilePicture !== undefined) updateData.profilePicture = updateUserDto.profilePicture;
-    
+    if (updateUserDto.profilePicture !== undefined)
+      updateData.profilePicture = updateUserDto.profilePicture;
+
     // Hash password if provided
     if (updateUserDto.password) {
       updateData.password = await bcrypt.hash(updateUserDto.password, 10);
     }
-    
+
     return await this.prisma.user.update({
       where: { id },
       data: updateData,

@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { knowledgeBaseService, type KbArticle, type KbCategory } from '../../services/knowledgeBaseService';
+import {
+  knowledgeBaseService,
+  type KbArticle,
+  type KbCategory,
+} from '../../services/knowledgeBaseService';
 
 interface KnowledgeBaseHomeProps {}
 
@@ -19,7 +23,10 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
       setLoading(true);
       const [categoriesData, featuredData, recentData] = await Promise.all([
         knowledgeBaseService.getCategories(),
-        knowledgeBaseService.getArticles({ featured: true, status: 'published' }),
+        knowledgeBaseService.getArticles({
+          featured: true,
+          status: 'published',
+        }),
         knowledgeBaseService.getArticles({ status: 'published', limit: 6 }),
       ]);
 
@@ -46,7 +53,8 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
           <div className="max-w-3xl">
             <h1 className="text-4xl font-bold mb-4">JasaWeb Knowledge Base</h1>
             <p className="text-lg text-blue-100">
-              Cari jawaban cepat untuk pertanyaan Anda atau jelajahi artikel berdasarkan kategori.
+              Cari jawaban cepat untuk pertanyaan Anda atau jelajahi artikel
+              berdasarkan kategori.
             </p>
           </div>
 
@@ -80,7 +88,10 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Kategori</h2>
-                <a href="/knowledge-base" className="text-blue-600 hover:text-blue-800 text-sm">
+                <a
+                  href="/knowledge-base"
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
                   Lihat semua
                 </a>
               </div>
@@ -92,16 +103,32 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
                     className="block p-6 bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {category.name}
+                      </h3>
                       {category._count?.articles !== undefined && (
-                        <span className="text-sm text-gray-500">{category._count.articles} artikel</span>
+                        <span className="text-sm text-gray-500">
+                          {category._count.articles} artikel
+                        </span>
                       )}
                     </div>
-                    <p className="text-gray-600 text-sm line-clamp-2">{category.description}</p>
+                    <p className="text-gray-600 text-sm line-clamp-2">
+                      {category.description}
+                    </p>
                     <div className="mt-4 flex items-center text-sm text-blue-600 font-medium">
                       Jelajahi
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-4 h-4 ml-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </div>
                   </a>
@@ -112,8 +139,13 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
             <section className="grid gap-12 lg:grid-cols-2">
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Featured Articles</h2>
-                  <a href="/knowledge-base/search?q=featured" className="text-blue-600 hover:text-blue-800 text-sm">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Featured Articles
+                  </h2>
+                  <a
+                    href="/knowledge-base/search?q=featured"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
                     Lihat semua
                   </a>
                 </div>
@@ -125,14 +157,24 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
                       className="block p-5 bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{article.title}</h3>
-                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Featured</span>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {article.title}
+                        </h3>
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          Featured
+                        </span>
                       </div>
-                      <p className="text-gray-600 text-sm line-clamp-2">{article.excerpt}</p>
+                      <p className="text-gray-600 text-sm line-clamp-2">
+                        {article.excerpt}
+                      </p>
                       <div className="mt-3 flex items-center text-sm text-gray-500 space-x-3">
                         <span>{article.category.name}</span>
                         <span>•</span>
-                        <span>{new Date(article.publishedAt || article.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(
+                            article.publishedAt || article.createdAt
+                          ).toLocaleDateString()}
+                        </span>
                       </div>
                     </a>
                   ))}
@@ -141,8 +183,13 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Artikel Terbaru</h2>
-                  <a href="/knowledge-base/search?q=latest" className="text-blue-600 hover:text-blue-800 text-sm">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Artikel Terbaru
+                  </h2>
+                  <a
+                    href="/knowledge-base/search?q=latest"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
                     Lihat semua
                   </a>
                 </div>
@@ -154,16 +201,26 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
                       className="block p-5 bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-100"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{article.title}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {article.title}
+                        </h3>
                         {article.tags.length > 0 && (
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{article.tags[0].name}</span>
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {article.tags[0].name}
+                          </span>
                         )}
                       </div>
-                      <p className="text-gray-600 text-sm line-clamp-2">{article.excerpt}</p>
+                      <p className="text-gray-600 text-sm line-clamp-2">
+                        {article.excerpt}
+                      </p>
                       <div className="mt-3 flex items-center text-sm text-gray-500 space-x-3">
                         <span>{article.category.name}</span>
                         <span>•</span>
-                        <span>{new Date(article.publishedAt || article.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(
+                            article.publishedAt || article.createdAt
+                          ).toLocaleDateString()}
+                        </span>
                       </div>
                     </a>
                   ))}

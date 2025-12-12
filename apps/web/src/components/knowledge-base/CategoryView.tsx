@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { knowledgeBaseService, type KbArticle, type KbCategory } from '../../services/knowledgeBaseService';
+import {
+  knowledgeBaseService,
+  type KbArticle,
+  type KbCategory,
+} from '../../services/knowledgeBaseService';
 
 interface CategoryViewProps {}
 
@@ -47,8 +51,13 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Category not found</h1>
-          <a href="/knowledge-base" className="text-blue-600 hover:text-blue-800">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Category not found
+          </h1>
+          <a
+            href="/knowledge-base"
+            className="text-blue-600 hover:text-blue-800"
+          >
             Back to Knowledge Base
           </a>
         </div>
@@ -63,12 +72,19 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-2">
               <li>
-                <a href="/knowledge-base" className="text-gray-500 hover:text-gray-700">
+                <a
+                  href="/knowledge-base"
+                  className="text-gray-500 hover:text-gray-700"
+                >
                   Knowledge Base
                 </a>
               </li>
               <li className="flex items-center">
-                <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
@@ -86,18 +102,27 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
         <div className="bg-white rounded-lg shadow-lg">
           <div className="px-8 py-6 border-b">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {category.name}
+              </h1>
               {category._count?.articles !== undefined && (
-                <span className="text-sm text-gray-500">{category._count.articles} articles</span>
+                <span className="text-sm text-gray-500">
+                  {category._count.articles} articles
+                </span>
               )}
             </div>
-            {category.description && <p className="mt-2 text-gray-600">{category.description}</p>}
+            {category.description && (
+              <p className="mt-2 text-gray-600">{category.description}</p>
+            )}
           </div>
 
           {articles.length > 0 ? (
             <div className="divide-y divide-gray-200">
               {articles.map((article) => (
-                <article key={article.id} className="px-8 py-6 hover:bg-gray-50 transition-colors">
+                <article
+                  key={article.id}
+                  className="px-8 py-6 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <a
                       href={`/knowledge-base/article/${article.slug}`}
@@ -106,16 +131,24 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
                       {article.title}
                     </a>
                     {article.featured && (
-                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded">Featured</span>
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded">
+                        Featured
+                      </span>
                     )}
                   </div>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{article.excerpt}</p>
+                  <p className="text-gray-600 mb-4 line-clamp-2">
+                    {article.excerpt}
+                  </p>
 
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center space-x-3">
                       <span>By {article.author.name}</span>
                       <span>•</span>
-                      <span>{new Date(article.publishedAt || article.createdAt).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(
+                          article.publishedAt || article.createdAt
+                        ).toLocaleDateString()}
+                      </span>
                       <span>•</span>
                       <span>{article.viewCount} views</span>
                     </div>
@@ -125,7 +158,11 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
                         <span
                           key={tag.id}
                           className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded"
-                          style={{ backgroundColor: tag.color ? `${tag.color}20` : undefined }}
+                          style={{
+                            backgroundColor: tag.color
+                              ? `${tag.color}20`
+                              : undefined,
+                          }}
                         >
                           {tag.name}
                         </span>
@@ -136,7 +173,9 @@ const CategoryView: React.FC<CategoryViewProps> = () => {
               ))}
             </div>
           ) : (
-            <div className="px-8 py-6 text-center text-gray-500">No articles found in this category yet.</div>
+            <div className="px-8 py-6 text-center text-gray-500">
+              No articles found in this category yet.
+            </div>
           )}
         </div>
       </div>

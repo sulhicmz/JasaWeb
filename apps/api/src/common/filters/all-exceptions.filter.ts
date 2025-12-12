@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = (responseObj as any).message || exception.message;
         error = (responseObj as any).error || exception.constructor.name;
       } else {
-        message = responseObj as string || exception.message;
+        message = (responseObj as string) || exception.message;
         error = exception.constructor.name;
       }
     } else if (exception instanceof Error) {

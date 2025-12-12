@@ -2,10 +2,7 @@
   "all": true,
   "check-coverage": true,
   "reporter": ["text", "lcov", "html"],
-  "include": [
-    "apps/*/src/**/*.ts",
-    "packages/*/src/**/*.ts"
-  ],
+  "include": ["apps/*/src/**/*.ts", "packages/*/src/**/*.ts"],
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",
