@@ -48,7 +48,7 @@ async function main() {
   });
 
   // Create tags
-  const tags = await Promise.all([
+  await Promise.all([
     prisma.kbTag.create({ data: { name: 'beginner', color: '#10B981' } }),
     prisma.kbTag.create({ data: { name: 'tutorial', color: '#3B82F6' } }),
     prisma.kbTag.create({ data: { name: 'setup', color: '#F59E0B' } }),

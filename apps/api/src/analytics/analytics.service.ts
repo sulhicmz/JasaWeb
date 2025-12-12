@@ -46,41 +46,41 @@ export class AnalyticsService {
 
     const totalProjects = projects.length;
     const completedProjects = projects.filter(
-      (p: any) => p.status === 'completed'
+      (p) => p.status === 'completed'
     ).length;
     const inProgressProjects = projects.filter(
-      (p: any) => p.status === 'progress'
+      (p) => p.status === 'progress'
     ).length;
     const overdueProjects = projects.filter(
-      (p: any) =>
+      (p) =>
         p.dueAt && new Date(p.dueAt) < new Date() && p.status !== 'completed'
     ).length;
 
     // Calculate milestone completion
     const totalMilestones = projects.reduce(
-      (sum: number, p: any) => sum + p.milestones.length,
+      (sum: number, p) => sum + p.milestones.length,
       0
     );
     const completedMilestones = projects.reduce(
-      (sum: number, p: any) =>
-        sum + p.milestones.filter((m: any) => m.status === 'completed').length,
+      (sum: number, p) =>
+        sum + p.milestones.filter((m) => m.status === 'completed').length,
       0
     );
 
     // Calculate task completion
     const totalTasks = projects.reduce(
-      (sum: number, p: any) => sum + p.tasks.length,
+      (sum: number, p) => sum + p.tasks.length,
       0
     );
     const completedTasks = projects.reduce(
-      (sum: number, p: any) =>
-        sum + p.tasks.filter((t: any) => t.status === 'completed').length,
+      (sum: number, p) =>
+        sum + p.tasks.filter((t) => t.status === 'completed').length,
       0
     );
 
     // Timeline adherence (projects completed on time)
     const completedOnTime = projects.filter(
-      (p: any) =>
+      (p) =>
         p.status === 'completed' && p.dueAt && p.updatedAt <= new Date(p.dueAt)
     ).length;
 
@@ -193,18 +193,18 @@ export class AnalyticsService {
       },
     });
 
-    return users.map((user: any) => {
+    return users.map((user) => {
       const totalTasks = user.Task.length;
       const completedTasks = user.Task.filter(
-        (t: any) => t.status === 'completed'
+        (t) => t.status === 'completed'
       ).length;
       const totalApprovals = user.approvals.length;
       const completedApprovals = user.approvals.filter(
-        (a: any) => a.status !== 'pending'
+        (a) => a.status !== 'pending'
       ).length;
       const totalTickets = user.tickets.length;
       const resolvedTickets = user.tickets.filter(
-        (t: any) => t.status === 'resolved' || t.status === 'closed'
+        (t) => t.status === 'resolved' || t.status === 'closed'
       ).length;
 
       return {
@@ -272,16 +272,16 @@ export class AnalyticsService {
 
     const totalInvoices = invoices.length;
     const totalAmount = invoices.reduce(
-      (sum: number, inv: any) => sum + inv.amount,
+      (sum: number, inv) => sum + inv.amount,
       0
     );
-    const paidInvoices = invoices.filter((inv: any) => inv.status === 'paid');
+    const paidInvoices = invoices.filter((inv) => inv.status === 'paid');
     const paidAmount = paidInvoices.reduce(
-      (sum: number, inv: any) => sum + inv.amount,
+      (sum: number, inv) => sum + inv.amount,
       0
     );
     const overdueInvoices = invoices.filter(
-      (inv: any) =>
+      (inv) =>
         inv.status !== 'paid' &&
         inv.status !== 'cancelled' &&
         new Date(inv.dueAt) < new Date()
@@ -289,7 +289,7 @@ export class AnalyticsService {
 
     // Group by currency
     const byCurrency = invoices.reduce(
-      (acc: any, inv: any) => {
+      (acc, inv) => {
         const currency = inv.currency;
         if (!acc[currency]) {
           acc[currency] = { count: 0, amount: 0, paid: 0 };
@@ -307,7 +307,7 @@ export class AnalyticsService {
 
     // Group by month
     const byMonth = invoices.reduce(
-      (acc: any, inv: any) => {
+      (acc, inv) => {
         const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
         if (!acc[month]) {
           acc[month] = { count: 0, amount: 0, paid: 0 };
@@ -368,26 +368,24 @@ export class AnalyticsService {
 
     const totalTickets = tickets.length;
     const resolvedTickets = tickets.filter(
-      (t: any) => t.status === 'resolved' || t.status === 'closed'
+      (t) => t.status === 'resolved' || t.status === 'closed'
     );
     const resolvedCount = resolvedTickets.length;
 
     // Calculate average resolution time (simplified - in real implementation, track resolution time)
-    const criticalTickets = tickets.filter(
-      (t: any) => t.priority === 'critical'
-    );
-    const highTickets = tickets.filter((t: any) => t.priority === 'high');
-    const mediumTickets = tickets.filter((t: any) => t.priority === 'medium');
-    const lowTickets = tickets.filter((t: any) => t.priority === 'low');
+    const criticalTickets = tickets.filter((t) => t.priority === 'critical');
+    const highTickets = tickets.filter((t) => t.priority === 'high');
+    const mediumTickets = tickets.filter((t) => t.priority === 'medium');
+    const lowTickets = tickets.filter((t) => t.priority === 'low');
 
     // SLA compliance (tickets resolved within SLA)
     const slaCompliantTickets = resolvedTickets.filter(
-      (t: any) => !t.slaDueAt || t.updatedAt <= new Date(t.slaDueAt)
+      (t) => !t.slaDueAt || t.updatedAt <= new Date(t.slaDueAt)
     ).length;
 
     // Group by type
     const byType = tickets.reduce(
-      (acc: any, ticket: any) => {
+      (acc, ticket) => {
         const type = ticket.type;
         if (!acc[type]) {
           acc[type] = { total: 0, resolved: 0 };
@@ -407,25 +405,25 @@ export class AnalyticsService {
       critical: {
         total: criticalTickets.length,
         resolved: criticalTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
       high: {
         total: highTickets.length,
         resolved: highTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
       medium: {
         total: mediumTickets.length,
         resolved: mediumTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
       low: {
         total: lowTickets.length,
         resolved: lowTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
     };
@@ -474,7 +472,7 @@ export class AnalyticsService {
 
     // Group by time period
     const trends = auditLogs.reduce(
-      (acc: any, log: any) => {
+      (acc, log) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
 
