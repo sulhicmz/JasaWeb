@@ -7,6 +7,9 @@ import NotificationToast from '../components/dashboard/NotificationToast.astro';
 import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
 import DashboardExport from '../components/dashboard/DashboardExport.astro';
 import NotificationPreferences from '../components/dashboard/NotificationPreferences.astro';
+import ProjectManagementHub from '../components/dashboard/ProjectManagementHub.astro';
+import NotificationCenter from '../components/dashboard/NotificationCenter.astro';
+import AnalyticsReports from '../components/dashboard/AnalyticsReports.astro';
 // Import notification service
 import '../services/notificationService.ts';
 ---
@@ -55,21 +58,31 @@ import '../services/notificationService.ts';
         <DashboardStats client:load />
       </section>
 
+      <!-- Enhanced Project Management Hub -->
+      <section class="mb-8">
+        <ProjectManagementHub client:load />
+      </section>
+
       <!-- Analytics Charts -->
       <section class="mb-8">
         <DashboardCharts client:load />
       </section>
 
-      <!-- Grid Layout for Activity and Projects -->
+      <!-- Advanced Analytics and Reports -->
+      <section class="mb-8">
+        <AnalyticsReports client:load />
+      </section>
+
+      <!-- Grid Layout for Activity and Notifications -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Recent Activity (2/3 width on large screens) -->
         <section class="lg:col-span-2">
           <RecentActivity client:load />
         </section>
 
-        <!-- Projects Overview (1/3 width on large screens) -->
+        <!-- Enhanced Notification Center (1/3 width on large screens) -->
         <section>
-          <ProjectsOverview client:load />
+          <NotificationCenter client:load />
         </section>
       </div>
 

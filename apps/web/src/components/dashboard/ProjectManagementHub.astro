@@ -1,0 +1,496 @@
+---
+// Enhanced Project Management Dashboard with real-time collaboration
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Project Management Hub</h2>
+    <div class="flex items-center space-x-2">
+      <button id="projectViewToggle" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200">
+        <i class="fas fa-th-large mr-1"></i> Grid View
+      </button>
+      <button id="addProjectBtn" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors duration-200">
+        <i class="fas fa-plus mr-1"></i> New Project
+      </button>
+    </div>
+  </div>
+
+  <!-- Project Filters and Search -->
+  <div class="mb-6 flex flex-col lg:flex-row gap-4">
+    <div class="flex-1">
+      <div class="relative">
+        <input 
+          type="text" 
+          id="projectSearch" 
+          placeholder="Search projects..." 
+          class="w-full px-4 py-2 pl-10 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+        >
+        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <select id="statusFilter" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+        <option value="on-hold">On Hold</option>
+        <option value="planning">Planning</option>
+      </select>
+      <select id="priorityFilter" class="px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+        <option value="">All Priority</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Projects Container -->
+  <div id="projectsContainer" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+    <!-- Projects will be dynamically loaded here -->
+  </div>
+
+  <!-- Loading State -->
+  <div id="loadingState" class="hidden text-center py-12">
+    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+    <p class="text-gray-400">Loading projects...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div id="emptyState" class="hidden text-center py-12">
+    <i class="fas fa-folder-open text-4xl text-gray-500 mb-4"></i>
+    <p class="text-gray-400 mb-4">No projects found</p>
+    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+      <i class="fas fa-plus mr-2"></i>Create Your First Project
+    </button>
+  </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div id="projectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-slate-700">
+      <div class="flex items-center justify-between">
+        <h3 id="modalProjectName" class="text-xl font-bold text-white"></h3>
+        <button id="closeModal" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+    <div id="modalContent" class="p-6">
+      <!-- Project details will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<script>
+  class ProjectManagementHub {
+    constructor() {
+      this.projects = [];
+      this.filteredProjects = [];
+      this.currentView = 'grid';
+      this.selectedProject = null;
+      this.init();
+    }
+
+    init() {
+      this.setupEventListeners();
+      this.loadProjects();
+      
+      // Listen for real-time updates
+      window.addEventListener('dashboard-update', (e) => {
+        if (e.detail.type === 'project') {
+          this.handleProjectUpdate(e.detail.data);
+        }
+      });
+
+      window.addEventListener('stats-updated', (e) => {
+        this.refreshProjects();
+      });
+    }
+
+    setupEventListeners() {
+      // Search and filters
+      document.getElementById('projectSearch')?.addEventListener('input', (e) => {
+        this.filterProjects(e.target.value);
+      });
+
+      document.getElementById('statusFilter')?.addEventListener('change', () => {
+        this.applyFilters();
+      });
+
+      document.getElementById('priorityFilter')?.addEventListener('change', () => {
+        this.applyFilters();
+      });
+
+      // View toggle
+      document.getElementById('projectViewToggle')?.addEventListener('click', () => {
+        this.toggleView();
+      });
+
+      // Add project button
+      document.getElementById('addProjectBtn')?.addEventListener('click', () => {
+        this.showCreateProjectForm();
+      });
+
+      // Modal controls
+      document.getElementById('closeModal')?.addEventListener('click', () => {
+        this.closeProjectModal();
+      });
+
+      document.getElementById('projectModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'projectModal') {
+          this.closeProjectModal();
+        }
+      });
+    }
+
+    async loadProjects() {
+      this.showLoading(true);
+      
+      try {
+        const response = await fetch('/api/dashboard/projects-overview?limit=20');
+        const projects = await response.json();
+        
+        this.projects = projects;
+        this.filteredProjects = projects;
+        this.renderProjects();
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        this.showError('Failed to load projects');
+      } finally {
+        this.showLoading(false);
+      }
+    }
+
+    filterProjects(searchTerm) {
+      const term = searchTerm.toLowerCase();
+      this.filteredProjects = this.projects.filter(project => 
+        project.name.toLowerCase().includes(term) ||
+        (project.description && project.description.toLowerCase().includes(term))
+      );
+      this.applyFilters();
+    }
+
+    applyFilters() {
+      const statusFilter = document.getElementById('statusFilter')?.value;
+      const priorityFilter = document.getElementById('priorityFilter')?.value;
+
+      let filtered = [...this.filteredProjects];
+
+      if (statusFilter) {
+        filtered = filtered.filter(project => project.status === statusFilter);
+      }
+
+      if (priorityFilter) {
+        filtered = filtered.filter(project => {
+          // Determine priority based on tickets
+          return project.highPriorityTickets > (priorityFilter === 'low' ? 0 : priorityFilter === 'medium' ? 1 : 2);
+        });
+      }
+
+      this.renderProjects(filtered);
+    }
+
+    renderProjects(projects = this.filteredProjects) {
+      const container = document.getElementById('projectsContainer');
+      const emptyState = document.getElementById('emptyState');
+
+      if (projects.length === 0) {
+        container.innerHTML = '';
+        emptyState?.classList.remove('hidden');
+        return;
+      }
+
+      emptyState?.classList.add('hidden');
+      container.innerHTML = projects.map(project => this.createProjectCard(project)).join('');
+
+      // Add click handlers to project cards
+      container.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const projectId = card.dataset.projectId;
+          this.showProjectDetails(projectId);
+        });
+      });
+    }
+
+    createProjectCard(project) {
+      const statusColors = {
+        active: 'bg-green-500',
+        completed: 'bg-blue-500',
+        'on-hold': 'bg-yellow-500',
+        planning: 'bg-gray-500'
+      };
+
+      const progressColor = project.progress >= 75 ? 'bg-green-500' : 
+                          project.progress >= 50 ? 'bg-blue-500' : 
+                          project.progress >= 25 ? 'bg-yellow-500' : 'bg-red-500';
+
+      return `
+        <div class="project-card bg-slate-800/50 rounded-lg p-6 border border-slate-700 hover:border-blue-500 transition-all duration-200 cursor-pointer" data-project-id="${project.id}">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-white mb-1">${project.name}</h3>
+              <p class="text-sm text-gray-400">${project.description || 'No description available'}</p>
+            </div>
+            <span class="px-2 py-1 ${statusColors[project.status]} text-white text-xs rounded-full">
+              ${project.status}
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-400 mb-1">
+              <span>Progress</span>
+              <span>${project.progress}%</span>
+            </div>
+            <div class="w-full bg-slate-700 rounded-full h-2">
+              <div class="${progressColor} h-2 rounded-full transition-all duration-300" style="width: ${project.progress}%"></div>
+            </div>
+          </div>
+
+          <!-- Project Stats -->
+          <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="text-center">
+              <div class="text-lg font-bold text-white">${project.totalMilestones}</div>
+              <div class="text-xs text-gray-400">Milestones</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-white">${project.openTickets}</div>
+              <div class="text-xs text-gray-400">Open Tickets</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-white">${project.completedMilestones}</div>
+              <div class="text-xs text-gray-400">Completed</div>
+            </div>
+          </div>
+
+          <!-- Project Dates -->
+          <div class="flex items-center justify-between text-xs text-gray-400">
+            <div>
+              <i class="fas fa-calendar-alt mr-1"></i>
+              Started: ${new Date(project.startAt || project.createdAt).toLocaleDateString()}
+            </div>
+            ${project.dueAt ? `
+              <div>
+                <i class="fas fa-clock mr-1"></i>
+                Due: ${new Date(project.dueAt).toLocaleDateString()}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- High Priority Alert -->
+          ${project.highPriorityTickets > 0 ? `
+            <div class="mt-3 flex items-center text-red-400 text-sm">
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              ${project.highPriorityTickets} high priority ticket${project.highPriorityTickets > 1 ? 's' : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    async showProjectDetails(projectId) {
+      const project = this.projects.find(p => p.id === projectId);
+      if (!project) return;
+
+      this.selectedProject = project;
+      const modal = document.getElementById('projectModal');
+      const modalName = document.getElementById('modalProjectName');
+      const modalContent = document.getElementById('modalContent');
+
+      modalName.textContent = project.name;
+      
+      // Load detailed project information
+      modalContent.innerHTML = `
+        <div class="space-y-6">
+          <!-- Project Overview -->
+          <div>
+            <h4 class="text-lg font-semibold text-white mb-3">Project Overview</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-slate-800/50 p-4 rounded-lg">
+                <div class="text-sm text-gray-400 mb-1">Status</div>
+                <div class="text-white font-medium">${project.status}</div>
+              </div>
+              <div class="bg-slate-800/50 p-4 rounded-lg">
+                <div class="text-sm text-gray-400 mb-1">Progress</div>
+                <div class="text-white font-medium">${project.progress}%</div>
+              </div>
+              <div class="bg-slate-800/50 p-4 rounded-lg">
+                <div class="text-sm text-gray-400 mb-1">Total Milestones</div>
+                <div class="text-white font-medium">${project.totalMilestones}</div>
+              </div>
+              <div class="bg-slate-800/50 p-4 rounded-lg">
+                <div class="text-sm text-gray-400 mb-1">Open Tickets</div>
+                <div class="text-white font-medium">${project.openTickets}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div>
+            <h4 class="text-lg font-semibold text-white mb-3">Recent Activity</h4>
+            <div id="projectActivity" class="space-y-2">
+              <div class="text-center py-4 text-gray-400">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Loading activity...
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div>
+            <h4 class="text-lg font-semibold text-white mb-3">Quick Actions</h4>
+            <div class="flex flex-wrap gap-2">
+              <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-plus mr-2"></i>Add Milestone
+              </button>
+              <button class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-ticket-alt mr-2"></i>Create Ticket
+              </button>
+              <button class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-upload mr-2"></i>Upload File
+              </button>
+              <button class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors duration-200">
+                <i class="fas fa-edit mr-2"></i>Edit Project
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+      
+      // Load project activity
+      this.loadProjectActivity(projectId);
+    }
+
+    async loadProjectActivity(projectId) {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/activity`);
+        const activities = await response.json();
+        
+        const activityContainer = document.getElementById('projectActivity');
+        if (activities.length === 0) {
+          activityContainer.innerHTML = '<div class="text-center py-4 text-gray-400">No recent activity</div>';
+          return;
+        }
+
+        activityContainer.innerHTML = activities.map(activity => `
+          <div class="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg">
+            <div class="flex-shrink-0">
+              ${this.getActivityIcon(activity.type)}
+            </div>
+            <div class="flex-1">
+              <div class="text-white text-sm">${activity.title}</div>
+              <div class="text-gray-400 text-xs">${new Date(activity.createdAt).toLocaleString()}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading project activity:', error);
+        document.getElementById('projectActivity').innerHTML = 
+          '<div class="text-center py-4 text-red-400">Failed to load activity</div>';
+      }
+    }
+
+    getActivityIcon(type) {
+      const icons = {
+        milestone: '<i class="fas fa-flag text-blue-400"></i>',
+        ticket: '<i class="fas fa-ticket-alt text-green-400"></i>',
+        file: '<i class="fas fa-file text-yellow-400"></i>',
+        approval: '<i class="fas fa-check-circle text-purple-400"></i>',
+        invoice: '<i class="fas fa-file-invoice text-red-400"></i>'
+      };
+      return icons[type] || '<i class="fas fa-circle text-gray-400"></i>';
+    }
+
+    closeProjectModal() {
+      document.getElementById('projectModal').classList.add('hidden');
+      this.selectedProject = null;
+    }
+
+    toggleView() {
+      const button = document.getElementById('projectViewToggle');
+      const container = document.getElementById('projectsContainer');
+      
+      if (this.currentView === 'grid') {
+        this.currentView = 'list';
+        container.className = 'space-y-4';
+        button.innerHTML = '<i class="fas fa-list mr-1"></i> List View';
+      } else {
+        this.currentView = 'grid';
+        container.className = 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6';
+        button.innerHTML = '<i class="fas fa-th-large mr-1"></i> Grid View';
+      }
+      
+      this.renderProjects();
+    }
+
+    showCreateProjectForm() {
+      // Implementation for project creation form
+      console.log('Show create project form');
+    }
+
+    handleProjectUpdate(data) {
+      // Update project in real-time
+      const projectIndex = this.projects.findIndex(p => p.id === data.projectId);
+      if (projectIndex !== -1) {
+        this.projects[projectIndex] = { ...this.projects[projectIndex], ...data };
+        this.applyFilters();
+      }
+    }
+
+    refreshProjects() {
+      this.loadProjects();
+    }
+
+    showLoading(show) {
+      const loadingState = document.getElementById('loadingState');
+      const container = document.getElementById('projectsContainer');
+      
+      if (show) {
+        loadingState?.classList.remove('hidden');
+        container.classList.add('hidden');
+      } else {
+        loadingState?.classList.add('hidden');
+        container.classList.remove('hidden');
+      }
+    }
+
+    showError(message) {
+      // Show error notification
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+  }
+
+  // Initialize the project management hub
+  document.addEventListener('DOMContentLoaded', () => {
+    new ProjectManagementHub();
+  });
+</script>
+
+<style>
+  .project-card {
+    transform: translateY(0);
+    transition: all 0.2s ease;
+  }
+
+  .project-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-panel {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+</style>

@@ -1,0 +1,641 @@
+---
+// Advanced Real-time Notification System with comprehensive features
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Notification Center</h2>
+    <div class="flex items-center space-x-2">
+      <button id="notificationSettings" class="p-2 text-gray-400 hover:text-white transition-colors duration-200">
+        <i class="fas fa-cog"></i>
+      </button>
+      <button id="markAllRead" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200">
+        Mark All Read
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Filters -->
+  <div class="mb-4 flex flex-wrap gap-2">
+    <button class="notification-filter px-3 py-1 bg-blue-600 text-white rounded-lg text-sm transition-colors duration-200" data-filter="all">
+      All
+    </button>
+    <button class="notification-filter px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200" data-filter="projects">
+      Projects
+    </button>
+    <button class="notification-filter px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200" data-filter="tickets">
+      Tickets
+    </button>
+    <button class="notification-filter px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200" data-filter="milestones">
+      Milestones
+    </button>
+    <button class="notification-filter px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200" data-filter="invoices">
+      Invoices
+    </button>
+  </div>
+
+  <!-- Notification List -->
+  <div id="notificationList" class="space-y-3 max-h-96 overflow-y-auto">
+    <!-- Notifications will be loaded here -->
+  </div>
+
+  <!-- Loading State -->
+  <div id="notificationLoading" class="hidden text-center py-8">
+    <i class="fas fa-spinner fa-spin text-2xl text-blue-500 mb-2"></i>
+    <p class="text-gray-400">Loading notifications...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div id="notificationEmpty" class="hidden text-center py-8">
+    <i class="fas fa-bell-slash text-3xl text-gray-500 mb-3"></i>
+    <p class="text-gray-400">No notifications</p>
+  </div>
+</div>
+
+<!-- Notification Settings Modal -->
+<div id="notificationSettingsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 rounded-xl max-w-md w-full">
+    <div class="p-6 border-b border-slate-700">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Notification Settings</h3>
+        <button id="closeSettings" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-white font-medium">Desktop Notifications</div>
+          <div class="text-sm text-gray-400">Show browser notifications</div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="desktopNotifications" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+      
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-white font-medium">Sound Alerts</div>
+          <div class="text-sm text-gray-400">Play sound for notifications</div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="soundAlerts" class="sr-only peer" checked>
+          <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-white font-medium">Email Digest</div>
+          <div class="text-sm text-gray-400">Daily email summary</div>
+        </div>
+        <select id="emailDigest" class="px-3 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm">
+          <option value="never">Never</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
+      <div class="border-t border-slate-700 pt-4">
+        <div class="text-white font-medium mb-3">Notification Types</div>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-blue-600 focus:ring-blue-500" checked>
+            <span class="text-gray-300">Project updates</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-blue-600 focus:ring-blue-500" checked>
+            <span class="text-gray-300">Ticket assignments</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-blue-600 focus:ring-blue-500" checked>
+            <span class="text-gray-300">Milestone completions</span>
+          </label>
+          <label class="flex items-center space-x-3">
+            <input type="checkbox" class="rounded bg-slate-800 border-slate-600 text-blue-600 focus:ring-blue-500" checked>
+            <span class="text-gray-300">Invoice updates</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="p-6 border-t border-slate-700">
+      <button id="saveSettings" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+        Save Settings
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  class NotificationCenter {
+    constructor() {
+      this.notifications = [];
+      this.filteredNotifications = [];
+      this.currentFilter = 'all';
+      this.settings = this.loadSettings();
+      this.init();
+    }
+
+    init() {
+      this.setupEventListeners();
+      this.loadNotifications();
+      
+      // Listen for real-time notifications
+      window.addEventListener('realtime-notification', (e) => {
+        this.handleRealtimeNotification(e.detail);
+      });
+
+      // Request notification permission
+      this.requestNotificationPermission();
+    }
+
+    setupEventListeners() {
+      // Filter buttons
+      document.querySelectorAll('.notification-filter').forEach(button => {
+        button.addEventListener('click', () => {
+          this.setFilter(button.dataset.filter);
+        });
+      });
+
+      // Mark all as read
+      document.getElementById('markAllRead')?.addEventListener('click', () => {
+        this.markAllAsRead();
+      });
+
+      // Settings modal
+      document.getElementById('notificationSettings')?.addEventListener('click', () => {
+        this.showSettings();
+      });
+
+      document.getElementById('closeSettings')?.addEventListener('click', () => {
+        this.hideSettings();
+      });
+
+      document.getElementById('notificationSettingsModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'notificationSettingsModal') {
+          this.hideSettings();
+        }
+      });
+
+      document.getElementById('saveSettings')?.addEventListener('click', () => {
+        this.saveSettings();
+      });
+
+      // Settings controls
+      document.getElementById('desktopNotifications')?.addEventListener('change', (e) => {
+        this.settings.desktopNotifications = e.target.checked;
+        if (e.target.checked) {
+          this.requestNotificationPermission();
+        }
+      });
+
+      document.getElementById('soundAlerts')?.addEventListener('change', (e) => {
+        this.settings.soundAlerts = e.target.checked;
+      });
+
+      document.getElementById('emailDigest')?.addEventListener('change', (e) => {
+        this.settings.emailDigest = e.target.value;
+      });
+    }
+
+    async loadNotifications() {
+      this.showLoading(true);
+      
+      try {
+        // Simulate API call - replace with actual endpoint
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Sample notifications
+        this.notifications = [
+          {
+            id: '1',
+            type: 'project',
+            title: 'Project Update',
+            message: 'Website Redesign project has been updated',
+            data: { projectId: 'proj-1', projectName: 'Website Redesign' },
+            isRead: false,
+            createdAt: new Date(Date.now() - 10 * 60 * 1000),
+            priority: 'medium'
+          },
+          {
+            id: '2',
+            type: 'ticket',
+            title: 'New Ticket Assigned',
+            message: 'High priority ticket assigned to you',
+            data: { ticketId: 'ticket-1', ticketTitle: 'Fix navigation issue' },
+            isRead: false,
+            createdAt: new Date(Date.now() - 30 * 60 * 1000),
+            priority: 'high'
+          },
+          {
+            id: '3',
+            type: 'milestone',
+            title: 'Milestone Completed',
+            message: 'Homepage Design milestone has been completed',
+            data: { milestoneId: 'milestone-1', milestoneTitle: 'Homepage Design' },
+            isRead: true,
+            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+            priority: 'low'
+          },
+          {
+            id: '4',
+            type: 'invoice',
+            title: 'Invoice Generated',
+            message: 'New invoice INV-2024-001 has been generated',
+            data: { invoiceId: 'inv-1', invoiceNumber: 'INV-2024-001', amount: 5000 },
+            isRead: true,
+            createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+            priority: 'medium'
+          }
+        ];
+        
+        this.filteredNotifications = [...this.notifications];
+        this.renderNotifications();
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+        this.showError('Failed to load notifications');
+      } finally {
+        this.showLoading(false);
+      }
+    }
+
+    setFilter(filter) {
+      this.currentFilter = filter;
+      
+      // Update button states
+      document.querySelectorAll('.notification-filter').forEach(button => {
+        if (button.dataset.filter === filter) {
+          button.className = 'notification-filter px-3 py-1 bg-blue-600 text-white rounded-lg text-sm transition-colors duration-200';
+        } else {
+          button.className = 'notification-filter px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors duration-200';
+        }
+      });
+
+      // Apply filter
+      if (filter === 'all') {
+        this.filteredNotifications = [...this.notifications];
+      } else {
+        this.filteredNotifications = this.notifications.filter(n => n.type === filter);
+      }
+
+      this.renderNotifications();
+    }
+
+    renderNotifications() {
+      const container = document.getElementById('notificationList');
+      const emptyState = document.getElementById('notificationEmpty');
+
+      if (this.filteredNotifications.length === 0) {
+        container.innerHTML = '';
+        emptyState?.classList.remove('hidden');
+        return;
+      }
+
+      emptyState?.classList.add('hidden');
+      container.innerHTML = this.filteredNotifications.map(notification => 
+        this.createNotificationElement(notification)
+      ).join('');
+
+      // Add click handlers
+      container.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const notificationId = item.dataset.notificationId;
+          this.handleNotificationClick(notificationId);
+        });
+      });
+    }
+
+    createNotificationElement(notification) {
+      const typeIcons = {
+        project: '<i class="fas fa-project-diagram text-blue-400"></i>',
+        ticket: '<i class="fas fa-ticket-alt text-green-400"></i>',
+        milestone: '<i class="fas fa-flag text-yellow-400"></i>',
+        invoice: '<i class="fas fa-file-invoice text-red-400"></i>'
+      };
+
+      const priorityColors = {
+        high: 'border-red-500',
+        medium: 'border-yellow-500',
+        low: 'border-gray-500'
+      };
+
+      return `
+        <div class="notification-item p-4 bg-slate-800/50 rounded-lg border-l-4 ${priorityColors[notification.priority]} ${notification.isRead ? 'opacity-75' : ''} cursor-pointer hover:bg-slate-800 transition-colors duration-200" data-notification-id="${notification.id}">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0 mt-1">
+              ${typeIcons[notification.type] || '<i class="fas fa-bell text-gray-400"></i>'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between mb-1">
+                <h4 class="text-white font-medium text-sm">${notification.title}</h4>
+                <span class="text-xs text-gray-400">${this.formatTime(notification.createdAt)}</span>
+              </div>
+              <p class="text-gray-300 text-sm mb-2">${notification.message}</p>
+              ${notification.data ? this.renderNotificationData(notification) : ''}
+            </div>
+            <div class="flex-shrink-0">
+              ${!notification.isRead ? '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    renderNotificationData(notification) {
+      const data = notification.data;
+      
+      switch (notification.type) {
+        case 'project':
+          return `<div class="text-xs text-gray-400">Project: ${data.projectName}</div>`;
+        case 'ticket':
+          return `<div class="text-xs text-gray-400">Ticket: ${data.ticketTitle}</div>`;
+        case 'milestone':
+          return `<div class="text-xs text-gray-400">Milestone: ${data.milestoneTitle}</div>`;
+        case 'invoice':
+          return `<div class="text-xs text-gray-400">Invoice: ${data.invoiceNumber} - $${data.amount.toLocaleString()}</div>`;
+        default:
+          return '';
+      }
+    }
+
+    handleNotificationClick(notificationId) {
+      const notification = this.notifications.find(n => n.id === notificationId);
+      if (!notification) return;
+
+      // Mark as read
+      if (!notification.isRead) {
+        this.markAsRead(notificationId);
+      }
+
+      // Handle navigation based on notification type
+      this.handleNotificationAction(notification);
+    }
+
+    handleNotificationAction(notification) {
+      switch (notification.type) {
+        case 'project':
+          if (notification.data.projectId) {
+            // Navigate to project details
+            console.log('Navigate to project:', notification.data.projectId);
+          }
+          break;
+        case 'ticket':
+          if (notification.data.ticketId) {
+            // Navigate to ticket details
+            console.log('Navigate to ticket:', notification.data.ticketId);
+          }
+          break;
+        case 'milestone':
+          if (notification.data.milestoneId) {
+            // Navigate to milestone details
+            console.log('Navigate to milestone:', notification.data.milestoneId);
+          }
+          break;
+        case 'invoice':
+          if (notification.data.invoiceId) {
+            // Navigate to invoice details
+            console.log('Navigate to invoice:', notification.data.invoiceId);
+          }
+          break;
+      }
+    }
+
+    async markAsRead(notificationId) {
+      const notification = this.notifications.find(n => n.id === notificationId);
+      if (notification) {
+        notification.isRead = true;
+        this.renderNotifications();
+        
+        // Update on server
+        try {
+          await fetch('/api/notifications/read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notificationId })
+          });
+        } catch (error) {
+          console.error('Error marking notification as read:', error);
+        }
+      }
+    }
+
+    async markAllAsRead() {
+      const unreadNotifications = this.notifications.filter(n => !n.isRead);
+      
+      if (unreadNotifications.length === 0) {
+        return;
+      }
+
+      // Mark all as read locally
+      this.notifications.forEach(n => n.isRead = true);
+      this.renderNotifications();
+
+      // Update on server
+      try {
+        await fetch('/api/notifications/read-all', { method: 'POST' });
+      } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+      }
+    }
+
+    handleRealtimeNotification(notification) {
+      // Add new notification to the top of the list
+      const newNotification = {
+        id: notification.id || Date.now().toString(),
+        type: notification.type || 'info',
+        title: notification.title || 'New Notification',
+        message: notification.message,
+        data: notification.data,
+        isRead: false,
+        createdAt: notification.timestamp || new Date(),
+        priority: notification.priority || 'medium'
+      };
+
+      this.notifications.unshift(newNotification);
+      this.setFilter(this.currentFilter);
+
+      // Show desktop notification if enabled
+      if (this.settings.desktopNotifications) {
+        this.showDesktopNotification(newNotification);
+      }
+
+      // Play sound if enabled
+      if (this.settings.soundAlerts) {
+        this.playNotificationSound();
+      }
+    }
+
+    showDesktopNotification(notification) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(notification.title, {
+          body: notification.message,
+          icon: '/favicon.ico',
+          tag: notification.id,
+          requireInteraction: false
+        });
+      }
+    }
+
+    playNotificationSound() {
+      // Create a simple notification sound
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }
+
+    requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            console.log('Desktop notifications enabled');
+          }
+        });
+      }
+    }
+
+    showSettings() {
+      document.getElementById('notificationSettingsModal').classList.remove('hidden');
+      this.populateSettings();
+    }
+
+    hideSettings() {
+      document.getElementById('notificationSettingsModal').classList.add('hidden');
+    }
+
+    populateSettings() {
+      document.getElementById('desktopNotifications').checked = this.settings.desktopNotifications;
+      document.getElementById('soundAlerts').checked = this.settings.soundAlerts;
+      document.getElementById('emailDigest').value = this.settings.emailDigest;
+    }
+
+    saveSettings() {
+      localStorage.setItem('notificationSettings', JSON.stringify(this.settings));
+      this.hideSettings();
+      this.showSuccess('Settings saved successfully');
+    }
+
+    loadSettings() {
+      const saved = localStorage.getItem('notificationSettings');
+      return saved ? JSON.parse(saved) : {
+        desktopNotifications: true,
+        soundAlerts: true,
+        emailDigest: 'daily'
+      };
+    }
+
+    formatTime(date) {
+      const now = new Date();
+      const diff = now - new Date(date);
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      
+      return new Date(date).toLocaleDateString();
+    }
+
+    showLoading(show) {
+      const loading = document.getElementById('notificationLoading');
+      const container = document.getElementById('notificationList');
+      
+      if (show) {
+        loading?.classList.remove('hidden');
+        container.classList.add('hidden');
+      } else {
+        loading?.classList.add('hidden');
+        container.classList.remove('hidden');
+      }
+    }
+
+    showError(message) {
+      this.showToast(message, 'error');
+    }
+
+    showSuccess(message) {
+      this.showToast(message, 'success');
+    }
+
+    showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+      };
+      
+      toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+      }, 100);
+      
+      setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  }
+
+  // Initialize the notification center
+  document.addEventListener('DOMContentLoaded', () => {
+    new NotificationCenter();
+  });
+</script>
+
+<style>
+  .glass-panel {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  .notification-item {
+    transform: translateX(0);
+    transition: all 0.2s ease;
+  }
+
+  .notification-item:hover {
+    transform: translateX(4px);
+  }
+
+  /* Custom scrollbar for notification list */
+  #notificationList::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  #notificationList::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  #notificationList::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 3px;
+  }
+
+  #notificationList::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+  }
+</style>

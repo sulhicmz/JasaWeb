@@ -1,0 +1,691 @@
+---
+// Advanced Analytics and Reporting Dashboard
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Analytics & Reports</h2>
+    <div class="flex items-center space-x-2">
+      <button id="exportReport" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors duration-200">
+        <i class="fas fa-download mr-1"></i> Export
+      </button>
+      <button id="scheduleReport" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors duration-200">
+        <i class="fas fa-calendar-alt mr-1"></i> Schedule
+      </button>
+    </div>
+  </div>
+
+  <!-- Time Period Selector -->
+  <div class="mb-6 flex flex-wrap items-center gap-4">
+    <div class="flex items-center space-x-2">
+      <label class="text-sm text-gray-400">Period:</label>
+      <select id="timePeriod" class="px-3 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="365">Last year</option>
+        <option value="custom">Custom range</option>
+      </select>
+    </div>
+    <div class="flex items-center space-x-2">
+      <label class="text-sm text-gray-400">Compare:</label>
+      <select id="comparePeriod" class="px-3 py-1 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none">
+        <option value="none">None</option>
+        <option value="previous">Previous period</option>
+        <option value="year">Year over year</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Key Performance Indicators -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Project Completion Rate</span>
+        <i class="fas fa-chart-line text-green-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1">87.5%</div>
+      <div class="text-xs text-green-400">
+        <i class="fas fa-arrow-up mr-1"></i>+5.2% from last period
+      </div>
+    </div>
+
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Average Response Time</span>
+        <i class="fas fa-clock text-blue-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1">2.4h</div>
+      <div class="text-xs text-green-400">
+        <i class="fas fa-arrow-down mr-1"></i>-30min from last period
+      </div>
+    </div>
+
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Client Satisfaction</span>
+        <i class="fas fa-smile text-yellow-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1">4.8/5</div>
+      <div class="text-xs text-green-400">
+        <i class="fas fa-arrow-up mr-1"></i>+0.3 from last period
+      </div>
+    </div>
+
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Revenue Growth</span>
+        <i class="fas fa-dollar-sign text-purple-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1">+23%</div>
+      <div class="text-xs text-green-400">
+        <i class="fas fa-arrow-up mr-1"></i>$12,500 additional
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Project Timeline Analytics -->
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <h3 class="text-white font-medium mb-4">Project Timeline Analytics</h3>
+      <div class="relative" style="height: 300px;">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Resource Utilization -->
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <h3 class="text-white font-medium mb-4">Resource Utilization</h3>
+      <div class="relative" style="height: 300px;">
+        <canvas id="resourceChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Metrics Table -->
+  <div class="bg-slate-800/50 p-4 rounded-lg">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-white font-medium">Detailed Project Metrics</h3>
+      <div class="flex items-center space-x-2">
+        <input 
+          type="text" 
+          id="metricsSearch" 
+          placeholder="Search projects..." 
+          class="px-3 py-1 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+        >
+        <button id="refreshMetrics" class="p-1 text-gray-400 hover:text-white">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-700">
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Project</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Progress</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Budget Used</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Time Elapsed</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Team Size</th>
+            <th class="text-left py-3 px-4 text-gray-400 font-medium">Health Score</th>
+          </tr>
+        </thead>
+        <tbody id="metricsTableBody">
+          <!-- Table rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Report Schedule Modal -->
+<div id="scheduleModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 rounded-xl max-w-md w-full">
+    <div class="p-6 border-b border-slate-700">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white">Schedule Report</h3>
+        <button id="closeSchedule" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Report Name</label>
+        <input 
+          type="text" 
+          id="reportName" 
+          placeholder="Weekly Analytics Report" 
+          class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Frequency</label>
+        <select id="reportFrequency" class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:outline-none">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Recipients</label>
+        <input 
+          type="email" 
+          id="reportRecipients" 
+          placeholder="team@example.com, manager@example.com" 
+          class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+        >
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Format</label>
+        <div class="flex space-x-4">
+          <label class="flex items-center">
+            <input type="checkbox" class="mr-2" checked>
+            <span class="text-gray-300">PDF</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" class="mr-2">
+            <span class="text-gray-300">Excel</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" class="mr-2" checked>
+            <span class="text-gray-300">Email</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="p-6 border-t border-slate-700">
+      <button id="saveSchedule" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+        Schedule Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  class AnalyticsReports {
+    constructor() {
+      this.charts = {};
+      this.metrics = [];
+      this.currentTimePeriod = 30;
+      this.comparePeriod = 'none';
+      this.init();
+    }
+
+    init() {
+      this.setupEventListeners();
+      this.loadMetrics();
+      this.initCharts();
+      
+      // Listen for data updates
+      window.addEventListener('stats-updated', (e) => {
+        this.updateAnalytics(e.detail.stats);
+      });
+    }
+
+    setupEventListeners() {
+      // Time period selector
+      document.getElementById('timePeriod')?.addEventListener('change', (e) => {
+        this.currentTimePeriod = e.target.value === 'custom' ? 'custom' : parseInt(e.target.value);
+        this.refreshAnalytics();
+      });
+
+      // Compare period selector
+      document.getElementById('comparePeriod')?.addEventListener('change', (e) => {
+        this.comparePeriod = e.target.value;
+        this.updateComparisonData();
+      });
+
+      // Export report
+      document.getElementById('exportReport')?.addEventListener('click', () => {
+        this.exportReport();
+      });
+
+      // Schedule report
+      document.getElementById('scheduleReport')?.addEventListener('click', () => {
+        this.showScheduleModal();
+      });
+
+      // Schedule modal
+      document.getElementById('closeSchedule')?.addEventListener('click', () => {
+        this.hideScheduleModal();
+      });
+
+      document.getElementById('scheduleModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'scheduleModal') {
+          this.hideScheduleModal();
+        }
+      });
+
+      document.getElementById('saveSchedule')?.addEventListener('click', () => {
+        this.saveReportSchedule();
+      });
+
+      // Metrics search
+      document.getElementById('metricsSearch')?.addEventListener('input', (e) => {
+        this.filterMetrics(e.target.value);
+      });
+
+      // Refresh metrics
+      document.getElementById('refreshMetrics')?.addEventListener('click', () => {
+        this.refreshMetrics();
+      });
+    }
+
+    async loadMetrics() {
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Sample metrics data
+        this.metrics = [
+          {
+            id: '1',
+            name: 'Website Redesign',
+            status: 'active',
+            progress: 75,
+            budgetUsed: 65000,
+            budgetTotal: 80000,
+            timeElapsed: 45,
+            timeTotal: 60,
+            teamSize: 4,
+            healthScore: 85
+          },
+          {
+            id: '2',
+            name: 'Mobile App Development',
+            status: 'active',
+            progress: 60,
+            budgetUsed: 42000,
+            budgetTotal: 70000,
+            timeElapsed: 30,
+            timeTotal: 90,
+            teamSize: 6,
+            healthScore: 78
+          },
+          {
+            id: '3',
+            name: 'E-commerce Platform',
+            status: 'completed',
+            progress: 100,
+            budgetUsed: 55000,
+            budgetTotal: 55000,
+            timeElapsed: 45,
+            timeTotal: 45,
+            teamSize: 5,
+            healthScore: 95
+          },
+          {
+            id: '4',
+            name: 'Marketing Dashboard',
+            status: 'on-hold',
+            progress: 30,
+            budgetUsed: 12000,
+            budgetTotal: 30000,
+            timeElapsed: 20,
+            timeTotal: 30,
+            teamSize: 2,
+            healthScore: 45
+          }
+        ];
+        
+        this.renderMetricsTable();
+      } catch (error) {
+        console.error('Error loading metrics:', error);
+      }
+    }
+
+    initCharts() {
+      this.initTimelineChart();
+      this.initResourceChart();
+    }
+
+    initTimelineChart() {
+      const ctx = document.getElementById('timelineChart')?.getContext('2d');
+      if (!ctx) return;
+
+      this.charts.timeline = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: this.generateTimeLabels(),
+          datasets: [
+            {
+              label: 'Completed Projects',
+              data: [3, 5, 4, 7, 6, 8, 9],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderWidth: 2,
+              tension: 0.4
+            },
+            {
+              label: 'Started Projects',
+              data: [4, 3, 6, 5, 7, 6, 8],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              borderWidth: 2,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#9ca3af' }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#fff',
+              bodyColor: '#fff'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              ticks: { color: '#9ca3af' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#9ca3af' }
+            }
+          }
+        }
+      });
+    }
+
+    initResourceChart() {
+      const ctx = document.getElementById('resourceChart')?.getContext('2d');
+      if (!ctx) return;
+
+      this.charts.resource = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Development', 'Design', 'Management', 'Testing', 'Deployment', 'Support'],
+          datasets: [
+            {
+              label: 'Current Utilization',
+              data: [85, 70, 60, 45, 30, 25],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderWidth: 2
+            },
+            {
+              label: 'Optimal Range',
+              data: [70, 70, 70, 70, 70, 70],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderWidth: 2,
+              borderDash: [5, 5]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#9ca3af' }
+            }
+          },
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              pointLabels: { color: '#9ca3af' },
+              ticks: { 
+                color: '#9ca3af',
+                backdropColor: 'transparent'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    generateTimeLabels() {
+      const labels = [];
+      const now = new Date();
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+      }
+      
+      return labels;
+    }
+
+    renderMetricsTable(metrics = this.metrics) {
+      const tbody = document.getElementById('metricsTableBody');
+      
+      tbody.innerHTML = metrics.map(metric => `
+        <tr class="border-b border-slate-700 hover:bg-slate-700/50 transition-colors">
+          <td class="py-3 px-4">
+            <div class="text-white font-medium">${metric.name}</div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-1 text-xs rounded-full ${this.getStatusColor(metric.status)}">
+              ${metric.status}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex items-center space-x-2">
+              <div class="w-16 bg-slate-700 rounded-full h-2">
+                <div class="bg-blue-500 h-2 rounded-full" style="width: ${metric.progress}%"></div>
+              </div>
+              <span class="text-gray-300 text-sm">${metric.progress}%</span>
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="text-white">
+              $${metric.budgetUsed.toLocaleString()}
+              <span class="text-gray-400 text-xs">/ $${metric.budgetTotal.toLocaleString()}</span>
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="text-white">
+              ${metric.timeElapsed}d
+              <span class="text-gray-400 text-xs">/ ${metric.timeTotal}d</span>
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="text-white">${metric.teamSize}</span>
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex items-center space-x-2">
+              <div class="w-12 bg-slate-700 rounded-full h-2">
+                <div class="h-2 rounded-full ${this.getHealthColor(metric.healthScore)}" style="width: ${metric.healthScore}%"></div>
+              </div>
+              <span class="text-gray-300 text-sm">${metric.healthScore}</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    getStatusColor(status) {
+      const colors = {
+        active: 'bg-green-500',
+        completed: 'bg-blue-500',
+        'on-hold': 'bg-yellow-500',
+        planning: 'bg-gray-500'
+      };
+      return colors[status] || 'bg-gray-500';
+    }
+
+    getHealthColor(score) {
+      if (score >= 80) return 'bg-green-500';
+      if (score >= 60) return 'bg-yellow-500';
+      return 'bg-red-500';
+    }
+
+    filterMetrics(searchTerm) {
+      const filtered = this.metrics.filter(metric => 
+        metric.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      this.renderMetricsTable(filtered);
+    }
+
+    refreshMetrics() {
+      const btn = document.getElementById('refreshMetrics');
+      const icon = btn?.querySelector('i');
+      
+      if (icon) {
+        icon.classList.add('fa-spin');
+      }
+
+      this.loadMetrics().finally(() => {
+        setTimeout(() => {
+          icon?.classList.remove('fa-spin');
+        }, 1000);
+      });
+    }
+
+    refreshAnalytics() {
+      // Refresh all analytics data
+      this.refreshMetrics();
+      this.updateCharts();
+    }
+
+    updateCharts() {
+      // Update chart data based on current time period
+      if (this.charts.timeline) {
+        const labels = this.generateTimeLabels();
+        this.charts.timeline.data.labels = labels;
+        this.charts.timeline.update();
+      }
+    }
+
+    updateComparisonData() {
+      // Update charts with comparison data
+      console.log('Updating comparison data for:', this.comparePeriod);
+    }
+
+    updateAnalytics(stats) {
+      // Update analytics with real-time stats
+      console.log('Updating analytics with stats:', stats);
+      this.refreshAnalytics();
+    }
+
+    exportReport() {
+      // Generate and download report
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        timePeriod: this.currentTimePeriod,
+        metrics: this.metrics,
+        summary: {
+          totalProjects: this.metrics.length,
+          activeProjects: this.metrics.filter(m => m.status === 'active').length,
+          completedProjects: this.metrics.filter(m => m.status === 'completed').length,
+          averageProgress: Math.round(this.metrics.reduce((sum, m) => sum + m.progress, 0) / this.metrics.length),
+          totalBudgetUsed: this.metrics.reduce((sum, m) => sum + m.budgetUsed, 0)
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      this.showSuccess('Report exported successfully');
+    }
+
+    showScheduleModal() {
+      document.getElementById('scheduleModal').classList.remove('hidden');
+    }
+
+    hideScheduleModal() {
+      document.getElementById('scheduleModal').classList.add('hidden');
+    }
+
+    saveReportSchedule() {
+      const schedule = {
+        name: document.getElementById('reportName').value,
+        frequency: document.getElementById('reportFrequency').value,
+        recipients: document.getElementById('reportRecipients').value,
+        formats: ['pdf', 'email'] // Simplified
+      };
+
+      // Save schedule (in real app, this would be an API call)
+      console.log('Saving report schedule:', schedule);
+      
+      this.hideScheduleModal();
+      this.showSuccess('Report scheduled successfully');
+    }
+
+    showSuccess(message) {
+      this.showToast(message, 'success');
+    }
+
+    showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500'
+      };
+      
+      toast.className = `fixed top-4 right-4 ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
+      toast.textContent = message;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+      }, 100);
+      
+      setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  }
+
+  // Initialize analytics and reports
+  document.addEventListener('DOMContentLoaded', () => {
+    new AnalyticsReports();
+  });
+</script>
+
+<style>
+  .glass-panel {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  /* Custom scrollbar */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 3px;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+  }
+</style>
