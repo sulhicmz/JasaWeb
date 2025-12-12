@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.API_BASE_URL;
 
 export interface KbCategory {
   id: string;
@@ -96,6 +96,9 @@ class KnowledgeBaseService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    if (!API_BASE_URL) {
+      throw new Error('API_BASE_URL environment variable is required');
+    }
     const url = `${API_BASE_URL}/knowledge-base${endpoint}`;
 
     const response = await fetch(url, {

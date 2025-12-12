@@ -3,14 +3,22 @@ import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<any> {
     // Hash the password before saving
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const bcryptRounds = this.configService.get<number>('BCRYPT_ROUNDS') || 12;
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      bcryptRounds
+    );
 
     return await this.prisma.user.create({
       data: {
@@ -50,7 +58,12 @@ export class UsersService {
 
     // Hash password if provided
     if (updateUserDto.password) {
-      updateData.password = await bcrypt.hash(updateUserDto.password, 10);
+      const bcryptRounds =
+        this.configService.get<number>('BCRYPT_ROUNDS') || 12;
+      updateData.password = await bcrypt.hash(
+        updateUserDto.password,
+        bcryptRounds
+      );
     }
 
     return await this.prisma.user.update({

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/database/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RefreshTokenService {
@@ -10,7 +11,8 @@ export class RefreshTokenService {
 
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private configService: ConfigService
   ) {}
 
   /**
@@ -26,7 +28,8 @@ export class RefreshTokenService {
     const expiresAt = this.parseExpiresIn(expiresIn);
 
     // Hash the actual refresh token before storing it for security
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const bcryptRounds = this.configService.get<number>('BCRYPT_ROUNDS') || 12;
+    const tokenHash = await bcrypt.hash(refreshToken, bcryptRounds);
 
     // Store the refresh token in the database
     await this.prisma.refreshToken.create({
@@ -55,9 +58,7 @@ export class RefreshTokenService {
   /**
    * Verifies a refresh token and returns a new access token if valid
    */
-  async rotateRefreshToken(
-    refreshToken: string
-  ): Promise<{
+  async rotateRefreshToken(refreshToken: string): Promise<{
     token: string;
     newRefreshToken: string;
     expiresAt: Date;

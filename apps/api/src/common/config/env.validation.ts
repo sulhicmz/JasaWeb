@@ -75,6 +75,16 @@ class EnvironmentVariables {
   @IsNumber()
   @IsOptional()
   REDIS_PORT: number = 6379;
+
+  @IsString()
+  @IsOptional()
+  REDIS_PASSWORD?: string;
+
+  @IsNumber()
+  @Min(10)
+  @Max(15)
+  @IsOptional()
+  BCRYPT_ROUNDS: number = 12;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

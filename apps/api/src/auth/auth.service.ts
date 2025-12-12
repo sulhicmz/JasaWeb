@@ -9,18 +9,18 @@ import * as bcrypt from 'bcrypt';
 import { RefreshTokenService } from './refresh-token.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private refreshTokenService: RefreshTokenService
+    private refreshTokenService: RefreshTokenService,
+    private configService: ConfigService
   ) {}
 
-  async register(
-    createUserDto: CreateUserDto
-  ): Promise<{
+  async register(createUserDto: CreateUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
@@ -35,7 +35,11 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const bcryptRounds = this.configService.get<number>('BCRYPT_ROUNDS') || 12;
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      bcryptRounds
+    );
 
     // Create the user
     const user = await this.usersService.create({
@@ -60,9 +64,7 @@ export class AuthService {
     };
   }
 
-  async login(
-    loginUserDto: LoginUserDto
-  ): Promise<{
+  async login(loginUserDto: LoginUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
