@@ -16,6 +16,7 @@ import { EmailModule } from './common/services/email.module';
 import { AuditModule } from './common/services/audit.module';
 import { ErrorHandlingModule } from './common/services/error-handling.module';
 import { SessionModule } from './common/services/session.module';
+import { DatabaseValidationModule } from './common/services/database-validation.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './common/database/prisma.module';
@@ -69,6 +70,7 @@ const parseEnvNumber = (
     AuditModule,
     ErrorHandlingModule,
     SessionModule,
+    DatabaseValidationModule,
     HealthModule,
     AnalyticsModule,
     KnowledgeBaseModule,
