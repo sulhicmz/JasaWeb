@@ -4,37 +4,121 @@
 
 <div class="glass-panel p-6 rounded-xl">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-bold text-white">Export Reports</h2>
-    <button id="export-menu-btn" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-      <i class="fas fa-download mr-1"></i> Export
-    </button>
+    <h2 class="text-xl font-bold text-white">Advanced Reports</h2>
+    <div class="flex items-center space-x-2">
+      <select id="reportPeriod" class="px-3 py-1 bg-slate-700 text-white rounded-lg text-sm border border-slate-600 focus:border-blue-500 focus:outline-none">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="custom">Custom Range</option>
+      </select>
+      <button id="export-menu-btn" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+        <i class="fas fa-download mr-1"></i> Export
+      </button>
+    </div>
   </div>
   
-  <div id="export-menu" class="hidden space-y-3">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <button onclick="exportDashboard('pdf')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
-        <i class="fas fa-file-pdf text-red-400 mb-2"></i>
-        <div class="text-white font-medium">PDF Report</div>
-        <div class="text-gray-400 text-sm">Complete dashboard overview</div>
-      </button>
-      
-      <button onclick="exportDashboard('excel')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
-        <i class="fas fa-file-excel text-green-400 mb-2"></i>
-        <div class="text-white font-medium">Excel Data</div>
-        <div class="text-gray-400 text-sm">Raw data for analysis</div>
-      </button>
-      
-      <button onclick="exportDashboard('json')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
-        <i class="fas fa-file-code text-blue-400 mb-2"></i>
-        <div class="text-white font-medium">JSON Data</div>
-        <div class="text-gray-400 text-sm">API response format</div>
-      </button>
-      
-      <button onclick="exportDashboard('csv')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
-        <i class="fas fa-file-csv text-purple-400 mb-2"></i>
-        <div class="text-white font-medium">CSV Data</div>
-        <div class="text-gray-400 text-sm">Spreadsheet compatible</div>
-      </button>
+  <!-- Custom Date Range (hidden by default) -->
+  <div id="customDateRange" class="hidden mb-4 p-3 bg-slate-800/50 rounded-lg">
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-gray-400 text-sm">Start Date</label>
+        <input type="date" id="startDate" class="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-blue-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="text-gray-400 text-sm">End Date</label>
+        <input type="date" id="endDate" class="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-blue-500 focus:outline-none">
+      </div>
+    </div>
+  </div>
+  
+  <div id="export-menu" class="hidden space-y-4">
+    <!-- Standard Reports -->
+    <div>
+      <h3 class="text-white font-medium mb-3">Standard Reports</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <button onclick="exportReport('executive-summary')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
+          <i class="fas fa-chart-line text-blue-400 mb-2"></i>
+          <div class="text-white font-medium">Executive Summary</div>
+          <div class="text-gray-400 text-sm">High-level overview for stakeholders</div>
+        </button>
+        
+        <button onclick="exportReport('project-performance')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
+          <i class="fas fa-project-diagram text-green-400 mb-2"></i>
+          <div class="text-white font-medium">Project Performance</div>
+          <div class="text-gray-400 text-sm">Detailed project metrics and KPIs</div>
+        </button>
+        
+        <button onclick="exportReport('financial-report')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
+          <i class="fas fa-dollar-sign text-yellow-400 mb-2"></i>
+          <div class="text-white font-medium">Financial Report</div>
+          <div class="text-gray-400 text-sm">Invoices, payments, and revenue analysis</div>
+        </button>
+        
+        <button onclick="exportReport('resource-utilization')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-left transition-colors">
+          <i class="fas fa-users text-purple-400 mb-2"></i>
+          <div class="text-white font-medium">Resource Utilization</div>
+          <div class="text-gray-400 text-sm">Team workload and capacity planning</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Data Exports -->
+    <div>
+      <h3 class="text-white font-medium mb-3">Data Exports</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button onclick="exportData('json')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors">
+          <i class="fas fa-file-code text-blue-400 mb-2"></i>
+          <div class="text-white font-medium text-sm">JSON</div>
+        </button>
+        
+        <button onclick="exportData('csv')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors">
+          <i class="fas fa-file-csv text-purple-400 mb-2"></i>
+          <div class="text-white font-medium text-sm">CSV</div>
+        </button>
+        
+        <button onclick="exportData('excel')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors">
+          <i class="fas fa-file-excel text-green-400 mb-2"></i>
+          <div class="text-white font-medium text-sm">Excel</div>
+        </button>
+        
+        <button onclick="exportData('pdf')" class="p-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors">
+          <i class="fas fa-file-pdf text-red-400 mb-2"></i>
+          <div class="text-white font-medium text-sm">PDF</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scheduled Reports -->
+    <div>
+      <h3 class="text-white font-medium mb-3">Scheduled Reports</h3>
+      <div class="p-3 bg-slate-800/50 rounded-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-white font-medium">Weekly Summary</div>
+            <div class="text-gray-400 text-sm">Automatically sent every Monday at 9:00 AM</div>
+          </div>
+          <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
+            Configure
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Progress -->
+  <div id="exportProgress" class="hidden">
+    <div class="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+      <div class="flex items-center space-x-3">
+        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400"></div>
+        <div>
+          <div class="text-white font-medium" id="progressText">Preparing report...</div>
+          <div class="text-gray-400 text-sm" id="progressSubtext">This may take a few moments</div>
+        </div>
+      </div>
+      <div class="mt-3 w-full bg-slate-700 rounded-full h-2">
+        <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -44,6 +128,7 @@
     stats: null,
     activities: null,
     projects: null,
+    analytics: null,
     lastUpdated: null
   };
 
@@ -53,39 +138,131 @@
     dashboardData.lastUpdated = e.detail.timestamp;
   });
 
-  // Toggle export menu
-  document.getElementById('export-menu-btn')?.addEventListener('click', () => {
-    const menu = document.getElementById('export-menu');
-    menu.classList.toggle('hidden');
+  // Initialize export component
+  document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    loadDashboardData();
   });
 
-  // Close menu when clicking outside
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('export-menu');
-    const btn = document.getElementById('export-menu-btn');
-    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-      menu.classList.add('hidden');
-    }
-  });
+  function setupEventListeners() {
+    // Toggle export menu
+    document.getElementById('export-menu-btn')?.addEventListener('click', () => {
+      const menu = document.getElementById('export-menu');
+      menu.classList.toggle('hidden');
+    });
 
-  async function exportDashboard(format) {
+    // Report period selector
+    document.getElementById('reportPeriod')?.addEventListener('change', (e) => {
+      const customRange = document.getElementById('customDateRange');
+      if (e.target.value === 'custom') {
+        customRange.classList.remove('hidden');
+        // Set default dates
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        
+        document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+        document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+      } else {
+        customRange.classList.add('hidden');
+      }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('export-menu');
+      const btn = document.getElementById('export-menu-btn');
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+  }
+
+  async function loadDashboardData() {
     try {
-      window.notificationSystem.info(`Preparing ${format.toUpperCase()} export...`);
-      
-      // Collect current data
-      const [stats, activities, projects] = await Promise.all([
+      const period = getSelectedPeriod();
+      const [stats, activities, projects, analytics] = await Promise.all([
         fetch('/api/dashboard/stats').then(r => r.json()),
         fetch('/api/dashboard/recent-activity?limit=50').then(r => r.json()),
-        fetch('/api/dashboard/projects-overview?limit=20').then(r => r.json())
+        fetch('/api/dashboard/projects-overview?limit=20').then(r => r.json()),
+        fetch(`/api/dashboard/analytics/performance?period=${period}`).then(r => r.json())
       ]);
 
+      dashboardData = { stats, activities, projects, analytics };
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  }
+
+  function getSelectedPeriod() {
+    const periodSelect = document.getElementById('reportPeriod') as HTMLSelectElement;
+    return periodSelect?.value || '30';
+  }
+
+  function getDateRange() {
+    const period = getSelectedPeriod();
+    
+    if (period === 'custom') {
+      const startDate = (document.getElementById('startDate') as HTMLInputElement)?.value;
+      const endDate = (document.getElementById('endDate') as HTMLInputElement)?.value;
+      return { startDate, endDate };
+    }
+    
+    const days = parseInt(period) || 30;
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  }
+
+  async function exportReport(reportType) {
+    showProgress('Preparing report...', 'Collecting data...');
+    
+    try {
+      updateProgress(20);
+      await loadDashboardData();
+      
+      updateProgress(40);
+      const reportData = await generateReportData(reportType);
+      
+      updateProgress(60);
+      const reportContent = await generateReportContent(reportType, reportData);
+      
+      updateProgress(80);
+      downloadReport(reportType, reportContent);
+      
+      updateProgress(100);
+      setTimeout(() => {
+        hideProgress();
+        showNotification('Report generated successfully!', 'success');
+      }, 500);
+      
+    } catch (error) {
+      hideProgress();
+      console.error('Report generation error:', error);
+      showNotification(`Failed to generate report: ${error.message}`, 'error');
+    }
+  }
+
+  async function exportData(format) {
+    showProgress(`Preparing ${format.toUpperCase()} export...`, 'Collecting data...');
+    
+    try {
+      updateProgress(20);
+      await loadDashboardData();
+      
+      updateProgress(50);
       const exportData = {
         generatedAt: new Date().toISOString(),
-        stats,
-        activities,
-        projects
+        dateRange: getDateRange(),
+        ...dashboardData
       };
 
+      updateProgress(80);
       switch (format) {
         case 'json':
           downloadJSON(exportData);
@@ -103,11 +280,345 @@
           throw new Error('Unsupported export format');
       }
 
-      window.notificationSystem.success(`${format.toUpperCase()} export completed successfully!`);
+      updateProgress(100);
+      setTimeout(() => {
+        hideProgress();
+        showNotification(`${format.toUpperCase()} export completed successfully!`, 'success');
+      }, 500);
+      
     } catch (error) {
+      hideProgress();
       console.error('Export error:', error);
-      window.notificationSystem.error(`Failed to export ${format.toUpperCase()}: ${error.message}`);
+      showNotification(`Failed to export ${format.toUpperCase()}: ${error.message}`, 'error');
     }
+  }
+
+  async function generateReportData(reportType) {
+    const dateRange = getDateRange();
+    
+    switch (reportType) {
+      case 'executive-summary':
+        return generateExecutiveSummaryData();
+      case 'project-performance':
+        return generateProjectPerformanceData();
+      case 'financial-report':
+        return generateFinancialReportData();
+      case 'resource-utilization':
+        return generateResourceUtilizationData();
+      default:
+        return dashboardData;
+    }
+  }
+
+  function generateExecutiveSummaryData() {
+    const { stats, analytics } = dashboardData;
+    
+    return {
+      overview: {
+        totalProjects: stats?.projects?.total || 0,
+        activeProjects: stats?.projects?.active || 0,
+        completionRate: analytics?.projectPerformance?.onTimeCompletionRate || 0,
+        totalRevenue: stats?.invoices?.totalAmount || 0,
+        clientSatisfaction: 4.5 // Mock data
+      },
+      keyMetrics: {
+        projectHealth: calculateProjectHealth(stats),
+        teamProductivity: calculateProductivity(stats),
+        budgetEfficiency: calculateBudgetEfficiency(stats),
+        milestoneCompletion: stats?.milestones?.completed || 0
+      },
+      trends: analytics || {},
+      risks: identifyRisks(stats),
+      recommendations: generateRecommendations(stats)
+    };
+  }
+
+  function generateProjectPerformanceData() {
+    const { stats, projects, analytics } = dashboardData;
+    
+    return {
+      projectSummary: stats?.projects || {},
+      projectDetails: projects || [],
+      performanceMetrics: analytics?.projectPerformance || {},
+      milestoneAnalysis: analytics?.milestoneCompletion || {},
+      ticketAnalysis: analytics?.ticketResolution || {},
+      timelineAnalysis: generateTimelineAnalysis(projects)
+    };
+  }
+
+  function generateFinancialReportData() {
+    const { stats, analytics } = dashboardData;
+    
+    return {
+      revenueOverview: {
+        totalRevenue: stats?.invoices?.totalAmount || 0,
+        pendingAmount: stats?.invoices?.pendingAmount || 0,
+        paidRate: analytics?.invoiceMetrics?.paidRate || 0
+      },
+      invoiceBreakdown: generateInvoiceBreakdown(stats?.invoices),
+      paymentTrends: analytics?.invoiceMetrics || {},
+      forecasting: generateRevenueForecast(stats)
+    };
+  }
+
+  function generateResourceUtilizationData() {
+    const { stats, analytics } = dashboardData;
+    
+    return {
+      currentWorkload: analytics?.resourceForecast || {},
+      teamCapacity: calculateTeamCapacity(stats),
+      utilizationMetrics: calculateUtilizationMetrics(stats),
+      efficiencyAnalysis: calculateEfficiencyMetrics(stats),
+      recommendations: generateResourceRecommendations(stats)
+    };
+  }
+
+  async function generateReportContent(reportType, reportData) {
+    switch (reportType) {
+      case 'executive-summary':
+        return generateExecutiveSummaryHTML(reportData);
+      case 'project-performance':
+        return generateProjectPerformanceHTML(reportData);
+      case 'financial-report':
+        return generateFinancialReportHTML(reportData);
+      case 'resource-utilization':
+        return generateResourceUtilizationHTML(reportData);
+      default:
+        return JSON.stringify(reportData, null, 2);
+    }
+  }
+
+  function generateExecutiveSummaryHTML(data) {
+    const dateRange = getDateRange();
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Executive Summary - JasaWeb Dashboard</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; }
+            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e9ecef; padding-bottom: 20px; }
+            .header h1 { color: #2c3e50; margin: 0; font-size: 2.5em; }
+            .header p { color: #6c757d; margin: 10px 0 0 0; font-size: 1.1em; }
+            .section { margin-bottom: 30px; }
+            .section h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+            .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+            .metric-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+            .metric-value { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+            .metric-label { font-size: 0.9em; opacity: 0.9; }
+            .risk-item { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+            .risk-high { background: #f8d7da; border-color: #f5c6cb; }
+            .recommendation { background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+            .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Executive Summary Report</h1>
+              <p>JasaWeb Dashboard Performance Overview</p>
+              <p>Report Period: ${dateRange.startDate} to ${dateRange.endDate}</p>
+              <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+            </div>
+            
+            <div class="section">
+              <h2>Key Performance Indicators</h2>
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <div class="metric-value">${data.overview.totalProjects}</div>
+                  <div class="metric-label">Total Projects</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-value">${data.overview.activeProjects}</div>
+                  <div class="metric-label">Active Projects</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-value">${data.overview.completionRate}%</div>
+                  <div class="metric-label">Completion Rate</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-value">$${(data.overview.totalRevenue / 1000).toFixed(1)}K</div>
+                  <div class="metric-label">Total Revenue</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
+              <h2>Identified Risks</h2>
+              ${data.risks.map(risk => `
+                <div class="risk-item ${risk.level === 'high' ? 'risk-high' : ''}">
+                  <strong>${risk.title}</strong>: ${risk.description}
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="section">
+              <h2>Recommendations</h2>
+              ${data.recommendations.map(rec => `
+                <div class="recommendation">
+                  <strong>${rec.title}</strong>: ${rec.description}
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="footer">
+              <p>This report was automatically generated by JasaWeb Dashboard</p>
+              <p>For questions or additional information, please contact your project manager</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  // Helper functions for data calculations
+  function calculateProjectHealth(stats) {
+    if (!stats?.projects) return 75;
+    return Math.round((stats.projects.completed / Math.max(stats.projects.total, 1)) * 100);
+  }
+
+  function calculateProductivity(stats) {
+    if (!stats?.tickets) return 25;
+    const resolved = stats.tickets.total - stats.tickets.open - stats.tickets.inProgress;
+    return resolved;
+  }
+
+  function calculateBudgetEfficiency(stats) {
+    if (!stats?.invoices) return 85;
+    return Math.round(((stats.invoices.total - stats.invoices.pending) / Math.max(stats.invoices.total, 1)) * 100);
+  }
+
+  function identifyRisks(stats) {
+    const risks = [];
+    
+    if (stats?.tickets?.critical > 0) {
+      risks.push({
+        level: 'high',
+        title: 'Critical Tickets',
+        description: `${stats.tickets.critical} critical tickets require immediate attention`
+      });
+    }
+    
+    if (stats?.projects?.onHold > 0) {
+      risks.push({
+        level: 'medium',
+        title: 'On Hold Projects',
+        description: `${stats.projects.onHold} projects are currently on hold`
+      });
+    }
+    
+    if (stats?.invoices?.overdue > 0) {
+      risks.push({
+        level: 'high',
+        title: 'Overdue Invoices',
+        description: `${stats.invoices.overdue} invoices are overdue and require follow-up`
+      });
+    }
+    
+    return risks;
+  }
+
+  function generateRecommendations(stats) {
+    const recommendations = [];
+    
+    if (stats?.tickets?.open > 10) {
+      recommendations.push({
+        title: 'Ticket Management',
+        description: 'Consider allocating additional resources to handle the high volume of open tickets'
+      });
+    }
+    
+    if (stats?.milestones?.overdue > 3) {
+      recommendations.push({
+        title: 'Milestone Planning',
+        description: 'Review milestone timelines and adjust project schedules to prevent delays'
+      });
+    }
+    
+    recommendations.push({
+      title: 'Continuous Improvement',
+      description: 'Regular monitoring of KPIs will help maintain optimal performance levels'
+    });
+    
+    return recommendations;
+  }
+
+  // Progress and notification functions
+  function showProgress(title, subtitle) {
+    const progressEl = document.getElementById('exportProgress');
+    const menuEl = document.getElementById('export-menu');
+    
+    document.getElementById('progressText')!.textContent = title;
+    document.getElementById('progressSubtext')!.textContent = subtitle;
+    document.getElementById('progressBar')!.style.width = '0%';
+    
+    menuEl?.classList.add('hidden');
+    progressEl?.classList.remove('hidden');
+  }
+
+  function updateProgress(percent) {
+    document.getElementById('progressBar')!.style.width = `${percent}%`;
+  }
+
+  function hideProgress() {
+    const progressEl = document.getElementById('exportProgress');
+    const menuEl = document.getElementById('export-menu');
+    
+    progressEl?.classList.add('hidden');
+    menuEl?.classList.remove('hidden');
+  }
+
+  function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+    
+    // Set color based on type
+    const colors = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      info: 'bg-blue-500',
+      warning: 'bg-yellow-500'
+    };
+    
+    notification.classList.add(colors[type] || colors.info);
+    
+    notification.innerHTML = `
+      <div class="flex items-center space-x-3 text-white">
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.parentElement.remove()" class="ml-4">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+      notification.classList.remove('translate-x-full');
+      notification.classList.add('translate-x-0');
+    }, 100);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => notification.remove(), 300);
+      }
+    }, 5000);
+  }
+
+  function downloadReport(reportType, content) {
+    const dateRange = getDateRange();
+    const filename = `${reportType.replace('-', '-')}-report-${dateRange.startDate}-to-${dateRange.endDate}.html`;
+    
+    const blob = new Blob([content], { type: 'text/html' });
+    downloadFile(blob, filename);
   }
 
   function downloadJSON(data) {
