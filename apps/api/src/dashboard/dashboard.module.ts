@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
+import { DashboardService } from './dashboard.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -17,7 +18,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     ]),
   ],
   controllers: [DashboardController],
-  providers: [],
-  exports: [],
+  providers: [DashboardService],
+  exports: [DashboardService],
 })
 export class DashboardModule {}
