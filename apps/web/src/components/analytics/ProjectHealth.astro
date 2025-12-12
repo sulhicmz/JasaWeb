@@ -1,0 +1,349 @@
+---
+interface HealthScoreProps {
+  projectId?: string;
+  showDetails?: boolean;
+}
+
+const { projectId = '', showDetails = true } = Astro.props;
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Project Health Assessment</h2>
+    {showDetails && (
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-400">Last updated:</span>
+        <span id="health-last-updated" class="text-sm text-white">-</span>
+      </div>
+    )}
+  </div>
+
+  <!-- Health Scores Grid -->
+  <div id="health-scores-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Health score cards will be populated here -->
+  </div>
+
+  <!-- Overall Health Summary -->
+  <div class="bg-slate-900 rounded-lg p-6 mb-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Overall Portfolio Health</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="text-center">
+        <div class="text-3xl font-bold text-green-400" id="critical-count">0</div>
+        <div class="text-sm text-gray-400">Critical</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-red-400" id="high-count">0</div>
+        <div class="text-sm text-gray-400">High Risk</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-yellow-400" id="medium-count">0</div>
+        <div class="text-sm text-gray-400">Medium Risk</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-blue-400" id="low-count">0</div>
+        <div class="text-sm text-gray-400">Low Risk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Factors Analysis -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Common Risk Factors -->
+    <div class="bg-slate-900 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Common Risk Factors</h3>
+      <div id="risk-factors-list" class="space-y-3">
+        <!-- Risk factors will be populated here -->
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="bg-slate-900 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Recommendations</h3>
+      <div id="recommendations-list" class="space-y-3">
+        <!-- Recommendations will be populated here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let healthScoresData = [];
+
+  async function loadHealthScores(projectId = '') {
+    try {
+      const url = `/api/analytics/projects/health${projectId ? '?projectId=' + projectId : ''}`;
+      const response = await fetch(url);
+      healthScoresData = await response.json();
+      
+      renderHealthScores();
+      renderRiskAnalysis();
+      updateLastUpdated();
+    } catch (error) {
+      console.error('Error loading health scores:', error);
+    }
+  }
+
+  function renderHealthScores() {
+    const container = document.getElementById('health-scores-grid');
+    container.innerHTML = '';
+
+    if (healthScoresData.length === 0) {
+      container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No active projects found</div>';
+      return;
+    }
+
+    healthScoresData.forEach(score => {
+      const card = createHealthScoreCard(score);
+      container.appendChild(card);
+    });
+
+    updateRiskSummary();
+  }
+
+  function createHealthScoreCard(score) {
+    const card = document.createElement('div');
+    card.className = 'bg-slate-900 rounded-lg p-6 hover:bg-slate-800 transition-colors duration-200 cursor-pointer';
+    
+    const riskColors = {
+      critical: 'red',
+      high: 'orange', 
+      medium: 'yellow',
+      low: 'green'
+    };
+
+    const riskColor = riskColors[score.riskLevel] || 'gray';
+    
+    card.innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-white font-medium">Project ${score.projectId.slice(0, 8)}...</h4>
+        <div class="flex items-center space-x-2">
+          <div class="w-3 h-3 bg-${riskColor}-500 rounded-full animate-pulse"></div>
+          <span class="text-xs text-${riskColor}-400 font-medium uppercase">${score.riskLevel}</span>
+        </div>
+      </div>
+      
+      <!-- Overall Score -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-400">Overall Health</span>
+          <span class="text-2xl font-bold text-white">${score.overallScore}</span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2">
+          <div class="bg-gradient-to-r from-${score.overallScore >= 80 ? 'green' : score.overallScore >= 60 ? 'yellow' : 'red'}-500 to-${score.overallScore >= 80 ? 'green' : score.overallScore >= 60 ? 'yellow' : 'red'}-400 h-2 rounded-full transition-all duration-500" style="width: ${score.overallScore}%"></div>
+        </div>
+      </div>
+      
+      <!-- Health Metrics -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400">Schedule</span>
+          <div class="flex items-center space-x-2">
+            <div class="w-12 bg-slate-700 rounded-full h-1">
+              <div class="bg-${score.scheduleHealth >= 80 ? 'green' : score.scheduleHealth >= 60 ? 'yellow' : 'red'}-500 h-1 rounded-full" style="width: ${score.scheduleHealth}%"></div>
+            </div>
+            <span class="text-xs text-white font-medium">${score.scheduleHealth}%</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400">Budget</span>
+          <div class="flex items-center space-x-2">
+            <div class="w-12 bg-slate-700 rounded-full h-1">
+              <div class="bg-${score.budgetHealth >= 80 ? 'green' : score.budgetHealth >= 60 ? 'yellow' : 'red'}-500 h-1 rounded-full" style="width: ${score.budgetHealth}%"></div>
+            </div>
+            <span class="text-xs text-white font-medium">${score.budgetHealth}%</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400">Quality</span>
+          <div class="flex items-center space-x-2">
+            <div class="w-12 bg-slate-700 rounded-full h-1">
+              <div class="bg-${score.qualityHealth >= 80 ? 'green' : score.qualityHealth >= 60 ? 'yellow' : 'red'}-500 h-1 rounded-full" style="width: ${score.qualityHealth}%"></div>
+            </div>
+            <span class="text-xs text-white font-medium">${score.qualityHealth}%</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-400">Team</span>
+          <div class="flex items-center space-x-2">
+            <div class="w-12 bg-slate-700 rounded-full h-1">
+              <div class="bg-${score.teamHealth >= 80 ? 'green' : score.teamHealth >= 60 ? 'yellow' : 'red'}-500 h-1 rounded-full" style="width: ${score.teamHealth}%"></div>
+            </div>
+            <span class="text-xs text-white font-medium">${score.teamHealth}%</span>
+          </div>
+        </div>
+      </div>
+      
+      ${score.factors && score.factors.length > 0 ? `
+        <div class="mt-4 pt-4 border-t border-slate-700">
+          <div class="text-xs text-gray-400 mb-2">Key Factors</div>
+          <div class="space-y-1">
+            ${score.factors.slice(0, 2).map(factor => `
+              <div class="flex items-center space-x-2">
+                <div class="w-1 h-1 bg-${factor.impact < 0 ? 'red' : 'green'}-500 rounded-full"></div>
+                <span class="text-xs text-gray-300">${factor.description}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    `;
+
+    card.addEventListener('click', () => {
+      showProjectDetails(score);
+    });
+
+    return card;
+  }
+
+  function updateRiskSummary() {
+    const summary = {
+      critical: 0,
+      high: 0,
+      medium: 0,
+      low: 0
+    };
+
+    healthScoresData.forEach(score => {
+      summary[score.riskLevel]++;
+    });
+
+    document.getElementById('critical-count').textContent = summary.critical;
+    document.getElementById('high-count').textContent = summary.high;
+    document.getElementById('medium-count').textContent = summary.medium;
+    document.getElementById('low-count').textContent = summary.low;
+  }
+
+  function renderRiskAnalysis() {
+    renderRiskFactors();
+    renderRecommendations();
+  }
+
+  function renderRiskFactors() {
+    const container = document.getElementById('risk-factors-list');
+    container.innerHTML = '';
+
+    // Aggregate all risk factors
+    const allFactors = healthScoresData.flatMap(score => score.factors || []);
+    const factorCounts = {};
+
+    allFactors.forEach(factor => {
+      const key = factor.description;
+      factorCounts[key] = (factorCounts[key] || 0) + 1;
+    });
+
+    // Sort by frequency
+    const sortedFactors = Object.entries(factorCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5);
+
+    if (sortedFactors.length === 0) {
+      container.innerHTML = '<div class="text-gray-500 text-sm">No significant risk factors identified</div>';
+      return;
+    }
+
+    sortedFactors.forEach(([description, count]) => {
+      const factorElement = document.createElement('div');
+      factorElement.className = 'flex items-center justify-between p-3 bg-slate-800 rounded-lg';
+      factorElement.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+          <span class="text-sm text-gray-300">${description}</span>
+        </div>
+        <span class="text-xs text-gray-400 bg-slate-700 px-2 py-1 rounded">${count} projects</span>
+      `;
+      container.appendChild(factorElement);
+    });
+  }
+
+  function renderRecommendations() {
+    const container = document.getElementById('recommendations-list');
+    container.innerHTML = '';
+
+    // Generate recommendations based on common issues
+    const recommendations = generateRecommendations();
+
+    recommendations.forEach(rec => {
+      const recElement = document.createElement('div');
+      recElement.className = 'flex items-start space-x-3 p-3 bg-slate-800 rounded-lg';
+      recElement.innerHTML = `
+        <i class="fas fa-lightbulb text-blue-400 mt-0.5"></i>
+        <div>
+          <div class="text-sm text-gray-300">${rec.text}</div>
+          <div class="text-xs text-gray-500 mt-1">Priority: ${rec.priority}</div>
+        </div>
+      `;
+      container.appendChild(recElement);
+    });
+  }
+
+  function generateRecommendations() {
+    const recommendations = [];
+    const riskLevels = healthScoresData.map(s => s.riskLevel);
+    
+    if (riskLevels.filter(r => r === 'critical').length > 0) {
+      recommendations.push({
+        text: 'Immediate action required for critical projects. Schedule emergency review meetings.',
+        priority: 'High'
+      });
+    }
+
+    if (riskLevels.filter(r => ['critical', 'high'].includes(r)).length > riskLevels.length * 0.3) {
+      recommendations.push({
+        text: 'Portfolio risk level is elevated. Consider reallocating resources or adjusting timelines.',
+        priority: 'High'
+      });
+    }
+
+    const avgScheduleHealth = healthScoresData.reduce((sum, s) => sum + s.scheduleHealth, 0) / healthScoresData.length;
+    if (avgScheduleHealth < 70) {
+      recommendations.push({
+        text: 'Schedule health is below optimal. Review project timelines and milestone dependencies.',
+        priority: 'Medium'
+      });
+    }
+
+    const avgBudgetHealth = healthScoresData.reduce((sum, s) => sum + s.budgetHealth, 0) / healthScoresData.length;
+    if (avgBudgetHealth < 70) {
+      recommendations.push({
+        text: 'Budget utilization needs attention. Review spending patterns and resource allocation.',
+        priority: 'Medium'
+      });
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push({
+        text: 'Projects are performing well. Continue current monitoring and management practices.',
+        priority: 'Low'
+      });
+    }
+
+    return recommendations;
+  }
+
+  function showProjectDetails(score) {
+    // Navigate to project details or show modal
+    console.log('Show project details for:', score);
+    // Could implement a modal or navigation here
+  }
+
+  function updateLastUpdated() {
+    const now = new Date();
+    const element = document.getElementById('health-last-updated');
+    if (element) {
+      element.textContent = now.toLocaleTimeString();
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    loadHealthScores(projectId);
+    
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+      loadHealthScores(projectId);
+    }, 300000);
+  });
+</script>

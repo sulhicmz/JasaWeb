@@ -1,0 +1,481 @@
+---
+interface TeamProductivityProps {
+  timeRange?: string;
+  showCharts?: boolean;
+}
+
+const { timeRange = '30d', showCharts = true } = Astro.props;
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Team Productivity & Workload</h2>
+    <div class="flex items-center space-x-4">
+      <select id="productivity-timeframe" class="bg-slate-800 text-white px-3 py-1 rounded border border-slate-700 focus:border-blue-500 focus:outline-none text-sm">
+        <option value="7d">Last 7 Days</option>
+        <option value="30d" selected>Last 30 Days</option>
+        <option value="90d">Last 90 Days</option>
+      </select>
+      <button id="export-productivity" class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+        <i class="fas fa-download text-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Team Overview Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Active Team Members</span>
+        <i class="fas fa-users text-blue-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="active-members">-</div>
+    </div>
+    
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Avg. Workload</span>
+        <i class="fas fa-tasks text-green-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="avg-workload">-</div>
+    </div>
+    
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Team Efficiency</span>
+        <i class="fas fa-chart-line text-purple-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="team-efficiency">-</div>
+    </div>
+    
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Tasks Completed</span>
+        <i class="fas fa-check-circle text-yellow-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="tasks-completed">-</div>
+    </div>
+  </div>
+
+  <!-- Team Members Grid -->
+  <div class="mb-8">
+    <h3 class="text-lg font-semibold text-white mb-4">Team Member Performance</h3>
+    <div id="team-members-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Team member cards will be populated here -->
+    </div>
+  </div>
+
+  <!-- Productivity Charts -->
+  {showCharts && (
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Workload Distribution Chart -->
+      <div class="bg-slate-900 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Workload Distribution</h3>
+        <div class="relative h-64">
+          <canvas id="workload-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Efficiency Trend Chart -->
+      <div class="bg-slate-900 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Efficiency Trend</h3>
+        <div class="relative h-64">
+          <canvas id="efficiency-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <!-- Workload Recommendations -->
+  <div class="mt-8 bg-slate-900 rounded-lg p-6">
+    <h3 class="text-lg font-semibold text-white mb-4">Workload Optimization</h3>
+    <div id="workload-recommendations" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Recommendations will be populated here -->
+    </div>
+  </div>
+</div>
+
+<script>
+  let teamData = [];
+  let workloadChart = null;
+  let efficiencyChart = null;
+
+  async function loadTeamProductivity(timeRange = '30d') {
+    try {
+      // Load insights data which includes team workload
+      const response = await fetch(`/api/analytics/projects/insights?timeRange=${timeRange}`);
+      const insights = await response.json();
+      
+      teamData = insights.teamWorkload || [];
+      renderTeamOverview();
+      renderTeamMembers();
+      renderWorkloadRecommendations();
+      
+      if (showCharts) {
+        renderWorkloadChart();
+        renderEfficiencyChart();
+      }
+    } catch (error) {
+      console.error('Error loading team productivity data:', error);
+    }
+  }
+
+  function renderTeamOverview() {
+    if (teamData.length === 0) return;
+
+    const activeMembers = teamData.length;
+    const avgWorkload = Math.round(teamData.reduce((sum, member) => sum + member.workloadPercentage, 0) / activeMembers);
+    const avgEfficiency = Math.round(teamData.reduce((sum, member) => sum + member.efficiency, 0) / activeMembers * 100);
+    const totalTasks = teamData.reduce((sum, member) => sum + member.activeTasks, 0);
+
+    document.getElementById('active-members').textContent = activeMembers;
+    document.getElementById('avg-workload').textContent = `${avgWorkload}%`;
+    document.getElementById('team-efficiency').textContent = `${avgEfficiency}%`;
+    document.getElementById('tasks-completed').textContent = totalTasks;
+  }
+
+  function renderTeamMembers() {
+    const container = document.getElementById('team-members-grid');
+    container.innerHTML = '';
+
+    if (teamData.length === 0) {
+      container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No team data available</div>';
+      return;
+    }
+
+    teamData.forEach(member => {
+      const card = createTeamMemberCard(member);
+      container.appendChild(card);
+    });
+  }
+
+  function createTeamMemberCard(member) {
+    const card = document.createElement('div');
+    card.className = 'bg-slate-800 rounded-lg p-4 hover:bg-slate-700 transition-colors duration-200';
+    
+    const workloadColor = member.workloadPercentage > 80 ? 'red' : 
+                         member.workloadPercentage > 60 ? 'yellow' : 'green';
+    
+    const efficiencyColor = member.efficiency > 0.8 ? 'green' : 
+                           member.efficiency > 0.6 ? 'yellow' : 'red';
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+            ${member.userName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h4 class="text-white font-medium">${member.userName}</h4>
+            <p class="text-xs text-gray-400">Team Member</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-gray-400">Efficiency</div>
+          <div class="text-sm font-medium text-${efficiencyColor}-400">${Math.round(member.efficiency * 100)}%</div>
+        </div>
+      </div>
+      
+      <div class="space-y-3">
+        <!-- Active Tasks -->
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-400">Active Tasks</span>
+          <span class="text-sm text-white font-medium">${member.activeTasks}</span>
+        </div>
+        
+        <!-- Workload -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm text-gray-400">Workload</span>
+            <span class="text-sm text-white font-medium">${member.workloadPercentage}%</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2">
+            <div class="bg-${workloadColor}-500 h-2 rounded-full transition-all duration-500" style="width: ${member.workloadPercentage}%"></div>
+          </div>
+        </div>
+        
+        <!-- Status Indicator -->
+        <div class="flex items-center space-x-2 pt-2 border-t border-slate-700">
+          <div class="w-2 h-2 bg-${workloadColor}-500 rounded-full animate-pulse"></div>
+          <span class="text-xs text-${workloadColor}-400">
+            ${member.workloadPercentage > 80 ? 'Overloaded' : 
+              member.workloadPercentage > 60 ? 'Optimal' : 'Available'}
+          </span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      showMemberDetails(member);
+    });
+
+    return card;
+  }
+
+  function renderWorkloadChart() {
+    const ctx = document.getElementById('workload-chart').getContext('2d');
+    
+    if (workloadChart) {
+      workloadChart.destroy();
+    }
+
+    const chartData = {
+      labels: teamData.map(member => member.userName),
+      datasets: [{
+        label: 'Workload %',
+        data: teamData.map(member => member.workloadPercentage),
+        backgroundColor: teamData.map(member => 
+          member.workloadPercentage > 80 ? 'rgba(239, 68, 68, 0.8)' :
+          member.workloadPercentage > 60 ? 'rgba(245, 158, 11, 0.8)' :
+          'rgba(34, 197, 94, 0.8)'
+        ),
+        borderColor: teamData.map(member => 
+          member.workloadPercentage > 80 ? 'rgba(239, 68, 68, 1)' :
+          member.workloadPercentage > 60 ? 'rgba(245, 158, 11, 1)' :
+          'rgba(34, 197, 94, 1)'
+        ),
+        borderWidth: 1
+      }]
+    };
+
+    workloadChart = new Chart(ctx, {
+      type: 'bar',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              color: '#9CA3AF',
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              color: 'rgba(75, 85, 99, 0.3)'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#9CA3AF'
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderEfficiencyChart() {
+    const ctx = document.getElementById('efficiency-chart').getContext('2d');
+    
+    if (efficiencyChart) {
+      efficiencyChart.destroy();
+    }
+
+    // Generate mock trend data for the last 30 days
+    const labels = [];
+    const efficiencyData = [];
+    const today = new Date();
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      
+      // Mock efficiency trend with some variation
+      const baseEfficiency = teamData.length > 0 ? 
+        teamData.reduce((sum, member) => sum + member.efficiency, 0) / teamData.length * 100 : 75;
+      efficiencyData.push(baseEfficiency + (Math.random() - 0.5) * 10);
+    }
+
+    efficiencyChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Team Efficiency %',
+          data: efficiencyData,
+          borderColor: 'rgba(147, 51, 234, 1)',
+          backgroundColor: 'rgba(147, 51, 234, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            min: 60,
+            max: 100,
+            ticks: {
+              color: '#9CA3AF',
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              color: 'rgba(75, 85, 99, 0.3)'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#9CA3AF',
+              maxRotation: 45,
+              minRotation: 45
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderWorkloadRecommendations() {
+    const container = document.getElementById('workload-recommendations');
+    container.innerHTML = '';
+
+    const recommendations = generateWorkloadRecommendations();
+
+    recommendations.forEach(rec => {
+      const recElement = document.createElement('div');
+      recElement.className = 'flex items-start space-x-3 p-4 bg-slate-800 rounded-lg';
+      recElement.innerHTML = `
+        <div class="w-8 h-8 bg-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-${rec.icon} text-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-400 text-sm"></i>
+        </div>
+        <div>
+          <h4 class="text-white font-medium mb-1">${rec.title}</h4>
+          <p class="text-sm text-gray-400">${rec.description}</p>
+          <div class="mt-2">
+            <span class="text-xs text-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-400 bg-${rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue'}-500/20 px-2 py-1 rounded">
+              ${rec.priority.toUpperCase()} PRIORITY
+            </span>
+          </div>
+        </div>
+      `;
+      container.appendChild(recElement);
+    });
+  }
+
+  function generateWorkloadRecommendations() {
+    const recommendations = [];
+    const overloadedMembers = teamData.filter(member => member.workloadPercentage > 80);
+    const underutilizedMembers = teamData.filter(member => member.workloadPercentage < 40);
+    const lowEfficiencyMembers = teamData.filter(member => member.efficiency < 0.6);
+
+    if (overloadedMembers.length > 0) {
+      recommendations.push({
+        title: 'Rebalance Workload',
+        description: `${overloadedMembers.length} team members are overloaded. Consider redistributing tasks or adjusting deadlines.`,
+        priority: 'high',
+        icon: 'exclamation-triangle'
+      });
+    }
+
+    if (underutilizedMembers.length > 0 && overloadedMembers.length > 0) {
+      recommendations.push({
+        title: 'Optimize Resource Allocation',
+        description: `Some team members have availability while others are overloaded. Reassign tasks to balance workload.`,
+        priority: 'medium',
+        icon: 'sync-alt'
+      });
+    }
+
+    if (lowEfficiencyMembers.length > 0) {
+      recommendations.push({
+        title: 'Address Efficiency Issues',
+        description: `${lowEfficiencyMembers.length} team members show low efficiency. Consider training or process improvements.`,
+        priority: 'medium',
+        icon: 'chart-line'
+      });
+    }
+
+    const avgWorkload = teamData.reduce((sum, member) => sum + member.workloadPercentage, 0) / teamData.length;
+    if (avgWorkload < 50) {
+      recommendations.push({
+        title: 'Increase Team Capacity',
+        description: 'Team has overall low workload. Consider taking on new projects or cross-training initiatives.',
+        priority: 'low',
+        icon: 'plus-circle'
+      });
+    }
+
+    if (recommendations.length === 0) {
+      recommendations.push({
+        title: 'Workload Well Balanced',
+        description: 'Team workload is optimally distributed. Continue current monitoring practices.',
+        priority: 'low',
+        icon: 'check-circle'
+      });
+    }
+
+    return recommendations;
+  }
+
+  function showMemberDetails(member) {
+    console.log('Show member details:', member);
+    // Could implement a modal with detailed member analytics
+  }
+
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', () => {
+    loadTeamProductivity(timeRange);
+    
+    // Time range change handler
+    document.getElementById('productivity-timeframe')?.addEventListener('change', (e) => {
+      loadTeamProductivity(e.target.value);
+    });
+    
+    // Export handler
+    document.getElementById('export-productivity')?.addEventListener('click', () => {
+      exportProductivityData();
+    });
+  });
+
+  function exportProductivityData() {
+    const csvContent = [
+      ['Team Member', 'Active Tasks', 'Workload %', 'Efficiency %'],
+      ...teamData.map(member => [
+        member.userName,
+        member.activeTasks,
+        member.workloadPercentage,
+        Math.round(member.efficiency * 100)
+      ])
+    ].map(row => row.join(',')).join('\\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `team-productivity-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  // Auto-refresh every 5 minutes
+  setInterval(() => {
+    const currentTimeRange = document.getElementById('productivity-timeframe')?.value || '30d';
+    loadTeamProductivity(currentTimeRange);
+  }, 300000);
+</script>

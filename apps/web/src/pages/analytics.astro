@@ -1,0 +1,468 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DashboardLayout from '../layouts/DashboardLayout.astro';
+import ProjectTimeline from '../components/analytics/ProjectTimeline.astro';
+import ProjectHealth from '../components/analytics/ProjectHealth.astro';
+import TeamProductivity from '../components/analytics/TeamProductivity.astro';
+import BudgetAnalytics from '../components/analytics/BudgetAnalytics.astro';
+---
+
+<DashboardLayout title="Project Analytics - Client Portal">
+  <div class="min-h-screen bg-slate-950">
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-white">Project Analytics</h1>
+            <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-medium">
+              Advanced Insights
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <select id="timeRange" class="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+              <option value="7d">Last 7 Days</option>
+              <option value="30d" selected>Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="1y">Last Year</option>
+            </select>
+            <button id="exportBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+              <i class="fas fa-download"></i>
+              <span>Export</span>
+            </button>
+            <button id="refreshBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+              <i class="fas fa-sync-alt"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+      <!-- Key Metrics Overview -->
+      <section class="mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Total Projects -->
+          <div class="glass-panel p-6 rounded-xl">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-project-diagram text-blue-400 text-xl"></i>
+              </div>
+              <span class="text-sm text-green-400 font-medium">+12%</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-1" id="totalProjects">-</h3>
+            <p class="text-gray-400 text-sm">Total Projects</p>
+          </div>
+
+          <!-- Active Projects -->
+          <div class="glass-panel p-6 rounded-xl">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-play-circle text-green-400 text-xl"></i>
+              </div>
+              <span class="text-sm text-yellow-400 font-medium">Stable</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-1" id="activeProjects">-</h3>
+            <p class="text-gray-400 text-sm">Active Projects</p>
+          </div>
+
+          <!-- On-Time Delivery -->
+          <div class="glass-panel p-6 rounded-xl">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-clock text-purple-400 text-xl"></i>
+              </div>
+              <span class="text-sm text-green-400 font-medium">+5%</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-1" id="onTimeDelivery">-</h3>
+            <p class="text-gray-400 text-sm">On-Time Delivery</p>
+          </div>
+
+          <!-- Client Satisfaction -->
+          <div class="glass-panel p-6 rounded-xl">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-star text-yellow-400 text-xl"></i>
+              </div>
+              <span class="text-sm text-green-400 font-medium">+0.3</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-1" id="clientSatisfaction">-</h3>
+            <p class="text-gray-400 text-sm">Client Satisfaction</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Performance Insights & Health Scores -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Performance Insights -->
+        <section class="glass-panel p-6 rounded-xl">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-white">Performance Insights</h2>
+            <div class="flex items-center space-x-2">
+              <div id="productivityIndicator" class="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span id="productivityTrend" class="text-sm text-gray-400">-</span>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <!-- Risk Factors -->
+            <div>
+              <h3 class="text-sm font-medium text-gray-400 mb-2">Risk Factors</h3>
+              <div id="riskFactors" class="space-y-2">
+                <!-- Risk factors will be populated here -->
+              </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div>
+              <h3 class="text-sm font-medium text-gray-400 mb-2">Recommendations</h3>
+              <div id="recommendations" class="space-y-2">
+                <!-- Recommendations will be populated here -->
+              </div>
+            </div>
+
+            <!-- Milestone Progress -->
+            <div>
+              <h3 class="text-sm font-medium text-gray-400 mb-2">Milestone Progress</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-green-400" id="onTimeMilestones">-</div>
+                  <div class="text-xs text-gray-400">On Time</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-yellow-400" id="delayedMilestones">-</div>
+                  <div class="text-xs text-gray-400">Delayed</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-blue-400" id="upcomingMilestones">-</div>
+                  <div class="text-xs text-gray-400">Upcoming</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-purple-400" id="completedMilestones">-</div>
+                  <div class="text-xs text-gray-400">Completed</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Project Health Scores -->
+        <section class="glass-panel p-6 rounded-xl">
+          <h2 class="text-xl font-bold text-white mb-6">Project Health Scores</h2>
+          <div id="healthScores" class="space-y-4">
+            <!-- Health scores will be populated here -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Enhanced Analytics Components -->
+      <section class="mb-8">
+        <ProjectTimeline />
+      </section>
+
+      <section class="mb-8">
+        <ProjectHealth />
+      </section>
+
+      <section class="mb-8">
+        <TeamProductivity />
+      </section>
+
+      <section class="mb-8">
+        <BudgetAnalytics />
+      </section>
+
+      <!-- Real-time Updates -->
+      <section class="glass-panel p-6 rounded-xl">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-white">Real-time Updates</h2>
+          <span class="text-sm text-gray-400" id="lastUpdated">-</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Recent Milestones -->
+          <div>
+            <h3 class="text-sm font-medium text-gray-400 mb-3">Recent Milestones</h3>
+            <div id="recentMilestones" class="space-y-2">
+              <!-- Milestones will be populated here -->
+            </div>
+          </div>
+
+          <!-- Recent Tickets -->
+          <div>
+            <h3 class="text-sm font-medium text-gray-400 mb-3">Recent Tickets</h3>
+            <div id="recentTickets" class="space-y-2">
+              <!-- Tickets will be populated here -->
+            </div>
+          </div>
+
+          <!-- Recent Files -->
+          <div>
+            <h3 class="text-sm font-medium text-gray-400 mb-3">Recent Files</h3>
+            <div id="recentFiles" class="space-y-2">
+              <!-- Files will be populated here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let refreshInterval;
+    let currentTimeRange = '30d';
+
+    async function loadAnalyticsData() {
+      try {
+        showLoadingState();
+        
+        const [metrics, insights, healthScores, realtimeUpdates] = await Promise.all([
+          fetch('/api/analytics/projects/metrics').then(r => r.json()),
+          fetch('/api/analytics/projects/insights').then(r => r.json()),
+          fetch('/api/analytics/projects/health').then(r => r.json()),
+          fetch('/api/analytics/projects/realtime').then(r => r.json())
+        ]);
+
+        updateMetricsDisplay(metrics);
+        updateInsightsDisplay(insights);
+        updateHealthScoresDisplay(healthScores);
+        updateRealtimeDisplay(realtimeUpdates);
+        
+        hideLoadingState();
+      } catch (error) {
+        console.error('Error loading analytics data:', error);
+        showErrorState();
+      }
+    }
+
+    function updateMetricsDisplay(metrics) {
+      document.getElementById('totalProjects').textContent = metrics.totalProjects || '-';
+      document.getElementById('activeProjects').textContent = metrics.activeProjects || '-';
+      document.getElementById('onTimeDelivery').textContent = `${metrics.onTimeDeliveryRate?.toFixed(1) || 0}%`;
+      document.getElementById('clientSatisfaction').textContent = (metrics.clientSatisfactionScore || 0).toFixed(1);
+    }
+
+    function updateInsightsDisplay(insights) {
+      // Update productivity trend
+      const trendElement = document.getElementById('productivityTrend');
+      const indicatorElement = document.getElementById('productivityIndicator');
+      
+      if (insights.productivityTrend) {
+        trendElement.textContent = insights.productivityTrend.charAt(0).toUpperCase() + insights.productivityTrend.slice(1);
+        
+        indicatorElement.className = 'w-3 h-3 rounded-full';
+        if (insights.productivityTrend === 'increasing') {
+          indicatorElement.classList.add('bg-green-500');
+        } else if (insights.productivityTrend === 'decreasing') {
+          indicatorElement.classList.add('bg-red-500');
+        } else {
+          indicatorElement.classList.add('bg-yellow-500');
+        }
+      }
+
+      // Update risk factors
+      const riskFactorsContainer = document.getElementById('riskFactors');
+      riskFactorsContainer.innerHTML = '';
+      
+      if (insights.riskFactors && insights.riskFactors.length > 0) {
+        insights.riskFactors.forEach(risk => {
+          const riskElement = document.createElement('div');
+          riskElement.className = 'flex items-center space-x-2 p-2 bg-red-500/10 rounded-lg';
+          riskElement.innerHTML = `
+            <i class="fas fa-exclamation-triangle text-red-400 text-sm"></i>
+            <span class="text-red-300 text-sm">${risk}</span>
+          `;
+          riskFactorsContainer.appendChild(riskElement);
+        });
+      } else {
+        riskFactorsContainer.innerHTML = '<div class="text-gray-500 text-sm">No risk factors identified</div>';
+      }
+
+      // Update recommendations
+      const recommendationsContainer = document.getElementById('recommendations');
+      recommendationsContainer.innerHTML = '';
+      
+      if (insights.recommendations && insights.recommendations.length > 0) {
+        insights.recommendations.forEach(rec => {
+          const recElement = document.createElement('div');
+          recElement.className = 'flex items-center space-x-2 p-2 bg-blue-500/10 rounded-lg';
+          recElement.innerHTML = `
+            <i class="fas fa-lightbulb text-blue-400 text-sm"></i>
+            <span class="text-blue-300 text-sm">${rec}</span>
+          `;
+          recommendationsContainer.appendChild(recElement);
+        });
+      }
+
+      // Update milestone progress
+      if (insights.milestoneProgress) {
+        document.getElementById('onTimeMilestones').textContent = insights.milestoneProgress.onTime || 0;
+        document.getElementById('delayedMilestones').textContent = insights.milestoneProgress.delayed || 0;
+        document.getElementById('upcomingMilestones').textContent = insights.milestoneProgress.upcoming || 0;
+        document.getElementById('completedMilestones').textContent = insights.milestoneProgress.completed || 0;
+      }
+    }
+
+    function updateHealthScoresDisplay(healthScores) {
+      const container = document.getElementById('healthScores');
+      container.innerHTML = '';
+
+      if (healthScores && healthScores.length > 0) {
+        healthScores.forEach(score => {
+          const scoreElement = document.createElement('div');
+          scoreElement.className = 'p-4 bg-slate-800 rounded-lg';
+          
+          const riskColor = score.riskLevel === 'critical' ? 'red' : 
+                           score.riskLevel === 'high' ? 'orange' : 
+                           score.riskLevel === 'medium' ? 'yellow' : 'green';
+          
+          scoreElement.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-white font-medium">Project ${score.projectId.slice(0, 8)}...</h4>
+              <div class="flex items-center space-x-2">
+                <div class="text-2xl font-bold text-white">${score.overallScore}</div>
+                <div class="w-2 h-2 bg-${riskColor}-500 rounded-full"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="flex justify-between">
+                <span class="text-gray-400">Schedule:</span>
+                <span class="text-${score.scheduleHealth >= 80 ? 'green' : score.scheduleHealth >= 60 ? 'yellow' : 'red'}-400">${score.scheduleHealth}%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Budget:</span>
+                <span class="text-${score.budgetHealth >= 80 ? 'green' : score.budgetHealth >= 60 ? 'yellow' : 'red'}-400">${score.budgetHealth}%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Quality:</span>
+                <span class="text-${score.qualityHealth >= 80 ? 'green' : score.qualityHealth >= 60 ? 'yellow' : 'red'}-400">${score.qualityHealth}%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Team:</span>
+                <span class="text-${score.teamHealth >= 80 ? 'green' : score.teamHealth >= 60 ? 'yellow' : 'red'}-400">${score.teamHealth}%</span>
+              </div>
+            </div>
+          `;
+          container.appendChild(scoreElement);
+        });
+      } else {
+        container.innerHTML = '<div class="text-gray-500 text-center py-8">No active projects</div>';
+      }
+    }
+
+    function updateRealtimeDisplay(updates) {
+      // Update last updated timestamp
+      if (updates.timestamp) {
+        const timestamp = new Date(updates.timestamp);
+        document.getElementById('lastUpdated').textContent = `Last updated: ${timestamp.toLocaleTimeString()}`;
+      }
+
+      // Update recent milestones
+      const milestonesContainer = document.getElementById('recentMilestones');
+      milestonesContainer.innerHTML = '';
+      
+      if (updates.milestones && updates.milestones.length > 0) {
+        updates.milestones.slice(0, 5).forEach(milestone => {
+          const element = document.createElement('div');
+          element.className = 'p-2 bg-slate-800 rounded text-sm';
+          element.innerHTML = `
+            <div class="text-white font-medium">${milestone.title}</div>
+            <div class="text-gray-400 text-xs">${milestone.project?.name || 'Unknown Project'}</div>
+          `;
+          milestonesContainer.appendChild(element);
+        });
+      }
+
+      // Update recent tickets
+      const ticketsContainer = document.getElementById('recentTickets');
+      ticketsContainer.innerHTML = '';
+      
+      if (updates.tickets && updates.tickets.length > 0) {
+        updates.tickets.slice(0, 5).forEach(ticket => {
+          const element = document.createElement('div');
+          element.className = 'p-2 bg-slate-800 rounded text-sm';
+          element.innerHTML = `
+            <div class="text-white font-medium">${ticket.title}</div>
+            <div class="text-gray-400 text-xs">${ticket.project?.name || 'Unknown Project'}</div>
+          `;
+          ticketsContainer.appendChild(element);
+        });
+      }
+
+      // Update recent files
+      const filesContainer = document.getElementById('recentFiles');
+      filesContainer.innerHTML = '';
+      
+      if (updates.files && updates.files.length > 0) {
+        updates.files.slice(0, 5).forEach(file => {
+          const element = document.createElement('div');
+          element.className = 'p-2 bg-slate-800 rounded text-sm';
+          element.innerHTML = `
+            <div class="text-white font-medium">${file.filename}</div>
+            <div class="text-gray-400 text-xs">${file.project?.name || 'Unknown Project'}</div>
+          `;
+          filesContainer.appendChild(element);
+        });
+      }
+    }
+
+    function showLoadingState() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      const icon = refreshBtn.querySelector('i');
+      icon.classList.add('fa-spin');
+    }
+
+    function hideLoadingState() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      const icon = refreshBtn.querySelector('i');
+      icon.classList.remove('fa-spin');
+    }
+
+    function showErrorState() {
+      // Show error message to user
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      errorDiv.textContent = 'Failed to load analytics data';
+      document.body.appendChild(errorDiv);
+      
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 5000);
+    }
+
+    function startAutoRefresh() {
+      refreshInterval = setInterval(() => {
+        loadAnalyticsData();
+      }, 60000); // Refresh every minute
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAnalyticsData();
+      startAutoRefresh();
+      
+      // Time range change handler
+      document.getElementById('timeRange').addEventListener('change', (e) => {
+        currentTimeRange = e.target.value;
+        loadAnalyticsData();
+      });
+      
+      // Refresh button handler
+      document.getElementById('refreshBtn').addEventListener('click', loadAnalyticsData);
+      
+      // Export button handler
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        // Implement export functionality
+        alert('Export functionality will be implemented soon');
+      });
+    });
+
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    });
+  </script>
+</DashboardLayout>

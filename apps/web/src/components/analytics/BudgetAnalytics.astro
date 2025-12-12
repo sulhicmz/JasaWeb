@@ -1,0 +1,629 @@
+---
+interface BudgetAnalyticsProps {
+  timeRange?: string;
+  showProjections?: boolean;
+}
+
+const { timeRange = '30d', showProjections = true } = Astro.props;
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Budget & Financial Analytics</h2>
+    <div class="flex items-center space-x-4">
+      <select id="budget-timeframe" class="bg-slate-800 text-white px-3 py-1 rounded border border-slate-700 focus:border-blue-500 focus:outline-none text-sm">
+        <option value="7d">Last 7 Days</option>
+        <option value="30d" selected>Last 30 Days</option>
+        <option value="90d">Last 90 Days</option>
+        <option value="1y">Last Year</option>
+      </select>
+      <button id="export-budget" class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+        <i class="fas fa-download text-sm"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Financial Overview Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Total Budget</span>
+        <i class="fas fa-dollar-sign text-green-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="total-budget">-</div>
+      <div class="text-xs text-gray-500 mt-1">Across all projects</div>
+    </div>
+    
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Spent</span>
+        <i class="fas fa-chart-pie text-blue-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="total-spent">-</div>
+      <div class="text-xs text-gray-500 mt-1" id="spent-percentage">-</div>
+    </div>
+    
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">Remaining</span>
+        <i class="fas fa-piggy-bank text-purple-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="remaining-budget">-</div>
+      <div class="text-xs text-gray-500 mt-1" id="remaining-percentage">-</div>
+    </div>
+    
+    <div class="bg-slate-900 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm text-gray-400">ROI</span>
+        <i class="fas fa-percentage text-yellow-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white" id="roi-percentage">-</div>
+      <div class="text-xs text-gray-500 mt-1">Return on investment</div>
+    </div>
+  </div>
+
+  <!-- Budget Charts -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Budget Utilization Chart -->
+    <div class="bg-slate-900 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Budget Utilization by Project</h3>
+      <div class="relative h-64">
+        <canvas id="budget-utilization-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Spending Trend Chart -->
+    <div class="bg-slate-900 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Spending Trend</h3>
+      <div class="relative h-64">
+        <canvas id="spending-trend-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Budget Details -->
+  <div class="mb-8">
+    <h3 class="text-lg font-semibold text-white mb-4">Project Budget Breakdown</h3>
+    <div id="project-budget-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Project budget cards will be populated here -->
+    </div>
+  </div>
+
+  <!-- Financial Projections -->
+  {showProjections && (
+    <div class="bg-slate-900 rounded-lg p-6 mb-8">
+      <h3 class="text-lg font-semibold text-white mb-4">Financial Projections</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="text-sm text-gray-400 mb-2">Expected Monthly Burn</div>
+          <div class="text-2xl font-bold text-white" id="monthly-burn">-</div>
+          <div class="text-xs text-gray-500 mt-1">Based on current trends</div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm text-gray-400 mb-2">Runway Remaining</div>
+          <div class="text-2xl font-bold text-white" id="runway">-</div>
+          <div class="text-xs text-gray-500 mt-1">Months at current rate</div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm text-gray-400 mb-2">Projected Annual Spend</div>
+          <div class="text-2xl font-bold text-white" id="annual-projection">-</div>
+          <div class="text-xs text-gray-500 mt-1">If trends continue</div>
+        </div>
+      </div>
+    </div>
+  )}
+
+  <!-- Budget Alerts & Recommendations -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Budget Alerts -->
+    <div class="bg-slate-900 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Budget Alerts</h3>
+      <div id="budget-alerts" class="space-y-3">
+        <!-- Alerts will be populated here -->
+      </div>
+    </div>
+
+    <!-- Cost Optimization -->
+    <div class="bg-slate-900 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-white mb-4">Cost Optimization</h3>
+      <div id="cost-optimization" class="space-y-3">
+        <!-- Optimization suggestions will be populated here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let budgetData = [];
+  let budgetUtilizationChart = null;
+  let spendingTrendChart = null;
+
+  async function loadBudgetAnalytics(timeRange = '30d') {
+    try {
+      // Load financial analytics
+      const response = await fetch(`/api/analytics/financial?timeRange=${timeRange}`);
+      budgetData = await response.json();
+      
+      renderFinancialOverview();
+      renderProjectBudgets();
+      renderBudgetCharts();
+      renderFinancialProjections();
+      renderBudgetAlerts();
+      renderCostOptimization();
+    } catch (error) {
+      console.error('Error loading budget analytics:', error);
+      // Load mock data for demo
+      loadMockBudgetData();
+    }
+  }
+
+  function loadMockBudgetData() {
+    // Mock budget data for demonstration
+    budgetData = {
+      totalBudget: 500000,
+      totalSpent: 325000,
+      projects: [
+        {
+          id: '1',
+          name: 'E-commerce Platform',
+          budget: 150000,
+          spent: 120000,
+          projectedSpend: 145000,
+          monthlyBurn: 15000
+        },
+        {
+          id: '2',
+          name: 'Mobile App Development',
+          budget: 200000,
+          spent: 110000,
+          projectedSpend: 185000,
+          monthlyBurn: 18000
+        },
+        {
+          id: '3',
+          name: 'Website Redesign',
+          budget: 100000,
+          spent: 65000,
+          projectedSpend: 95000,
+          monthlyBurn: 8000
+        },
+        {
+          id: '4',
+          name: 'API Integration',
+          budget: 50000,
+          spent: 30000,
+          projectedSpend: 48000,
+          monthlyBurn: 5000
+        }
+      ],
+      spendingTrend: generateMockSpendingTrend()
+    };
+    
+    renderFinancialOverview();
+    renderProjectBudgets();
+    renderBudgetCharts();
+    renderFinancialProjections();
+    renderBudgetAlerts();
+    renderCostOptimization();
+  }
+
+  function generateMockSpendingTrend() {
+    const trend = [];
+    const today = new Date();
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      trend.push({
+        date: date.toISOString().split('T')[0],
+        amount: 8000 + Math.random() * 4000 // Random spending between 8k-12k
+      });
+    }
+    
+    return trend;
+  }
+
+  function renderFinancialOverview() {
+    const totalBudget = budgetData.totalBudget || 0;
+    const totalSpent = budgetData.totalSpent || 0;
+    const remaining = totalBudget - totalSpent;
+    const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget * 100) : 0;
+    const remainingPercentage = totalBudget > 0 ? (remaining / totalBudget * 100) : 0;
+    
+    // Mock ROI calculation
+    const roi = 15 + Math.random() * 10; // 15-25% ROI
+
+    document.getElementById('total-budget').textContent = `$${totalBudget.toLocaleString()}`;
+    document.getElementById('total-spent').textContent = `$${totalSpent.toLocaleString()}`;
+    document.getElementById('spent-percentage').textContent = `${spentPercentage.toFixed(1)}% of budget`;
+    document.getElementById('remaining-budget').textContent = `$${remaining.toLocaleString()}`;
+    document.getElementById('remaining-percentage').textContent = `${remainingPercentage.toFixed(1)}% remaining`;
+    document.getElementById('roi-percentage').textContent = `${roi.toFixed(1)}%`;
+  }
+
+  function renderProjectBudgets() {
+    const container = document.getElementById('project-budget-grid');
+    container.innerHTML = '';
+
+    if (!budgetData.projects || budgetData.projects.length === 0) {
+      container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No project budget data available</div>';
+      return;
+    }
+
+    budgetData.projects.forEach(project => {
+      const card = createProjectBudgetCard(project);
+      container.appendChild(card);
+    });
+  }
+
+  function createProjectBudgetCard(project) {
+    const card = document.createElement('div');
+    card.className = 'bg-slate-800 rounded-lg p-4 hover:bg-slate-700 transition-colors duration-200';
+    
+    const utilizationPercentage = project.budget > 0 ? (project.spent / project.budget * 100) : 0;
+    const projectedUtilization = project.budget > 0 ? (project.projectedSpend / project.budget * 100) : 0;
+    const statusColor = utilizationPercentage > 90 ? 'red' : utilizationPercentage > 75 ? 'yellow' : 'green';
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-white font-medium">${project.name}</h4>
+        <div class="text-right">
+          <div class="text-xs text-gray-400">Status</div>
+          <div class="text-xs font-medium text-${statusColor}-400 uppercase">${utilizationPercentage > 90 ? 'Over Budget' : utilizationPercentage > 75 ? 'At Risk' : 'On Track'}</div>
+        </div>
+      </div>
+      
+      <div class="space-y-3">
+        <!-- Budget Overview -->
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div class="text-gray-400">Budget</div>
+            <div class="text-white font-medium">$${project.budget.toLocaleString()}</div>
+          </div>
+          <div>
+            <div class="text-gray-400">Spent</div>
+            <div class="text-white font-medium">$${project.spent.toLocaleString()}</div>
+          </div>
+        </div>
+        
+        <!-- Utilization Bar -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-gray-400">Utilization</span>
+            <span class="text-xs text-white font-medium">${utilizationPercentage.toFixed(1)}%</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2">
+            <div class="bg-${statusColor}-500 h-2 rounded-full transition-all duration-500" style="width: ${utilizationPercentage}%"></div>
+          </div>
+        </div>
+        
+        <!-- Projection -->
+        <div class="pt-2 border-t border-slate-700">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-gray-400">Projected Total</span>
+            <span class="text-${projectedUtilization > 100 ? 'red' : 'white'}-400 font-medium">$${project.projectedSpend.toLocaleString()}</span>
+          </div>
+          <div class="flex items-center justify-between text-xs mt-1">
+            <span class="text-gray-400">Monthly Burn</span>
+            <span class="text-white">$${project.monthlyBurn.toLocaleString()}/mo</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function renderBudgetCharts() {
+    renderBudgetUtilizationChart();
+    renderSpendingTrendChart();
+  }
+
+  function renderBudgetUtilizationChart() {
+    const ctx = document.getElementById('budget-utilization-chart').getContext('2d');
+    
+    if (budgetUtilizationChart) {
+      budgetUtilizationChart.destroy();
+    }
+
+    if (!budgetData.projects) return;
+
+    const chartData = {
+      labels: budgetData.projects.map(p => p.name),
+      datasets: [
+        {
+          label: 'Spent',
+          data: budgetData.projects.map(p => p.spent),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Remaining',
+          data: budgetData.projects.map(p => p.budget - p.spent),
+          backgroundColor: 'rgba(75, 85, 99, 0.8)',
+          borderColor: 'rgba(75, 85, 99, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+
+    budgetUtilizationChart = new Chart(ctx, {
+      type: 'bar',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#9CA3AF'
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: {
+              color: '#9CA3AF'
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              color: '#9CA3AF',
+              callback: function(value) {
+                return '$' + (value / 1000) + 'k';
+              }
+            },
+            grid: {
+              color: 'rgba(75, 85, 99, 0.3)'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderSpendingTrendChart() {
+    const ctx = document.getElementById('spending-trend-chart').getContext('2d');
+    
+    if (spendingTrendChart) {
+      spendingTrendChart.destroy();
+    }
+
+    if (!budgetData.spendingTrend) return;
+
+    const chartData = {
+      labels: budgetData.spendingTrend.map(t => {
+        const date = new Date(t.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }),
+      datasets: [{
+        label: 'Daily Spending',
+        data: budgetData.spendingTrend.map(t => t.amount),
+        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    };
+
+    spendingTrendChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: '#9CA3AF'
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              color: '#9CA3AF',
+              callback: function(value) {
+                return '$' + (value / 1000) + 'k';
+              }
+            },
+            grid: {
+              color: 'rgba(75, 85, 99, 0.3)'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#9CA3AF',
+              maxRotation: 45,
+              minRotation: 45
+            },
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderFinancialProjections() {
+    if (!budgetData.projects) return;
+
+    const totalMonthlyBurn = budgetData.projects.reduce((sum, p) => sum + p.monthlyBurn, 0);
+    const remainingBudget = budgetData.totalBudget - budgetData.totalSpent;
+    const runway = totalMonthlyBurn > 0 ? Math.floor(remainingBudget / totalMonthlyBurn) : 0;
+    const annualProjection = totalMonthlyBurn * 12;
+
+    document.getElementById('monthly-burn').textContent = `$${totalMonthlyBurn.toLocaleString()}`;
+    document.getElementById('runway').textContent = `${runway} months`;
+    document.getElementById('annual-projection').textContent = `$${annualProjection.toLocaleString()}`;
+  }
+
+  function renderBudgetAlerts() {
+    const container = document.getElementById('budget-alerts');
+    container.innerHTML = '';
+
+    const alerts = generateBudgetAlerts();
+
+    if (alerts.length === 0) {
+      container.innerHTML = '<div class="text-gray-500 text-sm">No budget alerts at this time</div>';
+      return;
+    }
+
+    alerts.forEach(alert => {
+      const alertElement = document.createElement('div');
+      alertElement.className = 'flex items-start space-x-3 p-3 bg-slate-800 rounded-lg';
+      alertElement.innerHTML = `
+        <div class="w-6 h-6 bg-${alert.severity === 'high' ? 'red' : alert.severity === 'medium' ? 'yellow' : 'blue'}-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-${alert.icon} text-${alert.severity === 'high' ? 'red' : alert.severity === 'medium' ? 'yellow' : 'blue'}-400 text-xs"></i>
+        </div>
+        <div>
+          <div class="text-white text-sm font-medium">${alert.title}</div>
+          <div class="text-gray-400 text-xs mt-1">${alert.description}</div>
+        </div>
+      `;
+      container.appendChild(alertElement);
+    });
+  }
+
+  function generateBudgetAlerts() {
+    const alerts = [];
+
+    if (!budgetData.projects) return alerts;
+
+    budgetData.projects.forEach(project => {
+      const utilization = project.budget > 0 ? (project.spent / project.budget * 100) : 0;
+      
+      if (utilization > 90) {
+        alerts.push({
+          severity: 'high',
+          icon: 'exclamation-triangle',
+          title: `${project.name} Over Budget`,
+          description: `Project has spent ${utilization.toFixed(1)}% of its budget`
+        });
+      } else if (utilization > 75) {
+        alerts.push({
+          severity: 'medium',
+          icon: 'exclamation-circle',
+          title: `${project.name} Approaching Limit`,
+          description: `Project has used ${utilization.toFixed(1)}% of budget`
+        });
+      }
+    });
+
+    return alerts;
+  }
+
+  function renderCostOptimization() {
+    const container = document.getElementById('cost-optimization');
+    container.innerHTML = '';
+
+    const optimizations = generateCostOptimizations();
+
+    optimizations.forEach(opt => {
+      const optElement = document.createElement('div');
+      optElement.className = 'flex items-start space-x-3 p-3 bg-slate-800 rounded-lg';
+      optElement.innerHTML = `
+        <div class="w-6 h-6 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-lightbulb text-green-400 text-xs"></i>
+        </div>
+        <div>
+          <div class="text-white text-sm font-medium">${opt.title}</div>
+          <div class="text-gray-400 text-xs mt-1">${opt.description}</div>
+          <div class="text-green-400 text-xs mt-1">Potential savings: ${opt.savings}</div>
+        </div>
+      `;
+      container.appendChild(optElement);
+    });
+  }
+
+  function generateCostOptimizations() {
+    const optimizations = [];
+
+    if (!budgetData.projects) return optimizations;
+
+    // Find projects with high monthly burn
+    const highBurnProjects = budgetData.projects.filter(p => p.monthlyBurn > 15000);
+    if (highBurnProjects.length > 0) {
+      optimizations.push({
+        title: 'Review High-Burn Projects',
+        description: `${highBurnProjects.length} projects have monthly burn over $15,000`,
+        savings: '$5,000-10,000/month'
+      });
+    }
+
+    // Find underutilized budget
+    const underutilizedProjects = budgetData.projects.filter(p => {
+      const utilization = p.budget > 0 ? (p.spent / p.budget * 100) : 0;
+      return utilization < 50;
+    });
+
+    if (underutilizedProjects.length > 0) {
+      optimizations.push({
+        title: 'Reallocate Underutilized Budget',
+        description: `${underutilizedProjects.length} projects using less than 50% of budget`,
+        savings: 'Optimize resource allocation'
+      });
+    }
+
+    optimizations.push({
+      title: 'Implement Cost Monitoring',
+      description: 'Set up automated alerts for budget thresholds',
+      savings: 'Prevent budget overruns'
+    });
+
+    return optimizations;
+  }
+
+  // Event listeners
+  document.addEventListener('DOMContentLoaded', () => {
+    loadBudgetAnalytics(timeRange);
+    
+    // Time range change handler
+    document.getElementById('budget-timeframe')?.addEventListener('change', (e) => {
+      loadBudgetAnalytics(e.target.value);
+    });
+    
+    // Export handler
+    document.getElementById('export-budget')?.addEventListener('click', () => {
+      exportBudgetData();
+    });
+  });
+
+  function exportBudgetData() {
+    if (!budgetData.projects) return;
+
+    const csvContent = [
+      ['Project', 'Budget', 'Spent', 'Remaining', 'Utilization %', 'Monthly Burn'],
+      ...budgetData.projects.map(project => [
+        project.name,
+        project.budget,
+        project.spent,
+        project.budget - project.spent,
+        ((project.spent / project.budget) * 100).toFixed(1),
+        project.monthlyBurn
+      ])
+    ].map(row => row.join(',')).join('\\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `budget-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  // Auto-refresh every 10 minutes
+  setInterval(() => {
+    const currentTimeRange = document.getElementById('budget-timeframe')?.value || '30d';
+    loadBudgetAnalytics(currentTimeRange);
+  }, 600000);
+</script>

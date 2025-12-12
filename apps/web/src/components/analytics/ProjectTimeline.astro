@@ -1,0 +1,354 @@
+---
+interface TimelineProps {
+  projectId?: string;
+  showControls?: boolean;
+}
+
+const { projectId = '', showControls = true } = Astro.props;
+---
+
+<div class="glass-panel p-6 rounded-xl" id="timeline-container">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Project Timeline</h2>
+    {showControls && (
+      <div class="flex items-center space-x-4">
+        <select id="timeline-project" class="bg-slate-800 text-white px-3 py-1 rounded border border-slate-700 focus:border-blue-500 focus:outline-none text-sm">
+          <option value="">All Projects</option>
+        </select>
+        <button id="timeline-zoom-in" class="p-1 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+          <i class="fas fa-search-plus text-sm"></i>
+        </button>
+        <button id="timeline-zoom-out" class="p-1 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+          <i class="fas fa-search-minus text-sm"></i>
+        </button>
+        <button id="timeline-expand" class="p-1 bg-slate-800 hover:bg-slate-700 text-white rounded transition-colors">
+          <i class="fas fa-expand text-sm"></i>
+        </button>
+      </div>
+    )}
+  </div>
+
+  <!-- Timeline Chart Container -->
+  <div class="relative bg-slate-900 rounded-lg p-4 overflow-x-auto">
+    <div id="gantt-chart" class="min-w-[800px] min-h-[400px] relative">
+      <!-- Timeline Header -->
+      <div class="flex border-b border-slate-700 pb-2 mb-4">
+        <div class="w-48 text-sm font-medium text-gray-400">Project / Milestone</div>
+        <div class="flex-1 flex" id="timeline-header">
+          <!-- Timeline dates will be populated here -->
+        </div>
+      </div>
+      
+      <!-- Timeline Content -->
+      <div id="timeline-content" class="space-y-2">
+        <!-- Timeline rows will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline Legend -->
+  <div class="flex items-center justify-center space-x-6 mt-4 text-xs">
+    <div class="flex items-center space-x-2">
+      <div class="w-3 h-3 bg-blue-500 rounded"></div>
+      <span class="text-gray-400">On Track</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+      <span class="text-gray-400">At Risk</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <div class="w-3 h-3 bg-red-500 rounded"></div>
+      <span class="text-gray-400">Delayed</span>
+    </div>
+    <div class="flex items-center space-x-2">
+      <div class="w-3 h-3 bg-green-500 rounded"></div>
+      <span class="text-gray-400">Completed</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let timelineData = [];
+  let zoomLevel = 1;
+  let selectedProject = '';
+
+  class GanttChart {
+    constructor(containerId) {
+      this.container = document.getElementById(containerId);
+      this.headerContainer = document.getElementById('timeline-header');
+      this.contentContainer = document.getElementById('timeline-content');
+      this.startDate = null;
+      this.endDate = null;
+      this.totalDays = 0;
+    }
+
+    async loadData(projectId = '') {
+      try {
+        const response = await fetch(`/api/analytics/projects/timeline${projectId ? '?projectId=' + projectId : ''}`);
+        timelineData = await response.json();
+        this.calculateDateRange();
+        this.render();
+      } catch (error) {
+        console.error('Error loading timeline data:', error);
+      }
+    }
+
+    calculateDateRange() {
+      if (timelineData.length === 0) return;
+
+      const allDates = timelineData.flatMap(project => [
+        new Date(project.startDate),
+        new Date(project.endDate),
+        ...project.milestones.map(m => new Date(m.dueDate))
+      ]);
+
+      this.startDate = new Date(Math.min(...allDates));
+      this.endDate = new Date(Math.max(...allDates));
+      
+      // Add buffer days
+      this.startDate.setDate(this.startDate.getDate() - 7);
+      this.endDate.setDate(this.endDate.getDate() + 7);
+      
+      this.totalDays = Math.ceil((this.endDate - this.startDate) / (1000 * 60 * 60 * 24));
+    }
+
+    render() {
+      this.renderHeader();
+      this.renderContent();
+    }
+
+    renderHeader() {
+      this.headerContainer.innerHTML = '';
+      
+      const dayWidth = Math.max(30, 60 * zoomLevel); // Minimum 30px per day
+      const monthWidth = dayWidth * 30; // Approximate month width
+      
+      // Generate month headers
+      const currentDate = new Date(this.startDate);
+      while (currentDate <= this.endDate) {
+        const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        
+        const monthDiv = document.createElement('div');
+        monthDiv.className = 'text-xs text-gray-400 border-l border-slate-700 pl-2';
+        monthDiv.style.width = `${monthWidth}px`;
+        monthDiv.style.minWidth = `${monthWidth}px`;
+        monthDiv.textContent = currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        
+        this.headerContainer.appendChild(monthDiv);
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+    }
+
+    renderContent() {
+      this.contentContainer.innerHTML = '';
+      
+      timelineData.forEach(project => {
+        this.renderProjectRow(project);
+        project.milestones.forEach(milestone => {
+          this.renderMilestoneRow(milestone, project);
+        });
+      });
+    }
+
+    renderProjectRow(project) {
+      const row = document.createElement('div');
+      row.className = 'flex items-center h-8 border-b border-slate-800';
+      
+      // Project name
+      const nameCell = document.createElement('div');
+      nameCell.className = 'w-48 pr-4 text-sm text-white font-medium truncate';
+      nameCell.textContent = project.projectName;
+      row.appendChild(nameCell);
+      
+      // Timeline bar
+      const timelineCell = document.createElement('div');
+      timelineCell.className = 'flex-1 relative h-6';
+      
+      const projectBar = this.createTimelineBar(
+        new Date(project.startDate),
+        new Date(project.endDate),
+        'project',
+        project
+      );
+      
+      timelineCell.appendChild(projectBar);
+      row.appendChild(timelineCell);
+      
+      this.contentContainer.appendChild(row);
+    }
+
+    renderMilestoneRow(milestone, project) {
+      const row = document.createElement('div');
+      row.className = 'flex items-center h-6 border-b border-slate-800';
+      
+      // Milestone name
+      const nameCell = document.createElement('div');
+      nameCell.className = 'w-48 pr-4 pl-4 text-xs text-gray-400 truncate';
+      nameCell.textContent = milestone.title;
+      row.appendChild(nameCell);
+      
+      // Timeline marker
+      const timelineCell = document.createElement('div');
+      timelineCell.className = 'flex-1 relative h-4';
+      
+      const milestoneMarker = this.createMilestoneMarker(milestone, project);
+      timelineCell.appendChild(milestoneMarker);
+      
+      row.appendChild(timelineCell);
+      this.contentContainer.appendChild(row);
+    }
+
+    createTimelineBar(startDate, endDate, type, data) {
+      const dayWidth = Math.max(30, 60 * zoomLevel);
+      const startOffset = Math.ceil((startDate - this.startDate) / (1000 * 60 * 60 * 24));
+      const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+      
+      const bar = document.createElement('div');
+      bar.className = `absolute h-full rounded cursor-pointer transition-all duration-200 hover:opacity-80`;
+      bar.style.left = `${startOffset * dayWidth}px`;
+      bar.style.width = `${Math.max(duration * dayWidth, 3)}px`;
+      
+      // Color based on status
+      if (type === 'project') {
+        const status = this.getProjectStatus(data);
+        bar.classList.add(
+          status === 'completed' ? 'bg-green-500' :
+          status === 'delayed' ? 'bg-red-500' :
+          status === 'at-risk' ? 'bg-yellow-500' :
+          'bg-blue-500'
+        );
+      }
+      
+      // Add tooltip
+      bar.title = `${data.projectName}\\n${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+      
+      // Click handler
+      bar.addEventListener('click', () => {
+        this.showDetails(data, type);
+      });
+      
+      return bar;
+    }
+
+    createMilestoneMarker(milestone, project) {
+      const dayWidth = Math.max(30, 60 * zoomLevel);
+      const dayOffset = Math.ceil((new Date(milestone.dueDate) - this.startDate) / (1000 * 60 * 60 * 24));
+      
+      const marker = document.createElement('div');
+      marker.className = `absolute w-2 h-2 rounded-full cursor-pointer transform -translate-x-1/2 transition-all duration-200 hover:scale-150`;
+      marker.style.left = `${dayOffset * dayWidth + (dayWidth / 2)}px`;
+      marker.style.top = '6px';
+      
+      // Color based on status
+      marker.classList.add(
+        milestone.status === 'COMPLETED' ? 'bg-green-500' :
+        new Date(milestone.dueDate) < new Date() && milestone.status !== 'COMPLETED' ? 'bg-red-500' :
+        'bg-blue-500'
+      );
+      
+      // Add tooltip
+      marker.title = `${milestone.title}\\nDue: ${new Date(milestone.dueDate).toLocaleDateString()}\\nStatus: ${milestone.status}`;
+      
+      // Click handler
+      marker.addEventListener('click', () => {
+        this.showMilestoneDetails(milestone, project);
+      });
+      
+      return marker;
+    }
+
+    getProjectStatus(project) {
+      const now = new Date();
+      const overdueMilestones = project.milestones.filter(m => 
+        new Date(m.dueDate) < now && m.status !== 'COMPLETED'
+      ).length;
+      
+      if (overdueMilestones > 0) return 'delayed';
+      if (overdueMilestones > 0 || project.milestones.some(m => 
+        new Date(m.dueDate) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) && m.status !== 'COMPLETED'
+      )) return 'at-risk';
+      
+      return 'on-track';
+    }
+
+    showDetails(data, type) {
+      // Show project details modal or navigate to project page
+      console.log('Show details for:', type, data);
+    }
+
+    showMilestoneDetails(milestone, project) {
+      // Show milestone details modal
+      console.log('Show milestone details:', milestone, project);
+    }
+
+    zoomIn() {
+      zoomLevel = Math.min(zoomLevel * 1.2, 3);
+      this.render();
+    }
+
+    zoomOut() {
+      zoomLevel = Math.max(zoomLevel / 1.2, 0.5);
+      this.render();
+    }
+  }
+
+  // Initialize Gantt chart
+  let ganttChart;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    ganttChart = new GanttChart('gantt-chart');
+    ganttChart.loadData(projectId);
+    
+    // Load project options
+    loadProjectOptions();
+    
+    // Event listeners
+    document.getElementById('timeline-zoom-in')?.addEventListener('click', () => {
+      ganttChart.zoomIn();
+    });
+    
+    document.getElementById('timeline-zoom-out')?.addEventListener('click', () => {
+      ganttChart.zoomOut();
+    });
+    
+    document.getElementById('timeline-project')?.addEventListener('change', (e) => {
+      selectedProject = e.target.value;
+      ganttChart.loadData(selectedProject);
+    });
+    
+    document.getElementById('timeline-expand')?.addEventListener('click', () => {
+      // Expand to fullscreen
+      const container = document.getElementById('timeline-container');
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      }
+    });
+  });
+
+  async function loadProjectOptions() {
+    try {
+      const response = await fetch('/api/projects');
+      const projects = await response.json();
+      
+      const select = document.getElementById('timeline-project');
+      if (select) {
+        projects.forEach(project => {
+          const option = document.createElement('option');
+          option.value = project.id;
+          option.textContent = project.name;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  }
+
+  // Auto-refresh timeline data
+  setInterval(() => {
+    if (ganttChart) {
+      ganttChart.loadData(selectedProject);
+    }
+  }, 60000); // Refresh every minute
+</script>

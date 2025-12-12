@@ -27,6 +27,133 @@ export class MultiTenantPrismaService {
   }
 
   /**
+   * Get a Prisma client for a specific organization
+   */
+  getClient(organizationId: string) {
+    return {
+      project: {
+        count: (args?: any) => {
+          return this.prisma.project.count({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+        findMany: (args?: any) => {
+          return this.prisma.project.findMany({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+        findUnique: (args: any) => {
+          return this.prisma.project.findUnique({
+            ...args,
+            where: {
+              ...args.where,
+              organizationId,
+            },
+          });
+        },
+      },
+      milestone: {
+        count: (args?: any) => {
+          return this.prisma.milestone.count({
+            ...args,
+            where: {
+              ...args?.where,
+              project: {
+                organizationId,
+              },
+            },
+          });
+        },
+        findMany: (args?: any) => {
+          return this.prisma.milestone.findMany({
+            ...args,
+            where: {
+              ...args?.where,
+              project: {
+                organizationId,
+              },
+            },
+          });
+        },
+      },
+      ticket: {
+        count: (args?: any) => {
+          return this.prisma.ticket.count({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+        findMany: (args?: any) => {
+          return this.prisma.ticket.findMany({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+      },
+      file: {
+        count: (args?: any) => {
+          return this.prisma.file.count({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+        findMany: (args?: any) => {
+          return this.prisma.file.findMany({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+      },
+      user: {
+        findMany: (args?: any) => {
+          return this.prisma.user.findMany({
+            ...args,
+            where: {
+              ...args?.where,
+              memberships: {
+                some: {
+                  organizationId,
+                },
+              },
+            },
+          });
+        },
+      },
+      invoice: {
+        count: (args?: any) => {
+          return this.prisma.invoice.count({
+            ...args,
+            where: {
+              ...args?.where,
+              organizationId,
+            },
+          });
+        },
+      },
+    };
+  }
+
+  /**
    * Projects service methods
    */
   project = {
