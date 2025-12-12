@@ -11,6 +11,10 @@ export default defineConfig({
     service: {
       entrypoint: 'astro/assets/services/sharp',
     },
+    // Optimize image processing
+    domains: ['localhost', 'jasaweb.id'],
+    format: ['webp', 'avif', 'jpeg'],
+    quality: 80,
   },
   vite: {
     plugins: [tailwindcss()],
@@ -21,7 +25,34 @@ export default defineConfig({
       loader: 'tsx',
       include: /\.tsx?$/,
       exclude: /node_modules/,
+      // Optimize bundle size
+      minify: true,
+      target: 'es2020',
     },
+    // Optimize build performance
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            ui: ['@jasaweb/ui'],
+            charts: ['chart.js', 'react-chartjs-2'],
+          },
+        },
+      },
+    },
+    // Enable CSS code splitting
+    cssCodeSplit: true,
   },
   integrations: [react()],
+  // Performance optimizations
+  compressHTML: true,
+  // Security headers
+  security: {
+    headers: {
+      'X-Frame-Options': 'DENY',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+    },
+  },
 });

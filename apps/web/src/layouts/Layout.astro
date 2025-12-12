@@ -18,23 +18,80 @@ const { title } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website'}</title>
-    <meta name="description" content="Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile. Dapatkan website cepat, aman, dan SEO friendly." />
-    <meta name="keywords" content="jasa pembuatan website, website sekolah, portal berita, company profile, web development Indonesia" />
+    <meta name="description" content="Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile. Dapatkan website cepat, aman, dan SEO friendly dengan garansi kepuasan." />
+    <meta name="keywords" content="jasa pembuatan website, website sekolah, portal berita, company profile, web development Indonesia, website profesional, SEO friendly" />
     <meta name="author" content="JasaWeb" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="id" />
+    <meta name="geo.region" content="ID" />
     
-    <!-- Open Graph -->
-    <meta property="og:title" content={title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website'} />
-    <meta property="og:description" content="Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile." />
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website'} />
+    <meta property="og:description" content="Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile. Dapatkan website cepat, aman, dan SEO friendly." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="id_ID" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title ? `${title} | JasaWeb` : 'JasaWeb - Jasa Pembuatan Website'} />
+    <meta property="twitter:description" content="Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile." />
+    <meta property="twitter:image" content="/og-image.jpg" />
     
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Favicon -->
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+    
+    <!-- Favicon and app icons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- PWA theme color -->
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="JasaWeb" />
+    
+    <!-- Microsoft Edge tiles -->
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "JasaWeb",
+      "url": "https://jasaweb.id",
+      "logo": "https://jasaweb.id/logo.png",
+      "description": "Jasa pembuatan website profesional untuk sekolah, portal berita, dan company profile",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "ID"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": "Indonesian"
+      },
+      "sameAs": [
+        "https://instagram.com/jasaweb",
+        "https://facebook.com/jasaweb"
+      ]
+    }
+    </script>
     
     <!-- Critical CSS (inline for faster rendering) -->
     <style>
@@ -63,12 +120,13 @@ const { title } = Astro.props;
       .shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)}
     </style>
     
-    <!-- Font Awesome with defer -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /></noscript>
+    <!-- Google Fonts with display=swap and preloading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" /></noscript>
     
-    <!-- Google Fonts with display=swap -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Font Awesome with defer and subset -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /></noscript>
     
     <!-- DNS prefetch for external resources -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -92,47 +150,114 @@ const { title } = Astro.props;
     </main>
     <Footer />
 
-    <!-- Performance monitoring script -->
+    <!-- Performance optimization script -->
     <script>
-      // Monitor Core Web Vitals
+      // Register Service Worker for PWA capabilities
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+
+      // Monitor Core Web Vitals and send to analytics
       if ('PerformanceObserver' in window) {
+        const vitals = {};
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             if (entry.entryType === 'largest-contentful-paint') {
-              console.log('LCP:', entry.startTime);
+              vitals.LCP = entry.startTime;
             }
             if (entry.entryType === 'first-input') {
-              console.log('FID:', entry.processingStart - entry.startTime);
+              vitals.FID = entry.processingStart - entry.startTime;
             }
             if (entry.entryType === 'layout-shift') {
               if (!entry.hadRecentInput) {
-                console.log('CLS:', entry.value);
+                vitals.CLS = (vitals.CLS || 0) + entry.value;
               }
+            }
+            if (entry.entryType === 'paint') {
+              vitals[entry.name] = entry.startTime;
             }
           }
         });
-        observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
+        observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift', 'paint'] });
+        
+        // Report vitals when page unloads
+        addEventListener('beforeunload', () => {
+          if (Object.keys(vitals).length > 0) {
+            console.log('Core Web Vitals:', vitals);
+            // TODO: Send to analytics service
+          }
+        });
       }
 
-      // Lazy loading for images
+      // Enhanced lazy loading for images and iframes
       if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries) => {
+        const lazyObserver = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
-              const img = entry.target;
-              if (img.dataset.src) {
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                imageObserver.unobserve(img);
+              const element = entry.target;
+              if (element.dataset.src) {
+                element.src = element.dataset.src;
+                element.classList.remove('lazy');
+                lazyObserver.unobserve(element);
+              }
+              if (element.dataset.poster) {
+                element.poster = element.dataset.poster;
               }
             }
           });
+        }, {
+          rootMargin: '50px 0px',
+          threshold: 0.01
         });
 
-        document.querySelectorAll('img[data-src]').forEach(img => {
-          imageObserver.observe(img);
+        // Observe all lazy elements
+        document.querySelectorAll('img[data-src], iframe[data-src]').forEach(element => {
+          lazyObserver.observe(element);
         });
       }
+
+      // Preload critical resources
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          // Preload next page resources
+          const preloadLinks = document.querySelectorAll('link[rel="preload"]');
+          preloadLinks.forEach(link => {
+            const resource = link.href;
+            if (resource) {
+              fetch(resource, { priority: 'low' });
+            }
+          });
+        });
+      }
+
+      // Optimize scroll performance
+      let ticking = false;
+      function updateScrollPosition() {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            // Update scroll-based animations
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }
+      window.addEventListener('scroll', updateScrollPosition, { passive: true });
+
+      // Add to home screen prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show install button if needed
+      });
     </script>
   </body>
 </html>

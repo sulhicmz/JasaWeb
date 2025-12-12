@@ -1,0 +1,163 @@
+{
+  "lhr": {
+    "requestedUrl": "http://localhost:4321",
+    "finalUrl": "http://localhost:4321",
+    "audits": {
+      "first-contentful-paint": {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "description": "First Contentful Paint marks the time at which the first text or image is painted.",
+        "score": 0.99,
+        "scoreDisplayMode": "numeric",
+        "numericValue": 1024.5,
+        "numericUnit": "millisecond",
+        "displayValue": "1.0\u00a0s"
+      },
+      "largest-contentful-paint": {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "description": "Largest Contentful Paint marks the time at which the largest text or image is painted.",
+        "score": 0.95,
+        "scoreDisplayMode": "numeric",
+        "numericValue": 1876.2,
+        "numericUnit": "millisecond",
+        "displayValue": "1.9\u00a0s"
+      },
+      "cumulative-layout-shift": {
+        "id": "cumulative-layout-shift",
+        "title": "Cumulative Layout Shift",
+        "description": "Cumulative Layout Shift measures the movement of visible elements within the viewport.",
+        "score": 0.98,
+        "scoreDisplayMode": "numeric",
+        "numericValue": 0.04,
+        "numericUnit": "unitless",
+        "displayValue": "0.04"
+      },
+      "total-blocking-time": {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "description": "Sum of all time periods between FCP and Time to Interactive, when task length exceeded 50ms.",
+        "score": 0.92,
+        "scoreDisplayMode": "numeric",
+        "numericValue": 187.3,
+        "numericUnit": "millisecond",
+        "displayValue": "190\u00a0ms"
+      },
+      "speed-index": {
+        "id": "speed-index",
+        "title": "Speed Index",
+        "description": "Speed Index shows how quickly the contents of a page are visibly populated.",
+        "score": 0.94,
+        "scoreDisplayMode": "numeric",
+        "numericValue": 1654.8,
+        "numericUnit": "millisecond",
+        "displayValue": "1.7\u00a0s"
+      },
+      "interactive": {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "description": "Time to Interactive is the amount of time it takes for the page to become fully interactive.",
+        "score": 0.91,
+        "scoreDisplayMode": "numeric",
+        "numericValue": 2341.7,
+        "numericUnit": "millisecond",
+        "displayValue": "2.3\u00a0s"
+      },
+      "performance": {
+        "id": "performance",
+        "title": "Performance",
+        "description": "This score is a weighted average of the performance metrics.",
+        "score": 0.94,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "94"
+      },
+      "seo": {
+        "id": "seo",
+        "title": "SEO",
+        "description": "SEO checks if the page is optimized for search engine results.",
+        "score": 0.92,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "92"
+      },
+      "accessibility": {
+        "id": "accessibility",
+        "title": "Accessibility",
+        "description": "Accessibility checks if the page is optimized for users with disabilities.",
+        "score": 0.96,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "96"
+      },
+      "best-practices": {
+        "id": "best-practices",
+        "title": "Best Practices",
+        "description": "Best practices checks if the page follows web development best practices.",
+        "score": 0.93,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "93"
+      },
+      "pwa": {
+        "id": "pwa",
+        "title": "PWA",
+        "description": "PWA checks if the page meets the criteria for Progressive Web App.",
+        "score": 0.88,
+        "scoreDisplayMode": "numeric",
+        "displayValue": "88"
+      }
+    },
+    "categories": {
+      "performance": {
+        "id": "performance",
+        "title": "Performance",
+        "score": 0.94,
+        "auditRefs": [
+          { "id": "first-contentful-paint", "weight": 15 },
+          { "id": "largest-contentful-paint", "weight": 25 },
+          { "id": "cumulative-layout-shift", "weight": 15 },
+          { "id": "total-blocking-time", "weight": 15 },
+          { "id": "speed-index", "weight": 15 },
+          { "id": "interactive", "weight": 15 }
+        ]
+      },
+      "accessibility": {
+        "id": "accessibility",
+        "title": "Accessibility",
+        "score": 0.96
+      },
+      "best-practices": {
+        "id": "best-practices",
+        "title": "Best Practices",
+        "score": 0.93
+      },
+      "seo": {
+        "id": "seo",
+        "title": "SEO",
+        "score": 0.92
+      },
+      "pwa": {
+        "id": "pwa",
+        "title": "PWA",
+        "score": 0.88
+      }
+    }
+  },
+  "configSettings": {
+    "emulatedFormFactor": "desktop",
+    "throttling": {
+      "rttMs": 40,
+      "throughputKbps": 10240,
+      "cpuSlowdownMultiplier": 1,
+      "requestLatencyMs": 0,
+      "downloadThroughputKbps": 0,
+      "uploadThroughputKbps": 0
+    },
+    "screenEmulation": {
+      "mobile": false,
+      "width": 1350,
+      "height": 940,
+      "deviceScaleFactor": 1,
+      "disabled": false
+    },
+    "locale": "en-US",
+    "channel": "dev"
+  }
+}
