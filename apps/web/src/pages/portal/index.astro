@@ -6,6 +6,7 @@ import QuickActions from '../../components/portal/QuickActions.tsx';
 import StatusWidgets from '../../components/portal/StatusWidgets.tsx';
 import ProjectOverview from '../../components/portal/ProjectOverview.tsx';
 import ActivityFeed from '../../components/portal/ActivityFeed.tsx';
+import DashboardCharts from '../../components/portal/DashboardCharts.tsx';
 
 export interface Props {
   title?: string;
@@ -33,7 +34,7 @@ const { title } = Astro.props;
         <StatusWidgets client:load />
       </div>
 
-      <!-- Main Content Grid -->
+<!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Project Overview (2/3 width) -->
         <div class="lg:col-span-2">
@@ -44,6 +45,11 @@ const { title } = Astro.props;
         <div class="lg:col-span-1">
           <ActivityFeed client:load />
         </div>
+      </div>
+
+      <!-- Dashboard Charts -->
+      <div class="mt-8">
+        <DashboardCharts client:load organizationId="current-org" />
       </div>
     </div>
   </div>
