@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { ProjectController } from './project.controller';
 import { ProjectService } from './project.service';
 import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
+import { DashboardModule } from '../dashboard/dashboard.module';
 
 @Module({
-  imports: [MultiTenantPrismaModule],
+  imports: [MultiTenantPrismaModule, DashboardModule],
   controllers: [ProjectController],
   providers: [ProjectService],
   exports: [ProjectService],

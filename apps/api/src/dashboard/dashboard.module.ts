@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
+import { DashboardGateway } from './dashboard.gateway';
+import { DashboardService } from './dashboard.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -15,9 +18,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
         limit: 20, // 20 requests per minute
       },
     ]),
+    AuthModule,
   ],
   controllers: [DashboardController],
-  providers: [],
-  exports: [],
+  providers: [DashboardGateway, DashboardService],
+  exports: [DashboardGateway, DashboardService],
 })
 export class DashboardModule {}

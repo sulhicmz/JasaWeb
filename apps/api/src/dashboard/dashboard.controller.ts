@@ -3,7 +3,6 @@ import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
@@ -205,6 +204,316 @@ export class DashboardController {
     return projectsWithMetrics;
   }
 
+  // New Advanced Analytics Endpoints
+
+  @Get('analytics/performance')
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer)
+  async getPerformanceAnalytics(
+    @CurrentOrganizationId() organizationId: string,
+    @Query('period') period: string = '30' // days
+  ) {
+    const days = Math.min(parseInt(period) || 30, 365); // Cap at 1 year
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const [projectTrends, ticketTrends, milestoneTrends, invoiceTrends] =
+      await Promise.all([
+        this.getProjectTrends(organizationId, startDate),
+        this.getTicketTrends(organizationId, startDate),
+        this.getMilestoneTrends(organizationId, startDate),
+        this.getInvoiceTrends(organizationId, startDate),
+      ]);
+
+    return {
+      period: days,
+      projectTrends,
+      ticketTrends,
+      milestoneTrends,
+      invoiceTrends,
+    };
+  }
+
+  @Get('analytics/financial')
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance)
+  async getFinancialAnalytics(
+    @CurrentOrganizationId() organizationId: string,
+    @Query('period') period: string = '90' // days
+  ) {
+    const days = Math.min(parseInt(period) || 90, 365);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const [revenueMetrics, paymentTrends, outstandingInvoices] =
+      await Promise.all([
+        this.getRevenueMetrics(organizationId, startDate),
+        this.getPaymentTrends(organizationId, startDate),
+        this.getOutstandingInvoices(organizationId),
+      ]);
+
+    return {
+      period: days,
+      revenueMetrics,
+      paymentTrends,
+      outstandingInvoices,
+    };
+  }
+
+  // Helper methods for analytics
+  private async getProjectTrends(organizationId: string, startDate: Date) {
+    const projects = await this.multiTenantPrisma.project.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: startDate },
+      },
+      select: {
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        startAt: true,
+        dueAt: true,
+      },
+    });
+
+    // Calculate completion rates
+    const completedProjects = projects.filter(
+      (p) => p.status === 'completed'
+    ).length;
+    const totalProjects = projects.length;
+    const completionRate =
+      totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
+
+    // Average project duration
+    const completedProjectsWithDuration = projects.filter(
+      (p) => p.status === 'completed' && p.startAt && p.updatedAt
+    );
+    const avgDuration =
+      completedProjectsWithDuration.length > 0
+        ? completedProjectsWithDuration.reduce(
+            (sum, p) =>
+              sum +
+              (new Date(p.updatedAt).getTime() -
+                new Date(p.startAt!).getTime()),
+            0
+          ) /
+          completedProjectsWithDuration.length /
+          (1000 * 60 * 60 * 24) // Convert to days
+        : 0;
+
+    return {
+      completionRate: Math.round(completionRate),
+      averageDuration: Math.round(avgDuration),
+      totalProjects,
+      completedProjects,
+    };
+  }
+
+  private async getTicketTrends(organizationId: string, startDate: Date) {
+    const tickets = await this.multiTenantPrisma.ticket.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: startDate },
+      },
+      select: {
+        status: true,
+        priority: true,
+        type: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    // Resolution metrics
+    const resolvedTickets = tickets.filter(
+      (t) => t.status === 'resolved' || t.status === 'closed'
+    );
+    const totalTickets = tickets.length;
+    const resolutionRate =
+      totalTickets > 0 ? (resolvedTickets.length / totalTickets) * 100 : 0;
+
+    // Average resolution time
+    const resolvedTicketsWithTime = resolvedTickets.filter((t) => t.updatedAt);
+    const avgResolutionTime =
+      resolvedTicketsWithTime.length > 0
+        ? resolvedTicketsWithTime.reduce(
+            (sum, t) =>
+              sum +
+              (new Date(t.updatedAt).getTime() -
+                new Date(t.createdAt).getTime()),
+            0
+          ) /
+          resolvedTicketsWithTime.length /
+          (1000 * 60 * 60 * 24) // Convert to days
+        : 0;
+
+    // Priority distribution
+    const priorityDistribution = tickets.reduce(
+      (acc, ticket) => {
+        acc[ticket.priority] = (acc[ticket.priority] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return {
+      resolutionRate: Math.round(resolutionRate),
+      averageResolutionTime: Math.round(avgResolutionTime * 10) / 10,
+      priorityDistribution,
+      totalTickets,
+      resolvedTickets: resolvedTickets.length,
+    };
+  }
+
+  private async getMilestoneTrends(organizationId: string, startDate: Date) {
+    const milestones = await this.multiTenantPrisma.milestone.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: startDate },
+      },
+    });
+
+    const completedMilestones = milestones.filter(
+      (m) => m.status === 'completed'
+    );
+    const overdueMilestones = milestones.filter(
+      (m) =>
+        m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < new Date()
+    );
+
+    const completionRate =
+      milestones.length > 0
+        ? (completedMilestones.length / milestones.length) * 100
+        : 0;
+    const overdueRate =
+      milestones.length > 0
+        ? (overdueMilestones.length / milestones.length) * 100
+        : 0;
+
+    return {
+      completionRate: Math.round(completionRate),
+      overdueRate: Math.round(overdueRate),
+      totalMilestones: milestones.length,
+      completedMilestones: completedMilestones.length,
+      overdueMilestones: overdueMilestones.length,
+    };
+  }
+
+  private async getInvoiceTrends(organizationId: string, startDate: Date) {
+    const invoices = await this.multiTenantPrisma.invoice.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: startDate },
+      },
+      select: {
+        status: true,
+        amount: true,
+        currency: true,
+        createdAt: true,
+        dueAt: true,
+      },
+    });
+
+    const paidInvoices = invoices.filter((i) => i.status === 'paid');
+    const totalRevenue = paidInvoices.reduce((sum, i) => sum + i.amount, 0);
+    const pendingRevenue = invoices
+      .filter((i) => i.status === 'issued' || i.status === 'draft')
+      .reduce((sum, i) => sum + i.amount, 0);
+
+    const paymentRate =
+      invoices.length > 0 ? (paidInvoices.length / invoices.length) * 100 : 0;
+
+    return {
+      totalRevenue,
+      pendingRevenue,
+      paymentRate: Math.round(paymentRate),
+      totalInvoices: invoices.length,
+      paidInvoices: paidInvoices.length,
+    };
+  }
+
+  private async getRevenueMetrics(organizationId: string, startDate: Date) {
+    const invoices = await this.multiTenantPrisma.invoice.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: startDate },
+      },
+    });
+
+    const paidInvoices = invoices.filter((i) => i.status === 'paid');
+    const totalRevenue = paidInvoices.reduce((sum, i) => sum + i.amount, 0);
+    const averageInvoiceValue =
+      paidInvoices.length > 0 ? totalRevenue / paidInvoices.length : 0;
+
+    // Simplified revenue by project (without joins for now)
+    const revenueByProject = {
+      Unassigned: totalRevenue,
+    };
+
+    return {
+      totalRevenue,
+      averageInvoiceValue: Math.round(averageInvoiceValue * 100) / 100,
+      paidInvoices: paidInvoices.length,
+      totalInvoices: invoices.length,
+      revenueByProject,
+    };
+  }
+
+  private async getPaymentTrends(organizationId: string, startDate: Date) {
+    const invoices = await this.multiTenantPrisma.invoice.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: startDate },
+      },
+      select: {
+        amount: true,
+        status: true,
+        createdAt: true,
+        dueAt: true,
+      },
+    });
+
+    const overdueInvoices = invoices.filter(
+      (i) =>
+        (i.status === 'issued' || i.status === 'overdue') &&
+        new Date(i.dueAt) < new Date()
+    );
+
+    return {
+      overdueAmount: overdueInvoices.reduce((sum, i) => sum + i.amount, 0),
+      overdueCount: overdueInvoices.length,
+    };
+  }
+
+  private async getOutstandingInvoices(organizationId: string) {
+    const outstanding = await this.multiTenantPrisma.invoice.findMany({
+      where: {
+        organizationId,
+        status: { in: ['issued', 'overdue'] },
+      },
+      include: {
+        project: {
+          select: { name: true },
+        },
+      },
+      orderBy: { dueAt: 'asc' },
+    });
+
+    return outstanding.map((invoice: any) => ({
+      id: invoice.id,
+      amount: invoice.amount,
+      dueAt: invoice.dueAt,
+      status: invoice.status,
+      projectName: 'Unassigned', // Simplified for now
+      daysOverdue: Math.max(
+        0,
+        Math.floor(
+          (new Date().getTime() - new Date(invoice.dueAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      ),
+    }));
+  }
+
+  // Existing helper methods
   private async getProjectsStats(organizationId: string) {
     const projects = await this.multiTenantPrisma.project.findMany({
       where: { organizationId },
