@@ -38,10 +38,11 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+          # Optional: Uncomment baris di bawah jika ingin checkout branch dev sejak awal
+          # ref: dev 
 
       - name: Install OpenCode CLI
         run: |
-        
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
@@ -73,23 +74,24 @@ jobs:
               2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
               3. `git add .`
               4. `git commit -m "feat: [Task Name] implementation"`
-              5. `git push origin main` (OR create a PR if you cannot push directly)
+              5. `git push origin dev` (OR create a PR to dev if you cannot push directly)
 
             **Execution Protocol**:
             1. **Analysis**: Understand JasaWeb's business model (web development services).
             2. **Implementation**: Incremental changes respecting monorepo structure.
             3. **Verification**: Code MUST build and pass quality checks.
-            4. **Persistence**: **EXECUTE GIT PUSH**.
+            4. **Persistence**: **EXECUTE GIT PUSH TO DEV**.
 
             **Deliverables**:
             - Clearly state the selected task and business impact.
             - Provide the code changes with proper documentation.
             - Update relevant documentation and tests.
-            - **SUCCESSFUL GIT PUSH TO MAIN**.
+            - **SUCCESSFUL GIT PUSH TO DEV**.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
-            --share false \
+            --share false
+
       - name: Run OpenCode1
         id: run_oc1
         timeout-minutes: 60
@@ -130,23 +132,24 @@ jobs:
               2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
               3. `git add .`
               4. `git commit -m "feat: [Task Name] implementation"`
-              5. `git push origin main` (OR create a PR if you cannot push directly)
+              5. `git push origin dev` (OR create a PR to dev if you cannot push directly)
 
             **Execution Protocol**:
             1. **Analysis**: Understand JasaWeb's business model (web development services).
             2. **Implementation**: Incremental changes respecting monorepo structure.
             3. **Verification**: Code MUST build and pass quality checks.
-            4. **Persistence**: **EXECUTE GIT PUSH**.
+            4. **Persistence**: **EXECUTE GIT PUSH TO DEV**.
 
             **Deliverables**:
             - Clearly state the selected task and business impact.
             - Provide the code changes with proper documentation.
             - Update relevant documentation and tests.
-            - **SUCCESSFUL GIT PUSH TO MAIN**.
+            - **SUCCESSFUL GIT PUSH TO DEV**.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
             --share false
+
       - name: Run OpenCode2
         id: run_oc2
         timeout-minutes: 60
@@ -179,19 +182,74 @@ jobs:
               2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
               3. `git add .`
               4. `git commit -m "feat: [Task Name] implementation"`
-              5. `git push origin main` (OR create a PR if you cannot push directly)
+              5. `git push origin dev` (OR create a PR to dev if you cannot push directly)
 
             **Execution Protocol**:
             1. **Analysis**: Understand JasaWeb's business model (web development services).
             2. **Implementation**: Incremental changes respecting monorepo structure.
             3. **Verification**: Code MUST build and pass quality checks.
-            4. **Persistence**: **EXECUTE GIT PUSH**.
+            4. **Persistence**: **EXECUTE GIT PUSH TO DEV**.
 
             **Deliverables**:
             - Clearly state the selected task and business impact.
             - Provide the code changes with proper documentation.
             - Update relevant documentation and tests.
-            - **SUCCESSFUL GIT PUSH TO MAIN**.
+            - **SUCCESSFUL GIT PUSH TO DEV**.
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false
+      - name: Run OpenCode3
+        id: run_oc3
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            **Role**: Senior Software Architect & Developer
+            **Context**: JasaWeb - Web Development Service Platform (Astro, NestJS, PostgreSQL, Prisma, Tailwind).
+
+            **Objective**:
+              - "Maintain repository hygiene by organizing directory structure and removing unused, temporary, or duplicate files according to project rules"
+              - "Ensure the repository contains only valid source code and essential project assets"
+              - "Audit and clean up outdated or irrelevant documents, ensuring all remaining documentation is current and consistent"
+              - "Refactor and reorganize documentation files to improve clarity, structure, and accessibility"
+              - "Verify repository layout aligns with the intended project architecture and correct deviations when necessary"
+              - "Monitor and remove deprecated scripts, configs, or artifacts that are no longer referenced by the codebase"
+              - "Standardize file naming, folder conventions, and documentation formatting across the repository"
+              - "Update or regenerate project metadata and configuration files when required for repository maintenance"
+              - "Ensure README and other core documentation reflect the latest repository structure and cleanup results"
+              Before starting:
+              - Review Codebase and documentations to fully understand the context, goals, and dependencies.            
+              Success criteria (must be met):
+              - No broken features or regressions introduced
+              - No broken database or rls
+              - Build success, change commited and pushed to remote
+
+            **Strict Standards**:
+            1. **Type Safety**: TypeScript Strict Mode. No `any` types permitted.
+            2. **UI/UX**: Mobile-First responsiveness (Tailwind). Professional service platform aesthetic.
+            3. **Architecture**: Monorepo structure with apps/ and packages/. Use Prisma for data access. Respect packages/ for shared utilities.
+            4. **Security**: Validate inputs. Implement proper authentication and multi-tenancy.
+
+            **CRITICAL: EPHEMERAL ENVIRONMENT WARNING**:
+            - This runs in a temporary GitHub Action runner. **ALL CHANGES WILL BE LOST** if you do not push.
+            - **YOU MUST** execute the following commands at the end of your work:
+              1. `git config --global user.name "standarizer"`
+              2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
+              3. `git add .`
+              4. `git commit -m "feat: [Task Name] implementation"`
+              5. `git push origin dev` (OR create a PR to dev if you cannot push directly)
+
+            **Execution Protocol**:
+            1. **Analysis**: Understand JasaWeb's business model (web development services).
+            2. **Implementation**: Incremental changes respecting monorepo structure.
+            3. **Verification**: Code MUST build and pass quality checks.
+            4. **Persistence**: **EXECUTE GIT PUSH TO DEV**.
+
+            **Deliverables**:
+            - Clearly state the selected task and business impact.
+            - Provide the code changes with proper documentation.
+            - Update relevant documentation and tests.
+            - **SUCCESSFUL GIT PUSH TO DEV**.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
