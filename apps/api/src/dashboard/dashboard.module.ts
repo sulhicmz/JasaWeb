@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DashboardController } from './dashboard.controller';
+import { GanttController } from './gantt.controller';
 import { DashboardGateway } from './dashboard.gateway';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -27,7 +28,7 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
     }),
     MultiTenantPrismaModule,
   ],
-  controllers: [DashboardController],
+  controllers: [DashboardController, GanttController],
   providers: [DashboardGateway],
   exports: [DashboardGateway],
 })

@@ -5,6 +5,7 @@ import RecentActivity from '../components/dashboard/RecentActivity.astro';
 import ProjectsOverview from '../components/dashboard/ProjectsOverview.astro';
 import NotificationToast from '../components/dashboard/NotificationToast.astro';
 import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
+import GanttChart from '../components/dashboard/GanttChart.astro';
 import DashboardExport from '../components/dashboard/DashboardExport.astro';
 import NotificationPreferences from '../components/dashboard/NotificationPreferences.astro';
 // Import notification service
@@ -58,6 +59,11 @@ import '../services/notificationService.ts';
       <!-- Analytics Charts -->
       <section class="mb-8">
         <DashboardCharts client:load />
+      </section>
+
+      <!-- Gantt Chart -->
+      <section class="mb-8">
+        <GanttChart client:load />
       </section>
 
       <!-- Grid Layout for Activity and Projects -->
