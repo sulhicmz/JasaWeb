@@ -21,14 +21,36 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
+      include: {
+        memberships: {
+          include: {
+            organization: true,
+          },
+        },
+      },
     });
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Return user without password
-    const { password, ...result } = user;
-    return result;
+    // Get the first membership for the user
+    // In a real implementation, you might want to handle multiple organizations
+    // or allow organization selection via header/subdomain
+    const activeMembership = user.memberships[0];
+
+    if (!activeMembership) {
+      throw new Error('User does not belong to any organization');
+    }
+
+    // Return user without password but with organization context
+    const { password, memberships, ...userWithoutPassword } = user;
+
+    return {
+      ...userWithoutPassword,
+      organizationId: activeMembership.organizationId,
+      organization: activeMembership.organization,
+      role: activeMembership.role,
+    };
   }
 }

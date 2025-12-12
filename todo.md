@@ -61,7 +61,7 @@ Sumber: `AGENTS.md` + `plan.md`. Checklist ini menyatukan tooling (pnpm, Vitest/
 
 ## 8) Kriteria Penerimaan (MVP)
 
-- [ ] Login multi‑tenant; user melihat data organisasinya saja
+- [x] Login multi‑tenant; user melihat data organisasinya saja
 - [ ] Projects: CRUD + ≥1 milestone; Files: upload/download; Approvals: 1 siklus sukses
 - [ ] Tickets: buat/update/status → email notifikasi terkirim
 - [ ] Invoices: unggah manual PDF → status tercatat → klien dapat unduh

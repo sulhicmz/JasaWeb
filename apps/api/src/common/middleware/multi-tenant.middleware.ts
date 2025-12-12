@@ -1,51 +1,28 @@
 import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { PrismaService } from '../database/prisma.service';
+import { RequestWithAuth } from '../types/request';
 
 /**
  * Middleware to set the organization context for multi-tenant architecture
- * This should be used in combination with request interceptors to ensure
- * all database queries are filtered by the current organization
+ * This middleware runs after JWT authentication and extracts organization context
+ * from the authenticated user object that was set by the JWT strategy
  */
 @Injectable()
 export class MultiTenantMiddleware implements NestMiddleware {
   private readonly logger = new Logger(MultiTenantMiddleware.name);
 
-  constructor(private prisma: PrismaService) {}
+  use(req: RequestWithAuth, _res: Response, next: NextFunction) {
+    // The JWT strategy now sets organization context on the user object
+    // We need to transfer it to the request level for easy access
+    if (req.user && req.user.organizationId) {
+      req.organizationId = req.user.organizationId;
+      req.organization = req.user.organization;
 
-  async use(req: Request, res: Response, next: NextFunction) {
-    // Extract organization from request - could be from:
-    // 1. JWT token (sub -> user -> membership -> organization)
-    // 2. Request header
-    // 3. URL subdomain
-    // 4. Request body/query params (for specific cases)
-
-    // For now, we'll set it to the request object
-    // In a real implementation, you would extract the user from JWT
-    // and then fetch their organization via their membership
-    const userId = req.headers['x-user-id']?.toString(); // This would come from JWT after auth
-
-    if (userId) {
-      try {
-        // Find the organization the user belongs to
-        const membership = await this.prisma.membership.findFirst({
-          where: {
-            userId: userId,
-          },
-          include: {
-            organization: true,
-          },
-        });
-
-        if (membership) {
-          // Attach organization to request for use in controllers/services
-          (req as any).organizationId = membership.organizationId;
-          (req as any).organization = membership.organization;
-        }
-      } catch (error) {
-        // If there's an error finding the organization, continue without organization context
-        this.logger.error('Error finding organization for user', error);
-      }
+      this.logger.debug(
+        `Organization context set: ${req.organizationId} for user: ${req.user.id}`
+      );
+    } else {
+      this.logger.warn('No organization context found in authenticated user');
     }
 
     next();
