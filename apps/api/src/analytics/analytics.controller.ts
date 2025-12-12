@@ -1,5 +1,15 @@
-import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  Request,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { PredictiveAnalyticsService } from './predictive-analytics.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { MultiTenantGuard } from '../common/guards/multi-tenant.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
@@ -7,7 +17,10 @@ import { CurrentOrganizationId } from '../common/decorators/current-organization
 @UseGuards(AuthGuard, MultiTenantGuard)
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly predictiveAnalyticsService: PredictiveAnalyticsService
+  ) {}
 
   @Get('projects')
   async getProjectAnalytics(
@@ -75,6 +88,127 @@ export class AnalyticsController {
       dateTo,
       granularity,
     });
+  }
+
+  @Get('projects/:projectId/metrics')
+  async getProjectMetrics(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @CurrentOrganizationId() organizationId: string,
+    @Query('status') status?: string[],
+    @Query('priority') priority?: string[],
+    @Query('assigneeId') assigneeId?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string
+  ) {
+    const filters = {
+      status,
+      priority,
+      assigneeId,
+      dateRange:
+        dateFrom && dateTo
+          ? {
+              start: new Date(dateFrom),
+              end: new Date(dateTo),
+            }
+          : undefined,
+    };
+
+    return this.analyticsService.getProjectMetrics(
+      projectId,
+      organizationId,
+      filters
+    );
+  }
+
+  @Get('organization/overview')
+  async getOrganizationAnalytics(
+    @CurrentOrganizationId() organizationId: string,
+    @Query('status') status?: string[],
+    @Query('priority') priority?: string[],
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string
+  ) {
+    const filters = {
+      status,
+      priority,
+      dateRange:
+        dateFrom && dateTo
+          ? {
+              start: new Date(dateFrom),
+              end: new Date(dateTo),
+            }
+          : undefined,
+    };
+
+    return this.analyticsService.getOrganizationAnalytics(
+      organizationId,
+      filters
+    );
+  }
+
+  @Get('projects/:projectId/predictions')
+  async getPredictiveAnalytics(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.analyticsService.getPredictiveAnalytics(
+      projectId,
+      organizationId
+    );
+  }
+
+  @Get('projects/:projectId/predictions/timeline')
+  async getTimelinePrediction(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.predictiveAnalyticsService.predictTimeline(
+      projectId,
+      organizationId
+    );
+  }
+
+  @Get('projects/:projectId/predictions/budget')
+  async getBudgetPrediction(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.predictiveAnalyticsService.predictBudget(
+      projectId,
+      organizationId
+    );
+  }
+
+  @Get('projects/:projectId/predictions/quality')
+  async getQualityPrediction(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.predictiveAnalyticsService.predictQuality(
+      projectId,
+      organizationId
+    );
+  }
+
+  @Get('projects/:projectId/predictions/risk')
+  async getRiskPrediction(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.predictiveAnalyticsService.predictRisk(
+      projectId,
+      organizationId
+    );
+  }
+
+  @Post('models/train')
+  async trainModels(@CurrentOrganizationId() organizationId: string) {
+    return this.predictiveAnalyticsService.trainModels(organizationId);
+  }
+
+  @Get('models/status')
+  async getModelStatus() {
+    return this.predictiveAnalyticsService.getModelStatus();
   }
 
   @Get('overview')

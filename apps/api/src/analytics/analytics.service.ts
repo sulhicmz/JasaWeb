@@ -1,10 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service';
 import { DateTime } from 'luxon';
+import { AuditService } from '../audit/audit.service';
+import { CacheService } from '../common/cache/cache.service';
+
+interface ProjectMetrics {
+  projectId: string;
+  organizationId: string;
+  totalTasks: number;
+  completedTasks: number;
+  overdueTasks: number;
+  totalMilestones: number;
+  completedMilestones: number;
+  averageTaskDuration: number;
+  budgetUtilization: number;
+  timelineAdherence: number;
+  teamProductivity: number;
+  riskScore: number;
+  clientSatisfactionPrediction: number;
+}
+
+interface AnalyticsFilters {
+  dateRange?: { start: Date; end: Date };
+  status?: string[];
+  priority?: string[];
+  assigneeId?: string;
+  tags?: string[];
+}
+
+interface TrendData {
+  period: string;
+  value: number;
+  change: number;
+  changePercent: number;
+}
+
+interface PredictiveMetrics {
+  estimatedCompletion: Date;
+  budgetOverrunRisk: number;
+  timelineDelayRisk: number;
+  qualityScore: number;
+  recommendedActions: string[];
+}
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+    private readonly cache: CacheService
+  ) {}
 
   // Project Analytics
   async getProjectAnalytics(
@@ -512,6 +561,546 @@ export class AnalyticsService {
     );
 
     return Object.values(trends);
+  }
+
+  // Advanced Project Metrics with Real-time Calculations
+  async getProjectMetrics(
+    projectId: string,
+    organizationId: string,
+    filters?: AnalyticsFilters
+  ): Promise<ProjectMetrics> {
+    const cacheKey = `analytics:project:${projectId}:${JSON.stringify(filters)}`;
+    const cached = await this.cache.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    // Verify project access
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        organizationId,
+      },
+      include: {
+        tasks: {
+          where: this.buildTaskFilters(filters),
+          include: {
+            assignee: true,
+          },
+        },
+        milestones: {
+          where: filters?.status
+            ? { status: { in: filters.status } }
+            : undefined,
+        },
+        invoices: true,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const metrics = await this.calculateProjectMetrics(project);
+
+    // Cache for 5 minutes
+    await this.cache.set(cacheKey, JSON.stringify(metrics), 300);
+
+    await this.audit.log({
+      actorId: 'system',
+      organizationId,
+      action: 'analytics.project_metrics_viewed',
+      target: projectId,
+      meta: { filters },
+    });
+
+    return metrics;
+  }
+
+  async getOrganizationAnalytics(
+    organizationId: string,
+    filters?: AnalyticsFilters
+  ): Promise<{
+    overview: {
+      totalProjects: number;
+      activeProjects: number;
+      completedProjects: number;
+      totalRevenue: number;
+      averageProjectDuration: number;
+      clientSatisfactionScore: number;
+    };
+    trends: {
+      projectCompletion: TrendData[];
+      revenue: TrendData[];
+      teamProductivity: TrendData[];
+    };
+    topPerformers: Array<{
+      userId: string;
+      name: string;
+      completedTasks: number;
+      productivityScore: number;
+    }>;
+    riskAnalysis: {
+      highRiskProjects: number;
+      budgetOverruns: number;
+      timelineDelays: number;
+    };
+  }> {
+    const cacheKey = `analytics:org:${organizationId}:${JSON.stringify(filters)}`;
+    const cached = await this.cache.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    const projects = await this.prisma.project.findMany({
+      where: {
+        organizationId,
+        ...this.buildProjectFilters(filters),
+      },
+      include: {
+        tasks: {
+          where: this.buildTaskFilters(filters),
+          include: {
+            assignee: true,
+          },
+        },
+        milestones: true,
+        invoices: true,
+        organization: {
+          include: {
+            members: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const analytics = await this.calculateOrganizationAnalytics(
+      projects,
+      organizationId
+    );
+
+    // Cache for 10 minutes
+    await this.cache.set(cacheKey, JSON.stringify(analytics), 600);
+
+    await this.audit.log({
+      actorId: 'system',
+      organizationId,
+      action: 'analytics.organization_viewed',
+      target: organizationId,
+      meta: { filters },
+    });
+
+    return analytics;
+  }
+
+  async getPredictiveAnalytics(
+    projectId: string,
+    organizationId: string
+  ): Promise<PredictiveMetrics> {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        organizationId,
+      },
+      include: {
+        tasks: {
+          include: {
+            assignee: true,
+          },
+        },
+        milestones: true,
+        invoices: true,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    const metrics = await this.calculateProjectMetrics(project);
+    const predictions = this.generatePredictions(project, metrics);
+
+    await this.audit.log({
+      actorId: 'system',
+      organizationId,
+      action: 'analytics.predictive_viewed',
+      target: projectId,
+      meta: { predictions },
+    });
+
+    return predictions;
+  }
+
+  private async calculateProjectMetrics(project: any): Promise<ProjectMetrics> {
+    const tasks = project.tasks || [];
+    const milestones = project.milestones || [];
+    const invoices = project.invoices || [];
+
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter((t) => t.status === 'done').length;
+    const overdueTasks = tasks.filter(
+      (t) => t.dueAt && new Date(t.dueAt) < new Date() && t.status !== 'done'
+    ).length;
+
+    const totalMilestones = milestones.length;
+    const completedMilestones = milestones.filter(
+      (m) => m.status === 'completed'
+    ).length;
+
+    // Calculate average task duration (in days)
+    const completedTasksWithDuration = tasks.filter(
+      (t) => t.status === 'done' && t.createdAt && t.updatedAt
+    );
+    const averageTaskDuration =
+      completedTasksWithDuration.length > 0
+        ? completedTasksWithDuration.reduce((sum, task) => {
+            const duration = Math.ceil(
+              (new Date(task.updatedAt).getTime() -
+                new Date(task.createdAt).getTime()) /
+                (1000 * 60 * 60 * 24)
+            );
+            return sum + duration;
+          }, 0) / completedTasksWithDuration.length
+        : 0;
+
+    // Calculate budget utilization
+    const totalBudget = project.budget || 0;
+    const totalSpent = invoices
+      .filter((i) => i.status === 'paid')
+      .reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
+    const budgetUtilization =
+      totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+    // Calculate timeline adherence
+    const plannedDuration =
+      project.startAt && project.dueAt
+        ? Math.ceil(
+            (new Date(project.dueAt).getTime() -
+              new Date(project.startAt).getTime()) /
+              (1000 * 60 * 60 * 24)
+          )
+        : 0;
+    const elapsedDays = project.startAt
+      ? Math.ceil(
+          (new Date().getTime() - new Date(project.startAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      : 0;
+    const expectedProgress =
+      plannedDuration > 0 ? (elapsedDays / plannedDuration) * 100 : 0;
+    const actualProgress =
+      totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+    const timelineAdherence =
+      expectedProgress > 0 ? (actualProgress / expectedProgress) * 100 : 100;
+
+    // Calculate team productivity (tasks completed per person per week)
+    const teamSize = new Set(tasks.map((t) => t.assigneeId)).size || 1;
+    const projectWeeks = Math.max(elapsedDays / 7, 1);
+    const teamProductivity = completedTasks / teamSize / projectWeeks;
+
+    // Calculate risk score (0-100, higher is riskier)
+    const overdueTaskRisk = (overdueTasks / totalTasks) * 100;
+    const budgetRisk =
+      budgetUtilization > 100 ? (budgetUtilization - 100) * 2 : 0;
+    const timelineRisk =
+      timelineAdherence < 80 ? (80 - timelineAdherence) * 1.5 : 0;
+    const riskScore = Math.min(
+      100,
+      overdueTaskRisk + budgetRisk + timelineRisk
+    );
+
+    // Predict client satisfaction based on various factors
+    const onTimeDelivery =
+      timelineAdherence >= 90 ? 30 : timelineAdherence >= 70 ? 20 : 0;
+    const onBudgetDelivery =
+      budgetUtilization <= 100 ? 25 : budgetUtilization <= 120 ? 10 : 0;
+    const qualityScore = Math.min(25, (completedTasks / totalTasks) * 25);
+    const communicationScore = 20; // Placeholder - could be based on response times
+    const clientSatisfactionPrediction =
+      onTimeDelivery + onBudgetDelivery + qualityScore + communicationScore;
+
+    return {
+      projectId: project.id,
+      organizationId: project.organizationId,
+      totalTasks,
+      completedTasks,
+      overdueTasks,
+      totalMilestones,
+      completedMilestones,
+      averageTaskDuration,
+      budgetUtilization,
+      timelineAdherence,
+      teamProductivity,
+      riskScore,
+      clientSatisfactionPrediction,
+    };
+  }
+
+  private async calculateOrganizationAnalytics(
+    projects: any[],
+    organizationId: string
+  ) {
+    const totalProjects = projects.length;
+    const activeProjects = projects.filter((p) => p.status === 'active').length;
+    const completedProjects = projects.filter(
+      (p) => p.status === 'completed'
+    ).length;
+
+    const totalRevenue = projects.reduce((sum, project) => {
+      return (
+        sum +
+        project.invoices
+          .filter((i) => i.status === 'paid')
+          .reduce(
+            (invoiceSum, invoice) => invoiceSum + (invoice.amount || 0),
+            0
+          )
+      );
+    }, 0);
+
+    // Calculate average project duration
+    const completedProjectsWithDuration = projects.filter(
+      (p) => p.status === 'completed' && p.startAt && p.dueAt
+    );
+    const averageProjectDuration =
+      completedProjectsWithDuration.length > 0
+        ? completedProjectsWithDuration.reduce((sum, project) => {
+            const duration = Math.ceil(
+              (new Date(project.dueAt).getTime() -
+                new Date(project.startAt).getTime()) /
+                (1000 * 60 * 60 * 24)
+            );
+            return sum + duration;
+          }, 0) / completedProjectsWithDuration.length
+        : 0;
+
+    // Calculate client satisfaction score (placeholder - would come from surveys)
+    const clientSatisfactionScore = 85; // Placeholder
+
+    // Generate trend data
+    const trends = {
+      projectCompletion: this.generateTrendData(projects, 'completion'),
+      revenue: this.generateTrendData(projects, 'revenue'),
+      teamProductivity: this.generateTrendData(projects, 'productivity'),
+    };
+
+    // Calculate top performers
+    const allTasks = projects.flatMap((p) => p.tasks || []);
+    const taskCountsByUser = allTasks.reduce((acc, task) => {
+      if (task.assigneeId && task.status === 'done') {
+        acc[task.assigneeId] = (acc[task.assigneeId] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const topPerformers = Object.entries(taskCountsByUser)
+      .map(([userId, completedTasks]) => ({
+        userId,
+        name: `User ${userId}`, // Would get actual name from user service
+        completedTasks: completedTasks as number,
+        productivityScore: (completedTasks as number) * 10, // Simplified calculation
+      }))
+      .sort((a, b) => b.productivityScore - a.productivityScore)
+      .slice(0, 5);
+
+    // Risk analysis
+    const highRiskProjects = projects.filter((p) => {
+      const metrics = this.calculateProjectMetrics(p);
+      return metrics.riskScore > 70;
+    }).length;
+
+    const budgetOverruns = projects.filter((p) => {
+      const metrics = this.calculateProjectMetrics(p);
+      return metrics.budgetUtilization > 100;
+    }).length;
+
+    const timelineDelays = projects.filter((p) => {
+      const metrics = this.calculateProjectMetrics(p);
+      return metrics.timelineAdherence < 80;
+    }).length;
+
+    return {
+      overview: {
+        totalProjects,
+        activeProjects,
+        completedProjects,
+        totalRevenue,
+        averageProjectDuration,
+        clientSatisfactionScore,
+      },
+      trends,
+      topPerformers,
+      riskAnalysis: {
+        highRiskProjects,
+        budgetOverruns,
+        timelineDelays,
+      },
+    };
+  }
+
+  private generatePredictions(
+    project: any,
+    metrics: ProjectMetrics
+  ): PredictiveMetrics {
+    // Estimate completion based on current progress
+    const completedTasks = metrics.completedTasks;
+    const totalTasks = metrics.totalTasks;
+    const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
+
+    const daysSinceStart = project.startAt
+      ? Math.ceil(
+          (new Date().getTime() - new Date(project.startAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      : 0;
+
+    const estimatedTotalDays =
+      completionRate > 0 ? daysSinceStart / completionRate : daysSinceStart * 2;
+    const estimatedCompletion = new Date(
+      Date.now() + (estimatedTotalDays - daysSinceStart) * 24 * 60 * 60 * 1000
+    );
+
+    // Calculate risks
+    const budgetOverrunRisk = Math.max(
+      0,
+      Math.min(100, (metrics.budgetUtilization - 100) * 2)
+    );
+    const timelineDelayRisk = Math.max(
+      0,
+      Math.min(100, (100 - metrics.timelineAdherence) * 1.5)
+    );
+
+    // Quality score based on various factors
+    const qualityScore = Math.max(
+      0,
+      Math.min(
+        100,
+        completionRate * 40 +
+          (100 - metrics.riskScore) * 0.3 +
+          metrics.teamProductivity * 10
+      )
+    );
+
+    // Generate recommended actions
+    const recommendedActions: string[] = [];
+    if (metrics.overdueTasks > 0) {
+      recommendedActions.push('Address overdue tasks immediately');
+    }
+    if (budgetOverrunRisk > 20) {
+      recommendedActions.push('Review budget allocation and spending');
+    }
+    if (timelineDelayRisk > 30) {
+      recommendedActions.push('Reassess project timeline and resources');
+    }
+    if (metrics.riskScore > 70) {
+      recommendedActions.push('Conduct risk mitigation review');
+    }
+    if (recommendedActions.length === 0) {
+      recommendedActions.push(
+        'Project is on track - continue current approach'
+      );
+    }
+
+    return {
+      estimatedCompletion,
+      budgetOverrunRisk,
+      timelineDelayRisk,
+      qualityScore,
+      recommendedActions,
+    };
+  }
+
+  private generateTrendData(projects: any[], type: string): TrendData[] {
+    // Generate mock trend data for the last 6 months
+    const trends: TrendData[] = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const period = date.toLocaleDateString('en-US', {
+        month: 'short',
+        year: 'numeric',
+      });
+
+      let value = 0;
+      let change = 0;
+
+      switch (type) {
+        case 'completion':
+          value = Math.floor(Math.random() * 10) + 5;
+          break;
+        case 'revenue':
+          value = Math.floor(Math.random() * 50000) + 10000;
+          break;
+        case 'productivity':
+          value = Math.floor(Math.random() * 20) + 10;
+          break;
+      }
+
+      if (trends.length > 0) {
+        change = value - trends[trends.length - 1].value;
+      }
+
+      trends.push({
+        period,
+        value,
+        change,
+        changePercent:
+          trends.length > 0
+            ? (change / trends[trends.length - 1].value) * 100
+            : 0,
+      });
+    }
+
+    return trends;
+  }
+
+  private buildTaskFilters(filters?: AnalyticsFilters) {
+    if (!filters) return undefined;
+
+    const where: any = {};
+
+    if (filters.status) {
+      where.status = { in: filters.status };
+    }
+
+    if (filters.assigneeId) {
+      where.assigneeId = filters.assigneeId;
+    }
+
+    if (filters.dateRange) {
+      where.createdAt = {
+        gte: filters.dateRange.start,
+        lte: filters.dateRange.end,
+      };
+    }
+
+    return where;
+  }
+
+  private buildProjectFilters(filters?: AnalyticsFilters) {
+    if (!filters) return undefined;
+
+    const where: any = {};
+
+    if (filters.status) {
+      where.status = { in: filters.status };
+    }
+
+    if (filters.dateRange) {
+      where.createdAt = {
+        gte: filters.dateRange.start,
+        lte: filters.dateRange.end,
+      };
+    }
+
+    return where;
   }
 
   // Overview Analytics - combines all analytics for dashboard
