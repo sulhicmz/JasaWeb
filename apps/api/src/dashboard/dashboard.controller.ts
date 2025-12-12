@@ -426,7 +426,9 @@ export class DashboardController {
 
       return { success: true, message: 'Update notification sent' };
     } catch (error) {
-      throw new Error(`Failed to send notification: ${error.message}`);
+      throw new Error(
+        `Failed to send notification: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -451,7 +453,9 @@ export class DashboardController {
 
       return { success: true, message: 'Cache refreshed and clients notified' };
     } catch (error) {
-      throw new Error(`Failed to refresh cache: ${error.message}`);
+      throw new Error(
+        `Failed to refresh cache: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 }

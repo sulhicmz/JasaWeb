@@ -43,7 +43,8 @@ interface DashboardUpdatePayload {
 export class DashboardGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  @WebSocketServer() server: Server;
+  @WebSocketServer()
+  server!: Server;
   private logger: Logger = new Logger('DashboardGateway');
 
   constructor(
@@ -82,7 +83,7 @@ export class DashboardGateway
         },
       });
 
-      if (!user || user.memberships.length === 0) {
+      if (!user || (user as any).memberships?.length === 0) {
         throw new WsException(
           'Unauthorized: Invalid user or organization access'
         );
@@ -103,7 +104,9 @@ export class DashboardGateway
       // Send initial dashboard data
       await this.sendInitialData(client, payload.organizationId);
     } catch (error) {
-      this.logger.error(`Connection error: ${error.message}`);
+      this.logger.error(
+        `Connection error: ${error instanceof Error ? error.message : String(error)}`
+      );
       client.emit('error', { message: 'Authentication failed' });
       client.disconnect();
     }
@@ -172,7 +175,9 @@ export class DashboardGateway
       // Clear cache to force fresh data on next request
       await this.cacheManager.del(`dashboard-stats-${data.organizationId}`);
     } catch (error) {
-      this.logger.error(`Error refreshing stats: ${error.message}`);
+      this.logger.error(
+        `Error refreshing stats: ${error instanceof Error ? error.message : String(error)}`
+      );
       client.emit('error', { message: 'Failed to refresh stats' });
     }
   }
@@ -217,7 +222,9 @@ export class DashboardGateway
         timestamp: new Date(),
       });
     } catch (error) {
-      this.logger.error(`Error sending initial data: ${error.message}`);
+      this.logger.error(
+        `Error sending initial data: ${error instanceof Error ? error.message : String(error)}`
+      );
       client.emit('error', { message: 'Failed to load initial data' });
     }
   }
