@@ -41,7 +41,7 @@ concurrency:
 jobs:
   autonomous-developer:
     name: OC Autonomous Developer
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     permissions:
       id-token: write
@@ -643,3 +643,4 @@ jobs:
           echo "- Prepare for next business development cycle" >> $GITHUB_STEP_SUMMARY
           echo "- Address client feedback and service improvements" >> $GITHUB_STEP_SUMMARY
           echo "- Continue competitive differentiation and growth initiatives" >> $GITHUB_STEP_SUMMARY
+
