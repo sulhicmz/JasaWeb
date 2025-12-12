@@ -4,9 +4,7 @@ import { ApprovalController } from './approval.controller';
 import { ApprovalService } from './approval.service';
 
 @Module({
-  imports: [
-    MultiTenantPrismaModule,
-  ],
+  imports: [MultiTenantPrismaModule],
   controllers: [ApprovalController],
   providers: [ApprovalService],
   exports: [ApprovalService],

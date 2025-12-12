@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - Enhanced CI/CD pipeline with comprehensive testing
 - Automated security scanning and dependency updates
 - Advanced branch protection and code review workflows
@@ -15,17 +16,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Team collaboration guidelines and documentation
 
 ### Changed
+
 - Improved repository structure and organization
 - Enhanced development environment setup
 - Optimized API performance with query improvements
 - Updated documentation with detailed guides
 
 ### Fixed
+
 - Database connection pooling issues
 - TypeScript compilation errors
 - Build process for production deployment
 
 ### Security
+
 - Implemented secret scanning and prevention
 - Added CodeQL analysis for security vulnerabilities
 - Enhanced dependency security monitoring
@@ -34,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-01-XX
 
 ### Added
+
 - Initial release of JasaWeb platform
 - Astro-based marketing website
 - NestJS client portal API
@@ -51,7 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD pipeline
 
 ### Features
+
 #### Marketing Website
+
 - Responsive design with Tailwind CSS
 - Service showcase pages
 - Portfolio and case studies
@@ -60,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SEO optimization
 
 #### Client Portal
+
 - User authentication and registration
 - Project dashboard with status tracking
 - File upload and management
@@ -70,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-organization support
 
 #### API Features
+
 - RESTful API design
 - Comprehensive error handling
 - Rate limiting and security
@@ -79,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Caching layer
 
 #### Infrastructure
+
 - Docker containerization
 - Environment-specific configurations
 - Database migrations
@@ -86,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Monitoring and logging
 
 ### Security
+
 - JWT-based authentication
 - Role-based access control
 - Input validation and sanitization
@@ -96,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session management
 
 ### Performance
+
 - Database query optimization
 - Connection pooling
 - Caching strategies
@@ -104,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lazy loading implementation
 
 ### Documentation
+
 - Comprehensive README
 - API documentation
 - Development guides
@@ -113,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.0] - 2024-01-XX
 
 ### Added
+
 - Beta release for testing
 - Core functionality implementation
 - Basic authentication system
@@ -120,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File upload capabilities
 
 ### Known Issues
+
 - Limited multi-tenant support
 - Performance optimization needed
 - Documentation incomplete
@@ -127,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2023-12-XX
 
 ### Added
+
 - Project initialization
 - Basic monorepo structure
 - Development environment setup
@@ -158,11 +174,11 @@ This project follows [Semantic Versioning](https://semver.org/):
 
 ### Supported Versions
 
-| Version | Status          | Supported Until |
-|---------|-----------------|-----------------|
-| 1.x.x   | Current         | Until 2.x.x release |
-| 0.9.x   | Maintenance     | March 2024      |
-| 0.1.x   | End of Life     | December 2023   |
+| Version | Status      | Supported Until     |
+| ------- | ----------- | ------------------- |
+| 1.x.x   | Current     | Until 2.x.x release |
+| 0.9.x   | Maintenance | March 2024          |
+| 0.1.x   | End of Life | December 2023       |
 
 ### Migration Guides
 

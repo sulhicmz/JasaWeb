@@ -1,6 +1,7 @@
 # Simple Conflict Resolution Process
 
 ## 🎯 Principles
+
 - **Fast resolution over perfect merging**
 - **Communication over complex tools**
 - **Small PRs over large changes**
@@ -9,6 +10,7 @@
 ## 🔄 Conflict Prevention
 
 ### Before Starting Work
+
 ```bash
 # Always start from latest main
 git checkout main
@@ -22,6 +24,7 @@ git checkout -b feature/your-feature-name
 ```
 
 ### During Development
+
 ```bash
 # Sync with main frequently (daily)
 git fetch origin
@@ -38,6 +41,7 @@ git push origin feature/your-feature-name
 ## ⚡ Quick Conflict Resolution
 
 ### Step 1: Identify Conflict Type
+
 ```bash
 # Pull latest changes
 git pull origin main
@@ -49,6 +53,7 @@ git status
 ### Step 2: Resolve Common Conflicts
 
 #### 📝 File Content Conflicts
+
 ```bash
 # Open conflicted file
 # Look for conflict markers:
@@ -66,6 +71,7 @@ git status
 ```
 
 #### 📦 Package.json Conflicts
+
 ```bash
 # Always keep the highest version number
 # Example:
@@ -79,6 +85,7 @@ npm install  # or pnpm install
 ```
 
 #### 🔧 Configuration Conflicts
+
 ```bash
 # For config files (tsconfig, eslint, etc.)
 # - Prefer main branch version
@@ -87,6 +94,7 @@ npm install  # or pnpm install
 ```
 
 ### Step 3: Test Resolution
+
 ```bash
 # Quick validation
 pnpm lint
@@ -102,6 +110,7 @@ git push origin feature/your-feature-name
 ## 🚨 Emergency Resolution (When Stuck)
 
 ### Option 1: Reset and Reapply
+
 ```bash
 # Save your work
 git stash
@@ -118,6 +127,7 @@ git commit -m "feat: small change"
 ```
 
 ### Option 2: Use Merge Tool
+
 ```bash
 # Use VS Code or other merge tool
 git mergetool
@@ -128,6 +138,7 @@ code .
 ```
 
 ### Option 3: Ask for Help
+
 ```bash
 # Create a draft PR with conflicts
 # Add comment: "Need help resolving conflicts"
@@ -137,16 +148,19 @@ code .
 ## 📋 Conflict Resolution Checklist
 
 ### Before Resolving
+
 - [ ] I understand what both sides changed
 - [ ] I have backed up my work
 - [ ] I know which files are conflicted
 
 ### During Resolution
+
 - [ ] I'm keeping the best version of each change
 - [ ] I'm removing all conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`)
 - [ ] I'm testing my changes after resolution
 
 ### After Resolution
+
 - [ ] Code compiles without errors
 - [ ] Tests pass
 - [ ] I've committed the resolution
@@ -155,6 +169,7 @@ code .
 ## 🔄 Branch Management Strategy
 
 ### Small Branches (Recommended)
+
 ```bash
 # Good: Small, focused branches
 feature/user-login
@@ -167,6 +182,7 @@ refactor/all-the-things
 ```
 
 ### Branch Lifecycle
+
 1. **Create**: From latest main
 2. **Develop**: Small, frequent commits
 3. **Sync**: Daily merges from main
@@ -178,12 +194,14 @@ refactor/all-the-things
 ## 🤝 Team Coordination
 
 ### Communication Rules
+
 - **Announce** what you're working on
 - **Coordinate** when working on related files
 - **Review** PRs quickly (within 24 hours)
 - **Communicate** about blocking changes
 
 ### Handoff Process
+
 ```bash
 # When handing off work:
 1. Create PR with clear description
@@ -195,6 +213,7 @@ refactor/all-the-things
 ## ⚡ Quick Commands Reference
 
 ### Daily Sync
+
 ```bash
 git checkout main
 git pull origin main
@@ -203,6 +222,7 @@ git merge main
 ```
 
 ### Conflict Resolution
+
 ```bash
 git pull origin main
 # Resolve conflicts manually
@@ -212,6 +232,7 @@ git push
 ```
 
 ### Emergency Reset
+
 ```bash
 git stash
 git reset --hard origin/main
@@ -221,12 +242,14 @@ git stash pop
 ## 📞 When to Get Help
 
 ### Get Help Immediately When:
+
 - You don't understand the conflicts
 - Tests fail after resolution
 - Multiple developers working on same files
 - Critical production issues
 
 ### How to Ask for Help:
+
 1. **Describe** the problem clearly
 2. **Show** the conflicted files
 3. **Explain** what you tried

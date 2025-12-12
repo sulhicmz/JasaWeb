@@ -16,7 +16,7 @@ export class AuthGuard extends PassportAuthGuard('jwt') {
     if (isPublic) {
       return true;
     }
-    
+
     return super.canActivate(context);
   }
 }

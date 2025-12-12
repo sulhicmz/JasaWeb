@@ -27,50 +27,50 @@ const services = [
 ---
 
 <Layout title="Beranda">
-  <!-- Hero Section -->
-  <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
-    <div class="absolute inset-0 z-0">
-      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] animate-pulse-glow"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] animate-pulse-glow" style="animation-delay: 2s"></div>
+<!-- Hero Section (optimized for mobile) -->
+  <section class="relative min-h-[100vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden pt-16 sm:pt-20">
+    <div class="absolute inset-0 z-0" style="content-visibility: auto;">
+      <div class="absolute top-1/4 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-blue-600/20 rounded-full blur-[128px] animate-pulse-glow"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-indigo-600/20 rounded-full blur-[128px] animate-pulse-glow" style="animation-delay: 2s"></div>
     </div>
 
-    <div class="container relative z-10 text-center px-4">
-      <div class="inline-block mb-4 px-4 py-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-300 text-sm font-medium backdrop-blur-sm animate-float">
+    <div class="container relative z-10 text-center px-4 sm:px-6">
+      <div class="inline-block mb-4 px-3 py-1.5 sm:px-4 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-300 text-xs sm:text-sm font-medium backdrop-blur-sm animate-float">
         🚀 Solusi Website Terdepan
       </div>
 
-      <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight">
+      <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-6 sm:mb-8 leading-tight tracking-tight">
         Jasa Pembuatan Website <br/>
         <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400 text-glow">Profesional & Elegan</span>
       </h1>
 
-      <p class="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+      <p class="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed px-2">
         Tingkatkan kredibilitas bisnis Anda dengan website premium yang cepat, aman, dan memukau.
       </p>
 
-      <div class="flex flex-col sm:flex-row justify-center items-center gap-6">
-        <a href="/contact" class="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 px-4">
+        <a href="/contact" class="group relative w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg font-bold text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden text-center">
           <div class="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-500 skew-x-12 -translate-x-full"></div>
-          <span class="relative flex items-center">
+          <span class="relative flex items-center justify-center">
             Mulai Konsultasi <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
           </span>
         </a>
-        <a href="/services" class="px-8 py-4 rounded-lg font-bold text-gray-300 border border-white/10 hover:bg-white/5 hover:text-white hover:border-white/30 transition-all duration-300 backdrop-blur-sm">
+        <a href="/services" class="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-gray-300 border border-white/10 hover:bg-white/5 hover:text-white hover:border-white/30 transition-all duration-300 backdrop-blur-sm text-center">
           Lihat Portfolio
         </a>
       </div>
     </div>
   </section>
 
-  <!-- Services Section -->
-  <section class="py-24 relative">
-    <div class="container mx-auto px-4 relative z-10">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Layanan Unggulan</h2>
-        <p class="text-gray-400 max-w-2xl mx-auto">Solusi digital yang dirancang khusus untuk memenuhi kebutuhan spesifik industri Anda.</p>
+<!-- Services Section (optimized for mobile) -->
+  <section class="py-16 sm:py-24 relative">
+    <div class="container mx-auto px-4 sm:px-6 relative z-10">
+      <div class="text-center mb-12 sm:mb-16">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Layanan Unggulan</h2>
+        <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">Solusi digital yang dirancang khusus untuk memenuhi kebutuhan spesifik industri Anda.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
         {services.map(service => (
           <ServiceCard service={service} />
         ))}
@@ -78,44 +78,44 @@ const services = [
     </div>
   </section>
 
-  <!-- Why Choose Us -->
-  <section class="py-24 relative overflow-hidden">
+<!-- Why Choose Us (optimized for mobile) -->
+  <section class="py-16 sm:py-24 relative overflow-hidden">
     <div class="absolute inset-0 bg-slate-900/50"></div>
-    <div class="container mx-auto px-4 relative z-10">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold mb-4">Mengapa Memilih Kami?</h2>
-        <p class="text-gray-400">Standar kualitas tinggi untuk hasil yang maksimal.</p>
+    <div class="container mx-auto px-4 sm:px-6 relative z-10">
+      <div class="text-center mb-12 sm:mb-16">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Mengapa Memilih Kami?</h2>
+        <p class="text-gray-400 text-sm sm:text-base">Standar kualitas tinggi untuk hasil yang maksimal.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
         {[
           { icon: 'fas fa-bolt', title: 'Performa Tinggi', desc: 'Optimasi kecepatan loading maksimal.' },
           { icon: 'fas fa-shield-alt', title: 'Keamanan', desc: 'Proteksi SSL dan keamanan berlapis.' },
           { icon: 'fas fa-pencil-ruler', title: 'Desain Premium', desc: 'UI/UX modern yang memanjakan mata.' },
           { icon: 'fas fa-headset', title: 'Support 24/7', desc: 'Dukungan teknis siap membantu Anda.' }
         ].map(item => (
-          <div class="glass-panel p-8 rounded-xl text-center hover:bg-slate-800/60 transition-colors duration-300">
-            <div class="text-4xl mb-6 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+          <div class="glass-panel p-6 sm:p-8 rounded-xl text-center hover:bg-slate-800/60 transition-colors duration-300">
+            <div class="text-3xl sm:text-4xl mb-4 sm:mb-6 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">
               <i class={item.icon}></i>
             </div>
-            <h3 class="text-xl font-bold mb-3 text-white">{item.title}</h3>
-            <p class="text-gray-400">{item.desc}</p>
+            <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-white">{item.title}</h3>
+            <p class="text-gray-400 text-sm sm:text-base">{item.desc}</p>
           </div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- CTA Section -->
-  <section class="py-24 relative overflow-hidden">
+<!-- CTA Section (optimized for mobile) -->
+  <section class="py-16 sm:py-24 relative overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-indigo-900/40 backdrop-blur-lg"></div>
-    <div class="container mx-auto px-4 relative z-10 text-center">
-      <div class="max-w-4xl mx-auto glass-panel p-12 rounded-2xl border border-blue-500/20 shadow-blue-500/10">
-        <h2 class="text-4xl md:text-5xl font-bold mb-6 text-white">Siap Wujudkan Website Impian?</h2>
-        <p class="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+    <div class="container mx-auto px-4 sm:px-6 relative z-10 text-center">
+      <div class="max-w-4xl mx-auto glass-panel p-8 sm:p-12 rounded-2xl border border-blue-500/20 shadow-blue-500/10">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-white">Siap Wujudkan Website Impian?</h2>
+        <p class="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-10 max-w-2xl mx-auto px-2">
           Jangan biarkan ide hebat Anda hanya menjadi angan. Hubungi kami sekarang dan dapatkan penawaran spesial.
         </p>
-        <a href="/contact" class="inline-block px-10 py-5 bg-white text-blue-900 font-bold text-lg rounded-full hover:bg-blue-50 hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+        <a href="/contact" class="inline-block px-6 sm:px-8 py-3 sm:py-5 bg-white text-blue-900 font-bold text-base sm:text-lg rounded-full hover:bg-blue-50 hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
           Hubungi Kami <i class="fas fa-paper-plane ml-2"></i>
         </a>
       </div>

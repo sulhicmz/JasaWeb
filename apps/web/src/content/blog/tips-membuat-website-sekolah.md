@@ -1,9 +1,9 @@
 ---
-title: "Tips Membuat Website Sekolah yang Efektif"
-description: "Pelajari cara membuat website sekolah yang informatif dan mudah digunakan oleh siswa, orang tua, dan staff."
+title: 'Tips Membuat Website Sekolah yang Efektif'
+description: 'Pelajari cara membuat website sekolah yang informatif dan mudah digunakan oleh siswa, orang tua, dan staff.'
 date: 2023-10-15
-author: "Admin JasaWeb"
-tags: ["sekolah", "website", "pendidikan"]
+author: 'Admin JasaWeb'
+tags: ['sekolah', 'website', 'pendidikan']
 ---
 
 Dalam era digital saat ini, website sekolah bukan lagi sekadar pelengkap melainkan kebutuhan mutlak. Website yang dirancang dengan baik dapat menjadi jembatan komunikasi antara sekolah, siswa, orang tua, dan masyarakat luas.
@@ -22,15 +22,19 @@ Sebuah website sekolah yang informatif dan mudah diakses dapat memberikan banyak
 Untuk membuat website sekolah yang efektif, ada beberapa elemen penting yang harus ada:
 
 ### 1. Navigasi yang Intuitif
+
 Struktur menu yang jelas dan mudah dipahami akan membantu pengunjung menemukan informasi dengan cepat. Kelompokkan halaman berdasarkan fungsi seperti "Profil Sekolah", "Akademik", "Kesiswaan", dan "Berita".
 
 ### 2. Mobile-Friendly Design
+
 Dengan meningkatnya penggunaan perangkat mobile, pastikan website dapat diakses dengan baik di berbagai ukuran layar. Gunakan responsive design yang menyesuaikan tampilan otomatis.
 
 ### 3. Konten yang Terorganisir
+
 Gunakan sistem kategori dan tagging untuk mengelompokkan konten. Ini akan memudahkan pencarian dan navigasi bagi pengunjung.
 
 ### 4. Integrasi Media Sosial
+
 Integrasikan akun media sosial sekolah untuk memperluas jangkauan dan interaksi dengan komunitas.
 
 ## Kesimpulan

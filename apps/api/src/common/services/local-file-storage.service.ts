@@ -34,7 +34,8 @@ export class LocalFileStorageService {
     }
 
     // Generate unique filename if not provided
-    const finalFilename = options.filename || `${uuidv4()}${path.extname(options.filename || '')}`;
+    const finalFilename =
+      options.filename || `${uuidv4()}${path.extname(options.filename || '')}`;
     const filePath = path.join(options.directory, finalFilename);
 
     // Write file to the specified path

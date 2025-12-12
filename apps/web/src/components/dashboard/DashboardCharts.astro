@@ -1,0 +1,249 @@
+---
+// DashboardCharts.astro - Analytics charts component
+---
+
+<div class="glass-panel p-6 rounded-xl">
+  <h2 class="text-xl font-bold text-white mb-6">Analytics Overview</h2>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Project Status Chart -->
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <h3 class="text-white font-medium mb-4">Project Status Distribution</h3>
+      <canvas id="projectStatusChart" width="200" height="200"></canvas>
+    </div>
+    
+    <!-- Ticket Priority Chart -->
+    <div class="bg-slate-800/50 p-4 rounded-lg">
+      <h3 class="text-white font-medium mb-4">Ticket Priority Breakdown</h3>
+      <canvas id="ticketPriorityChart" width="200" height="200"></canvas>
+    </div>
+  </div>
+  
+  <!-- Milestone Timeline -->
+  <div class="mt-6 bg-slate-800/50 p-4 rounded-lg">
+    <h3 class="text-white font-medium mb-4">Weekly Milestone Progress</h3>
+    <canvas id="milestoneTimelineChart" width="800" height="200"></canvas>
+  </div>
+</div>
+
+<script>
+  class DashboardCharts {
+    constructor() {
+      this.charts = {};
+      this.init();
+    }
+
+    init() {
+      this.drawProjectStatusChart();
+      this.drawTicketPriorityChart();
+      this.drawMilestoneTimelineChart();
+      
+      // Listen for data updates
+      window.addEventListener('stats-updated', (e) => {
+        this.updateCharts(e.detail.stats);
+      });
+    }
+
+    drawProjectStatusChart(data = null) {
+      const canvas = document.getElementById('projectStatusChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 80;
+      
+      // Default data
+      const chartData = data || {
+        active: 3,
+        completed: 5,
+        onHold: 1,
+        planning: 2
+      };
+      
+      const total = Object.values(chartData).reduce((sum, val) => sum + val, 0);
+      const colors = {
+        active: '#10b981',
+        completed: '#3b82f6',
+        onHold: '#f59e0b',
+        planning: '#6b7280'
+      };
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw pie chart
+      let currentAngle = -Math.PI / 2;
+      
+      Object.entries(chartData).forEach(([status, count]) => {
+        if (count === 0) return;
+        
+        const sliceAngle = (count / total) * 2 * Math.PI;
+        
+        // Draw slice
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+        ctx.lineTo(centerX, centerY);
+        ctx.fillStyle = colors[status];
+        ctx.fill();
+        
+        // Draw label
+        const labelAngle = currentAngle + sliceAngle / 2;
+        const labelX = centerX + Math.cos(labelAngle) * (radius + 20);
+        const labelY = centerY + Math.sin(labelAngle) * (radius + 20);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${status} (${count})`, labelX, labelY);
+        
+        currentAngle += sliceAngle;
+      });
+    }
+
+    drawTicketPriorityChart(data = null) {
+      const canvas = document.getElementById('ticketPriorityChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      
+      // Default data
+      const chartData = data || {
+        low: 2,
+        medium: 5,
+        high: 3,
+        critical: 1
+      };
+      
+      const colors = {
+        low: '#6b7280',
+        medium: '#f59e0b',
+        high: '#f97316',
+        critical: '#ef4444'
+      };
+      
+      const barWidth = 40;
+      const barSpacing = 20;
+      const maxValue = Math.max(...Object.values(chartData));
+      const chartHeight = 150;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw bars
+      let x = 30;
+      Object.entries(chartData).forEach(([priority, count]) => {
+        const barHeight = (count / maxValue) * chartHeight;
+        const y = canvas.height - barHeight - 30;
+        
+        // Draw bar
+        ctx.fillStyle = colors[priority];
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // Draw label
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '11px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(priority, x + barWidth / 2, canvas.height - 10);
+        ctx.fillText(count.toString(), x + barWidth / 2, y - 5);
+        
+        x += barWidth + barSpacing;
+      });
+    }
+
+    drawMilestoneTimelineChart() {
+      const canvas = document.getElementById('milestoneTimelineChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      
+      // Sample data for weekly milestone progress
+      const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+      const completed = [2, 3, 5, 4];
+      const planned = [3, 4, 6, 5];
+      
+      const chartWidth = canvas.width - 60;
+      const chartHeight = 150;
+      const barWidth = chartWidth / (weeks.length * 2 + weeks.length - 1);
+      const maxValue = Math.max(...planned);
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw axes
+      ctx.strokeStyle = '#4b5563';
+      ctx.beginPath();
+      ctx.moveTo(30, 20);
+      ctx.lineTo(30, canvas.height - 30);
+      ctx.lineTo(canvas.width - 30, canvas.height - 30);
+      ctx.stroke();
+      
+      // Draw bars
+      weeks.forEach((week, index) => {
+        const x = 40 + index * (barWidth * 2 + barWidth);
+        
+        // Completed milestones
+        const completedHeight = (completed[index] / maxValue) * chartHeight;
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(x, canvas.height - 30 - completedHeight, barWidth, completedHeight);
+        
+        // Planned milestones
+        const plannedHeight = (planned[index] / maxValue) * chartHeight;
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(x + barWidth, canvas.height - 30 - plannedHeight, barWidth, plannedHeight);
+        
+        // Week label
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '11px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(week, x + barWidth, canvas.height - 10);
+      });
+      
+      // Legend
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(canvas.width - 150, 10, 15, 15);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '11px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText('Completed', canvas.width - 130, 22);
+      
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillRect(canvas.width - 150, 30, 15, 15);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('Planned', canvas.width - 130, 42);
+    }
+
+    updateCharts(stats) {
+      if (stats.projects) {
+        this.drawProjectStatusChart({
+          active: stats.projects.active,
+          completed: stats.projects.completed,
+          onHold: stats.projects.onHold,
+          planning: 0 // Calculate from total - others
+        });
+      }
+      
+      if (stats.tickets) {
+        // Estimate priority distribution from ticket stats
+        this.drawTicketPriorityChart({
+          low: Math.floor(stats.tickets.total * 0.2),
+          medium: Math.floor(stats.tickets.total * 0.4),
+          high: stats.tickets.highPriority - stats.tickets.critical,
+          critical: stats.tickets.critical
+        });
+      }
+    }
+  }
+
+  // Initialize charts when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    new DashboardCharts();
+  });
+</script>
+
+<style>
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+</style>

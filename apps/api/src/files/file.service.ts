@@ -29,7 +29,20 @@ export const VALID_MIME_TYPES = [
 ];
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-export const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'];
+export const ALLOWED_EXTENSIONS = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.pdf',
+  '.txt',
+  '.doc',
+  '.docx',
+  '.ppt',
+  '.pptx',
+  '.xls',
+  '.xlsx',
+];
 
 export interface FileUploadDto {
   file: UploadedFilePayload;
@@ -53,10 +66,13 @@ export class FileService {
     private readonly multiTenantPrisma: MultiTenantPrismaService,
     private readonly fileStorageService: FileStorageService,
     private readonly localFileStorageService: LocalFileStorageService,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService
   ) {}
 
-  async uploadFile(fileUploadDto: FileUploadDto, organizationId: string): Promise<FileUploadResult> {
+  async uploadFile(
+    fileUploadDto: FileUploadDto,
+    organizationId: string
+  ): Promise<FileUploadResult> {
     const { file, projectId, uploadedById } = fileUploadDto;
 
     if (!projectId) {
@@ -70,12 +86,16 @@ export class FileService {
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      throw new BadRequestException(`File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+      throw new BadRequestException(
+        `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+      );
     }
 
     // Validate file type
     if (!VALID_MIME_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(`File type ${file.mimetype} is not allowed`);
+      throw new BadRequestException(
+        `File type ${file.mimetype} is not allowed`
+      );
     }
 
     // Validate project ID if provided
@@ -85,7 +105,9 @@ export class FileService {
       });
 
       if (!project) {
-        throw new BadRequestException('Project not found or does not belong to your organization');
+        throw new BadRequestException(
+          'Project not found or does not belong to your organization'
+        );
       }
     }
 
@@ -109,11 +131,14 @@ export class FileService {
         });
       } else {
         // Upload to local storage
-        const uploadResult = await this.localFileStorageService.uploadFile(file.buffer, {
-          directory: `./uploads/${organizationId}`,
-          filename: `${Date.now()}_${file.originalname}`,
-          allowedExtensions: ALLOWED_EXTENSIONS,
-        });
+        const uploadResult = await this.localFileStorageService.uploadFile(
+          file.buffer,
+          {
+            directory: `./uploads/${organizationId}`,
+            filename: `${Date.now()}_${file.originalname}`,
+            allowedExtensions: ALLOWED_EXTENSIONS,
+          }
+        );
 
         fileIdentifier = uploadResult.filename;
       }
@@ -129,7 +154,9 @@ export class FileService {
         },
       });
 
-      this.logger.log(`File uploaded: ${file.originalname} for organization ${organizationId}`);
+      this.logger.log(
+        `File uploaded: ${file.originalname} for organization ${organizationId}`
+      );
 
       return {
         id: createdFile.id,
@@ -175,8 +202,14 @@ export class FileService {
         const fileBuffer = await this.localFileStorageService.getFile(filePath);
 
         // Set response headers based on file type
-        response.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
-        response.setHeader('Content-Disposition', `attachment; filename="${fileRecord.filename}"`);
+        response.setHeader(
+          'Content-Type',
+          this.getMimeType(fileRecord.filename)
+        );
+        response.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${fileRecord.filename}"`
+        );
         response.setHeader('Content-Length', fileRecord.size);
 
         // Send the file
@@ -207,7 +240,7 @@ export class FileService {
         // Delete from S3
         await this.fileStorageService.deleteFile(
           process.env.S3_BUCKET_NAME || 'default-bucket',
-          `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
+          `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`
         );
       } else {
         // Delete from local storage
@@ -220,7 +253,9 @@ export class FileService {
         where: { id },
       });
 
-      this.logger.log(`File deleted: ${fileRecord.filename} for organization ${organizationId}`);
+      this.logger.log(
+        `File deleted: ${fileRecord.filename} for organization ${organizationId}`
+      );
 
       return { message: 'File deleted successfully' };
     } catch (error: unknown) {
@@ -249,15 +284,15 @@ export class FileService {
           select: {
             id: true,
             name: true,
-          }
+          },
         },
         uploadedBy: {
           select: {
             id: true,
             name: true,
             email: true,
-          }
-        }
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -271,16 +306,16 @@ export class FileService {
           select: {
             id: true,
             name: true,
-          }
+          },
         },
         uploadedBy: {
           select: {
             id: true,
             name: true,
             email: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!file) {
@@ -310,7 +345,7 @@ export class FileService {
 
     // Group by file type
     const byType: { [key: string]: number } = {};
-    files.forEach(file => {
+    files.forEach((file) => {
       const ext = path.extname(file.filename).toLowerCase();
       byType[ext] = (byType[ext] || 0) + 1;
     });
@@ -337,16 +372,19 @@ export class FileService {
       '.pdf': 'application/pdf',
       '.txt': 'text/plain',
       '.doc': 'application/msword',
-      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.docx':
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       '.ppt': 'application/vnd.ms-powerpoint',
-      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      '.pptx':
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       '.xls': 'application/vnd.ms-excel',
-      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.xlsx':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
 
     return mimeTypes[ext] || 'application/octet-stream';
   }
-  
+
   private getErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : 'Unknown error';
   }

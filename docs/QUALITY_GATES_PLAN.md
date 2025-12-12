@@ -3,6 +3,7 @@
 ## Pre-commit Hooks (Husky Setup)
 
 ### Package.json additions
+
 ```json
 {
   "devDependencies": {
@@ -13,22 +14,15 @@
     "yamllint": "^1.29.0"
   },
   "lint-staged": {
-    "*.{ts,js}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,yml,yaml}": [
-      "prettier --write",
-      "yamllint"
-    ],
-    "tsconfig*.json": [
-      "node scripts/validate-typescript.js"
-    ]
+    "*.{ts,js}": ["eslint --fix", "prettier --write"],
+    "*.{json,yml,yaml}": ["prettier --write", "yamllint"],
+    "tsconfig*.json": ["node scripts/validate-typescript.js"]
   }
 }
 ```
 
 ### Husky Configuration
+
 ```bash
 #!/bin/sh
 # .husky/pre-commit
@@ -53,6 +47,7 @@ echo "✅ Pre-commit checks passed!"
 ## GitHub Actions Quality Gates
 
 ### CI Workflow Enhancement
+
 ```yaml
 # .github/workflows/quality-gates.yml
 name: Quality Gates
@@ -71,16 +66,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-      
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
+
       - name: Validate TypeScript configs
         run: node scripts/validate-typescript.js
-      
+
       - name: Type check all packages
         run: pnpm type-check
-      
+
       - name: Build all packages
         run: pnpm build
 
@@ -89,16 +84,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Validate YAML syntax
         run: |
           pip install yamllint
           yamllint .github/workflows/*.yml
-      
+
       - name: Check action versions
         run: |
           node scripts/check-action-versions.js
-      
+
       - name: Validate workflow syntax
         run: node scripts/validate-workflows.js
 
@@ -109,7 +104,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Check for conflict markers
         run: |
           if grep -r "^<<<<<<< \|======= \|>>>>>>> " --include="*.json" --include="*.yml" --include="*.yaml" --include="*.ts" --include="*.js" .; then
@@ -123,18 +118,20 @@ jobs:
 ## Branch Protection Rules
 
 ### Required Status Checks
+
 ```yaml
 # Required checks before merge:
-- "Quality Gates / TypeScript Validation"
-- "Quality Gates / Workflow Validation" 
-- "Quality Gates / Merge Conflict Detection"
-- "CI / Build and Test"
-- "Security / CodeQL Analysis"
-- "Lint / ESLint"
-- "Format / Prettier"
+- 'Quality Gates / TypeScript Validation'
+- 'Quality Gates / Workflow Validation'
+- 'Quality Gates / Merge Conflict Detection'
+- 'CI / Build and Test'
+- 'Security / CodeQL Analysis'
+- 'Lint / ESLint'
+- 'Format / Prettier'
 ```
 
 ### Branch Protection Settings
+
 1. **Require PR reviews**: 2 reviewers required
 2. **Require status checks**: All quality gates must pass
 3. **Require up-to-date branches**: PR must be up-to-date before merging
@@ -143,6 +140,7 @@ jobs:
 ## Automated Testing Strategy
 
 ### TypeScript Config Testing
+
 ```javascript
 // scripts/test-typescript-configs.js
 const { execSync } = require('child_process');
@@ -152,13 +150,13 @@ const path = require('path');
 function validateTypeScriptConfig(configPath) {
   try {
     console.log(`🔍 Validating ${configPath}...`);
-    
+
     // Check if config is valid JSON
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    
+
     // Validate with TypeScript compiler
     execSync(`npx tsc --noEmit --project ${configPath}`, { stdio: 'inherit' });
-    
+
     console.log(`✅ ${configPath} is valid`);
     return true;
   } catch (error) {
@@ -171,11 +169,11 @@ function validateTypeScriptConfig(configPath) {
 const configFiles = [
   'tsconfig.json',
   'packages/config/tsconfig/base.json',
-  'apps/api/tsconfig.json'
+  'apps/api/tsconfig.json',
 ];
 
 let allValid = true;
-configFiles.forEach(config => {
+configFiles.forEach((config) => {
   if (!validateTypeScriptConfig(config)) {
     allValid = false;
   }
@@ -185,6 +183,7 @@ process.exit(allValid ? 0 : 1);
 ```
 
 ### Workflow Testing
+
 ```javascript
 // scripts/test-workflows.js
 const { execSync } = require('child_process');
@@ -194,23 +193,23 @@ const yaml = require('js-yaml');
 function validateWorkflow(workflowPath) {
   try {
     console.log(`🔍 Validating ${workflowPath}...`);
-    
+
     // Parse YAML
     const content = fs.readFileSync(workflowPath, 'utf8');
     const workflow = yaml.load(content);
-    
+
     // Basic structure validation
     if (!workflow.name || !workflow.on || !workflow.jobs) {
       throw new Error('Missing required workflow fields');
     }
-    
+
     // Check for required fields in jobs
-    Object.values(workflow.jobs).forEach(job => {
+    Object.values(workflow.jobs).forEach((job) => {
       if (!job['runs-on']) {
         throw new Error('Job missing runs-on field');
       }
     });
-    
+
     console.log(`✅ ${workflowPath} is valid`);
     return true;
   } catch (error) {
@@ -220,11 +219,12 @@ function validateWorkflow(workflowPath) {
 }
 
 // Test all workflows
-const workflowFiles = fs.readdirSync('.github/workflows')
-  .filter(file => file.endsWith('.yml') || file.endsWith('.yaml'));
+const workflowFiles = fs
+  .readdirSync('.github/workflows')
+  .filter((file) => file.endsWith('.yml') || file.endsWith('.yaml'));
 
 let allValid = true;
-workflowFiles.forEach(workflow => {
+workflowFiles.forEach((workflow) => {
   if (!validateWorkflow(`.github/workflows/${workflow}`)) {
     allValid = false;
   }

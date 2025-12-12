@@ -3,6 +3,7 @@
 ## **EMERGENCY RESOLUTION STEPS (Execute Immediately)**
 
 ### **Step 1: Create Safe Working Environment**
+
 ```bash
 # Backup current state
 git checkout main
@@ -16,11 +17,13 @@ git checkout -b emergency/fix-security-conflicts main
 ### **Step 2: Resolve TypeScript Configuration Conflicts**
 
 **2.1 Navigate to TypeScript fix branch:**
+
 ```bash
 git checkout emergency/fix-typescript-conflicts
 ```
 
 **2.2 Manually resolve `packages/config/tsconfig/base.json`:**
+
 ```json
 {
   "compilerOptions": {
@@ -36,8 +39,8 @@ git checkout emergency/fix-typescript-conflicts
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
-    "noImplicitAny": true,           // CHOOSE: true for better quality
-    "strictNullChecks": true,        // CHOOSE: true for better quality
+    "noImplicitAny": true, // CHOOSE: true for better quality
+    "strictNullChecks": true, // CHOOSE: true for better quality
     "strictFunctionTypes": true,
     "noImplicitThis": true,
     "noImplicitReturns": true,
@@ -71,6 +74,7 @@ git checkout emergency/fix-typescript-conflicts
 ```
 
 **2.3 Validate TypeScript configuration:**
+
 ```bash
 npx tsc --noEmit --project packages/config/tsconfig/base.json
 pnpm type-check
@@ -80,11 +84,13 @@ pnpm build
 ### **Step 3: Resolve Security Workflow Conflicts**
 
 **3.1 Navigate to security fix branch:**
+
 ```bash
 git checkout emergency/fix-security-conflicts
 ```
 
 **3.2 Replace `.github/workflows/security.yml` with clean version:**
+
 ```yaml
 name: Security
 
@@ -141,7 +147,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: '/language:${{matrix.language}}'
 
   dependency-security:
     name: Dependency Security
@@ -289,6 +295,7 @@ jobs:
 ```
 
 **3.3 Validate workflow syntax:**
+
 ```bash
 # Install yamllint if not available
 pip install yamllint
@@ -300,6 +307,7 @@ yamllint .github/workflows/security.yml
 ### **Step 4: Test and Validate Fixes**
 
 **4.1 Run comprehensive validation:**
+
 ```bash
 # Install validation dependencies
 pnpm install -D yamllint js-yaml
@@ -312,6 +320,7 @@ chmod +x scripts/validate-*.sh
 ```
 
 **4.2 Test TypeScript compilation:**
+
 ```bash
 # Clean build
 pnpm clean
@@ -324,6 +333,7 @@ pnpm build
 ```
 
 **4.3 Test workflow locally (if act is available):**
+
 ```bash
 # Install act if not available
 curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
@@ -335,6 +345,7 @@ act -j secret-scan
 ### **Step 5: Commit and Push Fixes**
 
 **5.1 Commit TypeScript fixes:**
+
 ```bash
 git checkout emergency/fix-typescript-conflicts
 git add packages/config/tsconfig/base.json
@@ -349,6 +360,7 @@ Closes: TypeScript configuration conflicts"
 ```
 
 **5.2 Commit security workflow fixes:**
+
 ```bash
 git checkout emergency/fix-security-conflicts
 git add .github/workflows/security.yml
@@ -364,6 +376,7 @@ Closes: Security workflow conflicts"
 ```
 
 **5.3 Push fixes and create PRs:**
+
 ```bash
 # Push branches
 git push origin emergency/fix-typescript-conflicts
@@ -376,6 +389,7 @@ git push origin emergency/fix-security-conflicts
 ### **Step 6: Merge Strategy**
 
 **6.1 Merge TypeScript fixes first:**
+
 ```bash
 git checkout main
 git merge emergency/fix-typescript-conflicts --no-ff
@@ -383,12 +397,14 @@ git push origin main
 ```
 
 **6.2 Then merge security workflow fixes:**
+
 ```bash
 git merge emergency/fix-security-conflicts --no-ff
 git push origin main
 ```
 
 **6.3 Clean up:**
+
 ```bash
 # Delete emergency branches
 git branch -d emergency/fix-typescript-conflicts

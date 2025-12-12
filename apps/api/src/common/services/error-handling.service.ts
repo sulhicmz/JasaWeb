@@ -25,7 +25,7 @@ export class ErrorHandlingService {
    */
   async logError(errorLogData: ErrorLogData): Promise<void> {
     const { error, message, user, organization, path } = errorLogData;
-    
+
     // Log to application logger
     this.logger.error({
       error,
@@ -57,7 +57,10 @@ export class ErrorHandlingService {
           },
         });
       } catch (error: any) {
-        this.logger.error(`Failed to create audit log for error: ${error.message}`, error.stack);
+        this.logger.error(
+          `Failed to create audit log for error: ${error.message}`,
+          error.stack
+        );
       }
     }
   }
@@ -65,7 +68,13 @@ export class ErrorHandlingService {
   /**
    * Creates a standardized error response object
    */
-  createErrorResponse(statusCode: number, error: string, message: string, path?: string, errorId?: string): any {
+  createErrorResponse(
+    statusCode: number,
+    error: string,
+    message: string,
+    path?: string,
+    errorId?: string
+  ): any {
     const response: any = {
       statusCode,
       error,

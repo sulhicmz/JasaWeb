@@ -81,7 +81,9 @@ export function validateEnv(config: Record<string, unknown>) {
   const validatedConfig = plainToClass(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });
-  const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
 
   if (errors.length > 0) {
     throw new Error(`Environment validation failed: ${errors.toString()}`);

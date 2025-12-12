@@ -12,14 +12,15 @@ export interface SessionOptions {
 export class SessionService {
   private readonly logger = new Logger(SessionService.name);
 
-  constructor(
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Creates a new session for a user
    */
-  async createSession(userId: string, options: SessionOptions = {}): Promise<{ sessionId: string, sessionToken: string, expiresAt: Date }> {
+  async createSession(
+    userId: string,
+    options: SessionOptions = {}
+  ): Promise<{ sessionId: string; sessionToken: string; expiresAt: Date }> {
     const sessionToken = uuidv4();
     const expiresAt = this.parseExpiresIn(options.expiresIn || '1d');
 
@@ -46,14 +47,16 @@ export class SessionService {
   /**
    * Verifies a session token and returns user info if valid
    */
-  async verifySession(sessionToken: string): Promise<{ userId: string, sessionId: string } | null> {
+  async verifySession(
+    sessionToken: string
+  ): Promise<{ userId: string; sessionId: string } | null> {
     if (!sessionToken) {
       return null;
     }
 
     // Find the session in the database
     const session = await this.prisma.session.findUnique({
-      where: { 
+      where: {
         sessionToken,
       },
       include: {
@@ -80,7 +83,7 @@ export class SessionService {
    */
   async revokeSession(sessionToken: string): Promise<void> {
     const session = await this.prisma.session.findUnique({
-      where: { 
+      where: {
         sessionToken,
       },
     });
@@ -94,7 +97,7 @@ export class SessionService {
       where: { id: session.id },
       data: { revokedAt: new Date() },
     });
-    
+
     this.logger.log(`Revoked session for user ${session.userId}`);
   }
 
@@ -111,7 +114,7 @@ export class SessionService {
         revokedAt: new Date(),
       },
     });
-    
+
     this.logger.log(`Revoked all sessions for user ${userId}`);
   }
 
@@ -121,9 +124,7 @@ export class SessionService {
   async cleanupExpiredSessions(): Promise<number> {
     const result = await this.prisma.session.deleteMany({
       where: {
-        OR: [
-          { expiresAt: { lt: new Date() } },
-        ],
+        OR: [{ expiresAt: { lt: new Date() } }],
       },
     });
 
@@ -169,16 +170,16 @@ export class SessionService {
 
     const now = new Date();
     switch (unit) {
-    case 's': // seconds
-      return new Date(now.getTime() + value * 1000);
-    case 'm': // minutes
-      return new Date(now.getTime() + value * 60 * 1000);
-    case 'h': // hours
-      return new Date(now.getTime() + value * 60 * 60 * 1000);
-    case 'd': // days
-      return new Date(now.getTime() + value * 24 * 60 * 60 * 1000);
-    default:
-      throw new Error('Invalid expiresIn unit');
+      case 's': // seconds
+        return new Date(now.getTime() + value * 1000);
+      case 'm': // minutes
+        return new Date(now.getTime() + value * 60 * 1000);
+      case 'h': // hours
+        return new Date(now.getTime() + value * 60 * 60 * 1000);
+      case 'd': // days
+        return new Date(now.getTime() + value * 24 * 60 * 60 * 1000);
+      default:
+        throw new Error('Invalid expiresIn unit');
     }
   }
 }

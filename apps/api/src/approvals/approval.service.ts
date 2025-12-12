@@ -10,7 +10,7 @@ export class ApprovalService {
     projectId: string,
     itemType: string,
     itemId: string,
-    requesterId: string,
+    requesterId: string
   ): Promise<any> {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
@@ -18,7 +18,9 @@ export class ApprovalService {
     });
 
     if (!project) {
-      throw new BadRequestException('Project not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Project not found or does not belong to your organization'
+      );
     }
 
     // Create the approval
@@ -32,14 +34,19 @@ export class ApprovalService {
     });
   }
 
-  async findApprovalsForProject(projectId: string, organizationId: string): Promise<any[]> {
+  async findApprovalsForProject(
+    projectId: string,
+    organizationId: string
+  ): Promise<any[]> {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
     });
 
     if (!project) {
-      throw new BadRequestException('Project not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Project not found or does not belong to your organization'
+      );
     }
 
     return await this.multiTenantPrisma.approval.findMany({
@@ -56,7 +63,7 @@ export class ApprovalService {
     approvalId: string,
     approverId: string,
     organizationId: string,
-    note?: string,
+    note?: string
   ): Promise<any> {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
@@ -88,7 +95,7 @@ export class ApprovalService {
     approvalId: string,
     rejecterId: string,
     organizationId: string,
-    note?: string,
+    note?: string
   ): Promise<any> {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({

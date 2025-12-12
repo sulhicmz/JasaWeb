@@ -5,7 +5,9 @@ This directory contains utility scripts to help with JasaWeb development.
 ## 🚀 Setup Scripts
 
 ### `setup.sh` (Linux/macOS)
+
 Complete development environment setup script that:
+
 - Checks system requirements (Node.js 20+, pnpm, Docker, Git)
 - Sets up environment files from templates
 - Installs dependencies
@@ -17,23 +19,28 @@ Complete development environment setup script that:
 - Verifies the setup
 
 **Usage:**
+
 ```bash
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
 ### `setup.bat` (Windows)
+
 Windows batch script equivalent of `setup.sh`.
 
 **Usage:**
+
 ```cmd
 scripts\setup.bat
 ```
 
 ### `quick-start.sh` (Linux/macOS)
+
 Fast setup for experienced developers who want to get running quickly.
 
 **Usage:**
+
 ```bash
 chmod +x scripts/quick-start.sh
 ./scripts/quick-start.sh
@@ -42,6 +49,7 @@ chmod +x scripts/quick-start.sh
 ## 🛠️ Utility Scripts
 
 ### Database Management
+
 ```bash
 # Run migrations
 pnpm db:migrate
@@ -60,6 +68,7 @@ pnpm db:reset
 ```
 
 ### Development Commands
+
 ```bash
 # Start all applications
 pnpm dev
@@ -85,6 +94,7 @@ pnpm typecheck
 ```
 
 ### Docker Commands
+
 ```bash
 # Start services
 docker-compose up -d
@@ -106,6 +116,7 @@ docker-compose up --build
 Create these files from their `.example` counterparts:
 
 #### Root `.env`
+
 ```bash
 # Application
 NODE_ENV=development
@@ -129,6 +140,7 @@ S3_SECRET_KEY=your-secret-key
 ```
 
 #### API `apps/api/.env`
+
 ```bash
 API_PORT=3000
 API_PREFIX=api
@@ -140,6 +152,7 @@ CORS_ORIGIN=http://localhost:4321
 ```
 
 #### Web `apps/web/.env`
+
 ```bash
 SITE_URL=http://localhost:4321
 SITE_NAME=JasaWeb
@@ -152,7 +165,9 @@ CONTACT_EMAIL=contact@jasaweb.com
 ### Common Issues
 
 #### Port Conflicts
+
 If ports are already in use:
+
 ```bash
 # Check what's using ports
 lsof -i :3000  # API port
@@ -164,6 +179,7 @@ kill -9 <PID>
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Restart database
 docker-compose restart postgres
@@ -178,6 +194,7 @@ pnpm db:migrate
 ```
 
 #### Permission Issues (Linux/macOS)
+
 ```bash
 # Fix script permissions
 chmod +x scripts/*.sh
@@ -188,6 +205,7 @@ sudo usermod -aG docker $USER
 ```
 
 #### Node.js Version Issues
+
 ```bash
 # Use correct Node.js version with nvm
 nvm use
@@ -198,7 +216,9 @@ nvm alias default 20
 ```
 
 ### Clean Setup
+
 If you need to start fresh:
+
 ```bash
 # Clean everything
 docker-compose down -v
@@ -214,28 +234,31 @@ rm pnpm-lock.yaml
 ## 🚀 Quick Development Workflow
 
 1. **Initial Setup** (one time):
+
    ```bash
    ./scripts/setup.sh
    ```
 
 2. **Daily Development**:
+
    ```bash
    # Start services
    docker-compose up -d
-   
+
    # Start development
    pnpm dev
    ```
 
 3. **Making Changes**:
+
    ```bash
    # Run tests
    pnpm test
-   
+
    # Check code quality
    pnpm lint
    pnpm typecheck
-   
+
    # Format code
    pnpm format
    ```

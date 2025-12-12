@@ -10,7 +10,7 @@ import { PrismaService } from './prisma.service';
 export class MultiTenantPrismaService {
   constructor(
     private prisma: PrismaService,
-    @Inject(REQUEST) private request: any,
+    @Inject(REQUEST) private request: any
   ) {}
 
   /**
@@ -19,7 +19,9 @@ export class MultiTenantPrismaService {
   private get organizationId(): string {
     const orgId = (this.request as any).organizationId;
     if (!orgId) {
-      throw new BadRequestException('Organization context not found. Please ensure multi-tenant middleware is applied.');
+      throw new BadRequestException(
+        'Organization context not found. Please ensure multi-tenant middleware is applied.'
+      );
     }
     return orgId;
   }

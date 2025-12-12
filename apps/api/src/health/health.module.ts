@@ -5,10 +5,7 @@ import { PrismaHealthIndicator } from './prisma.health';
 import { PrismaModule } from '../common/database/prisma.module';
 
 @Module({
-  imports: [
-    TerminusModule,
-    PrismaModule,
-  ],
+  imports: [TerminusModule, PrismaModule],
   controllers: [HealthController],
   providers: [PrismaHealthIndicator],
   exports: [PrismaHealthIndicator],

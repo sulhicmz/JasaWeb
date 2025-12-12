@@ -48,13 +48,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "title",
-        "description",
-        "date",
-        "client",
-        "category"
-      ],
+      "required": ["title", "description", "date", "client", "category"],
       "additionalProperties": false
     }
   },

@@ -21,7 +21,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     const startTime = Date.now();
-    
+
     res.on('finish', () => {
       const responseTime = Date.now() - startTime;
 
@@ -49,7 +49,11 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     const safeHeaders: Record<string, string> = {};
     for (const [key, value] of Object.entries(headers)) {
       // Don't log sensitive headers
-      if (!['authorization', 'cookie', 'x-api-key', 'x-auth-token'].includes(key.toLowerCase())) {
+      if (
+        !['authorization', 'cookie', 'x-api-key', 'x-auth-token'].includes(
+          key.toLowerCase()
+        )
+      ) {
         if (Array.isArray(value)) {
           safeHeaders[key] = value.join(', ');
         } else if (typeof value === 'string') {
@@ -66,17 +70,20 @@ export class RequestLoggingMiddleware implements NestMiddleware {
     // Don't log body for file uploads or very large payloads
     const contentLength = req.get('Content-Length');
     const contentType = req.get('Content-Type');
-    
-    if (contentLength && parseInt(contentLength, 10) > 1000000) { // 1MB
+
+    if (contentLength && parseInt(contentLength, 10) > 1000000) {
+      // 1MB
       return false;
     }
-    
-    if (contentType && 
-        (contentType.includes('multipart/form-data') || 
-         contentType.includes('application/octet-stream'))) {
+
+    if (
+      contentType &&
+      (contentType.includes('multipart/form-data') ||
+        contentType.includes('application/octet-stream'))
+    ) {
       return false;
     }
-    
+
     return true;
   }
 

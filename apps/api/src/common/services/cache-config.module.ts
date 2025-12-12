@@ -7,8 +7,7 @@ import { ConfigModule } from '@nestjs/config';
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
-      useFactory: async () => ({
-      }),
+      useFactory: async () => ({}),
     }),
   ],
   exports: [CacheModule],

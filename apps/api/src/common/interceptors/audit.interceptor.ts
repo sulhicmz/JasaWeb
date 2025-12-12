@@ -16,7 +16,7 @@ export interface AuditLogOptions {
 }
 
 // Decorator to mark endpoints that should be audited
-export const AuditLog = (options: AuditLogOptions) => 
+export const AuditLog = (options: AuditLogOptions) =>
   Reflector.createDecorator<AuditLogOptions>()(options);
 
 @Injectable()
@@ -25,12 +25,18 @@ export class AuditInterceptor implements NestInterceptor {
 
   constructor(
     private readonly auditService: AuditService,
-    private readonly reflector: Reflector,
+    private readonly reflector: Reflector
   ) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
-    const options = this.reflector.get<AuditLogOptions>('audit', context.getHandler());
-    
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler
+  ): Promise<Observable<any>> {
+    const options = this.reflector.get<AuditLogOptions>(
+      'audit',
+      context.getHandler()
+    );
+
     // If no audit options are defined for this endpoint, skip auditing
     if (!options) {
       return next.handle();
@@ -39,22 +45,24 @@ export class AuditInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    // Get user and organization context 
+    // Get user and organization context
     const user = request.user;
     const organizationId = (request as any).organizationId;
 
     // Only proceed with audit if we have user and organization context
     if (user && organizationId) {
       // Log the action before the request is handled
-      this.auditService.log({
-        actorId: user.id,
-        organizationId,
-        action: options.action,
-        target: options.target,
-        targetId: this.extractTargetId(request, options.target), // Extract the ID of the target entity
-      }).catch(err => {
-        this.logger.error(`Failed to log audit event: ${err.message}`);
-      });
+      this.auditService
+        .log({
+          actorId: user.id,
+          organizationId,
+          action: options.action,
+          target: options.target,
+          targetId: this.extractTargetId(request, options.target), // Extract the ID of the target entity
+        })
+        .catch((err) => {
+          this.logger.error(`Failed to log audit event: ${err.message}`);
+        });
     }
 
     return next.handle().pipe(
@@ -64,13 +72,18 @@ export class AuditInterceptor implements NestInterceptor {
         },
         error: (error) => {
           // Log errors if needed
-          this.logger.error(`Error in audited action ${options.action}: ${error.message}`);
+          this.logger.error(
+            `Error in audited action ${options.action}: ${error.message}`
+          );
         },
-      }),
+      })
     );
   }
 
-  private extractTargetId(request: any, targetType?: string): string | undefined {
+  private extractTargetId(
+    request: any,
+    targetType?: string
+  ): string | undefined {
     // Extract target ID based on the request parameters
     // This can be customized based on your route structure
     if (request.params && request.params.id) {
@@ -83,15 +96,15 @@ export class AuditInterceptor implements NestInterceptor {
     // and handle it differently if needed
 
     // For specific cases, we can customize further
-    switch(targetType) {
-    case 'File':
-      return request.params.fileId || request.body.fileId;
-    case 'Project':
-      return request.params.projectId || request.body.projectId;
-    case 'Ticket':
-      return request.params.ticketId || request.body.ticketId;
-    default:
-      return undefined;
+    switch (targetType) {
+      case 'File':
+        return request.params.fileId || request.body.fileId;
+      case 'Project':
+        return request.params.projectId || request.body.projectId;
+      case 'Ticket':
+        return request.params.ticketId || request.body.ticketId;
+      default:
+        return undefined;
     }
   }
 }

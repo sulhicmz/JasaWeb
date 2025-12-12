@@ -45,7 +45,7 @@ export class InvoiceController {
 
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
-    private readonly emailService: EmailService,
+    private readonly emailService: EmailService
   ) {}
 
   @UseGuards(ThrottlerGuard)
@@ -53,7 +53,7 @@ export class InvoiceController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only specific roles can create invoices
   async create(
     @Body() createInvoiceDto: CreateInvoiceDto,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     // If a project is specified, validate that it belongs to the organization
     if (createInvoiceDto.projectId) {
@@ -62,7 +62,9 @@ export class InvoiceController {
       });
 
       if (!project) {
-        throw new BadRequestException('Project does not exist or does not belong to your organization');
+        throw new BadRequestException(
+          'Project does not exist or does not belong to your organization'
+        );
       }
     }
 
@@ -84,7 +86,9 @@ export class InvoiceController {
       },
     });
 
-    this.logger.log(`Invoice created: ${invoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice created: ${invoice.id} for organization ${organizationId}`
+    );
 
     return invoice;
   }
@@ -94,15 +98,15 @@ export class InvoiceController {
   async findAll(
     @Query('projectId') projectId?: string,
     @Query('status') status?: string,
-    @CurrentOrganizationId() organizationId: string = '',
+    @CurrentOrganizationId() organizationId: string = ''
   ) {
     // Build query based on filters
     const whereClause: any = { organizationId }; // Ensure multi-tenant isolation
-    
+
     if (projectId) {
       whereClause.projectId = projectId;
     }
-    
+
     if (status) {
       whereClause.status = status;
     }
@@ -139,7 +143,7 @@ export class InvoiceController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance, Role.Member) // Multiple roles allowed to read
   async findOne(
     @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     const invoice = await this.multiTenantPrisma.invoice.findUnique({
       where: { id },
@@ -164,16 +168,20 @@ export class InvoiceController {
             email: true,
           },
         },
-      }
+      },
     });
 
     if (!invoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     // Verify that the invoice belongs to the current organization
     if (invoice.organizationId !== organizationId) {
-      throw new BadRequestException('Invoice does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice does not belong to your organization'
+      );
     }
 
     return invoice;
@@ -184,14 +192,16 @@ export class InvoiceController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only specific roles can update status
   async markAsPaid(
     @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     const invoice = await this.multiTenantPrisma.invoice.findUnique({
       where: { id },
     });
 
     if (!invoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     const updatedInvoice = await this.multiTenantPrisma.invoice.update({
@@ -226,7 +236,10 @@ export class InvoiceController {
 
     // Send notification email about payment
     const updatedInvoiceWithOrg = updatedInvoice as any;
-    if (updatedInvoiceWithOrg.organization && updatedInvoiceWithOrg.organization.billingEmail) {
+    if (
+      updatedInvoiceWithOrg.organization &&
+      updatedInvoiceWithOrg.organization.billingEmail
+    ) {
       let dueDate: string;
       if (updatedInvoice.dueAt) {
         dueDate = updatedInvoice.dueAt.toISOString().split('T')[0] || '';
@@ -245,7 +258,9 @@ export class InvoiceController {
       );
     }
 
-    this.logger.log(`Invoice marked as paid: ${updatedInvoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice marked as paid: ${updatedInvoice.id} for organization ${organizationId}`
+    );
 
     return updatedInvoice;
   }
@@ -256,7 +271,7 @@ export class InvoiceController {
   async update(
     @Param('id') id: string,
     @Body() updateInvoiceDto: UpdateInvoiceDto,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     // Check if invoice exists and belongs to the organization
     const existingInvoice = await this.multiTenantPrisma.invoice.findUnique({
@@ -264,7 +279,9 @@ export class InvoiceController {
     });
 
     if (!existingInvoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     // Update the invoice
@@ -299,9 +316,15 @@ export class InvoiceController {
     });
 
     // Send notification if status changed to issued
-    if (updateInvoiceDto.status === 'issued' && existingInvoice.status !== 'issued') {
+    if (
+      updateInvoiceDto.status === 'issued' &&
+      existingInvoice.status !== 'issued'
+    ) {
       const updatedInvoiceWithOrg = updatedInvoice as any;
-      if (updatedInvoiceWithOrg.organization && updatedInvoiceWithOrg.organization.billingEmail) {
+      if (
+        updatedInvoiceWithOrg.organization &&
+        updatedInvoiceWithOrg.organization.billingEmail
+      ) {
         let dueDate: string;
         if (updatedInvoice.dueAt) {
           dueDate = updatedInvoice.dueAt.toISOString().split('T')[0] || '';
@@ -321,7 +344,9 @@ export class InvoiceController {
       }
     }
 
-    this.logger.log(`Invoice updated: ${updatedInvoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice updated: ${updatedInvoice.id} for organization ${organizationId}`
+    );
 
     return updatedInvoice;
   }
@@ -331,21 +356,25 @@ export class InvoiceController {
   @Roles(Role.OrgOwner, Role.OrgAdmin) // Only org owners can delete
   async remove(
     @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string,
+    @CurrentOrganizationId() organizationId: string
   ) {
     const invoice = await this.multiTenantPrisma.invoice.findUnique({
       where: { id },
     });
 
     if (!invoice) {
-      throw new BadRequestException('Invoice not found or does not belong to your organization');
+      throw new BadRequestException(
+        'Invoice not found or does not belong to your organization'
+      );
     }
 
     const deletedInvoice = await this.multiTenantPrisma.invoice.delete({
       where: { id },
     });
 
-    this.logger.log(`Invoice deleted: ${deletedInvoice.id} for organization ${organizationId}`);
+    this.logger.log(
+      `Invoice deleted: ${deletedInvoice.id} for organization ${organizationId}`
+    );
 
     return { message: 'Invoice deleted successfully' };
   }

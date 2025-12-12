@@ -9,6 +9,7 @@ This document outlines how JasaWeb addresses the OWASP Top 10 security risks and
 **Risk**: Users can act outside of their intended permissions.
 
 **Mitigations Implemented**:
+
 - ✅ Role-Based Access Control (RBAC) with `RolesGuard`
 - ✅ Multi-tenant isolation with `MultiTenantGuard`
 - ✅ JWT-based authentication with secure token handling
@@ -17,11 +18,13 @@ This document outlines how JasaWeb addresses the OWASP Top 10 security risks and
 - ✅ Principle of least privilege enforced
 
 **Implementation Files**:
+
 - `apps/api/src/common/guards/roles.guard.ts`
 - `apps/api/src/common/guards/multi-tenant.guard.ts`
 - `apps/api/src/auth/auth.module.ts`
 
 **Testing**:
+
 ```bash
 # Run access control tests
 pnpm test:api -- --grep "access control"
@@ -34,6 +37,7 @@ pnpm test:api -- --grep "access control"
 **Risk**: Sensitive data exposed due to weak or missing encryption.
 
 **Mitigations Implemented**:
+
 - ✅ TLS 1.3 for data in transit
 - ✅ bcrypt for password hashing (10+ rounds)
 - ✅ JWT with strong secrets (256-bit minimum)
@@ -42,6 +46,7 @@ pnpm test:api -- --grep "access control"
 - ✅ Database encryption at rest
 
 **Configuration**:
+
 ```typescript
 // Password hashing
 BCRYPT_ROUNDS=10
@@ -52,6 +57,7 @@ JWT_EXPIRES_IN=1d
 ```
 
 **Implementation Files**:
+
 - `apps/api/src/auth/auth.service.ts`
 - `apps/api/src/common/config/security.config.ts`
 
@@ -62,6 +68,7 @@ JWT_EXPIRES_IN=1d
 **Risk**: Untrusted data sent to an interpreter as part of a command or query.
 
 **Mitigations Implemented**:
+
 - ✅ Parameterized queries with Prisma ORM
 - ✅ Input validation with `class-validator`
 - ✅ Input sanitization with `class-transformer`
@@ -70,16 +77,20 @@ JWT_EXPIRES_IN=1d
 - ✅ Command injection prevention
 
 **Implementation**:
+
 ```typescript
 // Global validation pipe
-app.useGlobalPipes(new ValidationPipe({
-  whitelist: true,
-  forbidNonWhitelisted: true,
-  transform: true,
-}));
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  })
+);
 ```
 
 **Implementation Files**:
+
 - `apps/api/src/main.ts`
 - All DTOs in `apps/api/src/*/dto/`
 
@@ -90,6 +101,7 @@ app.useGlobalPipes(new ValidationPipe({
 **Risk**: Missing or ineffective control design.
 
 **Mitigations Implemented**:
+
 - ✅ Secure by default configuration
 - ✅ Defense in depth strategy
 - ✅ Threat modeling documentation
@@ -98,6 +110,7 @@ app.useGlobalPipes(new ValidationPipe({
 - ✅ Regular security reviews
 
 **Documentation**:
+
 - `SECURITY.md` - Security policy
 - `docs/ARCHITECTURE.md` - System design
 - `docs/THREAT_MODEL.md` - Threat analysis
@@ -109,6 +122,7 @@ app.useGlobalPipes(new ValidationPipe({
 **Risk**: Missing security hardening or improperly configured permissions.
 
 **Mitigations Implemented**:
+
 - ✅ Security headers with Helmet
 - ✅ CORS properly configured
 - ✅ Error messages sanitized
@@ -117,6 +131,7 @@ app.useGlobalPipes(new ValidationPipe({
 - ✅ Unnecessary features disabled
 
 **Security Headers**:
+
 ```typescript
 // Helmet configuration
 helmet({
@@ -136,10 +151,11 @@ helmet({
   noSniff: true,
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   xssFilter: true,
-})
+});
 ```
 
 **Implementation Files**:
+
 - `apps/api/src/main.ts`
 - `apps/api/src/common/config/security.config.ts`
 
@@ -150,6 +166,7 @@ helmet({
 **Risk**: Using components with known vulnerabilities.
 
 **Mitigations Implemented**:
+
 - ✅ Automated dependency scanning with Dependabot
 - ✅ Weekly security audits
 - ✅ npm audit in CI/CD pipeline
@@ -158,16 +175,18 @@ helmet({
 - ✅ Version pinning in package.json
 
 **Automation**:
+
 ```yaml
 # .github/dependabot.yml
 version: 2
 updates:
-  - package-ecosystem: "npm"
+  - package-ecosystem: 'npm'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
 ```
 
 **Commands**:
+
 ```bash
 # Check for vulnerabilities
 pnpm security:audit
@@ -186,6 +205,7 @@ pnpm security:scan
 **Risk**: Broken authentication and session management.
 
 **Mitigations Implemented**:
+
 - ✅ Multi-factor authentication support
 - ✅ Strong password policies
 - ✅ Account lockout after failed attempts
@@ -194,6 +214,7 @@ pnpm security:scan
 - ✅ Password reset with secure tokens
 
 **Configuration**:
+
 ```typescript
 // Authentication settings
 MAX_LOGIN_ATTEMPTS=5
@@ -203,6 +224,7 @@ JWT_REFRESH_EXPIRES_IN=7d
 ```
 
 **Implementation Files**:
+
 - `apps/api/src/auth/auth.service.ts`
 - `apps/api/src/auth/strategies/`
 
@@ -213,6 +235,7 @@ JWT_REFRESH_EXPIRES_IN=7d
 **Risk**: Code and infrastructure that does not protect against integrity violations.
 
 **Mitigations Implemented**:
+
 - ✅ Code signing in CI/CD
 - ✅ Dependency integrity checks
 - ✅ Audit logging for all changes
@@ -221,6 +244,7 @@ JWT_REFRESH_EXPIRES_IN=7d
 - ✅ Secure update mechanisms
 
 **Implementation**:
+
 ```typescript
 // Audit logging
 @UseInterceptors(AuditInterceptor)
@@ -230,6 +254,7 @@ export class SensitiveController {
 ```
 
 **Implementation Files**:
+
 - `apps/api/src/common/services/audit.service.ts`
 - `apps/api/src/common/interceptors/audit.interceptor.ts`
 
@@ -240,6 +265,7 @@ export class SensitiveController {
 **Risk**: Insufficient logging and monitoring.
 
 **Mitigations Implemented**:
+
 - ✅ Comprehensive audit logging
 - ✅ Request/response logging
 - ✅ Error tracking and alerting
@@ -248,6 +274,7 @@ export class SensitiveController {
 - ✅ Log retention and analysis
 
 **Logging Configuration**:
+
 ```typescript
 // Request logging middleware
 export class RequestLoggingMiddleware {
@@ -258,6 +285,7 @@ export class RequestLoggingMiddleware {
 ```
 
 **Implementation Files**:
+
 - `apps/api/src/common/middleware/request-logging.middleware.ts`
 - `apps/api/src/common/services/audit.service.ts`
 
@@ -268,6 +296,7 @@ export class RequestLoggingMiddleware {
 **Risk**: Application fetches remote resources without validating user-supplied URLs.
 
 **Mitigations Implemented**:
+
 - ✅ URL validation and sanitization
 - ✅ Whitelist of allowed domains
 - ✅ Network segmentation
@@ -276,6 +305,7 @@ export class RequestLoggingMiddleware {
 - ✅ Disable URL redirects
 
 **Implementation**:
+
 ```typescript
 // URL validation
 @IsUrl({ protocols: ['https'], require_protocol: true })
@@ -290,16 +320,20 @@ url: string;
 ### Rate Limiting
 
 **Implementation**:
+
 ```typescript
-ThrottlerModule.forRoot([{
-  ttl: 60, // 60 seconds
-  limit: 10, // 10 requests per window
-}])
+ThrottlerModule.forRoot([
+  {
+    ttl: 60, // 60 seconds
+    limit: 10, // 10 requests per window
+  },
+]);
 ```
 
 ### Content Security Policy
 
 **Headers**:
+
 ```typescript
 contentSecurityPolicy: {
   directives: {
@@ -319,6 +353,7 @@ contentSecurityPolicy: {
 ### CORS Configuration
 
 **Settings**:
+
 ```typescript
 app.enableCors({
   origin: process.env.CORS_ORIGIN?.split(','),

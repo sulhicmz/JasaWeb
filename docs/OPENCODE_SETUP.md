@@ -15,6 +15,7 @@ Guide singkat untuk setup OpenCode CLI workflows di repositori JasaWeb.
 ### Required Permissions
 
 GitHub token harus memiliki permissions:
+
 - `contents: write`
 - `issues: write`
 - `pull-requests: write`
@@ -196,7 +197,7 @@ Edit `.github/workflows/oc-autonomous-developer.yml`:
 ```yaml
 # Custom schedule
 schedule:
-  - cron: '0 */4 * * *'  # Setiap 4 jam
+  - cron: '0 */4 * * *' # Setiap 4 jam
 
 # Custom focus areas
 focus_area:
@@ -216,6 +217,7 @@ focus_area:
 ### Metrics Collection
 
 Metrics otomatis dikumpulkan di:
+
 - Actions workflow logs
 - Security scan reports
 - Code quality reports
@@ -224,6 +226,7 @@ Metrics otomatis dikumpulkan di:
 ### Alert Configuration
 
 Alerts otomatis dibuat untuk:
+
 - Success rate < 80%
 - Token usage > 100,000
 - Workflow failures
@@ -287,11 +290,13 @@ env:
 Untuk override otomasi:
 
 1. Pause workflows:
+
    ```bash
    gh workflow disable [workflow-name]
    ```
 
 2. Manual intervention:
+
    ```bash
    gh issue close [issue-number] --comment "Manual override"
    gh pr merge [pr-number] --merge
@@ -434,10 +439,11 @@ strategy:
 ### Contact
 
 For setup issues:
+
 1. Check troubleshooting section
 2. Review workflow logs
 3. Create issue dengan tag `setup-issue`
 
 ---
 
-*Setup guide maintained by AI agent*
+_Setup guide maintained by AI agent_

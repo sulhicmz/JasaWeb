@@ -27,7 +27,9 @@ export class EmailService {
         text: options.text,
       });
 
-      this.logger.log(`Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`);
+      this.logger.log(
+        `Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(', ') : options.to}`
+      );
     } catch (error: any) {
       this.logger.error(`Failed to send email: ${error.message}`, error.stack);
     }
