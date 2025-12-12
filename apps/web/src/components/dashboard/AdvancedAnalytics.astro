@@ -1,0 +1,734 @@
+---
+interface AnalyticsData {
+  timeRange: number;
+  projectTrends: {
+    weeklyTrends: Record<string, { created: number; completed: number; started: number }>;
+    totalCreated: number;
+    averageCompletionTime: number;
+    onTimeDeliveryRate: number;
+  };
+  ticketMetrics: {
+    totalTickets: number;
+    openTickets: number;
+    resolvedTickets: number;
+    averageResolutionTime: number;
+    ticketsByPriority: Record<string, number>;
+    ticketsByType: Record<string, number>;
+    resolutionRate: number;
+  };
+  invoiceAnalytics: {
+    totalInvoices: number;
+    totalAmount: number;
+    paidAmount: number;
+    outstandingAmount: number;
+    averageInvoiceValue: number;
+    paymentRate: number;
+    monthlyRevenue: Record<string, number>;
+  };
+  milestoneAnalytics: {
+    totalMilestones: number;
+    completedMilestones: number;
+    overdueMilestones: number;
+    averageCompletionTime: number;
+    onTimeCompletionRate: number;
+  };
+  teamPerformance: Array<{
+    userId: string;
+    name: string;
+    email: string;
+    ticketsAssigned: number;
+    ticketsResolved: number;
+    ticketResolutionRate: number;
+    averageResolutionTime: number;
+    projectsCreated: number;
+    projectsCompleted: number;
+  }>;
+  riskIndicators: {
+    riskScore: number;
+    riskLevel: 'low' | 'medium' | 'high';
+    overdueProjects: number;
+    highPriorityTickets: number;
+    overdueInvoices: number;
+    recommendations: string[];
+  };
+  generatedAt: string;
+}
+
+interface InsightsData {
+  projectPredictions: Array<{
+    projectId: string;
+    projectName: string;
+    currentProgress: number;
+    expectedProgress: number;
+    velocity: number;
+    predictedCompletionDate: string;
+    isOnTrack: boolean;
+    riskLevel: 'low' | 'medium' | 'high';
+  }>;
+  productivityInsights: {
+    ticketVolumeGrowth: number;
+    projectVolumeGrowth: number;
+    productivityTrend: 'increasing' | 'stable' | 'decreasing';
+    teamCapacity: string;
+  };
+  financialInsights: {
+    quarterlyRevenue: number;
+    quarterlyPaidRevenue: number;
+    monthlyAverageRevenue: number;
+    outstandingAmount: number;
+    revenueGrowthRate: number;
+    paymentEfficiency: number;
+  };
+  recommendations: Array<{
+    type: string;
+    priority: string;
+    title: string;
+    description: string;
+    action: string;
+  }>;
+  alerts: Array<{
+    type: string;
+    severity: string;
+    title: string;
+    message: string;
+    entityId: string;
+    entityType: string;
+  }>;
+  generatedAt: string;
+}
+---
+
+<div class="glass-panel p-6 rounded-xl mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Advanced Analytics</h2>
+    <div class="flex items-center space-x-4">
+      <select id="timeRange" class="bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <button id="refreshAnalytics" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+        <i class="fas fa-sync-alt"></i>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="analyticsLoading" class="text-center py-12">
+    <i class="fas fa-spinner fa-spin text-4xl text-blue-400 mb-4"></i>
+    <p class="text-gray-400">Loading advanced analytics...</p>
+  </div>
+
+  <!-- Analytics Content -->
+  <div id="analyticsContent" class="hidden space-y-8">
+    <!-- Key Metrics Overview -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-gray-400 text-sm">Project Success Rate</span>
+          <i class="fas fa-chart-line text-green-400"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="successRate">-</div>
+        <div class="text-xs text-gray-500 mt-1">On-time delivery</div>
+      </div>
+
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-gray-400 text-sm">Ticket Resolution</span>
+          <i class="fas fa-ticket-alt text-blue-400"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="resolutionRate">-</div>
+        <div class="text-xs text-gray-500 mt-1">Resolution rate</div>
+      </div>
+
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-gray-400 text-sm">Revenue</span>
+          <i class="fas fa-dollar-sign text-green-400"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="revenue">-</div>
+        <div class="text-xs text-gray-500 mt-1">Monthly average</div>
+      </div>
+
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-gray-400 text-sm">Risk Score</span>
+          <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="riskScore">-</div>
+        <div class="text-xs text-gray-500 mt-1" id="riskLevel">Risk level</div>
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Project Trends Chart -->
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <h3 class="text-lg font-semibold text-white mb-4">Project Trends</h3>
+        <canvas id="projectTrendsChart" width="400" height="200"></canvas>
+      </div>
+
+      <!-- Ticket Metrics Chart -->
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <h3 class="text-lg font-semibold text-white mb-4">Ticket Distribution</h3>
+        <canvas id="ticketMetricsChart" width="400" height="200"></canvas>
+      </div>
+
+      <!-- Revenue Chart -->
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <h3 class="text-lg font-semibold text-white mb-4">Revenue Trends</h3>
+        <canvas id="revenueChart" width="400" height="200"></canvas>
+      </div>
+
+      <!-- Team Performance Chart -->
+      <div class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+        <h3 class="text-lg font-semibold text-white mb-4">Team Performance</h3>
+        <canvas id="teamPerformanceChart" width="400" height="200"></canvas>
+      </div>
+    </section>
+
+    <!-- Risk Indicators -->
+    <section class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <h3 class="text-lg font-semibold text-white mb-4">Risk Assessment</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-red-400" id="overdueProjectsCount">0</div>
+          <div class="text-sm text-gray-400">Overdue Projects</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-orange-400" id="criticalTicketsCount">0</div>
+          <div class="text-sm text-gray-400">Critical Tickets</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-yellow-400" id="overdueInvoicesCount">0</div>
+          <div class="text-sm text-gray-400">Overdue Invoices</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold" id="overallRiskScore">0</div>
+          <div class="text-sm text-gray-400">Risk Score</div>
+        </div>
+      </div>
+      
+      <div id="riskRecommendations" class="space-y-2">
+        <!-- Risk recommendations will be populated here -->
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Intelligent Insights Section -->
+<div class="glass-panel p-6 rounded-xl">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Intelligent Insights</h2>
+    <button id="refreshInsights" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+      <i class="fas fa-brain"></i>
+      <span>Refresh Insights</span>
+    </button>
+  </div>
+
+  <!-- Insights Loading State -->
+  <div id="insightsLoading" class="text-center py-12">
+    <i class="fas fa-brain fa-pulse text-4xl text-purple-400 mb-4"></i>
+    <p class="text-gray-400">Generating intelligent insights...</p>
+  </div>
+
+  <!-- Insights Content -->
+  <div id="insightsContent" class="hidden space-y-8">
+    <!-- Project Predictions -->
+    <section class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <h3 class="text-lg font-semibold text-white mb-4">Project Predictions</h3>
+      <div id="projectPredictions" class="space-y-4">
+        <!-- Project predictions will be populated here -->
+      </div>
+    </section>
+
+    <!-- Productivity Insights -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-6 rounded-lg">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-blue-100">Ticket Growth</span>
+          <i class="fas fa-chart-line text-blue-200"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="ticketGrowth">-</div>
+        <div class="text-sm text-blue-100 mt-1">Month over month</div>
+      </div>
+
+      <div class="bg-gradient-to-br from-green-600 to-green-700 p-6 rounded-lg">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-green-100">Project Growth</span>
+          <i class="fas fa-rocket text-green-200"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="projectGrowth">-</div>
+        <div class="text-sm text-green-100 mt-1">Month over month</div>
+      </div>
+
+      <div class="bg-gradient-to-br from-purple-600 to-purple-700 p-6 rounded-lg">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-purple-100">Team Capacity</span>
+          <i class="fas fa-users text-purple-200"></i>
+        </div>
+        <div class="text-2xl font-bold text-white" id="teamCapacity">-</div>
+        <div class="text-sm text-purple-100 mt-1">Current status</div>
+      </div>
+    </section>
+
+    <!-- Financial Insights -->
+    <section class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <h3 class="text-lg font-semibold text-white mb-4">Financial Performance</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <div class="text-sm text-gray-400 mb-1">Quarterly Revenue</div>
+          <div class="text-xl font-bold text-white" id="quarterlyRevenue">-</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-400 mb-1">Monthly Average</div>
+          <div class="text-xl font-bold text-white" id="monthlyAvgRevenue">-</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-400 mb-1">Outstanding</div>
+          <div class="text-xl font-bold text-yellow-400" id="outstandingAmount">-</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-400 mb-1">Payment Efficiency</div>
+          <div class="text-xl font-bold text-green-400" id="paymentEfficiency">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recommendations -->
+    <section class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <h3 class="text-lg font-semibold text-white mb-4">AI Recommendations</h3>
+      <div id="recommendations" class="space-y-4">
+        <!-- Recommendations will be populated here -->
+      </div>
+    </section>
+
+    <!-- Active Alerts -->
+    <section class="bg-slate-800 p-6 rounded-lg border border-slate-700">
+      <h3 class="text-lg font-semibold text-white mb-4">Active Alerts</h3>
+      <div id="alerts" class="space-y-3">
+        <!-- Alerts will be populated here -->
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  let analyticsData: AnalyticsData | null = null;
+  let insightsData: InsightsData | null = null;
+  let charts: any = {};
+
+  // Initialize analytics when component loads
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAnalytics();
+    loadInsights();
+    setupEventListeners();
+  });
+
+  function setupEventListeners() {
+    document.getElementById('timeRange')?.addEventListener('change', (e) => {
+      loadAnalytics();
+    });
+
+    document.getElementById('refreshAnalytics')?.addEventListener('click', () => {
+      loadAnalytics(true);
+    });
+
+    document.getElementById('refreshInsights')?.addEventListener('click', () => {
+      loadInsights(true);
+    });
+  }
+
+  async function loadAnalytics(refresh = false) {
+    const loadingEl = document.getElementById('analyticsLoading');
+    const contentEl = document.getElementById('analyticsContent');
+    
+    loadingEl?.classList.remove('hidden');
+    contentEl?.classList.add('hidden');
+
+    try {
+      const timeRange = (document.getElementById('timeRange') as HTMLSelectElement)?.value || '30';
+      const response = await fetch(`/api/dashboard/analytics?timeRange=${timeRange}${refresh ? '&refresh=true' : ''}`);
+      
+      if (!response.ok) throw new Error('Failed to load analytics');
+      
+      analyticsData = await response.json();
+      renderAnalytics();
+      
+      loadingEl?.classList.add('hidden');
+      contentEl?.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      loadingEl?.classList.add('hidden');
+      contentEl?.classList.remove('hidden');
+    }
+  }
+
+  async function loadInsights(refresh = false) {
+    const loadingEl = document.getElementById('insightsLoading');
+    const contentEl = document.getElementById('insightsContent');
+    
+    loadingEl?.classList.remove('hidden');
+    contentEl?.classList.add('hidden');
+
+    try {
+      const response = await fetch(`/api/dashboard/insights${refresh ? '?refresh=true' : ''}`);
+      
+      if (!response.ok) throw new Error('Failed to load insights');
+      
+      insightsData = await response.json();
+      renderInsights();
+      
+      loadingEl?.classList.add('hidden');
+      contentEl?.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading insights:', error);
+      loadingEl?.classList.add('hidden');
+      contentEl?.classList.remove('hidden');
+    }
+  }
+
+  function renderAnalytics() {
+    if (!analyticsData) return;
+
+    // Update key metrics
+    document.getElementById('successRate')!.textContent = `${Math.round(analyticsData.projectTrends.onTimeDeliveryRate)}%`;
+    document.getElementById('resolutionRate')!.textContent = `${Math.round(analyticsData.ticketMetrics.resolutionRate)}%`;
+    document.getElementById('revenue')!.textContent = `$${Math.round(analyticsData.invoiceAnalytics.monthlyAverageRevenue).toLocaleString()}`;
+    document.getElementById('riskScore')!.textContent = analyticsData.riskIndicators.riskScore.toString();
+    document.getElementById('riskLevel')!.textContent = analyticsData.riskIndicators.riskLevel.toUpperCase();
+
+    // Update risk indicators
+    document.getElementById('overdueProjectsCount')!.textContent = analyticsData.riskIndicators.overdueProjects.toString();
+    document.getElementById('criticalTicketsCount')!.textContent = analyticsData.riskIndicators.highPriorityTickets.toString();
+    document.getElementById('overdueInvoicesCount')!.textContent = analyticsData.riskIndicators.overdueInvoices.toString();
+    document.getElementById('overallRiskScore')!.textContent = analyticsData.riskIndicators.riskScore.toString();
+
+    // Render risk recommendations
+    const recommendationsEl = document.getElementById('riskRecommendations');
+    if (recommendationsEl) {
+      recommendationsEl.innerHTML = analyticsData.riskIndicators.recommendations.map(rec => `
+        <div class="flex items-start space-x-3 p-3 bg-slate-700 rounded-lg">
+          <i class="fas fa-lightbulb text-yellow-400 mt-1"></i>
+          <div>
+            <div class="text-white font-medium">${rec}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render charts
+    renderProjectTrendsChart();
+    renderTicketMetricsChart();
+    renderRevenueChart();
+    renderTeamPerformanceChart();
+  }
+
+  function renderInsights() {
+    if (!insightsData) return;
+
+    // Render project predictions
+    renderProjectPredictions();
+
+    // Update productivity insights
+    document.getElementById('ticketGrowth')!.textContent = `${insightsData.productivityInsights.ticketVolumeGrowth > 0 ? '+' : ''}${insightsData.productivityInsights.ticketVolumeGrowth}%`;
+    document.getElementById('projectGrowth')!.textContent = `${insightsData.productivityInsights.projectVolumeGrowth > 0 ? '+' : ''}${insightsData.productivityInsights.projectVolumeGrowth}%`;
+    document.getElementById('teamCapacity')!.textContent = insightsData.productivityInsights.teamCapacity.charAt(0).toUpperCase() + insightsData.productivityInsights.teamCapacity.slice(1);
+
+    // Update financial insights
+    document.getElementById('quarterlyRevenue')!.textContent = `$${Math.round(insightsData.financialInsights.quarterlyRevenue).toLocaleString()}`;
+    document.getElementById('monthlyAvgRevenue')!.textContent = `$${Math.round(insightsData.financialInsights.monthlyAverageRevenue).toLocaleString()}`;
+    document.getElementById('outstandingAmount')!.textContent = `$${Math.round(insightsData.financialInsights.outstandingAmount).toLocaleString()}`;
+    document.getElementById('paymentEfficiency')!.textContent = `${Math.round(insightsData.financialInsights.paymentEfficiency)}%`;
+
+    // Render recommendations
+    renderRecommendations();
+
+    // Render alerts
+    renderAlerts();
+  }
+
+  function renderProjectPredictions() {
+    if (!insightsData) return;
+
+    const predictionsEl = document.getElementById('projectPredictions');
+    if (!predictionsEl) return;
+
+    predictionsEl.innerHTML = insightsData.projectPredictions.map(prediction => {
+      const riskColor = prediction.riskLevel === 'high' ? 'red' : prediction.riskLevel === 'medium' ? 'yellow' : 'green';
+      const statusIcon = prediction.isOnTrack ? 'fa-check-circle' : 'fa-exclamation-triangle';
+      const statusColor = prediction.isOnTrack ? 'green' : 'yellow';
+
+      return `
+        <div class="border border-slate-600 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-white font-medium">${prediction.projectName}</h4>
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-1 bg-${riskColor}-500/20 text-${riskColor}-300 rounded text-xs font-medium">
+                ${prediction.riskLevel.toUpperCase()}
+              </span>
+              <i class="fas ${statusIcon} text-${statusColor}-400"></i>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <div class="text-gray-400 mb-1">Current Progress</div>
+              <div class="text-white font-medium">${prediction.currentProgress}%</div>
+            </div>
+            <div>
+              <div class="text-gray-400 mb-1">Expected Progress</div>
+              <div class="text-white font-medium">${prediction.expectedProgress}%</div>
+            </div>
+            <div>
+              <div class="text-gray-400 mb-1">Predicted Completion</div>
+              <div class="text-white font-medium">${new Date(prediction.predictedCompletionDate).toLocaleDateString()}</div>
+            </div>
+          </div>
+          
+          <div class="mt-3">
+            <div class="text-gray-400 text-sm mb-1">Velocity: ${prediction.velocity} tasks/day</div>
+            <div class="w-full bg-slate-700 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: ${prediction.currentProgress}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderRecommendations() {
+    if (!insightsData) return;
+
+    const recommendationsEl = document.getElementById('recommendations');
+    if (!recommendationsEl) return;
+
+    recommendationsEl.innerHTML = insightsData.recommendations.map(rec => {
+      const priorityColor = rec.priority === 'high' ? 'red' : rec.priority === 'medium' ? 'yellow' : 'blue';
+      
+      return `
+        <div class="border border-slate-600 rounded-lg p-4">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <i class="fas fa-lightbulb text-${priorityColor}-400 mt-1"></i>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-white font-medium">${rec.title}</h4>
+                <span class="px-2 py-1 bg-${priorityColor}-500/20 text-${priorityColor}-300 rounded text-xs font-medium">
+                  ${rec.priority.toUpperCase()}
+                </span>
+              </div>
+              <p class="text-gray-400 text-sm mb-3">${rec.description}</p>
+              <button class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded transition-colors duration-200">
+                ${rec.action}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderAlerts() {
+    if (!insightsData) return;
+
+    const alertsEl = document.getElementById('alerts');
+    if (!alertsEl) return;
+
+    if (insightsData.alerts.length === 0) {
+      alertsEl.innerHTML = '<p class="text-gray-400 text-center py-4">No active alerts</p>';
+      return;
+    }
+
+    alertsEl.innerHTML = insightsData.alerts.map(alert => {
+      const severityColor = alert.severity === 'error' ? 'red' : alert.severity === 'warning' ? 'yellow' : 'blue';
+      const icon = alert.type === 'deadline' ? 'fa-clock' : alert.type === 'milestone' ? 'fa-flag' : 'fa-exclamation-triangle';
+      
+      return `
+        <div class="flex items-start space-x-3 p-3 bg-${severityColor}-500/10 border border-${severityColor}-500/30 rounded-lg">
+          <i class="fas ${icon} text-${severityColor}-400 mt-1"></i>
+          <div class="flex-1">
+            <div class="text-white font-medium">${alert.title}</div>
+            <div class="text-gray-400 text-sm">${alert.message}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderProjectTrendsChart() {
+    if (!analyticsData) return;
+
+    const ctx = document.getElementById('projectTrendsChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const weeks = Object.keys(analyticsData.projectTrends.weeklyTrends);
+    const createdData = weeks.map(week => analyticsData.projectTrends.weeklyTrends[week].created);
+    const completedData = weeks.map(week => analyticsData.projectTrends.weeklyTrends[week].completed);
+
+    // Simple chart rendering (in production, would use Chart.js or similar)
+    const canvas = ctx.getContext('2d');
+    if (!canvas) return;
+
+    // Clear canvas
+    canvas.clearRect(0, 0, ctx.width, ctx.height);
+
+    // Draw simple bar chart
+    const barWidth = ctx.width / (weeks.length * 2 + 1);
+    const maxValue = Math.max(...createdData, ...completedData);
+
+    createdData.forEach((value, index) => {
+      const barHeight = (value / maxValue) * (ctx.height - 40);
+      const x = barWidth + (index * barWidth * 2);
+      const y = ctx.height - barHeight - 20;
+
+      canvas.fillStyle = '#3B82F6';
+      canvas.fillRect(x, y, barWidth, barHeight);
+    });
+
+    completedData.forEach((value, index) => {
+      const barHeight = (value / maxValue) * (ctx.height - 40);
+      const x = barWidth * 2 + (index * barWidth * 2);
+      const y = ctx.height - barHeight - 20;
+
+      canvas.fillStyle = '#10B981';
+      canvas.fillRect(x, y, barWidth, barHeight);
+    });
+  }
+
+  function renderTicketMetricsChart() {
+    if (!analyticsData) return;
+
+    const ctx = document.getElementById('ticketMetricsChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const priorities = Object.keys(analyticsData.ticketMetrics.ticketsByPriority);
+    const data = priorities.map(priority => analyticsData.ticketMetrics.ticketsByPriority[priority]);
+
+    // Simple pie chart rendering
+    const canvas = ctx.getContext('2d');
+    if (!canvas) return;
+
+    canvas.clearRect(0, 0, ctx.width, ctx.height);
+
+    const total = data.reduce((sum, value) => sum + value, 0);
+    const centerX = ctx.width / 2;
+    const centerY = ctx.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    let currentAngle = 0;
+    const colors = ['#EF4444', '#F59E0B', '#3B82F6', '#10B981'];
+
+    data.forEach((value, index) => {
+      const sliceAngle = (value / total) * 2 * Math.PI;
+      
+      canvas.beginPath();
+      canvas.moveTo(centerX, centerY);
+      canvas.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+      canvas.closePath();
+      canvas.fillStyle = colors[index % colors.length];
+      canvas.fill();
+
+      currentAngle += sliceAngle;
+    });
+  }
+
+  function renderRevenueChart() {
+    if (!analyticsData) return;
+
+    const ctx = document.getElementById('revenueChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const months = Object.keys(analyticsData.invoiceAnalytics.monthlyRevenue);
+    const data = months.map(month => analyticsData.invoiceAnalytics.monthlyRevenue[month]);
+
+    // Simple line chart rendering
+    const canvas = ctx.getContext('2d');
+    if (!canvas) return;
+
+    canvas.clearRect(0, 0, ctx.width, ctx.height);
+
+    if (data.length === 0) return;
+
+    const maxValue = Math.max(...data);
+    const stepX = ctx.width / (data.length - 1 || 1);
+
+    canvas.strokeStyle = '#10B981';
+    canvas.lineWidth = 2;
+    canvas.beginPath();
+
+    data.forEach((value, index) => {
+      const x = index * stepX;
+      const y = ctx.height - ((value / maxValue) * (ctx.height - 40)) - 20;
+
+      if (index === 0) {
+        canvas.moveTo(x, y);
+      } else {
+        canvas.lineTo(x, y);
+      }
+    });
+
+    canvas.stroke();
+
+    // Draw points
+    data.forEach((value, index) => {
+      const x = index * stepX;
+      const y = ctx.height - ((value / maxValue) * (ctx.height - 40)) - 20;
+
+      canvas.beginPath();
+      canvas.arc(x, y, 4, 0, 2 * Math.PI);
+      canvas.fillStyle = '#10B981';
+      canvas.fill();
+    });
+  }
+
+  function renderTeamPerformanceChart() {
+    if (!analyticsData) return;
+
+    const ctx = document.getElementById('teamPerformanceChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const teamData = analyticsData.teamPerformance.slice(0, 5); // Top 5 performers
+    const names = teamData.map(member => member.name.split(' ')[0]);
+    const resolutionRates = teamData.map(member => member.ticketResolutionRate);
+
+    // Simple horizontal bar chart
+    const canvas = ctx.getContext('2d');
+    if (!canvas) return;
+
+    canvas.clearRect(0, 0, ctx.width, ctx.height);
+
+    const barHeight = (ctx.height - 40) / names.length;
+    const maxValue = 100;
+
+    resolutionRates.forEach((rate, index) => {
+      const barWidth = (rate / maxValue) * (ctx.width - 100);
+      const x = 80;
+      const y = 20 + (index * barHeight);
+
+      canvas.fillStyle = '#8B5CF6';
+      canvas.fillRect(x, y, barWidth, barHeight - 10);
+
+      // Draw name
+      canvas.fillStyle = '#9CA3AF';
+      canvas.font = '12px sans-serif';
+      canvas.fillText(names[index], 10, y + (barHeight / 2));
+
+      // Draw percentage
+      canvas.fillText(`${Math.round(rate)}%`, x + barWidth + 10, y + (barHeight / 2));
+    });
+  }
+
+  // Listen for real-time updates
+  window.addEventListener('dashboard-update', (event: any) => {
+    const { type } = event.detail;
+    
+    if (['stats', 'activity', 'project', 'ticket', 'milestone', 'invoice'].includes(type)) {
+      // Refresh analytics when data changes
+      loadAnalytics();
+      loadInsights();
+    }
+  });
+</script>

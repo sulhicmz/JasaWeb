@@ -201,9 +201,66 @@ export class DashboardGateway
       });
     }
 
+    // Invalidate analytics cache when significant changes occur
+    if (['project', 'ticket', 'milestone', 'invoice'].includes(payload.type)) {
+      await this.invalidateAnalyticsCache(payload.organizationId);
+    }
+
     this.logger.log(
       `Broadcasted ${payload.type} update to organization ${payload.organizationId}`
     );
+  }
+
+  // Method to broadcast analytics updates
+  async broadcastAnalyticsUpdate(
+    organizationId: string,
+    analyticsType: string,
+    data: any
+  ) {
+    const roomName = `org-${organizationId}`;
+
+    this.server.to(roomName).emit('analytics-update', {
+      type: analyticsType,
+      data,
+      timestamp: new Date(),
+    });
+
+    this.logger.log(
+      `Broadcasted analytics update (${analyticsType}) to organization ${organizationId}`
+    );
+  }
+
+  // Method to broadcast insights updates
+  async broadcastInsightsUpdate(organizationId: string, insights: any) {
+    const roomName = `org-${organizationId}`;
+
+    this.server.to(roomName).emit('insights-update', {
+      insights,
+      timestamp: new Date(),
+    });
+
+    this.logger.log(
+      `Broadcasted insights update to organization ${organizationId}`
+    );
+  }
+
+  private async invalidateAnalyticsCache(organizationId: string) {
+    try {
+      // Clear analytics and insights cache
+      await Promise.all([
+        this.cacheManager.del(`analytics-${organizationId}-7`),
+        this.cacheManager.del(`analytics-${organizationId}-30`),
+        this.cacheManager.del(`analytics-${organizationId}-90`),
+        this.cacheManager.del(`insights-${organizationId}`),
+      ]);
+
+      // Notify clients that analytics should be refreshed
+      await this.broadcastAnalyticsUpdate(organizationId, 'cache-invalidated', {
+        message: 'Analytics data has been updated',
+      });
+    } catch (error) {
+      this.logger.error(`Failed to invalidate analytics cache: ${error}`);
+    }
   }
 
   private async sendInitialData(

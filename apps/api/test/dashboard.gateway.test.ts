@@ -292,4 +292,144 @@ describe('DashboardGateway', () => {
       expect(result[3].type).toBe('project'); // Oldest
     });
   });
+
+  describe('broadcastAnalyticsUpdate', () => {
+    it('should broadcast analytics update to organization room', async () => {
+      const analyticsType = 'project-trends';
+      const data = { weeklyData: { created: 5, completed: 3 } };
+
+      await gateway.broadcastAnalyticsUpdate('org-123', analyticsType, data);
+
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('analytics-update', {
+        type: analyticsType,
+        data,
+        timestamp: expect.any(Date),
+      });
+    });
+  });
+
+  describe('broadcastInsightsUpdate', () => {
+    it('should broadcast insights update to organization room', async () => {
+      const insights = {
+        projectPredictions: [
+          {
+            projectId: 'project1',
+            projectName: 'Test Project',
+            currentProgress: 65,
+            riskLevel: 'medium',
+          },
+        ],
+        recommendations: [
+          {
+            type: 'project',
+            priority: 'high',
+            title: 'Address Overdue Projects',
+            description: 'Review project timelines',
+          },
+        ],
+      };
+
+      await gateway.broadcastInsightsUpdate('org-123', insights);
+
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('insights-update', {
+        insights,
+        timestamp: expect.any(Date),
+      });
+    });
+  });
+
+  describe('invalidateAnalyticsCache', () => {
+    it('should clear analytics and insights cache', async () => {
+      // Mock the private method
+      vi.spyOn(gateway as any, 'invalidateAnalyticsCache').mockImplementation(
+        async (orgId: string) => {
+          await mockCacheManager.del!(`analytics-${orgId}-7`);
+          await mockCacheManager.del!(`analytics-${orgId}-30`);
+          await mockCacheManager.del!(`analytics-${orgId}-90`);
+          await mockCacheManager.del!(`insights-${orgId}`);
+        }
+      );
+
+      await gateway['invalidateAnalyticsCache']('org-123');
+
+      expect(mockCacheManager.del).toHaveBeenCalledWith('analytics-org-123-7');
+      expect(mockCacheManager.del).toHaveBeenCalledWith('analytics-org-123-30');
+      expect(mockCacheManager.del).toHaveBeenCalledWith('analytics-org-123-90');
+      expect(mockCacheManager.del).toHaveBeenCalledWith('insights-org-123');
+    });
+
+    it('should broadcast cache invalidation notification', async () => {
+      vi.spyOn(gateway as any, 'invalidateAnalyticsCache').mockImplementation(
+        async (orgId: string) => {
+          await mockCacheManager.del!(`analytics-${orgId}-30`);
+          await mockCacheManager.del!(`insights-${orgId}`);
+
+          await gateway.broadcastAnalyticsUpdate(orgId, 'cache-invalidated', {
+            message: 'Analytics data has been updated',
+          });
+        }
+      );
+
+      await gateway['invalidateAnalyticsCache']('org-123');
+
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('analytics-update', {
+        type: 'cache-invalidated',
+        data: { message: 'Analytics data has been updated' },
+        timestamp: expect.any(Date),
+      });
+    });
+  });
+
+  describe('broadcastDashboardUpdate with analytics cache invalidation', () => {
+    it('should invalidate analytics cache for significant updates', async () => {
+      vi.spyOn(gateway as any, 'invalidateAnalyticsCache').mockResolvedValue(
+        undefined
+      );
+
+      const payload = {
+        type: 'project' as const,
+        data: { projectId: 'project1', status: 'completed' },
+        timestamp: new Date(),
+        organizationId: 'org-123',
+      };
+
+      await gateway.broadcastDashboardUpdate(payload);
+
+      expect(gateway['invalidateAnalyticsCache']).toHaveBeenCalledWith(
+        'org-123'
+      );
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('dashboard-update', {
+        type: 'project',
+        data: payload.data,
+        timestamp: payload.timestamp,
+      });
+    });
+
+    it('should not invalidate analytics cache for non-significant updates', async () => {
+      vi.spyOn(gateway as any, 'invalidateAnalyticsCache').mockResolvedValue(
+        undefined
+      );
+
+      const payload = {
+        type: 'stats' as const,
+        data: { action: 'refresh' },
+        timestamp: new Date(),
+        organizationId: 'org-123',
+      };
+
+      await gateway.broadcastDashboardUpdate(payload);
+
+      expect(gateway['invalidateAnalyticsCache']).not.toHaveBeenCalled();
+      expect(mockServer.to).toHaveBeenCalledWith('org-org-123');
+      expect(mockServer.emit).toHaveBeenCalledWith('dashboard-update', {
+        type: 'stats',
+        data: payload.data,
+        timestamp: payload.timestamp,
+      });
+    });
+  });
 });

@@ -315,6 +315,8 @@ describe('DashboardController', () => {
       expect(mockCacheManager.del).toHaveBeenCalledWith(
         'dashboard-projects-org-123'
       );
+      expect(mockCacheManager.del).toHaveBeenCalledWith('analytics-org-123');
+      expect(mockCacheManager.del).toHaveBeenCalledWith('insights-org-123');
       expect(
         mockDashboardGateway.broadcastDashboardUpdate
       ).toHaveBeenCalledWith({
@@ -323,6 +325,386 @@ describe('DashboardController', () => {
         timestamp: expect.any(Date),
         organizationId: 'org-123',
       });
+    });
+  });
+
+  describe('getAdvancedAnalytics', () => {
+    it('should return cached analytics when available', async () => {
+      const cachedAnalytics = {
+        timeRange: 30,
+        projectTrends: {
+          weeklyTrends: {
+            '2025-W50': { created: 3, completed: 2, started: 2 },
+          },
+          totalCreated: 5,
+          averageCompletionTime: 15.5,
+          onTimeDeliveryRate: 85.5,
+        },
+        ticketMetrics: {
+          totalTickets: 25,
+          openTickets: 8,
+          resolvedTickets: 15,
+          averageResolutionTime: 172800000,
+          ticketsByPriority: { low: 5, medium: 10, high: 7, critical: 3 },
+          ticketsByType: { bug: 10, feature: 8, support: 7 },
+          resolutionRate: 75.0,
+        },
+        invoiceAnalytics: {
+          totalInvoices: 15,
+          totalAmount: 50000,
+          paidAmount: 35000,
+          outstandingAmount: 15000,
+          averageInvoiceValue: 3333.33,
+          paymentRate: 70.0,
+          monthlyRevenue: { '2025-11': 15000, '2025-12': 20000 },
+        },
+        milestoneAnalytics: {
+          totalMilestones: 30,
+          completedMilestones: 20,
+          overdueMilestones: 3,
+          averageCompletionTime: 864000000,
+          onTimeCompletionRate: 80.0,
+        },
+        teamPerformance: [
+          {
+            userId: 'user1',
+            name: 'John Doe',
+            email: 'john@example.com',
+            ticketsAssigned: 10,
+            ticketsResolved: 8,
+            ticketResolutionRate: 80.0,
+            averageResolutionTime: 129600000,
+            projectsCreated: 2,
+            projectsCompleted: 1,
+          },
+        ],
+        riskIndicators: {
+          riskScore: 35,
+          riskLevel: 'medium',
+          overdueProjects: 1,
+          highPriorityTickets: 3,
+          overdueInvoices: 2,
+          recommendations: [
+            'Review project timelines',
+            'Follow up on payments',
+          ],
+        },
+        generatedAt: new Date().toISOString(),
+      };
+
+      mockCacheManager.get!.mockResolvedValue(cachedAnalytics);
+
+      const result = await controller.getAdvancedAnalytics('org-123');
+
+      expect(result).toEqual(cachedAnalytics);
+      expect(mockCacheManager.get).toHaveBeenCalledWith('analytics-org-123-30');
+    });
+
+    it('should generate fresh analytics when cache is empty', async () => {
+      mockCacheManager.get!.mockResolvedValue(null);
+
+      // Mock project data
+      mockPrismaService.project!.findMany!.mockResolvedValue([
+        {
+          createdAt: new Date(),
+          status: 'active',
+          startAt: new Date(),
+          dueAt: new Date(),
+          milestones: [
+            { status: 'completed', dueAt: new Date(), completedAt: new Date() },
+          ],
+        },
+      ]);
+
+      // Mock ticket data
+      mockPrismaService.ticket!.findMany!.mockResolvedValue([
+        {
+          createdAt: new Date(),
+          status: 'resolved',
+          priority: 'high',
+          type: 'bug',
+          resolvedAt: new Date(),
+        },
+      ]);
+
+      // Mock invoice data
+      mockPrismaService.invoice!.findMany!.mockResolvedValue([
+        {
+          createdAt: new Date(),
+          amount: 1000,
+          status: 'paid',
+          dueAt: new Date(),
+          paidAt: new Date(),
+        },
+      ]);
+
+      // Mock milestone data
+      mockPrismaService.milestone!.findMany!.mockResolvedValue([
+        {
+          createdAt: new Date(),
+          status: 'completed',
+          dueAt: new Date(),
+          completedAt: new Date(),
+          projectId: 'project1',
+        },
+      ]);
+
+      // Mock user data
+      mockPrismaService.user!.findMany!.mockResolvedValue([
+        {
+          id: 'user1',
+          name: 'John Doe',
+          email: 'john@example.com',
+          assignedTickets: [
+            {
+              status: 'resolved',
+              resolvedAt: new Date(),
+              createdAt: new Date(),
+            },
+          ],
+          createdProjects: [{ status: 'completed', createdAt: new Date() }],
+        },
+      ]);
+
+      const result = await controller.getAdvancedAnalytics('org-123');
+
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        'analytics-org-123-30',
+        expect.any(Object),
+        600000
+      );
+      expect(result).toHaveProperty('timeRange');
+      expect(result).toHaveProperty('projectTrends');
+      expect(result).toHaveProperty('ticketMetrics');
+      expect(result).toHaveProperty('invoiceAnalytics');
+      expect(result).toHaveProperty('milestoneAnalytics');
+      expect(result).toHaveProperty('teamPerformance');
+      expect(result).toHaveProperty('riskIndicators');
+    });
+
+    it('should handle different time ranges', async () => {
+      mockCacheManager.get!.mockResolvedValue(null);
+      mockPrismaService.project!.findMany!.mockResolvedValue([]);
+
+      await controller.getAdvancedAnalytics('org-123', '90');
+
+      expect(mockCacheManager.get).toHaveBeenCalledWith('analytics-org-123-90');
+      expect(mockPrismaService.project!.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: expect.any(Date),
+          }),
+        })
+      );
+    });
+  });
+
+  describe('getIntelligentInsights', () => {
+    it('should return cached insights when available', async () => {
+      const cachedInsights = {
+        projectPredictions: [
+          {
+            projectId: 'project1',
+            projectName: 'Test Project',
+            currentProgress: 65,
+            expectedProgress: 70,
+            velocity: 0.85,
+            predictedCompletionDate: new Date('2025-12-20').toISOString(),
+            isOnTrack: false,
+            riskLevel: 'medium',
+          },
+        ],
+        productivityInsights: {
+          ticketVolumeGrowth: 15.5,
+          projectVolumeGrowth: 8.2,
+          productivityTrend: 'increasing',
+          teamCapacity: 'optimal',
+        },
+        financialInsights: {
+          quarterlyRevenue: 50000,
+          quarterlyPaidRevenue: 35000,
+          monthlyAverageRevenue: 16666.67,
+          outstandingAmount: 15000,
+          revenueGrowthRate: 12.5,
+          paymentEfficiency: 70.0,
+        },
+        recommendations: [
+          {
+            type: 'project',
+            priority: 'high',
+            title: 'Address Overdue Projects',
+            description:
+              'You have 1 overdue project(s). Consider reviewing timelines and reallocating resources.',
+            action: 'Review project timelines',
+          },
+        ],
+        alerts: [
+          {
+            type: 'deadline',
+            severity: 'warning',
+            title: 'Project Deadline Approaching',
+            message: 'Project "Test Project" is due on 12/20/2025',
+            entityId: 'project1',
+            entityType: 'project',
+          },
+        ],
+        generatedAt: new Date().toISOString(),
+      };
+
+      mockCacheManager.get!.mockResolvedValue(cachedInsights);
+
+      const result = await controller.getIntelligentInsights('org-123');
+
+      expect(result).toEqual(cachedInsights);
+      expect(mockCacheManager.get).toHaveBeenCalledWith('insights-org-123');
+    });
+
+    it('should generate fresh insights when cache is empty', async () => {
+      mockCacheManager.get!.mockResolvedValue(null);
+
+      // Mock project data for predictions
+      mockPrismaService.project!.findMany!.mockResolvedValue([
+        {
+          id: 'project1',
+          name: 'Test Project',
+          status: 'active',
+          startAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          dueAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+          milestones: [
+            { status: 'completed', dueAt: new Date(), completedAt: new Date() },
+            { status: 'in-progress', dueAt: new Date() },
+          ],
+        },
+      ]);
+
+      // Mock counts for recommendations
+      mockPrismaService.project!.count!.mockResolvedValue(2);
+      mockPrismaService.ticket!.count!.mockResolvedValue(5);
+      mockPrismaService.invoice!.count!.mockResolvedValue(3);
+
+      // Mock invoice data for financial insights
+      mockPrismaService.invoice!.findMany!.mockResolvedValue([
+        {
+          createdAt: new Date(),
+          amount: 1000,
+          status: 'paid',
+          dueAt: new Date(),
+        },
+      ]);
+
+      const result = await controller.getIntelligentInsights('org-123');
+
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        'insights-org-123',
+        expect.any(Object),
+        900000
+      );
+      expect(result).toHaveProperty('projectPredictions');
+      expect(result).toHaveProperty('productivityInsights');
+      expect(result).toHaveProperty('financialInsights');
+      expect(result).toHaveProperty('recommendations');
+      expect(result).toHaveProperty('alerts');
+    });
+
+    it('should generate project predictions with correct risk levels', async () => {
+      mockCacheManager.get!.mockResolvedValue(null);
+
+      const mockProject = {
+        id: 'project1',
+        name: 'Test Project',
+        status: 'active',
+        startAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        dueAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        milestones: [
+          { status: 'completed', dueAt: new Date(), completedAt: new Date() },
+          { status: 'completed', dueAt: new Date(), completedAt: new Date() },
+          { status: 'in-progress', dueAt: new Date() },
+        ],
+      };
+
+      mockPrismaService.project!.findMany!.mockResolvedValue([mockProject]);
+      mockPrismaService.project!.count!.mockResolvedValue(0);
+      mockPrismaService.ticket!.count!.mockResolvedValue(0);
+      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
+
+      const result = await controller.getIntelligentInsights('org-123');
+
+      const predictions = result.projectPredictions;
+      expect(predictions).toHaveLength(1);
+      expect(predictions[0]).toHaveProperty('currentProgress');
+      expect(predictions[0]).toHaveProperty('expectedProgress');
+      expect(predictions[0]).toHaveProperty('velocity');
+      expect(predictions[0]).toHaveProperty('predictedCompletionDate');
+      expect(predictions[0]).toHaveProperty('isOnTrack');
+      expect(predictions[0]).toHaveProperty('riskLevel');
+      expect(['low', 'medium', 'high']).toContain(predictions[0].riskLevel);
+    });
+
+    it('should generate recommendations based on actual data', async () => {
+      mockCacheManager.get!.mockResolvedValue(null);
+
+      mockPrismaService.project!.findMany!.mockResolvedValue([]);
+      mockPrismaService.project!.count!.mockResolvedValue(2);
+      mockPrismaService.ticket!.count!.mockResolvedValue(5);
+      mockPrismaService.invoice!.count!.mockResolvedValue(3);
+      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
+
+      const result = await controller.getIntelligentInsights('org-123');
+
+      const recommendations = result.recommendations;
+      expect(recommendations.length).toBeGreaterThan(0);
+
+      const hasProjectRecommendation = recommendations.some(
+        (r) => r.type === 'project'
+      );
+      const hasTicketRecommendation = recommendations.some(
+        (r) => r.type === 'ticket'
+      );
+      const hasFinancialRecommendation = recommendations.some(
+        (r) => r.type === 'financial'
+      );
+
+      expect(hasProjectRecommendation).toBe(true);
+      expect(hasTicketRecommendation).toBe(true);
+      expect(hasFinancialRecommendation).toBe(true);
+    });
+
+    it('should generate alerts for upcoming deadlines and overdue milestones', async () => {
+      mockCacheManager.get!.mockResolvedValue(null);
+
+      mockPrismaService.project!.findMany!.mockResolvedValue([
+        {
+          id: 'project1',
+          name: 'Urgent Project',
+          status: 'active',
+          dueAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        },
+      ]);
+
+      mockPrismaService.milestone!.findMany!.mockResolvedValue([
+        {
+          id: 'milestone1',
+          title: 'Overdue Milestone',
+          status: 'in-progress',
+          dueAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+          projectId: 'project1',
+        },
+      ]);
+
+      mockPrismaService.project!.count!.mockResolvedValue(0);
+      mockPrismaService.ticket!.count!.mockResolvedValue(0);
+      mockPrismaService.invoice!.findMany!.mockResolvedValue([]);
+
+      const result = await controller.getIntelligentInsights('org-123');
+
+      const alerts = result.alerts;
+      expect(alerts.length).toBeGreaterThan(0);
+
+      const hasDeadlineAlert = alerts.some((a) => a.type === 'deadline');
+      const hasMilestoneAlert = alerts.some((a) => a.type === 'milestone');
+
+      expect(hasDeadlineAlert).toBe(true);
+      expect(hasMilestoneAlert).toBe(true);
     });
   });
 });
