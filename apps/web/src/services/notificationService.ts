@@ -344,7 +344,9 @@ class NotificationService {
       personal: 'bg-purple-500',
     };
 
-    notificationEl.classList.add(colors[notification.type] || colors.info);
+    notificationEl.classList.add(
+      colors[notification.type as keyof typeof colors] || colors.info
+    );
 
     notificationEl.innerHTML = `
       <div class="flex items-center space-x-3 text-white">
@@ -387,7 +389,7 @@ class NotificationService {
       personal: '<i class="fas fa-user-circle"></i>',
     };
 
-    return icons[type] || icons.info;
+    return icons[type as keyof typeof icons] || icons.info;
   }
 
   private getNotificationDetails(data: any) {

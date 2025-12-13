@@ -7,7 +7,7 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
+import { Inject, InternalServerErrorException } from '@nestjs/common';
 import { DashboardGateway } from './dashboard.gateway';
 
 interface DashboardStats {
@@ -1073,7 +1073,7 @@ export class DashboardController {
     items.forEach((item) => {
       const date = new Date(item[dateField]);
       const dateKey = date.toISOString().split('T')[0];
-      if (dateKey && dailyData.hasOwnProperty(dateKey)) {
+      if (dateKey && Object.prototype.hasOwnProperty.call(dailyData, dateKey)) {
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
       }
     });

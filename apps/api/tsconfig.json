@@ -4,7 +4,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -15,7 +14,7 @@
     "module": "ES2022",
     "moduleResolution": "bundler"
   },
-  "include": ["src/**/*", "src/types/**/*", "test/**/*"],
+  "include": ["src/**/*", "src/types/**/*"],
   "exclude": ["node_modules", "dist"],
   "types": ["jest", "node"]
 }
