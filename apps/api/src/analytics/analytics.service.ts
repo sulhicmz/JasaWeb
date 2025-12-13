@@ -296,7 +296,7 @@ export class AnalyticsService {
     );
 
     // Group by currency
-    const byCurrencyMap = invoices.reduce((acc, inv) => {
+    const byCurrency = invoices.reduce((acc, inv) => {
       const currency = inv.currency;
       // Validate currency to prevent object injection
       if (typeof currency === 'string' && /^[A-Z]{3}$/.test(currency)) {
@@ -313,10 +313,8 @@ export class AnalyticsService {
       return acc;
     }, new Map<string, { count: number; amount: number; paid: number }>());
 
-    const byCurrency = Object.fromEntries(byCurrencyMap);
-
     // Group by month
-    const byMonthMap = invoices.reduce((acc, inv) => {
+    const byMonth = invoices.reduce((acc, inv) => {
       const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
       // Validate month format to prevent object injection
       if (typeof month === 'string' && /^\d{4}-\d{2}$/.test(month)) {
@@ -333,8 +331,6 @@ export class AnalyticsService {
       return acc;
     }, new Map<string, { count: number; amount: number; paid: number }>());
 
-    const byMonth = Object.fromEntries(byMonthMap);
-
     return {
       summary: {
         totalInvoices,
@@ -344,8 +340,8 @@ export class AnalyticsService {
         paymentRate: totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0,
         overdueCount: overdueInvoices.length,
       },
-      byCurrency,
-      byMonth,
+      byCurrency: Object.fromEntries(byCurrency),
+      byMonth: Object.fromEntries(byMonth),
     };
   }
 
@@ -476,7 +472,7 @@ export class AnalyticsService {
     });
 
     // Group by time period
-    const trendsMap = auditLogs.reduce(
+    const trends = auditLogs.reduce(
       (acc: Map<string, ActivityTrendData>, log) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
@@ -532,7 +528,7 @@ export class AnalyticsService {
       new Map<string, ActivityTrendData>()
     );
 
-    return Object.values(trendsMap) as ActivityTrendData[];
+    return Array.from(trends.values()) as ActivityTrendData[];
   }
 
   // Overview Analytics - combines all analytics for dashboard

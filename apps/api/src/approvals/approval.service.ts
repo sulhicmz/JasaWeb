@@ -12,7 +12,6 @@ export class ApprovalService {
     itemId: string,
     requesterId: string
   ) {
-    // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
     });

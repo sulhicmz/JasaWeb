@@ -1,3 +1,5 @@
+/* global fetch Response */
+
 // API endpoint for dashboard stats
 export async function GET({ request }: { request: Request }) {
   try {

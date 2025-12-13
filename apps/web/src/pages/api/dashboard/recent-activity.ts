@@ -1,3 +1,5 @@
+/* global fetch Response */
+
 // API endpoint for recent activity
 export async function GET({ request, url }: { request: Request; url: URL }) {
   try {

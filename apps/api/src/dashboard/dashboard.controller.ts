@@ -17,6 +17,13 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
+import { Project, Milestone, Ticket } from '@prisma/client';
+
+// Type definitions for project with relations
+type ProjectWithMilestonesAndTickets = Project & {
+  milestones?: Milestone[];
+  tickets?: Ticket[];
+};
 
 interface DashboardStats {
   projects: {
@@ -174,44 +181,46 @@ export class DashboardController {
     });
 
     // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map((project: any) => {
-      const totalMilestones = project.milestones?.length || 0;
-      const completedMilestones =
-        project.milestones?.filter((m: any) => m.status === 'completed')
-          .length || 0;
-      const progress =
-        totalMilestones > 0
-          ? Math.round((completedMilestones / totalMilestones) * 100)
-          : 0;
+    const projectsWithMetrics = projects.map(
+      (project: ProjectWithMilestonesAndTickets) => {
+        const totalMilestones = project.milestones?.length || 0;
+        const completedMilestones =
+          project.milestones?.filter((m: Milestone) => m.status === 'completed')
+            .length || 0;
+        const progress =
+          totalMilestones > 0
+            ? Math.round((completedMilestones / totalMilestones) * 100)
+            : 0;
 
-      const openTickets =
-        project.tickets?.filter(
-          (t: any) => t.status === 'open' || t.status === 'in-progress'
-        ).length || 0;
+        const openTickets =
+          project.tickets?.filter(
+            (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
+          ).length || 0;
 
-      const highPriorityTickets =
-        (project as any).tickets?.filter(
-          (t: any) =>
-            (t.priority === 'high' || t.priority === 'critical') &&
-            (t.status === 'open' || t.status === 'in-progress')
-        ).length || 0;
+        const highPriorityTickets =
+          project.tickets?.filter(
+            (t: Ticket) =>
+              (t.priority === 'high' || t.priority === 'critical') &&
+              (t.status === 'open' || t.status === 'in-progress')
+          ).length || 0;
 
-      return {
-        id: project.id,
-        name: project.name,
-        description: null, // Project model doesn't have description field
-        status: project.status,
-        progress,
-        totalMilestones,
-        completedMilestones,
-        openTickets,
-        highPriorityTickets,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-        startAt: project.startAt,
-        dueAt: project.dueAt,
-      };
-    });
+        return {
+          id: project.id,
+          name: project.name,
+          description: null, // Project model doesn't have description field
+          status: project.status,
+          progress,
+          totalMilestones,
+          completedMilestones,
+          openTickets,
+          highPriorityTickets,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          startAt: project.startAt,
+          dueAt: project.dueAt,
+        };
+      }
+    );
 
     return projectsWithMetrics;
   }
