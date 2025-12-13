@@ -55,9 +55,7 @@ export class RefreshTokenService {
   /**
    * Verifies a refresh token and returns a new access token if valid
    */
-  async rotateRefreshToken(
-    refreshToken: string
-  ): Promise<{
+  async rotateRefreshToken(refreshToken: string): Promise<{
     token: string;
     newRefreshToken: string;
     expiresAt: Date;

@@ -18,9 +18,7 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService
   ) {}
 
-  async register(
-    createUserDto: CreateUserDto
-  ): Promise<{
+  async register(createUserDto: CreateUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
@@ -60,9 +58,7 @@ export class AuthService {
     };
   }
 
-  async login(
-    loginUserDto: LoginUserDto
-  ): Promise<{
+  async login(loginUserDto: LoginUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
