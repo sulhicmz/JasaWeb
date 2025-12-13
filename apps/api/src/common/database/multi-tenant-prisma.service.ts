@@ -553,55 +553,33 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
-      return this.prisma.task.findUnique({
+    findFirst: (args?: any) => {
+      return this.prisma.task.findFirst({
         ...args,
         where: {
-          ...args.where,
+          ...args?.where,
           project: {
             organizationId: this.organizationId,
-            ...args.where.project,
+            ...args?.where?.project,
           },
         },
       });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.task.findUnique(args);
     },
 
     create: (args: any) => {
-      const projectId = args.data.project.connect.id;
-      return this.prisma.task.create({
-        ...args,
-        data: {
-          ...args.data,
-          projectId,
-        },
-      });
+      return this.prisma.task.create(args);
     },
 
     update: (args: any) => {
-      return this.prisma.task.update({
-        ...args,
-        where: {
-          ...args.where,
-          project: {
-            organizationId: this.organizationId,
-            ...args.where.project,
-          },
-        },
-        data: args.data,
-      });
+      return this.prisma.task.update(args);
     },
 
     delete: (args: any) => {
-      return this.prisma.task.delete({
-        ...args,
-        where: {
-          ...args.where,
-          project: {
-            organizationId: this.organizationId,
-            ...args.where.project,
-          },
-        },
-      });
+      return this.prisma.task.delete(args);
     },
 
     count: (args?: any) => {
@@ -612,6 +590,280 @@ export class MultiTenantPrismaService {
           project: {
             organizationId: this.organizationId,
             ...args?.where?.project,
+          },
+        },
+      });
+    },
+
+    aggregate: (args?: any) => {
+      return this.prisma.task.aggregate({
+        ...args,
+        where: {
+          ...args?.where,
+          project: {
+            organizationId: this.organizationId,
+            ...args?.where?.project,
+          },
+        },
+      });
+    },
+  };
+
+  /**
+   * Membership service methods
+   */
+  membership = {
+    findUnique: (args: any) => {
+      return this.prisma.membership.findUnique(args);
+    },
+
+    findMany: (args?: any) => {
+      return this.prisma.membership.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    create: (args: any) => {
+      return this.prisma.membership.create({
+        ...args,
+        data: {
+          ...args.data,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+
+    update: (args: any) => {
+      return this.prisma.membership.update(args);
+    },
+
+    delete: (args: any) => {
+      return this.prisma.membership.delete(args);
+    },
+
+    count: (args?: any) => {
+      return this.prisma.membership.count({
+        ...args,
+        where: {
+          ...args?.where,
+          organizationId: this.organizationId,
+        },
+      });
+    },
+  };
+
+  /**
+   * Task Comments service methods
+   */
+  taskComment = {
+    findMany: (args?: any) => {
+      return this.prisma.taskComment.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.taskComment.findUnique(args);
+    },
+
+    create: (args: any) => {
+      return this.prisma.taskComment.create(args);
+    },
+
+    update: (args: any) => {
+      return this.prisma.taskComment.update(args);
+    },
+
+    delete: (args: any) => {
+      return this.prisma.taskComment.delete(args);
+    },
+
+    count: (args?: any) => {
+      return this.prisma.taskComment.count({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+  };
+
+  /**
+   * Time Entries service methods
+   */
+  timeEntry = {
+    findMany: (args?: any) => {
+      return this.prisma.timeEntry.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.timeEntry.findUnique(args);
+    },
+
+    create: (args: any) => {
+      return this.prisma.timeEntry.create(args);
+    },
+
+    update: (args: any) => {
+      return this.prisma.timeEntry.update(args);
+    },
+
+    delete: (args: any) => {
+      return this.prisma.timeEntry.delete(args);
+    },
+
+    aggregate: (args?: any) => {
+      return this.prisma.timeEntry.aggregate({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+
+    count: (args?: any) => {
+      return this.prisma.timeEntry.count({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+  };
+
+  /**
+   * Task Dependencies service methods
+   */
+  taskDependency = {
+    findMany: (args?: any) => {
+      return this.prisma.taskDependency.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          dependentTask: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.taskDependency.findUnique(args);
+    },
+
+    create: (args: any) => {
+      return this.prisma.taskDependency.create(args);
+    },
+
+    update: (args: any) => {
+      return this.prisma.taskDependency.update(args);
+    },
+
+    delete: (args: any) => {
+      return this.prisma.taskDependency.delete(args);
+    },
+
+    count: (args?: any) => {
+      return this.prisma.taskDependency.count({
+        ...args,
+        where: {
+          ...args?.where,
+          dependentTask: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+  };
+
+  /**
+   * Task Watchers service methods
+   */
+  taskWatcher = {
+    findMany: (args?: any) => {
+      return this.prisma.taskWatcher.findMany({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
+          },
+        },
+      });
+    },
+
+    findUnique: (args: any) => {
+      return this.prisma.taskWatcher.findUnique(args);
+    },
+
+    create: (args: any) => {
+      return this.prisma.taskWatcher.create(args);
+    },
+
+    upsert: (args: any) => {
+      return this.prisma.taskWatcher.upsert(args);
+    },
+
+    update: (args: any) => {
+      return this.prisma.taskWatcher.update(args);
+    },
+
+    delete: (args: any) => {
+      return this.prisma.taskWatcher.delete(args);
+    },
+
+    count: (args?: any) => {
+      return this.prisma.taskWatcher.count({
+        ...args,
+        where: {
+          ...args?.where,
+          task: {
+            project: {
+              organizationId: this.organizationId,
+            },
           },
         },
       });

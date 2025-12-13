@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import ProjectHeader from '../../components/projects/ProjectHeader.astro';
+import TaskBoard from '../../components/projects/TaskBoard';
+import TaskTimeline from '../../components/projects/TaskTimeline';
 import MilestoneTimeline from '../../components/projects/MilestoneTimeline.astro';
 import ProjectFiles from '../../components/projects/ProjectFiles.astro';
 import ProjectTickets from '../../components/projects/ProjectTickets.astro';
@@ -26,6 +28,18 @@ const { projectId } = Astro.props;
       <!-- Project Metrics Overview -->
       <section class="mb-8">
         <ProjectMetrics client:load projectId={projectId} />
+      </section>
+
+      <!-- Task Board -->
+      <section class="mb-8">
+        <div class="glass-panel p-6 rounded-xl">
+          <TaskBoard client:load projectId={projectId} />
+        </div>
+      </section>
+
+      <!-- Task Timeline -->
+      <section class="mb-8">
+        <TaskTimeline client:load projectId={projectId} tasks={[]} />
       </section>
 
       <!-- Milestone Timeline -->

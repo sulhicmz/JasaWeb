@@ -28,6 +28,7 @@ import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { TaskModule } from './tasks/task.module';
 
 const parseEnvNumber = (
   value: string | undefined,
@@ -73,6 +74,7 @@ const parseEnvNumber = (
     AnalyticsModule,
     KnowledgeBaseModule,
     DashboardModule,
+    TaskModule,
     PrismaModule,
     MultiTenantPrismaModule,
   ],
