@@ -1,0 +1,823 @@
+---
+// Enhanced Project Dashboard with real-time progress tracking and milestone visualization
+---
+
+<enhanced-project-dashboard></enhanced-project-dashboard>
+
+<script>
+  // Enhanced Project Dashboard Component
+  interface Project {
+    id: string;
+    name: string;
+    description?: string;
+    status: string;
+    progress: number;
+    totalMilestones: number;
+    completedMilestones: number;
+    openTickets: number;
+    highPriorityTickets: number;
+    startAt?: string;
+    dueAt?: string;
+    createdAt: string;
+    updatedAt: string;
+    milestones?: Milestone[];
+    team?: TeamMember[];
+    budget?: {
+      allocated: number;
+      spent: number;
+      currency: string;
+    };
+    healthScore?: number;
+    riskLevel?: 'low' | 'medium' | 'high';
+  }
+
+  interface Milestone {
+    id: string;
+    title: string;
+    description?: string;
+    status: 'pending' | 'in-progress' | 'completed' | 'overdue';
+    dueAt: string;
+    completedAt?: string;
+    progress: number;
+    dependencies?: string[];
+    assignees?: string[];
+  }
+
+  interface TeamMember {
+    id: string;
+    name: string;
+    role: string;
+    avatar?: string;
+    workload: number;
+    availability: 'available' | 'busy' | 'unavailable';
+  }
+
+  class EnhancedProjectDashboard extends HTMLElement {
+    private projects: Project[] = [];
+    private selectedProject: Project | null = null;
+    private loading = false;
+    private error: string | null = null;
+    private viewMode: 'overview' | 'timeline' | 'details' = 'overview';
+    private filterStatus: string = 'all';
+    private sortBy: string = 'updatedAt';
+
+    connectedCallback() {
+      this.render();
+      this.fetchProjects();
+      this.setupEventListeners();
+      this.startRealTimeUpdates();
+    }
+
+    setupEventListeners() {
+      // Listen for refresh events
+      window.addEventListener('refresh-dashboard', () => {
+        this.fetchProjects();
+      });
+
+      // Listen for real-time project updates
+      window.addEventListener('project-updated', (e: any) => {
+        this.handleProjectUpdate(e.detail);
+      });
+
+      // Listen for milestone updates
+      window.addEventListener('milestone-updated', (e: any) => {
+        this.handleMilestoneUpdate(e.detail);
+      });
+    }
+
+    startRealTimeUpdates() {
+      // Update project progress every 30 seconds
+      setInterval(() => {
+        if (!this.loading) {
+          this.updateProjectProgress();
+        }
+      }, 30000);
+    }
+
+    async fetchProjects() {
+      this.loading = true;
+      this.error = null;
+      this.render();
+
+      try {
+        const response = await fetch('/api/dashboard/projects-overview?limit=10&include=details');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        this.projects = await response.json();
+        this.enrichProjectData();
+      } catch (err) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch projects';
+        console.error('Error fetching enhanced projects:', err);
+      } finally {
+        this.loading = false;
+        this.render();
+      }
+    }
+
+    enrichProjectData() {
+      this.projects = this.projects.map(project => ({
+        ...project,
+        healthScore: this.calculateHealthScore(project),
+        riskLevel: this.calculateRiskLevel(project),
+        milestones: project.milestones || this.generateMockMilestones(project),
+        team: project.team || this.generateMockTeam(),
+        budget: project.budget || {
+          allocated: Math.floor(Math.random() * 100000000) + 50000000,
+          spent: Math.floor(Math.random() * 80000000) + 20000000,
+          currency: 'IDR'
+        }
+      }));
+    }
+
+    calculateHealthScore(project: Project): number {
+      let score = 100;
+      
+      // Progress factors
+      if (project.progress < 25) score -= 20;
+      else if (project.progress < 50) score -= 10;
+      else if (project.progress > 90) score += 10;
+
+      // Ticket factors
+      if (project.highPriorityTickets > 3) score -= 15;
+      else if (project.highPriorityTickets > 0) score -= 5;
+
+      // Timeline factors
+      if (project.dueAt && new Date(project.dueAt) < new Date()) {
+        score -= 25;
+      }
+
+      // Milestone completion rate
+      const milestoneRate = project.totalMilestones > 0 
+        ? project.completedMilestones / project.totalMilestones 
+        : 0;
+      if (milestoneRate < 0.5) score -= 15;
+      else if (milestoneRate > 0.8) score += 10;
+
+      return Math.max(0, Math.min(100, score));
+    }
+
+    calculateRiskLevel(project: Project): 'low' | 'medium' | 'high' {
+      const healthScore = this.calculateHealthScore(project);
+      
+      if (healthScore >= 80) return 'low';
+      if (healthScore >= 60) return 'medium';
+      return 'high';
+    }
+
+    generateMockMilestones(project: Project): Milestone[] {
+      const milestoneTemplates = [
+        { title: 'Project Kickoff', duration: 7 },
+        { title: 'Requirements Gathering', duration: 14 },
+        { title: 'Design Phase', duration: 21 },
+        { title: 'Development Sprint 1', duration: 14 },
+        { title: 'Development Sprint 2', duration: 14 },
+        { title: 'Testing & QA', duration: 10 },
+        { title: 'Client Review', duration: 7 },
+        { title: 'Deployment', duration: 5 }
+      ];
+
+      const startDate = project.startAt ? new Date(project.startAt) : new Date(project.createdAt);
+      const completedCount = Math.floor((project.progress / 100) * milestoneTemplates.length);
+
+      return milestoneTemplates.slice(0, project.totalMilestones || 6).map((template, index) => {
+        const dueDate = new Date(startDate);
+        dueDate.setDate(dueDate.getDate() + template.duration * (index + 1));
+
+        const isCompleted = index < completedCount;
+        const status = isCompleted ? 'completed' : 
+                      index === completedCount ? 'in-progress' : 'pending';
+
+        return {
+          id: `milestone-${project.id}-${index}`,
+          title: template.title,
+          status: status as Milestone['status'],
+          dueAt: dueDate.toISOString(),
+          completedAt: isCompleted ? new Date(dueDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+          progress: isCompleted ? 100 : status === 'in-progress' ? 60 : 0
+        };
+      });
+    }
+
+    generateMockTeam(): TeamMember[] {
+      const roles = ['Project Manager', 'Frontend Developer', 'Backend Developer', 'UI/UX Designer', 'QA Engineer'];
+      const names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Wilson', 'Tom Brown'];
+      
+      return roles.slice(0, 3 + Math.floor(Math.random() * 3)).map((role, index) => ({
+        id: `member-${index}`,
+        name: names[index],
+        role,
+        workload: Math.floor(Math.random() * 100),
+        availability: Math.random() > 0.3 ? 'available' : Math.random() > 0.5 ? 'busy' : 'unavailable'
+      }));
+    }
+
+    handleProjectUpdate(data: any) {
+      const projectIndex = this.projects.findIndex(p => p.id === data.projectId);
+      if (projectIndex !== -1) {
+        this.projects[projectIndex] = { ...this.projects[projectIndex], ...data.updates };
+        this.enrichProjectData();
+        this.render();
+        this.showUpdateNotification(`Project "${this.projects[projectIndex].name}" updated`);
+      }
+    }
+
+    handleMilestoneUpdate(data: any) {
+      const project = this.projects.find(p => p.id === data.projectId);
+      if (project && project.milestones) {
+        const milestoneIndex = project.milestones.findIndex(m => m.id === data.milestoneId);
+        if (milestoneIndex !== -1) {
+          project.milestones[milestoneIndex] = { ...project.milestones[milestoneIndex], ...data.updates };
+          this.updateProjectProgress();
+          this.render();
+        }
+      }
+    }
+
+    updateProjectProgress() {
+      this.projects = this.projects.map(project => {
+        if (project.milestones && project.milestones.length > 0) {
+          const completedMilestones = project.milestones.filter(m => m.status === 'completed').length;
+          const newProgress = Math.round((completedMilestones / project.milestones.length) * 100);
+          
+          return {
+            ...project,
+            progress: newProgress,
+            completedMilestones,
+            healthScore: this.calculateHealthScore(project),
+            riskLevel: this.calculateRiskLevel(project)
+          };
+        }
+        return project;
+      });
+    }
+
+    showUpdateNotification(message: string) {
+      // Create a subtle notification
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    selectProject(project: Project) {
+      this.selectedProject = project;
+      this.viewMode = 'details';
+      this.render();
+    }
+
+    setViewMode(mode: 'overview' | 'timeline' | 'details') {
+      this.viewMode = mode;
+      this.render();
+    }
+
+    filterProjects(status: string) {
+      this.filterStatus = status;
+      this.render();
+    }
+
+    sortProjects(criteria: string) {
+      this.sortBy = criteria;
+      this.render();
+    }
+
+    getFilteredAndSortedProjects(): Project[] {
+      let filtered = this.projects;
+
+      // Apply filters
+      if (this.filterStatus !== 'all') {
+        filtered = filtered.filter(p => p.status === this.filterStatus);
+      }
+
+      // Apply sorting
+      return filtered.sort((a, b) => {
+        switch (this.sortBy) {
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'progress':
+            return b.progress - a.progress;
+          case 'health':
+            return (b.healthScore || 0) - (a.healthScore || 0);
+          case 'dueDate':
+            if (!a.dueAt && !b.dueAt) return 0;
+            if (!a.dueAt) return 1;
+            if (!b.dueAt) return -1;
+            return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+          default:
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        }
+      });
+    }
+
+    formatCurrency(amount: number, currency: string = 'IDR'): string {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    }
+
+    getHealthScoreColor(score: number): string {
+      if (score >= 80) return 'text-green-400';
+      if (score >= 60) return 'text-yellow-400';
+      return 'text-red-400';
+    }
+
+    getRiskLevelColor(level: string): string {
+      switch (level) {
+        case 'low': return 'bg-green-500/20 text-green-400';
+        case 'medium': return 'bg-yellow-500/20 text-yellow-400';
+        case 'high': return 'bg-red-500/20 text-red-400';
+        default: return 'bg-gray-500/20 text-gray-400';
+      }
+    }
+
+    render() {
+      if (this.loading) {
+        this.innerHTML = `
+          <div class="glass-panel p-8 rounded-xl">
+            <div class="text-center text-white">
+              <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+              <p>Loading enhanced project dashboard...</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (this.error) {
+        this.innerHTML = `
+          <div class="glass-panel p-8 rounded-xl border border-red-500/20">
+            <div class="text-center text-red-400">
+              <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+              <p>${this.error}</p>
+              <button onclick="this.parentElement.parentElement.parentElement.fetchProjects()" 
+                      class="mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg">
+                Retry
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const filteredProjects = this.getFilteredAndSortedProjects();
+
+      this.innerHTML = `
+        <div class="glass-panel p-6 rounded-xl">
+          <!-- Header with Controls -->
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
+            <div>
+              <h2 class="text-2xl font-bold text-white mb-2">Enhanced Project Dashboard</h2>
+              <p class="text-gray-400">Real-time progress tracking and milestone visualization</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- View Mode Toggle -->
+              <div class="flex bg-slate-800 rounded-lg p-1">
+                <button onclick="this.closest('enhanced-project-dashboard').setViewMode('overview')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.viewMode === 'overview' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Overview
+                </button>
+                <button onclick="this.closest('enhanced-project-dashboard').setViewMode('timeline')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.viewMode === 'timeline' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Timeline
+                </button>
+                <button onclick="this.closest('enhanced-project-dashboard').setViewMode('details')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.viewMode === 'details' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Details
+                </button>
+              </div>
+
+              <!-- Filter Dropdown -->
+              <select onchange="this.closest('enhanced-project-dashboard').filterProjects(this.value)" 
+                      class="bg-slate-800 text-white px-3 py-1 rounded-lg text-sm border border-slate-700 focus:border-blue-500 focus:outline-none">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
+              </select>
+
+              <!-- Sort Dropdown -->
+              <select onchange="this.closest('enhanced-project-dashboard').sortProjects(this.value)" 
+                      class="bg-slate-800 text-white px-3 py-1 rounded-lg text-sm border border-slate-700 focus:border-blue-500 focus:outline-none">
+                <option value="updatedAt">Last Updated</option>
+                <option value="name">Name</option>
+                <option value="progress">Progress</option>
+                <option value="health">Health Score</option>
+                <option value="dueDate">Due Date</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Projects Summary Stats -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-white">${this.projects.length}</div>
+              <div class="text-sm text-gray-400">Total Projects</div>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-green-400">
+                ${this.projects.filter(p => p.status === 'active').length}
+              </div>
+              <div class="text-sm text-gray-400">Active</div>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-blue-400">
+                ${Math.round(this.projects.reduce((sum, p) => sum + p.progress, 0) / this.projects.length)}%
+              </div>
+              <div class="text-sm text-gray-400">Avg Progress</div>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-yellow-400">
+                ${this.projects.filter(p => p.riskLevel === 'high').length}
+              </div>
+              <div class="text-sm text-gray-400">At Risk</div>
+            </div>
+          </div>
+
+          <!-- Content Area -->
+          ${this.renderContent(filteredProjects)}
+        </div>
+      `;
+    }
+
+    renderContent(projects: Project[]): string {
+      switch (this.viewMode) {
+        case 'timeline':
+          return this.renderTimelineView(projects);
+        case 'details':
+          return this.renderDetailsView();
+        default:
+          return this.renderOverviewView(projects);
+      }
+    }
+
+    renderOverviewView(projects: Project[]): string {
+      if (projects.length === 0) {
+        return `
+          <div class="text-center py-12 text-gray-400">
+            <i class="fas fa-folder-open text-6xl mb-4 opacity-50"></i>
+            <p class="text-xl">No projects found</p>
+            <p class="text-sm mt-2">Try adjusting your filters or create a new project</p>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          ${projects.map(project => this.renderProjectCard(project)).join('')}
+        </div>
+      `;
+    }
+
+    renderProjectCard(project: Project): string {
+      const healthScore = project.healthScore || 0;
+      const riskColor = this.getRiskLevelColor(project.riskLevel || 'low');
+      const isOverdue = project.dueAt && new Date(project.dueAt) < new Date();
+
+      return `
+        <div class="bg-slate-800/50 rounded-xl p-6 hover:bg-slate-800/70 transition-all duration-300 cursor-pointer border border-slate-700"
+             onclick="this.closest('enhanced-project-dashboard').selectProject(${JSON.stringify(project).replace(/"/g, '&quot;')})">
+          
+          <!-- Project Header -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-white truncate">${project.name}</h3>
+              <div class="flex items-center space-x-2 mt-2">
+                <span class="px-2 py-1 ${this.getStatusColor(project.status).bg} ${this.getStatusColor(project.status).text} text-xs rounded-full">
+                  ${project.status}
+                </span>
+                <span class="px-2 py-1 ${riskColor} text-xs rounded-full">
+                  ${project.riskLevel} risk
+                </span>
+                ${isOverdue ? '<span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full">Overdue</span>' : ''}
+              </div>
+            </div>
+            <div class="text-right ml-4">
+              <div class="text-2xl font-bold text-white">${project.progress}%</div>
+              <div class="text-xs ${this.getHealthScoreColor(healthScore)}">
+                Health: ${healthScore}
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mb-4">
+            <div class="w-full bg-slate-700 rounded-full h-3">
+              <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500" 
+                   style="width: ${project.progress}%"></div>
+            </div>
+          </div>
+
+          <!-- Project Metrics -->
+          <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-flag-checkered text-blue-400"></i>
+              <span class="text-gray-300">${project.completedMilestones}/${project.totalMilestones} milestones</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-ticket-alt text-yellow-400"></i>
+              <span class="text-gray-300">${project.openTickets} tickets</span>
+            </div>
+            ${project.dueAt ? `
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-calendar text-purple-400"></i>
+              <span class="text-gray-300">Due: ${this.formatDate(project.dueAt)}</span>
+            </div>
+            ` : ''}
+            ${project.budget ? `
+            <div class="flex items-center space-x-2">
+              <i class="fas fa-wallet text-green-400"></i>
+              <span class="text-gray-300">${this.formatCurrency(project.budget.spent, project.budget.currency)}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          <!-- Team Preview -->
+          ${project.team && project.team.length > 0 ? `
+          <div class="flex items-center justify-between">
+            <div class="flex -space-x-2">
+              ${project.team.slice(0, 4).map(member => `
+                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-800">
+                  ${member.name.split(' ').map(n => n[0]).join('')}
+                </div>
+              `).join('')}
+              ${project.team.length > 4 ? `
+                <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center text-gray-400 text-xs font-bold border-2 border-slate-800">
+                  +${project.team.length - 4}
+                </div>
+              ` : ''}
+            </div>
+            <button class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+              View Details →
+            </button>
+          </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    renderTimelineView(projects: Project[]): string {
+      return `
+        <div class="space-y-6">
+          ${projects.map(project => this.renderProjectTimeline(project)).join('')}
+        </div>
+      `;
+    }
+
+    renderProjectTimeline(project: Project): string {
+      if (!project.milestones || project.milestones.length === 0) {
+        return '';
+      }
+
+      const startDate = project.startAt ? new Date(project.startAt) : new Date(project.createdAt);
+      const endDate = project.dueAt ? new Date(project.dueAt) : new Date();
+      const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      return `
+        <div class="bg-slate-800/50 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-white">${project.name}</h3>
+            <div class="text-sm text-gray-400">
+              ${this.formatDate(startDate)} - ${this.formatDate(project.dueAt || endDate)}
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="relative">
+            <!-- Timeline Base -->
+            <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-600"></div>
+            
+            <!-- Milestones -->
+            <div class="space-y-6">
+              ${project.milestones.map((milestone, index) => {
+                const milestoneDate = new Date(milestone.dueAt);
+                const daysFromStart = Math.ceil((milestoneDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                const position = Math.min((daysFromStart / totalDays) * 100, 100);
+                
+                return `
+                  <div class="relative flex items-center space-x-4">
+                    <!-- Milestone Node -->
+                    <div class="relative z-10">
+                      <div class="w-4 h-4 rounded-full border-2 ${
+                        milestone.status === 'completed' ? 'bg-green-500 border-green-400' :
+                        milestone.status === 'in-progress' ? 'bg-blue-500 border-blue-400' :
+                        milestone.status === 'overdue' ? 'bg-red-500 border-red-400' :
+                        'bg-slate-600 border-slate-500'
+                      }"></div>
+                    </div>
+
+                    <!-- Milestone Content -->
+                    <div class="flex-1 bg-slate-700/50 rounded-lg p-4">
+                      <div class="flex items-start justify-between">
+                        <div>
+                          <h4 class="font-medium text-white">${milestone.title}</h4>
+                          <p class="text-sm text-gray-400 mt-1">${this.formatDate(milestone.dueAt)}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <span class="px-2 py-1 ${
+                            milestone.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            milestone.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400' :
+                            milestone.status === 'overdue' ? 'bg-red-500/20 text-red-400' :
+                            'bg-slate-600/20 text-gray-400'
+                          } text-xs rounded-full">
+                            ${milestone.status}
+                          </span>
+                          <div class="text-sm font-medium text-white">${milestone.progress}%</div>
+                        </div>
+                      </div>
+                      
+                      ${milestone.progress > 0 && milestone.progress < 100 ? `
+                      <div class="mt-3">
+                        <div class="w-full bg-slate-600 rounded-full h-1.5">
+                          <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-300" 
+                               style="width: ${milestone.progress}%"></div>
+                        </div>
+                      </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    renderDetailsView(): string {
+      if (!this.selectedProject) {
+        return `
+          <div class="text-center py-12 text-gray-400">
+            <i class="fas fa-mouse-pointer text-6xl mb-4 opacity-50"></i>
+            <p class="text-xl">Select a project to view details</p>
+            <p class="text-sm mt-2">Click on any project card in the overview to see detailed information</p>
+          </div>
+        `;
+      }
+
+      const project = this.selectedProject;
+      
+      return `
+        <div class="space-y-6">
+          <!-- Back Button -->
+          <button onclick="this.closest('enhanced-project-dashboard').setViewMode('overview')" 
+                  class="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Overview</span>
+          </button>
+
+          <!-- Project Header -->
+          <div class="bg-slate-800/50 rounded-xl p-6">
+            <div class="flex items-start justify-between">
+              <div>
+                <h2 class="text-2xl font-bold text-white mb-2">${project.name}</h2>
+                <p class="text-gray-400 mb-4">${project.description || 'No description available'}</p>
+                <div class="flex items-center space-x-3">
+                  <span class="px-3 py-1 ${this.getStatusColor(project.status).bg} ${this.getStatusColor(project.status).text} text-sm rounded-full">
+                    ${project.status}
+                  </span>
+                  <span class="px-3 py-1 ${this.getRiskLevelColor(project.riskLevel || 'low')} text-sm rounded-full">
+                    ${project.riskLevel} risk
+                  </span>
+                  <div class="text-sm text-gray-400">
+                    Health Score: <span class="${this.getHealthScoreColor(project.healthScore || 0)} font-bold">${project.healthScore}/100</span>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl font-bold text-white">${project.progress}%</div>
+                <div class="text-sm text-gray-400">Complete</div>
+              </div>
+            </div>
+
+            <!-- Overall Progress -->
+            <div class="mt-6">
+              <div class="w-full bg-slate-700 rounded-full h-4">
+                <div class="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full transition-all duration-500" 
+                     style="width: ${project.progress}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Details Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Milestones -->
+            <div class="lg:col-span-2 bg-slate-800/50 rounded-xl p-6">
+              <h3 class="text-lg font-semibold text-white mb-4">Milestones</h3>
+              <div class="space-y-3">
+                ${project.milestones?.map(milestone => `
+                  <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                    <div>
+                      <h4 class="font-medium text-white">${milestone.title}</h4>
+                      <p class="text-sm text-gray-400">Due: ${this.formatDate(milestone.dueAt)}</p>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-sm font-medium text-white">${milestone.progress}%</div>
+                      <span class="px-2 py-1 ${
+                        milestone.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                        milestone.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-slate-600/20 text-gray-400'
+                      } text-xs rounded-full">
+                        ${milestone.status}
+                      </span>
+                    </div>
+                  </div>
+                `).join('') || '<p class="text-gray-400">No milestones defined</p>'}
+              </div>
+            </div>
+
+            <!-- Team & Budget -->
+            <div class="space-y-6">
+              <!-- Team -->
+              <div class="bg-slate-800/50 rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Team</h3>
+                <div class="space-y-3">
+                  ${project.team?.map(member => `
+                    <div class="flex items-center space-x-3">
+                      <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                        ${member.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div class="flex-1">
+                        <div class="font-medium text-white">${member.name}</div>
+                        <div class="text-sm text-gray-400">${member.role}</div>
+                      </div>
+                      <div class="w-2 h-2 rounded-full ${
+                        member.availability === 'available' ? 'bg-green-400' :
+                        member.availability === 'busy' ? 'bg-yellow-400' : 'bg-red-400'
+                      }"></div>
+                    </div>
+                  `).join('') || '<p class="text-gray-400">No team members assigned</p>'}
+                </div>
+              </div>
+
+              <!-- Budget -->
+              ${project.budget ? `
+              <div class="bg-slate-800/50 rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Budget</h3>
+                <div class="space-y-3">
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span class="text-gray-400">Spent</span>
+                      <span class="text-white">${this.formatCurrency(project.budget.spent, project.budget.currency)}</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2">
+                      <div class="bg-gradient-to-r from-green-500 to-yellow-500 h-2 rounded-full" 
+                           style="width: ${Math.min((project.budget.spent / project.budget.allocated) * 100, 100)}%"></div>
+                    </div>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Allocated</span>
+                    <span class="text-white">${this.formatCurrency(project.budget.allocated, project.budget.currency)}</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Remaining</span>
+                    <span class="text-green-400">${this.formatCurrency(project.budget.allocated - project.budget.spent, project.budget.currency)}</span>
+                  </div>
+                </div>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    getStatusColor(status: string): { bg: string; text: string } {
+      const colors = {
+        active: { bg: 'bg-green-500/20', text: 'text-green-400' },
+        'in-progress': { bg: 'bg-blue-500/20', text: 'text-blue-400' },
+        completed: { bg: 'bg-green-500/20', text: 'text-green-400' },
+        'on-hold': { bg: 'bg-yellow-500/20', text: 'text-yellow-400' },
+        cancelled: { bg: 'bg-red-500/20', text: 'text-red-400' },
+        planning: { bg: 'bg-gray-500/20', text: 'text-gray-400' },
+      };
+      return colors[status as keyof typeof colors] || { bg: 'bg-gray-500/20', text: 'text-gray-400' };
+    }
+
+    formatDate(dateString: string): string {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+  }
+
+  customElements.define('enhanced-project-dashboard', EnhancedProjectDashboard);
+</script>

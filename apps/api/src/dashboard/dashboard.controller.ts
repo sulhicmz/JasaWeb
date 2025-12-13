@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Query,
+  Post,
+  Body,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -133,27 +141,55 @@ export class DashboardController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async getProjectsOverview(
     @CurrentOrganizationId() organizationId: string,
-    @Query('limit') limit: string = '6'
+    @Query('limit') limit: string = '6',
+    @Query('include') include: string = 'basic'
   ) {
     const limitNum = Math.min(parseInt(limit) || 6, 20);
+    const includeDetails = include === 'details';
 
     const projects = await this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       include: {
-        milestones: {
-          select: {
-            id: true,
-            status: true,
-            dueAt: true,
-          },
-        },
-        tickets: {
-          select: {
-            id: true,
-            status: true,
-            priority: true,
-          },
-        },
+        milestones: includeDetails
+          ? {
+              include: {
+                assignees: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            }
+          : {
+              select: {
+                id: true,
+                status: true,
+                dueAt: true,
+                title: true,
+                progress: true,
+              },
+            },
+        tickets: includeDetails
+          ? {
+              include: {
+                assignee: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            }
+          : {
+              select: {
+                id: true,
+                status: true,
+                priority: true,
+              },
+            },
         _count: {
           select: {
             milestones: true,
@@ -1252,6 +1288,832 @@ export class DashboardController {
     if (avgWorkload > 35) return 'consider-resource-allocation';
     if (avgWorkload < 15) return 'underutilized-capacity';
     return 'optimal-resource-utilization';
+  }
+
+  @Get('projects/enhanced')
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
+  async getEnhancedProjects(
+    @CurrentOrganizationId() organizationId: string,
+    @Query('limit') limit: string = '10',
+    @Query('status') status?: string,
+    @Query('risk') riskLevel?: string
+  ) {
+    const limitNum = Math.min(parseInt(limit) || 10, 50);
+
+    // Build where clause
+    const whereClause: any = { organizationId };
+    if (status && status !== 'all') {
+      whereClause.status = status;
+    }
+
+    const projects = await this.multiTenantPrisma.project.findMany({
+      where: whereClause,
+      include: {
+        milestones: {
+          include: {
+            assignees: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { dueAt: 'asc' },
+        },
+        tickets: {
+          include: {
+            assignee: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { priority: 'desc' },
+        },
+        invoices: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            dueAt: true,
+            currency: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: limitNum,
+    });
+
+    // Enhance projects with additional metrics
+    const enhancedProjects = await Promise.all(
+      projects.map(async (project) => {
+        const projectWithMetrics =
+          await this.enhanceProjectWithMetrics(project);
+
+        // Apply risk level filter if specified
+        if (riskLevel && riskLevel !== 'all') {
+          if (projectWithMetrics.riskLevel !== riskLevel) {
+            return null;
+          }
+        }
+
+        return projectWithMetrics;
+      })
+    );
+
+    // Filter out null values (from risk level filtering)
+    return enhancedProjects.filter(
+      (project): project is NonNullable<typeof project> => project !== null
+    );
+  }
+
+  private async enhanceProjectWithMetrics(project: any): Promise<any> {
+    // Calculate health score
+    const healthScore = this.calculateProjectHealthScore(project);
+
+    // Determine risk level
+    const riskLevel = this.determineProjectRiskLevel(project, healthScore);
+
+    // Calculate budget metrics
+    const budgetMetrics = await this.calculateProjectBudgetMetrics(project.id);
+
+    // Get team information
+    const teamInfo = await this.getProjectTeamInfo(project.id);
+
+    // Calculate predicted completion date
+    const predictedCompletion = this.predictProjectCompletion(project);
+
+    return {
+      ...project,
+      healthScore,
+      riskLevel,
+      budget: budgetMetrics,
+      team: teamInfo,
+      predictedCompletion,
+      performanceMetrics: {
+        onTimeDeliveryRate: this.calculateOnTimeDeliveryRate([project]),
+        budgetUtilization:
+          budgetMetrics.allocated > 0
+            ? (budgetMetrics.spent / budgetMetrics.allocated) * 100
+            : 0,
+        teamEfficiency: this.calculateTeamEfficiency(teamInfo),
+        milestoneVelocity: this.calculateMilestoneVelocity(
+          project.milestones || []
+        ),
+      },
+    };
+  }
+
+  private calculateProjectHealthScore(project: any): number {
+    let score = 100;
+
+    // Progress factors
+    const totalMilestones = project.milestones?.length || 0;
+    const completedMilestones =
+      project.milestones?.filter((m: any) => m.status === 'completed').length ||
+      0;
+    const progress =
+      totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
+
+    if (progress < 25) score -= 20;
+    else if (progress < 50) score -= 10;
+    else if (progress > 90) score += 10;
+
+    // Ticket factors
+    const highPriorityTickets =
+      project.tickets?.filter(
+        (t: any) =>
+          (t.priority === 'high' || t.priority === 'critical') &&
+          (t.status === 'open' || t.status === 'in-progress')
+      ).length || 0;
+
+    if (highPriorityTickets > 3) score -= 15;
+    else if (highPriorityTickets > 0) score -= 5;
+
+    // Timeline factors
+    if (project.dueAt && new Date(project.dueAt) < new Date()) {
+      score -= 25;
+    }
+
+    // Milestone completion rate
+    const milestoneRate =
+      totalMilestones > 0 ? completedMilestones / totalMilestones : 0;
+    if (milestoneRate < 0.5) score -= 15;
+    else if (milestoneRate > 0.8) score += 10;
+
+    return Math.max(0, Math.min(100, score));
+  }
+
+  private determineProjectRiskLevel(
+    project: any,
+    healthScore: number
+  ): 'low' | 'medium' | 'high' {
+    if (healthScore >= 80) return 'low';
+    if (healthScore >= 60) return 'medium';
+    return 'high';
+  }
+
+  private async calculateProjectBudgetMetrics(projectId: string) {
+    const invoices = await this.multiTenantPrisma.invoice.findMany({
+      where: { projectId },
+      select: { amount: true, status: true, currency: true },
+    });
+
+    const allocated = invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+    const spent = invoices
+      .filter((inv) => inv.status === 'paid')
+      .reduce((sum, inv) => sum + (inv.amount || 0), 0);
+
+    return {
+      allocated,
+      spent,
+      currency: 'IDR', // Default currency, should be configurable
+    };
+  }
+
+  private async getProjectTeamInfo(projectId: string) {
+    // Get unique team members from milestones and tickets
+    // For now, return empty team array as the schema doesn't include assignees
+    // This would need to be implemented when the schema is updated
+    const allMembers: any[] = [];
+
+    const uniqueMembers = allMembers.filter(
+      (member, index, self) =>
+        index === self.findIndex((m) => m.id === member.id)
+    );
+
+    return uniqueMembers.map((member) => ({
+      ...member,
+      role: 'Team Member', // This could be enhanced with actual roles
+      workload: Math.floor(Math.random() * 100), // Placeholder
+      availability:
+        Math.random() > 0.3
+          ? 'available'
+          : Math.random() > 0.5
+            ? 'busy'
+            : 'unavailable',
+    }));
+  }
+
+  private predictProjectCompletion(project: any): Date {
+    const milestones = project.milestones || [];
+    const completedMilestones = milestones.filter(
+      (m: any) => m.status === 'completed'
+    );
+    const pendingMilestones = milestones.filter(
+      (m: any) => m.status !== 'completed'
+    );
+
+    if (pendingMilestones.length === 0) {
+      return new Date();
+    }
+
+    // Calculate average completion time from completed milestones
+    const avgCompletionTime =
+      completedMilestones.length > 0
+        ? this.calculateAverageMilestoneCompletionTime(completedMilestones)
+        : 7; // Default to 7 days per milestone
+
+    // Predict completion based on remaining milestones
+    const daysRemaining = pendingMilestones.length * avgCompletionTime;
+    const predictedDate = new Date();
+    predictedDate.setDate(predictedDate.getDate() + daysRemaining);
+
+    return predictedDate;
+  }
+
+  private calculateTeamEfficiency(team: any[]): number {
+    if (team.length === 0) return 0;
+
+    const availableMembers = team.filter(
+      (m) => m.availability === 'available'
+    ).length;
+    const avgWorkload =
+      team.reduce((sum, m) => sum + m.workload, 0) / team.length;
+
+    // Efficiency based on availability and workload balance
+    const availabilityScore = (availableMembers / team.length) * 100;
+    const workloadScore = Math.max(0, 100 - avgWorkload);
+
+    return Math.round((availabilityScore + workloadScore) / 2);
+  }
+
+  private calculateMilestoneVelocity(milestones: any[]): number {
+    const completedMilestones = milestones.filter(
+      (m) => m.status === 'completed'
+    );
+    if (completedMilestones.length === 0) return 0;
+
+    const totalTime = completedMilestones.reduce((sum, milestone) => {
+      if (milestone.createdAt && milestone.completedAt) {
+        const days = Math.ceil(
+          (new Date(milestone.completedAt).getTime() -
+            new Date(milestone.createdAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+        return sum + days;
+      }
+      return sum + 7; // Default 7 days
+    }, 0);
+
+    return Math.round(totalTime / completedMilestones.length);
+  }
+
+  @Get('status-reports')
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
+  async getStatusReports(
+    @CurrentOrganizationId() organizationId: string,
+    @Query('period') period: string = 'weekly',
+    @Query('limit') limit: string = '10'
+  ) {
+    const limitNum = Math.min(parseInt(limit) || 10, 50);
+
+    // In a real implementation, these would be stored in a database
+    // For now, we'll generate mock reports based on current projects
+    const projects = await this.multiTenantPrisma.project.findMany({
+      where: { organizationId },
+      include: {
+        milestones: true,
+        tickets: true,
+        invoices: true,
+      },
+      take: limitNum,
+    });
+
+    const reports = await Promise.all(
+      projects.map((project) => this.generateStatusReport(project, period))
+    );
+
+    return reports.filter((report) => report !== null);
+  }
+
+  @Post('status-reports/generate')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
+  async generateStatusReportEndpoint(
+    @Body() body: { period?: string; projectId?: string },
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    const period = body.period || 'weekly';
+
+    if (body.projectId) {
+      const projects = await this.multiTenantPrisma.project.findMany({
+        where: { id: body.projectId, organizationId },
+        include: {
+          milestones: true,
+          tickets: true,
+          invoices: true,
+        },
+      });
+
+      if (projects.length === 0) {
+        throw new Error('Project not found');
+      }
+
+      const report = await this.generateStatusReport(projects[0], period);
+      return report;
+    } else {
+      // Generate reports for all active projects
+      const projects = await this.multiTenantPrisma.project.findMany({
+        where: { organizationId, status: 'active' },
+        include: {
+          milestones: true,
+          tickets: true,
+          invoices: true,
+        },
+      });
+
+      const reports = await Promise.all(
+        projects.map((project) => this.generateStatusReport(project, period))
+      );
+
+      return reports.filter((report) => report !== null);
+    }
+  }
+
+  @Post('status-reports/generate-all')
+  @Roles(Role.OrgOwner, Role.OrgAdmin)
+  async generateAllStatusReports(
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    const projects = await this.multiTenantPrisma.project.findMany({
+      where: { organizationId },
+      include: {
+        milestones: true,
+        tickets: true,
+        invoices: true,
+      },
+    });
+
+    const reports = await Promise.all(
+      projects.map((project) => this.generateStatusReport(project, 'weekly'))
+    );
+
+    return { success: true, generated: reports.length };
+  }
+
+  private async generateStatusReport(
+    project: any,
+    period: string
+  ): Promise<any> {
+    try {
+      const progressMetrics = await this.calculateProgressMetrics(project);
+      const keyAchievements = await this.identifyKeyAchievements(project);
+      const blockersAndRisks = await this.identifyBlockersAndRisks(project);
+      const upcomingMilestones = await this.getUpcomingMilestones(project);
+      const teamPerformance = await this.calculateTeamPerformance(project);
+      const recommendations = await this.generateRecommendations(
+        project,
+        progressMetrics,
+        blockersAndRisks
+      );
+      const nextSteps = await this.generateNextSteps(
+        project,
+        upcomingMilestones
+      );
+
+      const overallStatus = this.determineOverallStatus(
+        progressMetrics,
+        blockersAndRisks
+      );
+
+      return {
+        id: `report-${project.id}-${Date.now()}`,
+        projectId: project.id,
+        projectName: project.name,
+        generatedAt: new Date(),
+        period,
+        overallStatus,
+        progressMetrics,
+        keyAchievements,
+        blockersAndRisks,
+        upcomingMilestones,
+        teamPerformance,
+        recommendations,
+        nextSteps,
+      };
+    } catch (error) {
+      console.error('Error generating status report:', error);
+      return null;
+    }
+  }
+
+  private async calculateProgressMetrics(project: any) {
+    const milestones = project.milestones || [];
+    const tickets = project.tickets || [];
+    const invoices = project.invoices || [];
+
+    // Overall Progress
+    const completedMilestones = milestones.filter(
+      (m: any) => m.status === 'completed'
+    ).length;
+    const overallProgress =
+      milestones.length > 0
+        ? (completedMilestones / milestones.length) * 100
+        : 0;
+
+    // Milestone Progress
+    const milestoneProgress = overallProgress;
+
+    // Budget Utilization
+    const totalBudget = invoices.reduce(
+      (sum: number, inv: any) => sum + (inv.amount || 0),
+      0
+    );
+    const spentBudget = invoices
+      .filter((inv: any) => inv.status === 'paid')
+      .reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+    const budgetUtilization =
+      totalBudget > 0 ? (spentBudget / totalBudget) * 100 : 0;
+
+    // Timeline Adherence
+    const now = new Date();
+    const overdueMilestones = milestones.filter(
+      (m: any) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
+    ).length;
+    const timelineAdherence =
+      milestones.length > 0
+        ? Math.max(0, 100 - (overdueMilestones / milestones.length) * 100)
+        : 100;
+
+    // Team Performance (simplified calculation)
+    const openTickets = tickets.filter(
+      (t: any) => t.status === 'open' || t.status === 'in-progress'
+    ).length;
+    const criticalTickets = tickets.filter(
+      (t: any) => t.priority === 'critical' && t.status !== 'closed'
+    ).length;
+    const teamPerformance = Math.max(
+      0,
+      100 - criticalTickets * 10 - openTickets * 2
+    );
+
+    return {
+      overallProgress: Math.round(overallProgress),
+      milestoneProgress: Math.round(milestoneProgress),
+      budgetUtilization: Math.round(budgetUtilization),
+      timelineAdherence: Math.round(timelineAdherence),
+      teamPerformance: Math.round(teamPerformance),
+    };
+  }
+
+  private async identifyKeyAchievements(project: any): Promise<string[]> {
+    const achievements = [];
+    const milestones = project.milestones || [];
+    const completedMilestones = milestones.filter(
+      (m: any) => m.status === 'completed'
+    );
+
+    if (completedMilestones.length > 0) {
+      achievements.push(
+        `Completed ${completedMilestones.length} milestone${completedMilestones.length > 1 ? 's' : ''}`
+      );
+    }
+
+    const recentMilestones = completedMilestones.filter((m: any) => {
+      const completedAt = m.completedAt ? new Date(m.completedAt) : new Date();
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return completedAt > weekAgo;
+    });
+
+    if (recentMilestones.length > 0) {
+      achievements.push(
+        `${recentMilestones.length} milestone${recentMilestones.length > 1 ? 's' : ''} completed this week`
+      );
+    }
+
+    const tickets = project.tickets || [];
+    const resolvedTickets = tickets.filter((t: any) => t.status === 'closed');
+    if (resolvedTickets.length > 0) {
+      achievements.push(
+        `Resolved ${resolvedTickets.length} ticket${resolvedTickets.length > 1 ? 's' : ''}`
+      );
+    }
+
+    // Add project-specific achievements based on milestones
+    const designMilestones = completedMilestones.filter(
+      (m: any) =>
+        m.title.toLowerCase().includes('design') ||
+        m.title.toLowerCase().includes('ui')
+    );
+    if (designMilestones.length > 0) {
+      achievements.push('Design phase completed successfully');
+    }
+
+    const developmentMilestones = completedMilestones.filter(
+      (m: any) =>
+        m.title.toLowerCase().includes('development') ||
+        m.title.toLowerCase().includes('sprint')
+    );
+    if (developmentMilestones.length > 0) {
+      achievements.push('Development milestones on track');
+    }
+
+    return achievements;
+  }
+
+  private async identifyBlockersAndRisks(project: any): Promise<any[]> {
+    const blockersAndRisks = [];
+    const milestones = project.milestones || [];
+    const tickets = project.tickets || [];
+
+    // Identify overdue milestones as risks
+    const now = new Date();
+    const overdueMilestones = milestones.filter(
+      (m: any) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
+    );
+
+    overdueMilestones.forEach((milestone: any) => {
+      blockersAndRisks.push({
+        type: 'risk',
+        description: `Milestone "${milestone.title}" is overdue`,
+        severity: 'high',
+        dueDate: milestone.dueAt,
+      });
+    });
+
+    // Identify critical tickets as blockers
+    const criticalTickets = tickets.filter(
+      (t: any) =>
+        t.priority === 'critical' &&
+        (t.status === 'open' || t.status === 'in-progress')
+    );
+
+    criticalTickets.forEach((ticket: any) => {
+      blockersAndRisks.push({
+        type: 'blocker',
+        description: `Critical ticket: ${ticket.type || 'Issue'} needs immediate attention`,
+        severity: 'critical',
+      });
+    });
+
+    // Identify high priority tickets as risks
+    const highPriorityTickets = tickets.filter(
+      (t: any) =>
+        t.priority === 'high' &&
+        (t.status === 'open' || t.status === 'in-progress')
+    );
+
+    if (highPriorityTickets.length > 3) {
+      blockersAndRisks.push({
+        type: 'risk',
+        description: `Multiple high priority tickets (${highPriorityTickets.length}) may impact timeline`,
+        severity: 'medium',
+      });
+    }
+
+    // Check for budget risks
+    const invoices = project.invoices || [];
+    const overdueInvoices = invoices.filter(
+      (inv: any) =>
+        (inv.status === 'issued' || inv.status === 'overdue') &&
+        inv.dueAt &&
+        new Date(inv.dueAt) < now
+    );
+
+    if (overdueInvoices.length > 0) {
+      blockersAndRisks.push({
+        type: 'risk',
+        description: `${overdueInvoices.length} overdue invoice${overdueInvoices.length > 1 ? 's' : ''} affecting cash flow`,
+        severity: 'medium',
+      });
+    }
+
+    return blockersAndRisks;
+  }
+
+  private async getUpcomingMilestones(project: any): Promise<any[]> {
+    const milestones = project.milestones || [];
+    const now = new Date();
+    const monthFromNow = new Date();
+    monthFromNow.setDate(monthFromNow.getDate() + 30);
+
+    const upcomingMilestones = milestones
+      .filter(
+        (m: any) =>
+          m.status !== 'completed' &&
+          m.dueAt &&
+          new Date(m.dueAt) >= now &&
+          new Date(m.dueAt) <= monthFromNow
+      )
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
+      )
+      .slice(0, 5)
+      .map((milestone: any) => ({
+        id: milestone.id,
+        title: milestone.title,
+        dueDate: milestone.dueAt,
+        confidence: this.calculateMilestoneConfidence(milestone),
+      }));
+
+    return upcomingMilestones;
+  }
+
+  private calculateMilestoneConfidence(milestone: any): number {
+    let confidence = 80; // Base confidence
+
+    // Reduce confidence based on overdue status
+    if (milestone.dueAt && new Date(milestone.dueAt) < new Date()) {
+      confidence -= 30;
+    }
+
+    // Increase confidence if progress is good
+    if (milestone.progress && milestone.progress > 50) {
+      confidence += 10;
+    }
+
+    // Reduce confidence if no progress
+    if (!milestone.progress || milestone.progress === 0) {
+      confidence -= 20;
+    }
+
+    return Math.max(0, Math.min(100, confidence));
+  }
+
+  private async calculateTeamPerformance(project: any): Promise<any> {
+    const tickets = project.tickets || [];
+
+    // Productivity: Based on ticket resolution rate
+    const totalTickets = tickets.length;
+    const resolvedTickets = tickets.filter(
+      (t: any) => t.status === 'closed'
+    ).length;
+    const productivity =
+      totalTickets > 0 ? (resolvedTickets / totalTickets) * 100 : 75;
+
+    // Collaboration: Based on milestone progress
+    const milestones = project.milestones || [];
+    const completedMilestones = milestones.filter(
+      (m: any) => m.status === 'completed'
+    ).length;
+    const collaboration =
+      milestones.length > 0
+        ? (completedMilestones / milestones.length) * 100
+        : 75;
+
+    // Satisfaction: Placeholder - would come from team surveys
+    const satisfaction = 85;
+
+    // Workload: Based on open tickets
+    const openTickets = tickets.filter(
+      (t: any) => t.status === 'open' || t.status === 'in-progress'
+    ).length;
+    const workload = Math.max(0, 100 - openTickets * 5);
+
+    return {
+      productivity: Math.round(productivity),
+      collaboration: Math.round(collaboration),
+      satisfaction: Math.round(satisfaction),
+      workload: Math.round(workload),
+    };
+  }
+
+  private async generateRecommendations(
+    project: any,
+    metrics: any,
+    blockers: any[]
+  ): Promise<string[]> {
+    const recommendations = [];
+
+    // Progress-based recommendations
+    if (metrics.overallProgress < 50) {
+      recommendations.push(
+        'Consider reviewing project timeline and resource allocation'
+      );
+    }
+
+    if (metrics.milestoneProgress < metrics.overallProgress) {
+      recommendations.push(
+        'Focus on completing milestones to improve overall progress'
+      );
+    }
+
+    // Budget-based recommendations
+    if (metrics.budgetUtilization > 90) {
+      recommendations.push(
+        'Monitor budget closely - approaching allocation limit'
+      );
+    } else if (metrics.budgetUtilization < 50) {
+      recommendations.push(
+        'Budget utilization is low - ensure resources are being used effectively'
+      );
+    }
+
+    // Timeline-based recommendations
+    if (metrics.timelineAdherence < 70) {
+      recommendations.push(
+        'Address timeline delays immediately to prevent project slippage'
+      );
+    }
+
+    // Team performance recommendations
+    if (metrics.teamPerformance < 60) {
+      recommendations.push(
+        'Team performance needs attention - consider workload redistribution'
+      );
+    }
+
+    // Blocker-specific recommendations
+    const criticalBlockers = blockers.filter(
+      (b: any) => b.severity === 'critical'
+    );
+    if (criticalBlockers.length > 0) {
+      recommendations.push(
+        'Address critical blockers immediately to prevent project failure'
+      );
+    }
+
+    const highRisks = blockers.filter(
+      (b: any) => b.type === 'risk' && b.severity === 'high'
+    );
+    if (highRisks.length > 2) {
+      recommendations.push(
+        'Multiple high-risk items identified - implement risk mitigation plan'
+      );
+    }
+
+    // Default recommendation if everything is going well
+    if (recommendations.length === 0) {
+      recommendations.push(
+        'Project is performing well - maintain current momentum'
+      );
+    }
+
+    return recommendations.slice(0, 5); // Limit to 5 recommendations
+  }
+
+  private async generateNextSteps(
+    project: any,
+    upcomingMilestones: any[]
+  ): Promise<string[]> {
+    const nextSteps = [];
+
+    // Add upcoming milestones as next steps
+    upcomingMilestones.slice(0, 3).forEach((milestone: any) => {
+      nextSteps.push(
+        `Complete "${milestone.title}" milestone by ${this.formatDateShort(milestone.dueDate)}`
+      );
+    });
+
+    // Add action items based on project status
+    const tickets = project.tickets || [];
+    const criticalTickets = tickets.filter(
+      (t: any) => t.priority === 'critical' && t.status !== 'closed'
+    );
+
+    if (criticalTickets.length > 0) {
+      nextSteps.push(
+        `Resolve ${criticalTickets.length} critical ticket${criticalTickets.length > 1 ? 's' : ''}`
+      );
+    }
+
+    const highPriorityTickets = tickets.filter(
+      (t: any) => t.priority === 'high' && t.status !== 'closed'
+    );
+    if (highPriorityTickets.length > 0) {
+      nextSteps.push(
+        `Address ${highPriorityTickets.length} high priority ticket${highPriorityTickets.length > 1 ? 's' : ''}`
+      );
+    }
+
+    // Add general next steps
+    nextSteps.push('Review project progress with stakeholders');
+    nextSteps.push('Update project documentation');
+
+    return nextSteps.slice(0, 6); // Limit to 6 next steps
+  }
+
+  private determineOverallStatus(metrics: any, blockers: any[]): string {
+    const criticalBlockers = blockers.filter(
+      (b: any) => b.severity === 'critical'
+    ).length;
+    const highRisks = blockers.filter((b: any) => b.severity === 'high').length;
+
+    if (criticalBlockers > 0) return 'critical';
+    if (highRisks > 2 || metrics.timelineAdherence < 50) return 'delayed';
+    if (
+      highRisks > 0 ||
+      metrics.timelineAdherence < 70 ||
+      metrics.overallProgress < 40
+    )
+      return 'at-risk';
+    if (metrics.overallProgress >= 90) return 'completed';
+    return 'on-track';
+  }
+
+  private formatDateShort(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
   }
 
   @Get('analytics/predictive')

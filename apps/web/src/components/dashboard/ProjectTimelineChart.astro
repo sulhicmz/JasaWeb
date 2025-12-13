@@ -1,0 +1,570 @@
+---
+// Project Timeline/Gantt Chart Component for enhanced project visualization
+---
+
+<project-timeline-chart></project-timeline-chart>
+
+<script>
+  interface TimelineMilestone {
+    id: string;
+    title: string;
+    start: Date;
+    end: Date;
+    progress: number;
+    status: 'pending' | 'in-progress' | 'completed' | 'overdue';
+    dependencies?: string[];
+    assignees?: string[];
+    category?: string;
+  }
+
+  interface TimelineProject {
+    id: string;
+    name: string;
+    start: Date;
+    end: Date;
+    milestones: TimelineMilestone[];
+    progress: number;
+    status: string;
+    color?: string;
+  }
+
+  class ProjectTimelineChart extends HTMLElement {
+    private projects: TimelineProject[] = [];
+    private selectedProject: TimelineProject | null = null;
+    private viewMode: 'month' | 'quarter' | 'year' = 'month';
+    private loading = false;
+    private error: string | null = null;
+    private currentDate = new Date();
+    private timelineStartDate: Date;
+    private timelineEndDate: Date;
+
+    connectedCallback() {
+      this.calculateTimelineBounds();
+      this.render();
+      this.fetchTimelineData();
+      this.setupEventListeners();
+    }
+
+    calculateTimelineBounds() {
+      this.timelineStartDate = new Date(this.currentDate);
+      this.timelineEndDate = new Date(this.currentDate);
+
+      switch (this.viewMode) {
+        case 'month':
+          this.timelineStartDate.setDate(1);
+          this.timelineEndDate.setMonth(this.timelineEndDate.getMonth() + 1);
+          this.timelineEndDate.setDate(0);
+          break;
+        case 'quarter':
+          const quarter = Math.floor(this.currentDate.getMonth() / 3);
+          this.timelineStartDate.setMonth(quarter * 3, 1);
+          this.timelineEndDate.setMonth((quarter + 1) * 3, 0);
+          break;
+        case 'year':
+          this.timelineStartDate.setMonth(0, 1);
+          this.timelineEndDate.setMonth(11, 31);
+          break;
+      }
+    }
+
+    setupEventListeners() {
+      window.addEventListener('refresh-dashboard', () => {
+        this.fetchTimelineData();
+      });
+
+      window.addEventListener('project-updated', (e: any) => {
+        this.handleProjectUpdate(e.detail);
+      });
+    }
+
+    async fetchTimelineData() {
+      this.loading = true;
+      this.error = null;
+      this.render();
+
+      try {
+        const response = await fetch(`/api/dashboard/projects/enhanced?limit=5&include=timeline`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const projectsData = await response.json();
+        this.projects = this.transformToTimelineData(projectsData);
+      } catch (err) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch timeline data';
+        console.error('Error fetching timeline data:', err);
+      } finally {
+        this.loading = false;
+        this.render();
+      }
+    }
+
+    transformToTimelineData(projectsData: any[]): TimelineProject[] {
+      return projectsData.map((project, index) => {
+        const milestones = (project.milestones || []).map((milestone: any) => ({
+          id: milestone.id,
+          title: milestone.title,
+          start: new Date(milestone.createdAt || milestone.dueAt),
+          end: new Date(milestone.dueAt),
+          progress: milestone.progress || 0,
+          status: milestone.status,
+          dependencies: milestone.dependencies || [],
+          assignees: milestone.assignees?.map((a: any) => a.name) || [],
+          category: this.categorizeMilestone(milestone.title),
+        }));
+
+        const projectStart = milestones.length > 0 
+          ? new Date(Math.min(...milestones.map(m => m.start.getTime())))
+          : new Date(project.createdAt);
+        
+        const projectEnd = milestones.length > 0
+          ? new Date(Math.max(...milestones.map(m => m.end.getTime())))
+          : new Date(project.dueAt || project.createdAt);
+
+        return {
+          id: project.id,
+          name: project.name,
+          start: projectStart,
+          end: projectEnd,
+          milestones,
+          progress: project.progress || 0,
+          status: project.status,
+          color: this.getProjectColor(index),
+        };
+      });
+    }
+
+    categorizeMilestone(title: string): string {
+      const categories = {
+        'Planning': ['kickoff', 'planning', 'requirements', 'discovery', 'analysis'],
+        'Design': ['design', 'ui', 'ux', 'mockup', 'prototype', 'wireframe'],
+        'Development': ['development', 'sprint', 'coding', 'implementation', 'feature'],
+        'Testing': ['testing', 'qa', 'quality', 'review', 'validation'],
+        'Deployment': ['deployment', 'launch', 'release', 'go-live', 'production'],
+      };
+
+      const lowerTitle = title.toLowerCase();
+      for (const [category, keywords] of Object.entries(categories)) {
+        if (keywords.some(keyword => lowerTitle.includes(keyword))) {
+          return category;
+        }
+      }
+      return 'Other';
+    }
+
+    getProjectColor(index: number): string {
+      const colors = [
+        '#3B82F6', // blue
+        '#10B981', // green
+        '#F59E0B', // yellow
+        '#EF4444', // red
+        '#8B5CF6', // purple
+        '#EC4899', // pink
+        '#14B8A6', // teal
+        '#F97316', // orange
+      ];
+      return colors[index % colors.length];
+    }
+
+    handleProjectUpdate(data: any) {
+      const projectIndex = this.projects.findIndex(p => p.id === data.projectId);
+      if (projectIndex !== -1) {
+        // Update project data
+        this.projects[projectIndex] = { ...this.projects[projectIndex], ...data.updates };
+        this.render();
+      }
+    }
+
+    setViewMode(mode: 'month' | 'quarter' | 'year') {
+      this.viewMode = mode;
+      this.calculateTimelineBounds();
+      this.render();
+    }
+
+    selectProject(project: TimelineProject) {
+      this.selectedProject = this.selectedProject?.id === project.id ? null : project;
+      this.render();
+    }
+
+    navigateTimeline(direction: 'prev' | 'next') {
+      switch (this.viewMode) {
+        case 'month':
+          this.currentDate.setMonth(this.currentDate.getMonth() + (direction === 'next' ? 1 : -1));
+          break;
+        case 'quarter':
+          this.currentDate.setMonth(this.currentDate.getMonth() + (direction === 'next' ? 3 : -3));
+          break;
+        case 'year':
+          this.currentDate.setFullYear(this.currentDate.getFullYear() + (direction === 'next' ? 1 : -1));
+          break;
+      }
+      this.calculateTimelineBounds();
+      this.fetchTimelineData();
+    }
+
+    render() {
+      if (this.loading) {
+        this.innerHTML = `
+          <div class="glass-panel p-8 rounded-xl">
+            <div class="text-center text-white">
+              <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+              <p>Loading project timeline...</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (this.error) {
+        this.innerHTML = `
+          <div class="glass-panel p-8 rounded-xl border border-red-500/20">
+            <div class="text-center text-red-400">
+              <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+              <p>${this.error}</p>
+              <button onclick="this.closest('project-timeline-chart').fetchTimelineData()" 
+                      class="mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg">
+                Retry
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      this.innerHTML = `
+        <div class="glass-panel p-6 rounded-xl">
+          <!-- Header -->
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
+            <div>
+              <h2 class="text-2xl font-bold text-white mb-2">Project Timeline</h2>
+              <p class="text-gray-400">Visualize project schedules and milestones</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- View Mode Toggle -->
+              <div class="flex bg-slate-800 rounded-lg p-1">
+                <button onclick="this.closest('project-timeline-chart').setViewMode('month')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.viewMode === 'month' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Month
+                </button>
+                <button onclick="this.closest('project-timeline-chart').setViewMode('quarter')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.viewMode === 'quarter' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Quarter
+                </button>
+                <button onclick="this.closest('project-timeline-chart').setViewMode('year')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.viewMode === 'year' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Year
+                </button>
+              </div>
+
+              <!-- Navigation -->
+              <div class="flex items-center space-x-2">
+                <button onclick="this.closest('project-timeline-chart').navigateTimeline('prev')" 
+                        class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="text-white font-medium min-w-[120px] text-center">
+                  ${this.formatTimelineRange()}
+                </span>
+                <button onclick="this.closest('project-timeline-chart').navigateTimeline('next')" 
+                        class="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Chart -->
+          <div class="bg-slate-800/50 rounded-xl p-6 overflow-x-auto">
+            ${this.renderTimelineChart()}
+          </div>
+
+          <!-- Project Details -->
+          ${this.selectedProject ? this.renderProjectDetails() : ''}
+        </div>
+      `;
+    }
+
+    renderTimelineChart(): string {
+      if (this.projects.length === 0) {
+        return `
+          <div class="text-center py-12 text-gray-400">
+            <i class="fas fa-calendar-alt text-6xl mb-4 opacity-50"></i>
+            <p class="text-xl">No projects to display</p>
+            <p class="text-sm mt-2">Projects will appear here once they have milestones defined</p>
+          </div>
+        `;
+      }
+
+      const totalDays = Math.ceil(
+        (this.timelineEndDate.getTime() - this.timelineStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      return `
+        <div class="min-w-[800px]">
+          <!-- Timeline Header -->
+          <div class="flex border-b border-slate-700 pb-4 mb-4">
+            <div class="w-48 pr-4">
+              <h3 class="text-sm font-semibold text-gray-400">Projects</h3>
+            </div>
+            <div class="flex-1 relative">
+              <div class="flex h-8">
+                ${this.renderTimelineHeader(totalDays)}
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline Rows -->
+          <div class="space-y-3">
+            ${this.projects.map(project => this.renderProjectRow(project, totalDays)).join('')}
+          </div>
+
+          <!-- Legend -->
+          <div class="flex items-center justify-center space-x-6 mt-6 pt-4 border-t border-slate-700">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-blue-500 rounded"></div>
+              <span class="text-xs text-gray-400">Planning</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-purple-500 rounded"></div>
+              <span class="text-xs text-gray-400">Design</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-green-500 rounded"></div>
+              <span class="text-xs text-gray-400">Development</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+              <span class="text-xs text-gray-400">Testing</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-red-500 rounded"></div>
+              <span class="text-xs text-gray-400">Deployment</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    renderTimelineHeader(totalDays: number): string {
+      const headers = [];
+      
+      if (this.viewMode === 'month') {
+        // Show weeks for month view
+        const weeks = Math.ceil(totalDays / 7);
+        for (let i = 0; i < weeks; i++) {
+          const weekStart = new Date(this.timelineStartDate);
+          weekStart.setDate(weekStart.getDate() + (i * 7));
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          
+          headers.push(`
+            <div class="flex-1 text-center border-r border-slate-700 last:border-r-0">
+              <div class="text-xs text-gray-400">Week ${i + 1}</div>
+              <div class="text-xs text-gray-500">${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+            </div>
+          `);
+        }
+      } else if (this.viewMode === 'quarter') {
+        // Show months for quarter view
+        const months = Math.ceil(totalDays / 30);
+        for (let i = 0; i < months; i++) {
+          const monthStart = new Date(this.timelineStartDate);
+          monthStart.setMonth(monthStart.getMonth() + i);
+          
+          headers.push(`
+            <div class="flex-1 text-center border-r border-slate-700 last:border-r-0">
+              <div class="text-xs text-gray-400">${monthStart.toLocaleDateString('en-US', { month: 'short' })}</div>
+            </div>
+          `);
+        }
+      } else {
+        // Show quarters for year view
+        const quarters = Math.ceil(totalDays / 90);
+        for (let i = 0; i < quarters; i++) {
+          headers.push(`
+            <div class="flex-1 text-center border-r border-slate-700 last:border-r-0">
+              <div class="text-xs text-gray-400">Q${i + 1}</div>
+            </div>
+          `);
+        }
+      }
+
+      return headers.join('');
+    }
+
+    renderProjectRow(project: TimelineProject, totalDays: number): string {
+      const projectStartOffset = Math.max(0, Math.ceil(
+        (project.start.getTime() - this.timelineStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      ));
+      
+      const projectDuration = Math.ceil(
+        (project.end.getTime() - project.start.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      
+      const projectWidthPercent = (projectDuration / totalDays) * 100;
+      const projectLeftPercent = (projectStartOffset / totalDays) * 100;
+
+      return `
+        <div class="flex items-center">
+          <!-- Project Name -->
+          <div class="w-48 pr-4">
+            <button onclick="this.closest('project-timeline-chart').selectProject(${JSON.stringify(project).replace(/"/g, '&quot;')})" 
+                    class="text-left hover:text-blue-400 transition-colors">
+              <div class="font-medium text-white text-sm truncate">${project.name}</div>
+              <div class="text-xs text-gray-400">${project.progress}% complete</div>
+            </button>
+          </div>
+
+          <!-- Timeline Bar -->
+          <div class="flex-1 relative h-12">
+            <!-- Project Background Bar -->
+            <div class="absolute h-6 bg-slate-700 rounded" 
+                 style="left: ${projectLeftPercent}%; width: ${projectWidthPercent}%; top: 50%; transform: translateY(-50%);">
+              <!-- Progress Bar -->
+              <div class="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-l" 
+                   style="width: ${project.progress}%;"></div>
+            </div>
+
+            <!-- Milestones -->
+            ${project.milestones.map(milestone => this.renderMilestone(milestone, totalDays)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    renderMilestone(milestone: TimelineMilestone, totalDays: number): string {
+      const startOffset = Math.max(0, Math.ceil(
+        (milestone.start.getTime() - this.timelineStartDate.getTime()) / (1000 * 60 * 60 * 24)
+      ));
+      
+      const duration = Math.ceil(
+        (milestone.end.getTime() - milestone.start.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      
+      const leftPercent = (startOffset / totalDays) * 100;
+      const widthPercent = Math.max(1, (duration / totalDays) * 100);
+
+      const categoryColors = {
+        'Planning': '#3B82F6',
+        'Design': '#8B5CF6',
+        'Development': '#10B981',
+        'Testing': '#F59E0B',
+        'Deployment': '#EF4444',
+        'Other': '#6B7280',
+      };
+
+      const color = categoryColors[milestone.category as keyof typeof categoryColors] || '#6B7280';
+      const statusOpacity = milestone.status === 'completed' ? '1' : '0.6';
+
+      return `
+        <div class="absolute h-2 rounded cursor-pointer hover:opacity-80 transition-opacity"
+             style="left: ${leftPercent}%; width: ${widthPercent}%; top: 50%; transform: translateY(-50%); 
+                    background-color: ${color}; opacity: ${statusOpacity};"
+             title="${milestone.title} (${milestone.progress}%)">
+        </div>
+      `;
+    }
+
+    renderProjectDetails(): string {
+      if (!this.selectedProject) return '';
+
+      const project = this.selectedProject;
+
+      return `
+        <div class="mt-6 p-6 bg-slate-800/50 rounded-xl">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white">${project.name}</h3>
+            <button onclick="this.closest('project-timeline-chart').selectProject({id: ''})" 
+                    class="text-gray-400 hover:text-white">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Project Info -->
+            <div>
+              <h4 class="text-sm font-medium text-gray-400 mb-3">Project Information</h4>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Status:</span>
+                  <span class="text-white">${project.status}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Progress:</span>
+                  <span class="text-white">${project.progress}%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Start Date:</span>
+                  <span class="text-white">${this.formatDate(project.start)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">End Date:</span>
+                  <span class="text-white">${this.formatDate(project.end)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-400">Duration:</span>
+                  <span class="text-white">${this.calculateDuration(project.start, project.end)} days</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestones -->
+            <div>
+              <h4 class="text-sm font-medium text-gray-400 mb-3">Milestones (${project.milestones.length})</h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${project.milestones.map(milestone => `
+                  <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded text-sm">
+                    <div>
+                      <div class="text-white font-medium">${milestone.title}</div>
+                      <div class="text-gray-400 text-xs">${milestone.category}</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-white">${milestone.progress}%</div>
+                      <div class="text-xs text-gray-400">${milestone.status}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    formatTimelineRange(): string {
+      switch (this.viewMode) {
+        case 'month':
+          return this.currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        case 'quarter':
+          const quarter = Math.floor(this.currentDate.getMonth() / 3) + 1;
+          return `Q${quarter} ${this.currentDate.getFullYear()}`;
+        case 'year':
+          return this.currentDate.getFullYear().toString();
+        default:
+          return '';
+      }
+    }
+
+    formatDate(date: Date): string {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    calculateDuration(start: Date, end: Date): number {
+      return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    }
+  }
+
+  customElements.define('project-timeline-chart', ProjectTimelineChart);
+</script>

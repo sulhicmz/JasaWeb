@@ -3,6 +3,9 @@ import DashboardLayout from '../layouts/DashboardLayout.astro';
 import DashboardStats from '../components/dashboard/DashboardStats.astro';
 import RecentActivity from '../components/dashboard/RecentActivity.astro';
 import ProjectsOverview from '../components/dashboard/ProjectsOverview.astro';
+import EnhancedProjectDashboard from '../components/dashboard/EnhancedProjectDashboard.astro';
+import ProjectTimelineChart from '../components/dashboard/ProjectTimelineChart.astro';
+import ProjectStatusReports from '../components/dashboard/ProjectStatusReports.astro';
 import NotificationToast from '../components/dashboard/NotificationToast.astro';
 import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
 import DashboardExport from '../components/dashboard/DashboardExport.astro';
@@ -64,6 +67,21 @@ import '../services/notificationService.ts';
       <!-- Advanced Analytics -->
       <section class="mb-8">
         <AdvancedAnalytics client:load />
+      </section>
+
+      <!-- Enhanced Project Dashboard -->
+      <section class="mb-8">
+        <EnhancedProjectDashboard client:load />
+      </section>
+
+      <!-- Project Timeline Chart -->
+      <section class="mb-8">
+        <ProjectTimelineChart client:load />
+      </section>
+
+      <!-- Project Status Reports -->
+      <section class="mb-8">
+        <ProjectStatusReports client:load />
       </section>
 
       <!-- Grid Layout for Activity and Projects -->

@@ -1,0 +1,621 @@
+---
+// Project Status Reporting Component with automated progress calculations
+---
+
+<project-status-reports></project-status-reports>
+
+<script>
+  interface StatusReport {
+    id: string;
+    projectId: string;
+    projectName: string;
+    generatedAt: Date;
+    period: 'weekly' | 'monthly' | 'quarterly';
+    overallStatus: 'on-track' | 'at-risk' | 'delayed' | 'completed';
+    progressMetrics: {
+      overallProgress: number;
+      milestoneProgress: number;
+      budgetUtilization: number;
+      timelineAdherence: number;
+      teamPerformance: number;
+    };
+    keyAchievements: string[];
+    blockersAndRisks: {
+      type: 'blocker' | 'risk';
+      description: string;
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      owner?: string;
+      dueDate?: Date;
+    }[];
+    upcomingMilestones: {
+      id: string;
+      title: string;
+      dueDate: Date;
+      confidence: number;
+    }[];
+    teamPerformance: {
+      productivity: number;
+      collaboration: number;
+      satisfaction: number;
+      workload: number;
+    };
+    recommendations: string[];
+    nextSteps: string[];
+  }
+
+  class ProjectStatusReports extends HTMLElement {
+    private reports: StatusReport[] = [];
+    private selectedReport: StatusReport | null = null;
+    private loading = false;
+    private error: string | null = null;
+    private reportPeriod: 'weekly' | 'monthly' | 'quarterly' = 'weekly';
+    private autoGenerate = true;
+
+    connectedCallback() {
+      this.render();
+      this.fetchReports();
+      this.setupAutoGeneration();
+      this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+      window.addEventListener('refresh-dashboard', () => {
+        this.fetchReports();
+      });
+
+      window.addEventListener('generate-status-report', (e: any) => {
+        this.generateReport(e.detail.projectId);
+      });
+    }
+
+    setupAutoGeneration() {
+      // Auto-generate reports every hour
+      if (this.autoGenerate) {
+        setInterval(() => {
+          this.generateAllReports();
+        }, 60 * 60 * 1000);
+      }
+    }
+
+    async fetchReports() {
+      this.loading = true;
+      this.error = null;
+      this.render();
+
+      try {
+        const response = await fetch(`/api/dashboard/status-reports?period=${this.reportPeriod}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        this.reports = await response.json();
+      } catch (err) {
+        this.error = err instanceof Error ? err.message : 'Failed to fetch status reports';
+        console.error('Error fetching status reports:', err);
+      } finally {
+        this.loading = false;
+        this.render();
+      }
+    }
+
+    async generateReport(projectId?: string) {
+      try {
+        const url = projectId 
+          ? `/api/dashboard/status-reports/generate?projectId=${projectId}`
+          : '/api/dashboard/status-reports/generate';
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            period: this.reportPeriod,
+            includeRecommendations: true,
+            includeTeamMetrics: true,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const newReport = await response.json();
+        this.reports.unshift(newReport);
+        this.render();
+        
+        this.showNotification('Status report generated successfully', 'success');
+      } catch (err) {
+        console.error('Error generating report:', err);
+        this.showNotification('Failed to generate status report', 'error');
+      }
+    }
+
+    async generateAllReports() {
+      try {
+        const response = await fetch('/api/dashboard/status-reports/generate-all', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          await this.fetchReports();
+        }
+      } catch (err) {
+        console.error('Error generating all reports:', err);
+      }
+    }
+
+    selectReport(report: StatusReport) {
+      this.selectedReport = this.selectedReport?.id === report.id ? null : report;
+      this.render();
+    }
+
+    setReportPeriod(period: 'weekly' | 'monthly' | 'quarterly') {
+      this.reportPeriod = period;
+      this.fetchReports();
+    }
+
+    exportReport(report: StatusReport, format: 'pdf' | 'excel' | 'json') {
+      const url = `/api/dashboard/status-reports/${report.id}/export?format=${format}`;
+      window.open(url, '_blank');
+    }
+
+    showNotification(message: string, type: 'success' | 'error' = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      } text-white`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    calculateOverallStatus(report: StatusReport): string {
+      const metrics = report.progressMetrics;
+      const avgScore = (
+        metrics.overallProgress +
+        metrics.milestoneProgress +
+        (100 - Math.abs(100 - metrics.budgetUtilization)) + // Closer to 100% is better
+        metrics.timelineAdherence +
+        metrics.teamPerformance
+      ) / 5;
+
+      if (avgScore >= 85) return 'on-track';
+      if (avgScore >= 70) return 'at-risk';
+      if (avgScore >= 50) return 'delayed';
+      return 'critical';
+    }
+
+    getStatusColor(status: string): string {
+      switch (status) {
+        case 'on-track': return 'text-green-400 bg-green-500/20';
+        case 'at-risk': return 'text-yellow-400 bg-yellow-500/20';
+        case 'delayed': return 'text-orange-400 bg-orange-500/20';
+        case 'critical': return 'text-red-400 bg-red-500/20';
+        case 'completed': return 'text-blue-400 bg-blue-500/20';
+        default: return 'text-gray-400 bg-gray-500/20';
+      }
+    }
+
+    getSeverityColor(severity: string): string {
+      switch (severity) {
+        case 'low': return 'text-blue-400';
+        case 'medium': return 'text-yellow-400';
+        case 'high': return 'text-orange-400';
+        case 'critical': return 'text-red-400';
+        default: return 'text-gray-400';
+      }
+    }
+
+    formatMetric(value: number): string {
+      return `${Math.round(value)}%`;
+    }
+
+    formatDate(date: Date | string): string {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    render() {
+      if (this.loading) {
+        this.innerHTML = `
+          <div class="glass-panel p-8 rounded-xl">
+            <div class="text-center text-white">
+              <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+              <p>Loading status reports...</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (this.error) {
+        this.innerHTML = `
+          <div class="glass-panel p-8 rounded-xl border border-red-500/20">
+            <div class="text-center text-red-400">
+              <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+              <p>${this.error}</p>
+              <button onclick="this.closest('project-status-reports').fetchReports()" 
+                      class="mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg">
+                Retry
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      this.innerHTML = `
+        <div class="glass-panel p-6 rounded-xl">
+          <!-- Header -->
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
+            <div>
+              <h2 class="text-2xl font-bold text-white mb-2">Project Status Reports</h2>
+              <p class="text-gray-400">Automated progress calculations and insights</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- Period Selector -->
+              <div class="flex bg-slate-800 rounded-lg p-1">
+                <button onclick="this.closest('project-status-reports').setReportPeriod('weekly')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.reportPeriod === 'weekly' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Weekly
+                </button>
+                <button onclick="this.closest('project-status-reports').setReportPeriod('monthly')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.reportPeriod === 'monthly' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Monthly
+                </button>
+                <button onclick="this.closest('project-status-reports').setReportPeriod('quarterly')" 
+                        class="px-3 py-1 rounded text-sm transition-colors ${
+                          this.reportPeriod === 'quarterly' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'
+                        }">
+                  Quarterly
+                </button>
+              </div>
+
+              <!-- Generate Report Button -->
+              <button onclick="this.closest('project-status-reports').generateReport()" 
+                      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center space-x-2">
+                <i class="fas fa-plus"></i>
+                <span>Generate Report</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Reports Summary -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-white">${this.reports.length}</div>
+              <div class="text-sm text-gray-400">Total Reports</div>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-green-400">
+                ${this.reports.filter(r => r.overallStatus === 'on-track').length}
+              </div>
+              <div class="text-sm text-gray-400">On Track</div>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-yellow-400">
+                ${this.reports.filter(r => r.overallStatus === 'at-risk').length}
+              </div>
+              <div class="text-sm text-gray-400">At Risk</div>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-lg">
+              <div class="text-2xl font-bold text-red-400">
+                ${this.reports.filter(r => r.overallStatus === 'delayed' || r.overallStatus === 'critical').length}
+              </div>
+              <div class="text-sm text-gray-400">Delayed</div>
+            </div>
+          </div>
+
+          <!-- Reports List -->
+          ${this.reports.length === 0 ? `
+            <div class="text-center py-12 text-gray-400">
+              <i class="fas fa-chart-line text-6xl mb-4 opacity-50"></i>
+              <p class="text-xl">No status reports available</p>
+              <p class="text-sm mt-2">Generate your first report to see project insights</p>
+            </div>
+          ` : `
+            <div class="space-y-4">
+              ${this.reports.map(report => this.renderReportCard(report)).join('')}
+            </div>
+          `}
+
+          <!-- Selected Report Details -->
+          ${this.selectedReport ? this.renderReportDetails() : ''}
+        </div>
+      `;
+    }
+
+    renderReportCard(report: StatusReport): string {
+      const statusColor = this.getStatusColor(report.overallStatus);
+      const avgProgress = Math.round(
+        Object.values(report.progressMetrics).reduce((sum, val) => sum + val, 0) / 
+        Object.values(report.progressMetrics).length
+      );
+
+      return `
+        <div class="bg-slate-800/50 rounded-xl p-6 hover:bg-slate-800/70 transition-all duration-300 cursor-pointer"
+             onclick="this.closest('project-status-reports').selectReport(${JSON.stringify(report).replace(/"/g, '&quot;')})">
+          
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <h3 class="text-lg font-semibold text-white">${report.projectName}</h3>
+                <span class="px-2 py-1 ${statusColor} text-xs rounded-full">
+                  ${report.overallStatus}
+                </span>
+                <span class="text-xs text-gray-400 capitalize">${report.period}</span>
+              </div>
+              <p class="text-sm text-gray-400">
+                Generated on ${this.formatDate(report.generatedAt)}
+              </p>
+            </div>
+            
+            <div class="text-right ml-4">
+              <div class="text-2xl font-bold text-white">${avgProgress}%</div>
+              <div class="text-xs text-gray-400">Avg Progress</div>
+            </div>
+          </div>
+
+          <!-- Key Metrics -->
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div class="text-center">
+              <div class="text-lg font-bold text-blue-400">${this.formatMetric(report.progressMetrics.overallProgress)}</div>
+              <div class="text-xs text-gray-400">Overall</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-green-400">${this.formatMetric(report.progressMetrics.milestoneProgress)}</div>
+              <div class="text-xs text-gray-400">Milestones</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-yellow-400">${this.formatMetric(report.progressMetrics.budgetUtilization)}</div>
+              <div class="text-xs text-gray-400">Budget</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-purple-400">${this.formatMetric(report.progressMetrics.timelineAdherence)}</div>
+              <div class="text-xs text-gray-400">Timeline</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-bold text-pink-400">${this.formatMetric(report.progressMetrics.teamPerformance)}</div>
+              <div class="text-xs text-gray-400">Team</div>
+            </div>
+          </div>
+
+          <!-- Key Insights -->
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              ${report.blockersAndRisks.length > 0 ? `
+                <div class="flex items-center space-x-2 text-sm">
+                  <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                  <span class="text-gray-300">
+                    ${report.blockersAndRisks.filter(r => r.type === 'blocker').length} blockers, 
+                    ${report.blockersAndRisks.filter(r => r.type === 'risk').length} risks
+                  </span>
+                </div>
+              ` : `
+                <div class="flex items-center space-x-2 text-sm">
+                  <i class="fas fa-check-circle text-green-400"></i>
+                  <span class="text-gray-300">No critical issues</span>
+                </div>
+              `}
+            </div>
+            
+            <div class="flex items-center space-x-2">
+              <button onclick="event.stopPropagation(); this.closest('project-status-reports').exportReport(${JSON.stringify(report).replace(/"/g, '&quot;')}, 'pdf')" 
+                      class="p-2 text-gray-400 hover:text-white transition-colors" title="Export PDF">
+                <i class="fas fa-file-pdf"></i>
+              </button>
+              <button onclick="event.stopPropagation(); this.closest('project-status-reports').exportReport(${JSON.stringify(report).replace(/"/g, '&quot;')}, 'excel')" 
+                      class="p-2 text-gray-400 hover:text-white transition-colors" title="Export Excel">
+                <i class="fas fa-file-excel"></i>
+              </button>
+              <i class="fas fa-chevron-right text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    renderReportDetails(): string {
+      if (!this.selectedReport) return '';
+
+      const report = this.selectedReport;
+
+      return `
+        <div class="mt-6 p-6 bg-slate-800/50 rounded-xl">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="text-xl font-bold text-white">${report.projectName} - Status Report</h3>
+              <p class="text-gray-400">
+                ${report.period.charAt(0).toUpperCase() + report.period.slice(1)} report generated on ${this.formatDate(report.generatedAt)}
+              </p>
+            </div>
+            <button onclick="this.closest('project-status-reports').selectReport({id: ''})" 
+                    class="text-gray-400 hover:text-white">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Progress Metrics -->
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-4">Progress Metrics</h4>
+              <div class="space-y-3">
+                ${Object.entries(report.progressMetrics).map(([key, value]) => `
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span class="text-gray-400 capitalize">${key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                      <span class="text-white">${this.formatMetric(value)}</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2">
+                      <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" 
+                           style="width: ${value}%"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Key Achievements -->
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-4">Key Achievements</h4>
+              <div class="space-y-2">
+                ${report.keyAchievements.length > 0 ? 
+                  report.keyAchievements.map(achievement => `
+                    <div class="flex items-start space-x-2">
+                      <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                      <span class="text-gray-300 text-sm">${achievement}</span>
+                    </div>
+                  `).join('') :
+                  '<p class="text-gray-400 text-sm">No achievements recorded for this period</p>'
+                }
+              </div>
+            </div>
+
+            <!-- Blockers and Risks -->
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-4">Blockers & Risks</h4>
+              <div class="space-y-3">
+                ${report.blockersAndRisks.length > 0 ?
+                  report.blockersAndRisks.map(item => `
+                    <div class="p-3 bg-slate-700/50 rounded-lg">
+                      <div class="flex items-start justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                          <i class="fas ${item.type === 'blocker' ? 'fa-ban text-red-400' : 'fa-exclamation-triangle text-yellow-400'}"></i>
+                          <span class="text-white font-medium text-sm capitalize">${item.type}</span>
+                          <span class="px-2 py-0.5 ${this.getSeverityColor(item.severity)} bg-opacity-20 text-xs rounded-full">
+                            ${item.severity}
+                          </span>
+                        </div>
+                      </div>
+                      <p class="text-gray-300 text-sm mb-2">${item.description}</p>
+                      ${item.owner ? `<p class="text-gray-400 text-xs">Owner: ${item.owner}</p>` : ''}
+                      ${item.dueDate ? `<p class="text-gray-400 text-xs">Due: ${this.formatDate(item.dueDate)}</p>` : ''}
+                    </div>
+                  `).join('') :
+                  '<p class="text-gray-400 text-sm">No blockers or risks identified</p>'
+                }
+              </div>
+            </div>
+
+            <!-- Upcoming Milestones -->
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-4">Upcoming Milestones</h4>
+              <div class="space-y-2">
+                ${report.upcomingMilestones.length > 0 ?
+                  report.upcomingMilestones.map(milestone => `
+                    <div class="flex items-center justify-between p-2 bg-slate-700/50 rounded">
+                      <div>
+                        <div class="text-white text-sm font-medium">${milestone.title}</div>
+                        <div class="text-gray-400 text-xs">Due: ${this.formatDate(milestone.dueDate)}</div>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-sm font-medium ${milestone.confidence >= 80 ? 'text-green-400' : milestone.confidence >= 60 ? 'text-yellow-400' : 'text-red-400'}">
+                          ${milestone.confidence}%
+                        </div>
+                        <div class="text-xs text-gray-400">confidence</div>
+                      </div>
+                    </div>
+                  `).join('') :
+                  '<p class="text-gray-400 text-sm">No upcoming milestones</p>'
+                }
+              </div>
+            </div>
+
+            <!-- Team Performance -->
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-4">Team Performance</h4>
+              <div class="space-y-3">
+                ${Object.entries(report.teamPerformance).map(([key, value]) => `
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span class="text-gray-400 capitalize">${key}</span>
+                      <span class="text-white">${this.formatMetric(value)}</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2">
+                      <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500" 
+                           style="width: ${value}%"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div>
+              <h4 class="text-lg font-semibold text-white mb-4">Recommendations</h4>
+              <div class="space-y-2">
+                ${report.recommendations.length > 0 ?
+                  report.recommendations.map(rec => `
+                    <div class="flex items-start space-x-2">
+                      <i class="fas fa-lightbulb text-yellow-400 mt-1"></i>
+                      <span class="text-gray-300 text-sm">${rec}</span>
+                    </div>
+                  `).join('') :
+                  '<p class="text-gray-400 text-sm">No specific recommendations at this time</p>'
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Steps -->
+          <div class="mt-6">
+            <h4 class="text-lg font-semibold text-white mb-4">Next Steps</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              ${report.nextSteps.map((step, index) => `
+                <div class="flex items-center space-x-2">
+                  <span class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    ${index + 1}
+                  </span>
+                  <span class="text-gray-300 text-sm">${step}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Export Actions -->
+          <div class="mt-6 pt-6 border-t border-slate-700">
+            <div class="flex items-center justify-between">
+              <p class="text-gray-400 text-sm">Export this report in different formats</p>
+              <div class="flex items-center space-x-3">
+                <button onclick="this.closest('project-status-reports').exportReport(${JSON.stringify(report).replace(/"/g, '&quot;')}, 'pdf')" 
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center space-x-2">
+                  <i class="fas fa-file-pdf"></i>
+                  <span>Export PDF</span>
+                </button>
+                <button onclick="this.closest('project-status-reports').exportReport(${JSON.stringify(report).replace(/"/g, '&quot;')}, 'excel')" 
+                        class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center space-x-2">
+                  <i class="fas fa-file-excel"></i>
+                  <span>Export Excel</span>
+                </button>
+                <button onclick="this.closest('project-status-reports').exportReport(${JSON.stringify(report).replace(/"/g, '&quot;')}, 'json')" 
+                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center space-x-2">
+                  <i class="fas fa-file-code"></i>
+                  <span>Export JSON</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  customElements.define('project-status-reports', ProjectStatusReports);
+</script>
