@@ -17,6 +17,13 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
+import { Project, Milestone, Ticket } from '@prisma/client';
+
+// Type definitions for project with relations
+type ProjectWithMilestonesAndTickets = Project & {
+  milestones?: Milestone[];
+  tickets?: Ticket[];
+};
 
 interface DashboardStats {
   projects: {
@@ -174,44 +181,46 @@ export class DashboardController {
     });
 
     // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map((project: any) => {
-      const totalMilestones = project.milestones?.length || 0;
-      const completedMilestones =
-        project.milestones?.filter((m: any) => m.status === 'completed')
-          .length || 0;
-      const progress =
-        totalMilestones > 0
-          ? Math.round((completedMilestones / totalMilestones) * 100)
-          : 0;
+    const projectsWithMetrics = projects.map(
+      (project: ProjectWithMilestonesAndTickets) => {
+        const totalMilestones = project.milestones?.length || 0;
+        const completedMilestones =
+          project.milestones?.filter((m: Milestone) => m.status === 'completed')
+            .length || 0;
+        const progress =
+          totalMilestones > 0
+            ? Math.round((completedMilestones / totalMilestones) * 100)
+            : 0;
 
-      const openTickets =
-        project.tickets?.filter(
-          (t: any) => t.status === 'open' || t.status === 'in-progress'
-        ).length || 0;
+        const openTickets =
+          project.tickets?.filter(
+            (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
+          ).length || 0;
 
-      const highPriorityTickets =
-        (project as any).tickets?.filter(
-          (t: any) =>
-            (t.priority === 'high' || t.priority === 'critical') &&
-            (t.status === 'open' || t.status === 'in-progress')
-        ).length || 0;
+        const highPriorityTickets =
+          project.tickets?.filter(
+            (t: Ticket) =>
+              (t.priority === 'high' || t.priority === 'critical') &&
+              (t.status === 'open' || t.status === 'in-progress')
+          ).length || 0;
 
-      return {
-        id: project.id,
-        name: project.name,
-        description: null, // Project model doesn't have description field
-        status: project.status,
-        progress,
-        totalMilestones,
-        completedMilestones,
-        openTickets,
-        highPriorityTickets,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-        startAt: project.startAt,
-        dueAt: project.dueAt,
-      };
-    });
+        return {
+          id: project.id,
+          name: project.name,
+          description: null, // Project model doesn't have description field
+          status: project.status,
+          progress,
+          totalMilestones,
+          completedMilestones,
+          openTickets,
+          highPriorityTickets,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          startAt: project.startAt,
+          dueAt: project.dueAt,
+        };
+      }
+    );
 
     return projectsWithMetrics;
   }
@@ -284,9 +293,6 @@ export class DashboardController {
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: {
-        organizationId,
-      },
       select: { status: true, dueAt: true },
     });
 
@@ -366,7 +372,7 @@ export class DashboardController {
     limit: number
   ): Promise<RecentActivity[]> {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: { organizationId },
+      where: {},
       select: {
         id: true,
         title: true,
@@ -697,7 +703,6 @@ export class DashboardController {
   ) {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
       where: {
-        organizationId,
         createdAt: { gte: startDate, lte: endDate },
       },
       select: {
@@ -774,7 +779,7 @@ export class DashboardController {
       },
       include: {
         milestones: {
-          select: { status: true, dueAt: true, completedAt: true },
+          select: { status: true, dueAt: true, updatedAt: true },
         },
         tickets: {
           select: {
@@ -842,13 +847,12 @@ export class DashboardController {
   ) {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
       where: {
-        organizationId,
         createdAt: { gte: startDate },
       },
       select: {
         status: true,
         dueAt: true,
-        completedAt: true,
+        updatedAt: true,
         createdAt: true,
       },
     });
@@ -947,7 +951,6 @@ export class DashboardController {
   ) {
     const pendingMilestones = await this.multiTenantPrisma.milestone.findMany({
       where: {
-        organizationId,
         status: { not: 'completed' },
         dueAt: { lte: forecastDate },
       },
@@ -1114,7 +1117,10 @@ export class DashboardController {
     if (completedMilestones.length === 0) return 0;
 
     const onTime = completedMilestones.filter((m) => {
-      const completedAt = m.completedAt ? new Date(m.completedAt) : new Date();
+      const completedAt =
+        m.status === 'completed' && m.updatedAt
+          ? new Date(m.updatedAt)
+          : new Date();
       const dueDate = new Date(m.dueAt);
       return completedAt <= dueDate;
     });
@@ -1203,9 +1209,10 @@ export class DashboardController {
 
     const totalDays = completedMilestones.reduce((sum, milestone) => {
       const created = new Date(milestone.createdAt);
-      const completed = milestone.completedAt
-        ? new Date(milestone.completedAt)
-        : new Date();
+      const completed =
+        milestone.status === 'completed' && milestone.updatedAt
+          ? new Date(milestone.updatedAt)
+          : new Date();
       return (
         sum +
         Math.ceil(
@@ -1353,7 +1360,7 @@ export class DashboardController {
         },
         include: {
           milestones: {
-            select: { status: true, dueAt: true, completedAt: true },
+            select: { status: true, dueAt: true, updatedAt: true },
           },
           tickets: {
             select: { status: true, priority: true, createdAt: true },
@@ -1564,7 +1571,6 @@ export class DashboardController {
         }),
         this.multiTenantPrisma.milestone.count({
           where: {
-            organizationId,
             status: { not: 'completed' },
             dueAt: { lt: new Date() },
           },

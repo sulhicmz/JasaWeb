@@ -531,6 +531,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 - [🔍 OWASP Compliance](./docs/OWASP_COMPLIANCE.md) - Security compliance
 - [📈 Testing Summary](./docs/TESTING_SUMMARY.md) - Testing documentation
 - [📊 Performance Summary](./PERFORMANCE_SUMMARY.md) - Performance metrics
+- [🧹 Repository Cleanup](./docs/CLEANUP_SUMMARY.md) - Cleanup and maintenance summary
 
 ## 🐛 Troubleshooting
 
@@ -582,13 +583,14 @@ pnpm lint
 
 ### Repository Maintenance
 
-This repository follows strict hygiene standards with automated cleanup and organization:
+This repository follows strict hygiene standards with regular cleanup and organization:
 
-- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, archived docs in `/docs/obsolete/`
-- **Script Organization**: Essential scripts in `/scripts/`, one-time scripts removed after use
-- **Workflow Management**: Active workflows in `.github/workflows/`, duplicates removed
+- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, obsolete docs archived and removed
+- **Script Organization**: Essential scripts in `/scripts/` with dev-tools subdirectory
+- **Workflow Management**: Active workflows in `.github/workflows/` with OpenCode agents
 - **File Naming**: Consistent kebab-case for files, PascalCase for components
-- **Regular Cleanup**: Automated removal of unused dependencies and temporary files
+- **Regular Cleanup**: Compiled files, temporary artifacts, and obsolete documentation removed
+- **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
 
 ## 📄 License
 

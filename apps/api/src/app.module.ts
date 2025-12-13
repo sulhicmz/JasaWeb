@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from './users/user.module';
 import { ProjectModule } from './projects/project.module';
 import { MilestoneModule } from './milestones/milestone.module';
@@ -29,6 +30,7 @@ import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { OrganizationModule } from './common/services/organization.module';
 
 const parseEnvNumber = (
   value: string | undefined,
@@ -59,6 +61,7 @@ const parseEnvNumber = (
       },
     ]),
     AuthModule,
+    JwtModule,
     UserModule,
     ProjectModule,
     MilestoneModule,
@@ -77,6 +80,7 @@ const parseEnvNumber = (
     DashboardModule,
     PrismaModule,
     MultiTenantPrismaModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [

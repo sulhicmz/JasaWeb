@@ -31,7 +31,7 @@ export class ProjectController {
     @Body() createProjectDto: CreateProjectDto,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.projectService.create(createProjectDto, organizationId);
+    return this.projectService.create(createProjectDto);
   }
 
   @Get()

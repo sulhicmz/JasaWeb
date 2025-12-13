@@ -1,104 +1,117 @@
-interface EnvVarSchema {
-  [key: string]: {
-    required: boolean;
-    type: 'string' | 'number' | 'boolean';
-    minLength?: number;
-    pattern?: RegExp;
-    description: string;
-  };
+export interface EnvSchema {
+  type: 'string' | 'number' | 'boolean';
+  required: boolean;
+  minLength?: number;
+  pattern?: RegExp;
+  description?: string;
 }
 
-const ENV_SCHEMA: EnvVarSchema = {
+export const ENV_SCHEMA: Record<string, EnvSchema> = {
   // Database
-  POSTGRES_DB: {
-    required: true,
+  DATABASE_URL: {
     type: 'string',
-    minLength: 1,
-    description: 'PostgreSQL database name',
-  },
-  POSTGRES_USER: {
     required: true,
-    type: 'string',
-    minLength: 1,
-    description: 'PostgreSQL username',
-  },
-  POSTGRES_PASSWORD: {
-    required: true,
-    type: 'string',
-    minLength: 16,
-    description: 'PostgreSQL password (minimum 16 characters)',
+    description: 'PostgreSQL connection string',
   },
 
   // Redis
-  REDIS_PASSWORD: {
-    required: true,
+  REDIS_URL: {
     type: 'string',
-    minLength: 16,
-    description: 'Redis password (minimum 16 characters)',
+    required: false,
+    description: 'Redis connection string',
   },
 
-  // MinIO/S3
-  MINIO_ROOT_USER: {
-    required: true,
-    type: 'string',
-    minLength: 3,
-    description: 'MinIO root username',
-  },
-  MINIO_ROOT_PASSWORD: {
-    required: true,
-    type: 'string',
-    minLength: 16,
-    description: 'MinIO root password (minimum 16 characters)',
-  },
-
-  // JWT Secrets
+  // JWT
   JWT_SECRET: {
-    required: true,
     type: 'string',
+    required: true,
     minLength: 32,
-    pattern: /^[A-Za-z0-9+/=_-]+$/,
-    description:
-      'JWT secret key (minimum 32 characters, alphanumeric and symbols only)',
+    description: 'JWT signing secret',
   },
-  JWT_REFRESH_SECRET: {
-    required: true,
+  JWT_EXPIRES_IN: {
     type: 'string',
-    minLength: 32,
-    pattern: /^[A-Za-z0-9+/=_-]+$/,
-    description:
-      'JWT refresh secret key (minimum 32 characters, alphanumeric and symbols only)',
+    required: false,
+    description: 'JWT expiration time',
   },
 
   // Session
   SESSION_SECRET: {
-    required: true,
     type: 'string',
+    required: true,
     minLength: 32,
-    pattern: /^[A-Za-z0-9+/=_-]+$/,
-    description:
-      'Session secret (minimum 32 characters, alphanumeric and symbols only)',
+    description: 'Session signing secret',
   },
 
-  // Encryption
-  ENCRYPTION_KEY: {
-    required: true,
+  // Email
+  SMTP_HOST: {
     type: 'string',
-    minLength: 32,
-    pattern: /^[A-Za-z0-9+/=_-]+$/,
-    description: 'Encryption key for sensitive data (minimum 32 characters)',
+    required: false,
+    description: 'SMTP server host',
+  },
+  SMTP_PORT: {
+    type: 'number',
+    required: false,
+    description: 'SMTP server port',
+  },
+  SMTP_USER: {
+    type: 'string',
+    required: false,
+    description: 'SMTP username',
+  },
+  SMTP_PASS: {
+    type: 'string',
+    required: false,
+    description: 'SMTP password',
+  },
+
+  // File Storage
+  S3_ENDPOINT: {
+    type: 'string',
+    required: false,
+    description: 'S3-compatible endpoint',
+  },
+  S3_ACCESS_KEY: {
+    type: 'string',
+    required: false,
+    description: 'S3 access key',
+  },
+  S3_SECRET_KEY: {
+    type: 'string',
+    required: false,
+    description: 'S3 secret key',
+  },
+  S3_BUCKET: {
+    type: 'string',
+    required: false,
+    description: 'S3 bucket name',
+  },
+  S3_REGION: {
+    type: 'string',
+    required: false,
+    description: 'S3 region',
   },
 
   // Application
   NODE_ENV: {
-    required: false,
     type: 'string',
+    required: false,
     pattern: /^(development|production|test)$/,
-    description: 'Application environment (development, production, or test)',
+    description: 'Application environment',
   },
   PORT: {
-    required: false,
     type: 'number',
-    description: 'Application port (default: 3000)',
+    required: false,
+    description: 'Application port',
+  },
+  API_BASE_URL: {
+    type: 'string',
+    required: false,
+    description: 'Base URL for API',
+  },
+  WEB_BASE_URL: {
+    type: 'string',
+    required: false,
+    description: 'Base URL for web application',
   },
 };
 
@@ -113,109 +126,112 @@ export function validateEnvironmentVariables(): void {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  for (const [key, schema] of Object.entries(ENV_SCHEMA)) {
+  const envKeys = Object.keys(ENV_SCHEMA) as Array<keyof typeof ENV_SCHEMA>;
+  for (const key of envKeys) {
+    const schema = ENV_SCHEMA[key];
     const value = process.env[key];
 
-    if (schema.required && (value === undefined || value === '')) {
+    if (schema?.required && (value === undefined || value === '')) {
       errors.push(`Required environment variable ${key} is missing or empty`);
       continue;
     }
 
     if (value !== undefined && value !== '') {
       // Type validation
-      if (schema.type === 'number' && isNaN(Number(value))) {
+      if (schema?.type === 'number' && isNaN(Number(value))) {
         errors.push(`Environment variable ${key} must be a number`);
         continue;
       }
 
       if (
-        schema.type === 'boolean' &&
+        schema?.type === 'boolean' &&
         !['true', 'false'].includes(value.toLowerCase())
       ) {
         errors.push(`Environment variable ${key} must be 'true' or 'false'`);
         continue;
       }
 
-      // Length validation
-      if (schema.minLength && value.length < schema.minLength) {
-        errors.push(
-          `Environment variable ${key} must be at least ${schema.minLength} characters long (current: ${value.length})`
-        );
-      }
+      // String validation
+      if (schema?.type === 'string') {
+        if (schema?.minLength && value.length < schema.minLength) {
+          errors.push(
+            `Environment variable ${key} must be at least ${schema.minLength} characters long (current: ${value.length})`
+          );
+          continue;
+        }
 
-      // Pattern validation
-      if (schema.pattern && !schema.pattern.test(value)) {
-        errors.push(`Environment variable ${key} contains invalid characters`);
+        if (schema?.pattern && !schema.pattern.test(value)) {
+          errors.push(
+            `Environment variable ${key} does not match required pattern`
+          );
+          continue;
+        }
       }
     }
   }
 
-  // Security warnings
+  // Security checks for production
   if (process.env.NODE_ENV === 'production') {
-    const weakPasswords = [
-      'password',
-      'admin',
-      '123456',
-      'qwerty',
-      'minioadmin',
-      'redis_password',
+    // Check for weak passwords
+    const weakPatterns = [
+      /password/i,
+      /123456/,
+      /admin/i,
+      /secret/i,
+      /qwerty/i,
     ];
 
-    for (const weak of weakPasswords) {
-      if (process.env.POSTGRES_PASSWORD?.includes(weak)) {
-        warnings.push(`PostgreSQL password contains weak pattern: ${weak}`);
+    const checkWeakPassword = (value: string | undefined, name: string) => {
+      if (value) {
+        for (const weak of weakPatterns) {
+          if (weak.test(value)) {
+            warnings.push(`${name} contains weak pattern: ${weak.source}`);
+            break;
+          }
+        }
       }
-      if (process.env.REDIS_PASSWORD?.includes(weak)) {
-        warnings.push(`Redis password contains weak pattern: ${weak}`);
-      }
-      if (process.env.MINIO_ROOT_PASSWORD?.includes(weak)) {
-        warnings.push(`MinIO password contains weak pattern: ${weak}`);
-      }
-    }
+    };
+
+    checkWeakPassword(process.env.DATABASE_URL, 'PostgreSQL password');
+    checkWeakPassword(process.env.REDIS_URL, 'Redis password');
+    checkWeakPassword(process.env.S3_SECRET_KEY, 'MinIO password');
 
     // Check for default secrets
-    if (process.env.JWT_SECRET === 'your-super-secret-jwt-key') {
+    if (
+      process.env.JWT_SECRET ===
+      'your-super-secret-jwt-key-change-in-production'
+    ) {
       warnings.push('Using default JWT secret in production');
     }
-    if (process.env.SESSION_SECRET === 'your-super-secret-session-key') {
+
+    if (
+      process.env.SESSION_SECRET ===
+      'your-super-secret-session-key-change-in-production'
+    ) {
       warnings.push('Using default session secret in production');
     }
   }
 
-  // Output results
+  // Report results
   if (warnings.length > 0) {
-    console.warn('\n⚠️  Environment Security Warnings:');
-    warnings.forEach((warning) => console.warn(`  - ${warning}`));
+    console.warn('Environment validation warnings:');
+    warnings.forEach((warning: string) => console.warn(`  - ${warning}`));
   }
 
   if (errors.length > 0) {
-    console.error('\n❌ Environment Validation Errors:');
-    errors.forEach((error) => console.error(`  - ${error}`));
-    console.error(
-      '\nPlease set the required environment variables before starting the application.'
-    );
-    console.error(
-      'Refer to .env.example for the complete list of required variables.\n'
-    );
+    console.error('Environment validation errors:');
+    errors.forEach((error: string) => console.error(`  - ${error}`));
     throw new EnvValidationError(
       `Environment validation failed: ${errors.join(', ')}`
     );
   }
-
-  console.log('✅ Environment variables validated successfully');
-}
-
-export function generateSecureSecret(length: number = 32): string {
-  const chars =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=_-';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
 }
 
 export function getRequiredEnv(key: string): string {
+  // Validate key to prevent injection
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+    throw new EnvValidationError(`Invalid environment variable key: ${key}`);
+  }
   const value = process.env[key];
   if (!value) {
     throw new EnvValidationError(
@@ -229,5 +245,43 @@ export function getOptionalEnv(
   key: string,
   defaultValue?: string
 ): string | undefined {
+  // Validate key to prevent injection
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+    throw new EnvValidationError(`Invalid environment variable key: ${key}`);
+  }
   return process.env[key] || defaultValue;
+}
+
+export function getEnvNumber(key: string, defaultValue?: number): number {
+  const value = getOptionalEnv(key);
+  if (value === undefined) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
+    throw new EnvValidationError(
+      `Required environment variable ${key} is not set`
+    );
+  }
+
+  const parsed = Number(value);
+  if (isNaN(parsed)) {
+    throw new EnvValidationError(
+      `Environment variable ${key} must be a number`
+    );
+  }
+  return parsed;
+}
+
+export function getEnvBoolean(key: string, defaultValue?: boolean): boolean {
+  const value = getOptionalEnv(key);
+  if (value === undefined) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
+    throw new EnvValidationError(
+      `Required environment variable ${key} is not set`
+    );
+  }
+
+  return value.toLowerCase() === 'true';
 }

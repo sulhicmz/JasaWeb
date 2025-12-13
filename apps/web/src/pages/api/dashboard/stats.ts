@@ -1,5 +1,7 @@
+/* global fetch Response */
+
 // API endpoint for dashboard stats
-export async function GET({ request }) {
+export async function GET({ request }: { request: Request }) {
   try {
     // Forward the request to the backend API
     const backendUrl = 'http://localhost:3001/dashboard/stats';
@@ -10,11 +12,11 @@ export async function GET({ request }) {
         'Content-Type': 'application/json',
         // Forward authorization header if present
         ...(request.headers.get('authorization') && {
-          Authorization: request.headers.get('authorization'),
+          Authorization: request.headers.get('authorization')!,
         }),
         // Forward organization header if present
         ...(request.headers.get('x-organization-id') && {
-          'x-organization-id': request.headers.get('x-organization-id'),
+          'x-organization-id': request.headers.get('x-organization-id')!,
         }),
       },
     });
@@ -32,13 +34,13 @@ export async function GET({ request }) {
         'Cache-Control': 'no-cache',
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Dashboard stats API error:', error);
 
     return new Response(
       JSON.stringify({
         error: 'Failed to fetch dashboard stats',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,

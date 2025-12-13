@@ -1,5 +1,24 @@
 import { Injectable, Scope, Inject, BadRequestException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
+import {
+  Prisma,
+  Project,
+  Milestone,
+  Task,
+  Ticket,
+  Invoice,
+  File,
+  Approval,
+  AuditLog,
+  User,
+  KbArticle,
+  KbFeedback,
+  KbSearchLog,
+  RefreshToken,
+  Session,
+  Organization,
+  Membership,
+} from '@prisma/client';
 import { PrismaService } from './prisma.service';
 
 interface RequestWithOrganization {
@@ -10,6 +29,85 @@ interface RequestWithOrganization {
     organizationId: string;
   };
 }
+
+// Type definitions for Prisma operations
+type ProjectFindManyArgs = Omit<Prisma.ProjectFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type ProjectFindUniqueArgs = Omit<Prisma.ProjectFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.ProjectWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type ProjectCreateArgs = Omit<Prisma.ProjectCreateArgs, 'data'> & {
+  data: Omit<Prisma.ProjectUncheckedCreateInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type ProjectUpdateArgs = Omit<Prisma.ProjectUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.ProjectWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+  data: Prisma.ProjectUpdateInput;
+};
+
+type ProjectDeleteArgs = Omit<Prisma.ProjectDeleteArgs, 'where'> & {
+  where: Omit<Prisma.ProjectWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type ProjectCountArgs = Omit<Prisma.ProjectCountArgs, 'where'> & {
+  where?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+// Milestone types
+type MilestoneFindManyArgs = Omit<Prisma.MilestoneFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.MilestoneWhereInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type MilestoneFindUniqueArgs = Omit<Prisma.MilestoneFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.MilestoneWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type MilestoneCreateArgs = Omit<Prisma.MilestoneCreateArgs, 'data'> & {
+  data: Prisma.MilestoneCreateInput;
+};
+
+type MilestoneUpdateArgs = Omit<
+  Prisma.MilestoneUpdateArgs,
+  'where' | 'data'
+> & {
+  where: Omit<Prisma.MilestoneWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+  data: Prisma.MilestoneUpdateInput;
+};
+
+type MilestoneDeleteArgs = Omit<Prisma.MilestoneDeleteArgs, 'where'> & {
+  where: Omit<Prisma.MilestoneWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
 
 /**
  * Service that wraps Prisma to enforce multi-tenant data isolation
@@ -39,7 +137,7 @@ export class MultiTenantPrismaService {
    * Projects service methods
    */
   project = {
-    findMany: (args?: any) => {
+    findMany: (args?: ProjectFindManyArgs) => {
       return this.prisma.project.findMany({
         ...args,
         where: {
@@ -49,7 +147,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: ProjectFindUniqueArgs) => {
       return this.prisma.project.findUnique({
         ...args,
         where: {
@@ -59,7 +157,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
+    create: (args: ProjectCreateArgs) => {
       return this.prisma.project.create({
         ...args,
         data: {
@@ -69,7 +167,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: any) => {
+    update: (args: ProjectUpdateArgs) => {
       return this.prisma.project.update({
         ...args,
         where: {
@@ -80,7 +178,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: ProjectDeleteArgs) => {
       return this.prisma.project.delete({
         ...args,
         where: {
@@ -90,7 +188,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: ProjectCountArgs) => {
       return this.prisma.project.count({
         ...args,
         where: {
@@ -105,7 +203,7 @@ export class MultiTenantPrismaService {
    * Milestones service methods
    */
   milestone = {
-    findMany: (args?: any) => {
+    findMany: (args?: MilestoneFindManyArgs) => {
       return this.prisma.milestone.findMany({
         ...args,
         where: {
@@ -118,7 +216,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: MilestoneFindUniqueArgs) => {
       return this.prisma.milestone.findUnique({
         ...args,
         where: {
@@ -131,18 +229,27 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
-      const projectId = args.data.project.connect.id;
+    create: (args: MilestoneCreateArgs) => {
+      const projectId = (
+        args.data.project as Prisma.ProjectCreateNestedOneWithoutMilestonesInput
+      ).connect?.id;
+      if (!projectId) {
+        throw new BadRequestException(
+          'Project connection is required for milestone creation'
+        );
+      }
       return this.prisma.milestone.create({
         ...args,
         data: {
-          ...args.data,
+          title: args.data.title,
+          dueAt: args.data.dueAt,
+          status: args.data.status,
           projectId,
         },
       });
     },
 
-    update: (args: any) => {
+    update: (args: MilestoneUpdateArgs) => {
       return this.prisma.milestone.update({
         ...args,
         where: {
@@ -156,7 +263,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: MilestoneDeleteArgs) => {
       return this.prisma.milestone.delete({
         ...args,
         where: {
@@ -169,7 +276,15 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (
+      args?: Omit<Prisma.MilestoneCountArgs, 'where'> & {
+        where?: Omit<Prisma.MilestoneWhereInput, 'project'> & {
+          project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+            organizationId?: string;
+          };
+        };
+      }
+    ) => {
       return this.prisma.milestone.count({
         ...args,
         where: {

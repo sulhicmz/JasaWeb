@@ -6,7 +6,10 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@jasaweb/*": ["../../packages/*"],
+      "@jasaweb/config": ["../../packages/config"],
+      "@jasaweb/config/*": ["../../packages/config/*"]
     },
     "strict": true,
     "noImplicitAny": true,
@@ -14,7 +17,7 @@
     "module": "ES2022",
     "moduleResolution": "bundler"
   },
-  "include": ["src/**/*", "src/types/**/*"],
+  "include": ["src/**/*", "src/types/**/*", "../../packages/config/**/*"],
   "exclude": ["node_modules", "dist"],
   "types": ["jest", "node"]
 }

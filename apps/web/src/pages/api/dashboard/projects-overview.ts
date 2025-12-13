@@ -1,5 +1,7 @@
+/* global fetch Response */
+
 // API endpoint for projects overview
-export async function GET({ request, url }) {
+export async function GET({ request, url }: { request: Request; url: URL }) {
   try {
     // Get query parameters
     const limit = url.searchParams.get('limit') || '6';
@@ -13,11 +15,11 @@ export async function GET({ request, url }) {
         'Content-Type': 'application/json',
         // Forward authorization header if present
         ...(request.headers.get('authorization') && {
-          Authorization: request.headers.get('authorization'),
+          Authorization: request.headers.get('authorization')!,
         }),
         // Forward organization header if present
         ...(request.headers.get('x-organization-id') && {
-          'x-organization-id': request.headers.get('x-organization-id'),
+          'x-organization-id': request.headers.get('x-organization-id')!,
         }),
       },
     });
@@ -35,13 +37,13 @@ export async function GET({ request, url }) {
         'Cache-Control': 'no-cache',
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Projects overview API error:', error);
 
     return new Response(
       JSON.stringify({
         error: 'Failed to fetch projects overview',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,

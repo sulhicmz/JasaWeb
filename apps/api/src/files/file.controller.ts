@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { getRequiredEnv } from '@jasaweb/config/env-validation';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { FileStorageService } from '../common/services/file-storage.service';
@@ -108,7 +109,7 @@ export class FileController {
       if (useS3) {
         // Upload to S3
         fileIdentifier = await this.fileStorageService.uploadFile(file.buffer, {
-          bucket: process.env.S3_BUCKET_NAME || 'default-bucket',
+          bucket: getRequiredEnv('S3_BUCKET'),
           key: `organizations/${organizationId}/projects/${projectId || 'general'}/${Date.now()}_${file.originalname}`,
           contentType: file.mimetype,
           metadata: {
@@ -197,7 +198,7 @@ export class FileController {
       if (useS3) {
         // Generate a signed URL for S3 download
         const signedUrl = await this.fileStorageService.generateDownloadUrl({
-          bucket: process.env.S3_BUCKET_NAME || 'default-bucket',
+          bucket: getRequiredEnv('S3_BUCKET'),
           key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
           expiresIn: 3600, // 1 hour
         });
@@ -250,7 +251,7 @@ export class FileController {
       if (useS3) {
         // Delete from S3
         await this.fileStorageService.deleteFile(
-          process.env.S3_BUCKET_NAME || 'default-bucket',
+          getRequiredEnv('S3_BUCKET'),
           `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`
         );
       } else {

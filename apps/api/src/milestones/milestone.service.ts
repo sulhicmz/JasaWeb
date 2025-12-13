@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 
 export interface CreateMilestoneDto {
@@ -29,7 +25,7 @@ export class MilestoneService {
       where: { id: createMilestoneDto.projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project does not exist or does not belong to your organization'
       );
@@ -37,12 +33,16 @@ export class MilestoneService {
 
     return await this.multiTenantPrisma.milestone.create({
       data: {
-        ...createMilestoneDto,
+        title: createMilestoneDto.title,
+        dueAt: createMilestoneDto.dueAt,
         status:
           createMilestoneDto.dueAt &&
           new Date(createMilestoneDto.dueAt) < new Date()
             ? 'overdue'
             : 'todo',
+        project: {
+          connect: { id: createMilestoneDto.projectId },
+        },
       },
     });
   }
@@ -54,7 +54,7 @@ export class MilestoneService {
         where: { id: projectId },
       });
 
-      if (!project) {
+      if (!project || project.organizationId !== organizationId) {
         throw new BadRequestException(
           'Project does not exist or does not belong to your organization'
         );
@@ -88,23 +88,25 @@ export class MilestoneService {
   async findOne(id: string, organizationId: string) {
     const milestone = await this.multiTenantPrisma.milestone.findUnique({
       where: { id },
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
     });
 
     if (!milestone) {
+      throw new BadRequestException('Milestone not found');
+    }
+
+    // Verify project belongs to organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: milestone.projectId },
+      select: { id: true, name: true, organizationId: true },
+    });
+
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Milestone not found or does not belong to your organization'
       );
     }
 
-    return milestone;
+    return { ...milestone, project };
   }
 
   async update(
@@ -112,7 +114,7 @@ export class MilestoneService {
     updateMilestoneDto: UpdateMilestoneDto,
     organizationId: string
   ) {
-    // Check if milestone exists
+    // Check if milestone exists and belongs to organization
     const existingMilestone = await this.multiTenantPrisma.milestone.findUnique(
       {
         where: { id },
@@ -120,11 +122,26 @@ export class MilestoneService {
     );
 
     if (!existingMilestone) {
+      throw new BadRequestException('Milestone not found');
+    }
+
+    // Verify project belongs to organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: existingMilestone.projectId },
+      select: { organizationId: true },
+    });
+
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Milestone not found or does not belong to your organization'
       );
     }
 
+    if (!existingMilestone) {
+      throw new BadRequestException(
+        'Milestone not found or does not belong to your organization'
+      );
+    }
     // Automatically update status based on due date if needed
     const updateData = { ...updateMilestoneDto };
     if (
@@ -147,6 +164,16 @@ export class MilestoneService {
     });
 
     if (!milestone) {
+      throw new BadRequestException('Milestone not found');
+    }
+
+    // Verify project belongs to organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: milestone.projectId },
+      select: { organizationId: true },
+    });
+
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Milestone not found or does not belong to your organization'
       );

@@ -60,7 +60,13 @@ export class RequestLoggingMiddleware implements NestMiddleware {
           safeHeaders[key] = value;
         }
       } else {
-        safeHeaders[key] = '[REDACTED]';
+        // Use safe property assignment
+        Object.defineProperty(safeHeaders, key, {
+          value: '[REDACTED]',
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
       }
     }
     return safeHeaders;

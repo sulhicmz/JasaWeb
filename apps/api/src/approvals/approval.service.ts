@@ -6,20 +6,17 @@ export class ApprovalService {
   constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
 
   async createApproval(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     organizationId: string,
     projectId: string,
     itemType: string,
     itemId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     requesterId: string
   ) {
-    // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project not found or does not belong to your organization'
       );
@@ -32,14 +29,12 @@ export class ApprovalService {
         itemType,
         itemId,
         status: 'pending',
+        requesterId,
       },
     });
   }
 
-  async findApprovalsForProject(
-    projectId: string,
-    /* eslint-disable-line @typescript-eslint/no-unused-vars */ organizationId: string
-  ) {
+  async findApprovalsForProject(projectId: string, organizationId: string) {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
