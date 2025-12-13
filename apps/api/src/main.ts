@@ -5,29 +5,25 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { ErrorHandlingService } from './common/services/error-handling.service';
+import {
+  validateEnvironmentVariables,
+  EnvValidationError,
+} from './common/config/env-validation';
 import helmet from 'helmet';
 import compression from 'compression';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
-  // Validate critical environment variables
-  const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
-  const missingVars = requiredEnvVars.filter(
-    (varName) => !process.env[varName]
-  );
-
-  if (missingVars.length > 0) {
-    logger.error(
-      `Missing required environment variables: ${missingVars.join(', ')}`
-    );
-    process.exit(1);
-  }
-
-  // Validate JWT secret strength
-  if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
-    logger.error('JWT_SECRET must be at least 32 characters long');
-    process.exit(1);
+  // Validate all environment variables using comprehensive validation
+  try {
+    validateEnvironmentVariables();
+  } catch (error) {
+    if (error instanceof EnvValidationError) {
+      logger.error(`Environment validation failed: ${error.message}`);
+      process.exit(1);
+    }
+    throw error;
   }
 
   const app = await NestFactory.create(AppModule);
