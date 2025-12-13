@@ -8,7 +8,7 @@ import { ErrorHandlingService } from './common/services/error-handling.service';
 import {
   validateEnvironmentVariables,
   EnvValidationError,
-} from './common/config/env-validation';
+} from '@jasaweb/config/env-validation';
 import helmet from 'helmet';
 import compression from 'compression';
 
@@ -70,7 +70,9 @@ async function bootstrap() {
 
   // Enhanced CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321'],
+    origin: (
+      process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321']
+    ).map((o) => o.trim()),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
     exposedHeaders: ['X-Total-Count', 'X-Page-Count'],

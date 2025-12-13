@@ -8,15 +8,16 @@ import { UserModule } from '../users/user.module';
 import { PrismaModule } from '../common/database/prisma.module';
 import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
+import { getRequiredEnv, getOptionalEnv } from '@jasaweb/config/env-validation';
 
 @Module({
   imports: [
     UserModule,
     PrismaModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: getRequiredEnv('JWT_SECRET'),
       signOptions: {
-        expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
+        expiresIn: getOptionalEnv('JWT_EXPIRES_IN', '60m') as any,
       },
     }),
   ],
@@ -28,6 +29,6 @@ import { PasswordService } from './password.service';
     LocalStrategy,
     JwtStrategy,
   ],
-  exports: [AuthService, RefreshTokenService, PasswordService],
+  exports: [AuthService, RefreshTokenService, PasswordService, JwtModule],
 })
 export class AuthModule {}

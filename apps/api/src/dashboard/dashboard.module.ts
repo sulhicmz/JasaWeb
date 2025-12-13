@@ -4,6 +4,7 @@ import { DashboardGateway } from './dashboard.gateway';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
+import { getRequiredEnv, getOptionalEnv } from '@jasaweb/config/env-validation';
 
 import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
 
@@ -20,9 +21,9 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
       },
     ]),
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
+      secret: getRequiredEnv('JWT_SECRET'),
       signOptions: {
-        expiresIn: (process.env.JWT_EXPIRES_IN || '60m') as any,
+        expiresIn: getOptionalEnv('JWT_EXPIRES_IN', '60m') as any,
       },
     }),
     MultiTenantPrismaModule,

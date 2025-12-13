@@ -16,6 +16,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import { getOptionalEnv } from '@jasaweb/config/env-validation';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 
@@ -34,7 +35,7 @@ interface DashboardUpdatePayload {
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:4321',
+    origin: getOptionalEnv('FRONTEND_URL') || 'http://localhost:4321',
     methods: ['GET', 'POST'],
     credentials: true,
   },

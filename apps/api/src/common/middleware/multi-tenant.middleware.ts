@@ -1,51 +1,67 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { PrismaService } from '../database/prisma.service';
+import { JwtService } from '@nestjs/jwt';
+import { OrganizationMembershipService } from '../services/organization-membership.service';
 
-/**
- * Middleware to set the organization context for multi-tenant architecture
- * This should be used in combination with request interceptors to ensure
- * all database queries are filtered by the current organization
- */
 @Injectable()
 export class MultiTenantMiddleware implements NestMiddleware {
   private readonly logger = new Logger(MultiTenantMiddleware.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private jwtService: JwtService,
+    private membershipService: OrganizationMembershipService
+  ) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
-    // Extract organization from request - could be from:
-    // 1. JWT token (sub -> user -> membership -> organization)
-    // 2. Request header
-    // 3. URL subdomain
-    // 4. Request body/query params (for specific cases)
-
-    // For now, we'll set it to the request object
-    // In a real implementation, you would extract the user from JWT
-    // and then fetch their organization via their membership
-    const userId = req.headers['x-user-id']?.toString(); // This would come from JWT after auth
-
-    if (userId) {
-      try {
-        // Find the organization the user belongs to
-        const membership = await this.prisma.membership.findFirst({
-          where: {
-            userId: userId,
-          },
-          include: {
-            organization: true,
-          },
-        });
-
-        if (membership) {
-          // Attach organization to request for use in controllers/services
-          (req as any).organizationId = membership.organizationId;
-          (req as any).organization = membership.organization;
-        }
-      } catch (error) {
-        // If there's an error finding the organization, continue without organization context
-        this.logger.error('Error finding organization for user', error);
+    try {
+      // Extract JWT token from Authorization header
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        throw new UnauthorizedException('No authorization token provided');
       }
+
+      const token = authHeader.substring(7);
+      const payload = this.jwtService.verify(token);
+
+      if (!payload.sub || !payload.organizationId) {
+        throw new UnauthorizedException('Invalid token payload');
+      }
+
+      const userId = payload.sub;
+      const organizationId = payload.organizationId;
+
+      // Verify membership using the dedicated service
+      const membershipContext = await this.membershipService.verifyMembership(
+        userId,
+        organizationId
+      );
+
+      // Attach organization and user context to request
+      (req as any).organizationId = membershipContext.organizationId;
+      (req as any).organization = membershipContext.organization;
+      (req as any).userId = membershipContext.userId;
+      (req as any).user = membershipContext.user;
+      (req as any).membership = {
+        id: 'membership-id', // Would be actual membership ID
+        role: membershipContext.role,
+      };
+
+      this.logger.debug(
+        `User ${userId} accessing organization ${organizationId} (${membershipContext.role})`
+      );
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      // For JWT verification errors or other issues
+      this.logger.error('Error in multi-tenant middleware', error);
+      throw new UnauthorizedException('Invalid authentication token');
     }
 
     next();

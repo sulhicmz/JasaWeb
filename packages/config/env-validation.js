@@ -1,0 +1,471 @@
+export const ENV_SCHEMA = {
+    DATABASE_URL: {
+        type: 'string',
+        required: true,
+        description: 'PostgreSQL connection string',
+    },
+    POSTGRES_DB: {
+        type: 'string',
+        required: false,
+        description: 'PostgreSQL database name (alternative to DATABASE_URL)',
+    },
+    POSTGRES_USER: {
+        type: 'string',
+        required: false,
+        description: 'PostgreSQL username (alternative to DATABASE_URL)',
+    },
+    POSTGRES_PASSWORD: {
+        type: 'string',
+        required: false,
+        minLength: 16,
+        description: 'PostgreSQL password (minimum 16 characters)',
+    },
+    POSTGRES_HOST: {
+        type: 'string',
+        required: false,
+        defaultValue: 'localhost',
+        description: 'PostgreSQL host',
+    },
+    POSTGRES_PORT: {
+        type: 'number',
+        required: false,
+        defaultValue: 5432,
+        description: 'PostgreSQL port',
+    },
+    REDIS_URL: {
+        type: 'string',
+        required: false,
+        description: 'Redis connection string',
+    },
+    REDIS_PASSWORD: {
+        type: 'string',
+        required: false,
+        minLength: 16,
+        description: 'Redis password (minimum 16 characters)',
+    },
+    REDIS_HOST: {
+        type: 'string',
+        required: false,
+        defaultValue: 'localhost',
+        description: 'Redis host',
+    },
+    REDIS_PORT: {
+        type: 'number',
+        required: false,
+        defaultValue: 6379,
+        description: 'Redis port',
+    },
+    JWT_SECRET: {
+        type: 'string',
+        required: true,
+        minLength: 32,
+        pattern: /^[A-Za-z0-9+/=_-]+$/,
+        description: 'JWT signing secret (minimum 32 characters, alphanumeric and symbols only)',
+    },
+    JWT_REFRESH_SECRET: {
+        type: 'string',
+        required: true,
+        minLength: 32,
+        pattern: /^[A-Za-z0-9+/=_-]+$/,
+        description: 'JWT refresh secret (minimum 32 characters, alphanumeric and symbols only)',
+    },
+    JWT_EXPIRES_IN: {
+        type: 'string',
+        required: false,
+        defaultValue: '1h',
+        description: 'JWT expiration time (e.g., 1h, 7d)',
+    },
+    JWT_REFRESH_EXPIRES_IN: {
+        type: 'string',
+        required: false,
+        defaultValue: '7d',
+        description: 'JWT refresh expiration time (e.g., 7d, 30d)',
+    },
+    SESSION_SECRET: {
+        type: 'string',
+        required: true,
+        minLength: 32,
+        pattern: /^[A-Za-z0-9+/=_-]+$/,
+        description: 'Session signing secret (minimum 32 characters, alphanumeric and symbols only)',
+    },
+    SESSION_MAX_AGE_HOURS: {
+        type: 'number',
+        required: false,
+        defaultValue: 24,
+        description: 'Session maximum age in hours',
+    },
+    SESSION_ABSOLUTE_TIMEOUT_HOURS: {
+        type: 'number',
+        required: false,
+        defaultValue: 72,
+        description: 'Session absolute timeout in hours',
+    },
+    SESSION_INACTIVITY_TIMEOUT_MINUTES: {
+        type: 'number',
+        required: false,
+        defaultValue: 30,
+        description: 'Session inactivity timeout in minutes',
+    },
+    ENCRYPTION_KEY: {
+        type: 'string',
+        required: true,
+        minLength: 32,
+        pattern: /^[A-Za-z0-9+/=_-]+$/,
+        description: 'Encryption key for sensitive data (exactly 32 characters)',
+    },
+    ENCRYPTION_ALGORITHM: {
+        type: 'string',
+        required: false,
+        defaultValue: 'aes-256-gcm',
+        description: 'Encryption algorithm',
+    },
+    SMTP_HOST: {
+        type: 'string',
+        required: false,
+        description: 'SMTP server host',
+    },
+    SMTP_PORT: {
+        type: 'number',
+        required: false,
+        defaultValue: 587,
+        description: 'SMTP server port',
+    },
+    SMTP_USER: {
+        type: 'string',
+        required: false,
+        description: 'SMTP username',
+    },
+    SMTP_PASS: {
+        type: 'string',
+        required: false,
+        description: 'SMTP password',
+    },
+    SMTP_SECURE: {
+        type: 'boolean',
+        required: false,
+        defaultValue: false,
+        description: 'Use secure SMTP connection',
+    },
+    S3_ENDPOINT: {
+        type: 'string',
+        required: false,
+        description: 'S3-compatible endpoint URL',
+    },
+    S3_ACCESS_KEY: {
+        type: 'string',
+        required: false,
+        description: 'S3 access key',
+    },
+    S3_SECRET_KEY: {
+        type: 'string',
+        required: false,
+        minLength: 16,
+        description: 'S3 secret key (minimum 16 characters)',
+    },
+    S3_BUCKET: {
+        type: 'string',
+        required: false,
+        description: 'S3 bucket name',
+    },
+    S3_REGION: {
+        type: 'string',
+        required: false,
+        defaultValue: 'us-east-1',
+        description: 'S3 region',
+    },
+    MINIO_ROOT_USER: {
+        type: 'string',
+        required: false,
+        minLength: 3,
+        description: 'MinIO root username',
+    },
+    MINIO_ROOT_PASSWORD: {
+        type: 'string',
+        required: false,
+        minLength: 16,
+        description: 'MinIO root password (minimum 16 characters)',
+    },
+    PASSWORD_MIN_LENGTH: {
+        type: 'number',
+        required: false,
+        defaultValue: 8,
+        description: 'Minimum password length',
+    },
+    PASSWORD_REQUIRE_UPPERCASE: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        description: 'Require uppercase letters in passwords',
+    },
+    PASSWORD_REQUIRE_LOWERCASE: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        description: 'Require lowercase letters in passwords',
+    },
+    PASSWORD_REQUIRE_NUMBERS: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        description: 'Require numbers in passwords',
+    },
+    PASSWORD_REQUIRE_SPECIAL: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        description: 'Require special characters in passwords',
+    },
+    PASSWORD_MAX_AGE_DAYS: {
+        type: 'number',
+        required: false,
+        defaultValue: 90,
+        description: 'Maximum password age in days',
+    },
+    PASSWORD_PREVENT_REUSE: {
+        type: 'number',
+        required: false,
+        defaultValue: 5,
+        description: 'Number of previous passwords to prevent reuse',
+    },
+    ACCOUNT_LOCKOUT_ENABLED: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        description: 'Enable account lockout after failed attempts',
+    },
+    LOCKOUT_MAX_ATTEMPTS: {
+        type: 'number',
+        required: false,
+        defaultValue: 5,
+        description: 'Maximum failed login attempts before lockout',
+    },
+    LOCKOUT_DURATION_MINUTES: {
+        type: 'number',
+        required: false,
+        defaultValue: 30,
+        description: 'Lockout duration in minutes',
+    },
+    LOCKOUT_RESET_AFTER_MINUTES: {
+        type: 'number',
+        required: false,
+        defaultValue: 60,
+        description: 'Reset failed attempts after this many minutes',
+    },
+    RATE_LIMIT_TTL: {
+        type: 'number',
+        required: false,
+        defaultValue: 60,
+        description: 'Global rate limit TTL in seconds',
+    },
+    RATE_LIMIT_MAX: {
+        type: 'number',
+        required: false,
+        defaultValue: 100,
+        description: 'Global rate limit maximum requests',
+    },
+    AUTH_RATE_LIMIT_TTL: {
+        type: 'number',
+        required: false,
+        defaultValue: 900,
+        description: 'Auth rate limit TTL in seconds',
+    },
+    AUTH_RATE_LIMIT_MAX: {
+        type: 'number',
+        required: false,
+        defaultValue: 5,
+        description: 'Auth rate limit maximum requests',
+    },
+    API_RATE_LIMIT_TTL: {
+        type: 'number',
+        required: false,
+        defaultValue: 60,
+        description: 'API rate limit TTL in seconds',
+    },
+    API_RATE_LIMIT_MAX: {
+        type: 'number',
+        required: false,
+        defaultValue: 100,
+        description: 'API rate limit maximum requests',
+    },
+    CORS_ORIGIN: {
+        type: 'string',
+        required: false,
+        description: 'Comma-separated list of allowed CORS origins',
+    },
+    NODE_ENV: {
+        type: 'string',
+        required: false,
+        pattern: /^(development|production|test)$/,
+        defaultValue: 'development',
+        description: 'Application environment (development, production, or test)',
+    },
+    PORT: {
+        type: 'number',
+        required: false,
+        defaultValue: 3000,
+        description: 'Application port',
+    },
+    API_BASE_URL: {
+        type: 'string',
+        required: false,
+        description: 'Base URL for API',
+    },
+    WEB_BASE_URL: {
+        type: 'string',
+        required: false,
+        description: 'Base URL for web application',
+    },
+};
+export class EnvValidationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'EnvValidationError';
+    }
+}
+export function validateEnvironmentVariables() {
+    const errors = [];
+    const warnings = [];
+    const envKeys = Object.keys(ENV_SCHEMA);
+    for (const key of envKeys) {
+        const schema = ENV_SCHEMA[key];
+        const value = process.env[key];
+        if (schema?.required && (value === undefined || value === '')) {
+            errors.push(`Required environment variable ${key} is missing or empty`);
+            continue;
+        }
+        if (value !== undefined && value !== '') {
+            if (schema?.type === 'number' && isNaN(Number(value))) {
+                errors.push(`Environment variable ${key} must be a number`);
+                continue;
+            }
+            if (schema?.type === 'boolean' &&
+                !['true', 'false'].includes(value.toLowerCase())) {
+                errors.push(`Environment variable ${key} must be 'true' or 'false'`);
+                continue;
+            }
+            if (schema?.type === 'string') {
+                if (schema?.minLength && value.length < schema.minLength) {
+                    errors.push(`Environment variable ${key} must be at least ${schema.minLength} characters long (current: ${value.length})`);
+                    continue;
+                }
+                if (schema?.pattern && !schema.pattern.test(value)) {
+                    errors.push(`Environment variable ${key} does not match required pattern`);
+                    continue;
+                }
+            }
+        }
+    }
+    if (process.env.NODE_ENV === 'production') {
+        const weakPatterns = [
+            /password/i,
+            /123456/,
+            /admin/i,
+            /secret/i,
+            /qwerty/i,
+            /minioadmin/i,
+            /redis_password/i,
+        ];
+        const checkWeakPassword = (value, name) => {
+            if (value) {
+                for (const weak of weakPatterns) {
+                    if (weak.test(value)) {
+                        warnings.push(`${name} contains weak pattern: ${weak.source}`);
+                        break;
+                    }
+                }
+            }
+        };
+        checkWeakPassword(process.env.POSTGRES_PASSWORD, 'PostgreSQL password');
+        checkWeakPassword(process.env.REDIS_PASSWORD, 'Redis password');
+        checkWeakPassword(process.env.S3_SECRET_KEY, 'S3 secret key');
+        checkWeakPassword(process.env.MINIO_ROOT_PASSWORD, 'MinIO password');
+        const defaultSecrets = [
+            'your-super-secret-jwt-key-change-in-production',
+            'your-super-secret-jwt-key',
+            'your-super-secret-session-key-change-in-production',
+            'your-super-secret-session-key',
+            'change-me-in-production',
+            'default-secret-key',
+        ];
+        if (defaultSecrets.includes(process.env.JWT_SECRET || '')) {
+            warnings.push('Using default JWT secret in production');
+        }
+        if (defaultSecrets.includes(process.env.JWT_REFRESH_SECRET || '')) {
+            warnings.push('Using default JWT refresh secret in production');
+        }
+        if (defaultSecrets.includes(process.env.SESSION_SECRET || '')) {
+            warnings.push('Using default session secret in production');
+        }
+        if (defaultSecrets.includes(process.env.ENCRYPTION_KEY || '')) {
+            warnings.push('Using default encryption key in production');
+        }
+        if (process.env.CORS_ORIGIN === '*' ||
+            process.env.CORS_ORIGIN?.includes('*')) {
+            warnings.push('Using wildcard CORS origin in production is insecure');
+        }
+        if (process.env.SMTP_SECURE === 'false') {
+            warnings.push('SMTP secure connection disabled in production');
+        }
+    }
+    if (warnings.length > 0) {
+        console.warn('\n⚠️  Environment Security Warnings:');
+        warnings.forEach((warning) => console.warn(`  - ${warning}`));
+    }
+    if (errors.length > 0) {
+        console.error('\n❌ Environment Validation Errors:');
+        errors.forEach((error) => console.error(`  - ${error}`));
+        console.error('\nPlease set the required environment variables before starting the application.');
+        console.error('Refer to .env.example for the complete list of required variables.\n');
+        throw new EnvValidationError(`Environment validation failed: ${errors.join(', ')}`);
+    }
+    console.log('✅ Environment variables validated successfully');
+}
+export function getRequiredEnv(key) {
+    if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+        throw new EnvValidationError(`Invalid environment variable key: ${key}`);
+    }
+    const value = process.env[key];
+    if (!value) {
+        throw new EnvValidationError(`Required environment variable ${key} is not set`);
+    }
+    return value;
+}
+export function getOptionalEnv(key, defaultValue) {
+    if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+        throw new EnvValidationError(`Invalid environment variable key: ${key}`);
+    }
+    return process.env[key] || defaultValue;
+}
+export function getEnvNumber(key, defaultValue) {
+    const value = getOptionalEnv(key);
+    if (value === undefined) {
+        if (defaultValue !== undefined) {
+            return defaultValue;
+        }
+        throw new EnvValidationError(`Required environment variable ${key} is not set`);
+    }
+    const parsed = Number(value);
+    if (isNaN(parsed)) {
+        throw new EnvValidationError(`Environment variable ${key} must be a number`);
+    }
+    return parsed;
+}
+export function getEnvBoolean(key, defaultValue) {
+    const value = getOptionalEnv(key);
+    if (value === undefined) {
+        if (defaultValue !== undefined) {
+            return defaultValue;
+        }
+        throw new EnvValidationError(`Required environment variable ${key} is not set`);
+    }
+    return value.toLowerCase() === 'true';
+}
+export function generateSecureSecret(length = 32) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=_-';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+//# sourceMappingURL=env-validation.js.map
