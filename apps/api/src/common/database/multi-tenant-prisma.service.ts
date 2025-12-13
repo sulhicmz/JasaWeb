@@ -2,6 +2,15 @@ import { Injectable, Scope, Inject, BadRequestException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { PrismaService } from './prisma.service';
 
+interface RequestWithOrganization {
+  organizationId: string;
+  user?: {
+    id: string;
+    email: string;
+    organizationId: string;
+  };
+}
+
 /**
  * Service that wraps Prisma to enforce multi-tenant data isolation
  * This service intercepts Prisma operations to ensure they're scoped to the current organization
@@ -10,14 +19,14 @@ import { PrismaService } from './prisma.service';
 export class MultiTenantPrismaService {
   constructor(
     private prisma: PrismaService,
-    @Inject(REQUEST) private request: any
+    @Inject(REQUEST) private request: RequestWithOrganization
   ) {}
 
   /**
    * Helper method to get the current organization ID
    */
   private get organizationId(): string {
-    const orgId = (this.request as any).organizationId;
+    const orgId = this.request.organizationId;
     if (!orgId) {
       throw new BadRequestException(
         'Organization context not found. Please ensure multi-tenant middleware is applied.'

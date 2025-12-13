@@ -1,6 +1,6 @@
 /// <reference types="@types/jest" />
 
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from '../common/config/env.validation';
 import { AuthModule } from './auth.module';
