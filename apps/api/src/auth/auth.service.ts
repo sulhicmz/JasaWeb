@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -15,12 +16,11 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private refreshTokenService: RefreshTokenService
+    private refreshTokenService: RefreshTokenService,
+    private configService: ConfigService
   ) {}
 
-  async register(
-    createUserDto: CreateUserDto
-  ): Promise<{
+  async register(createUserDto: CreateUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
@@ -35,7 +35,11 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const securityConfig = this.configService.get('security');
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      securityConfig.password.bcryptRounds || 12
+    );
 
     // Create the user
     const user = await this.usersService.create({
@@ -60,9 +64,7 @@ export class AuthService {
     };
   }
 
-  async login(
-    loginUserDto: LoginUserDto
-  ): Promise<{
+  async login(loginUserDto: LoginUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;

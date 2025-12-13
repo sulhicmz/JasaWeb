@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getApiUrl } from '../../config/app.config';
 
 const QuickActions: React.FC = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -30,7 +31,7 @@ const QuickActions: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/projects', {
+      const response = await fetch(getApiUrl('projects'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,7 +72,7 @@ const QuickActions: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/tickets', {
+      const response = await fetch(getApiUrl('tickets'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

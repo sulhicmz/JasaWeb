@@ -1,8 +1,10 @@
 // API endpoint for dashboard stats
+import { getApiUrl } from '../../../config/app.config';
+
 export async function GET({ request }) {
   try {
     // Forward the request to the backend API
-    const backendUrl = 'http://localhost:3001/dashboard/stats';
+    const backendUrl = getApiUrl('dashboard/stats');
 
     const response = await fetch(backendUrl, {
       method: 'GET',

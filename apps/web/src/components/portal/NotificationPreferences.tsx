@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '../../config/app.config';
 
 interface NotificationPreferences {
   type: string;
@@ -90,14 +91,16 @@ export const NotificationPreferences: React.FC<
   const fetchPreferences = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
 
-      const response = await fetch(`${apiUrl}/notifications/preferences`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/notifications/preferences`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -134,16 +137,18 @@ export const NotificationPreferences: React.FC<
     try {
       setSaving(true);
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
 
-      const response = await fetch(`${apiUrl}/notifications/preferences`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ preferences }),
-      });
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/notifications/preferences`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ preferences }),
+        }
+      );
 
       if (response.ok) {
         // Show success message

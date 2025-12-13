@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../../config/app.config';
 
 interface Project {
   id: string;
@@ -44,7 +45,7 @@ const StatusWidgets: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
 
-      const response = await fetch('http://localhost:3001/dashboard/stats', {
+      const response = await fetch(getApiUrl('dashboard/stats'), {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

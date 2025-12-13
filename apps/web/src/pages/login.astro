@@ -100,9 +100,17 @@ const pageTitle = 'Login ke Portal Klien - JasaWeb';
   <!-- Error/Success Messages -->
   <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
 
-  <script client:load>
-    // API configuration
-    const API_BASE_URL = 'http://localhost:3001';
+  <script>
+    // API configuration will be loaded dynamically
+    let API_BASE_URL = 'http://localhost:3001';
+    
+    // Load configuration
+    import('../config/app.config.js').then(module => {
+      API_BASE_URL = module.API_CONFIG.baseUrl;
+    }).catch(() => {
+      // Fallback to default if config fails to load
+      console.warn('Failed to load API config, using fallback');
+    });
 
     // Check if user is already logged in
     document.addEventListener('DOMContentLoaded', function() {

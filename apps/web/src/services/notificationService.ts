@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
+import { API_CONFIG } from '../config/app.config';
 
 export interface Notification {
   id: string;
@@ -76,7 +77,7 @@ class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    const apiUrl = API_CONFIG.baseUrl;
 
     this.socket = io(`${apiUrl}/notifications`, {
       auth: {
@@ -103,7 +104,7 @@ class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    const apiUrl = API_CONFIG.baseUrl;
 
     this.dashboardSocket = io(`${apiUrl}/dashboard`, {
       auth: {

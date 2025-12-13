@@ -1,11 +1,13 @@
 // API endpoint for recent activity
+import { getApiUrl } from '../../../config/app.config';
+
 export async function GET({ request, url }) {
   try {
     // Get query parameters
     const limit = url.searchParams.get('limit') || '10';
 
     // Forward the request to the backend API
-    const backendUrl = `http://localhost:3001/dashboard/recent-activity?limit=${limit}`;
+    const backendUrl = getApiUrl(`dashboard/recent-activity?limit=${limit}`);
 
     const response = await fetch(backendUrl, {
       method: 'GET',

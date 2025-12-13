@@ -53,9 +53,16 @@ const { title } = Astro.props;
     </div>
   </div>
 
-  <script client:load>
-    // API configuration
-    const API_BASE_URL = 'http://localhost:3001';
+<script>
+    // API configuration will be loaded dynamically
+    let API_BASE_URL = 'http://localhost:3001';
+    
+    // Load configuration
+    import('../../../config/app.config.js').then(module => {
+      API_BASE_URL = module.API_CONFIG.baseUrl;
+    }).catch(() => {
+      console.warn('Failed to load API config, using fallback');
+    });
 
     // Check authentication
     const isAuthenticated = localStorage.getItem('authToken');

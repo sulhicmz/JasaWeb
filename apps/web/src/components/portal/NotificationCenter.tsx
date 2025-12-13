@@ -4,6 +4,7 @@ import type {
   Notification,
   NotificationUpdate,
 } from '../../services/notificationService';
+import { API_CONFIG } from '../../config/app.config';
 
 interface NotificationCenterProps {
   className?: string;
@@ -22,14 +23,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     try {
       setLoading(true);
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
 
-      const response = await fetch(`${apiUrl}/notifications?limit=20`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${API_CONFIG.baseUrl}/notifications?limit=20`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -49,15 +52,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const markAsRead = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
 
-      await fetch(`${apiUrl}/notifications/${notificationId}/read`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      await fetch(
+        `${API_CONFIG.baseUrl}/notifications/${notificationId}/read`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       // Update local state
       setNotifications((prev) =>
@@ -78,9 +83,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const markAllAsRead = async () => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
 
-      await fetch(`${apiUrl}/notifications/read-all`, {
+      await fetch(`${API_CONFIG.baseUrl}/notifications/read-all`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -105,9 +109,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const deleteNotification = async (notificationId: string) => {
     try {
       const token = localStorage.getItem('auth_token');
-      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
 
-      await fetch(`${apiUrl}/notifications/${notificationId}`, {
+      await fetch(`${API_CONFIG.baseUrl}/notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

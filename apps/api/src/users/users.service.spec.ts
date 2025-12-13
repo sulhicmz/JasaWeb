@@ -1,6 +1,7 @@
 /// <reference types="@types/jest" />
 
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from './users.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -35,6 +36,19 @@ describe('UsersService', () => {
     },
   };
 
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === 'security') {
+        return {
+          password: {
+            bcryptRounds: 12,
+          },
+        };
+      }
+      return null;
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,6 +56,10 @@ describe('UsersService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile();
@@ -72,7 +90,7 @@ describe('UsersService', () => {
 
       const result = await service.create(createUserDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 12);
       expect(mockPrismaService.user.create).toHaveBeenCalledWith({
         data: {
           email: createUserDto.email,
@@ -189,7 +207,7 @@ describe('UsersService', () => {
 
       await service.update('1', updatePasswordDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('new-test-pass', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('new-test-pass', 12);
       expect(mockPrismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
         data: { password: 'new-test-hash' },

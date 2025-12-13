@@ -43,6 +43,7 @@ export default registerAs('security', () => ({
     requireSpecialChars: process.env.PASSWORD_REQUIRE_SPECIAL !== 'false',
     maxAge: parseNumber(process.env.PASSWORD_MAX_AGE_DAYS, 90),
     preventReuse: parseNumber(process.env.PASSWORD_PREVENT_REUSE, 5),
+    bcryptRounds: parseNumber(process.env.BCRYPT_ROUNDS, 12), // Increased from 10 to 12 for better security
   },
 
   // Account Lockout

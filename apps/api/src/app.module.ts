@@ -1,6 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateEnv } from './common/config/env.validation';
+import securityConfig from './common/config/security.config';
+import appConfig from './common/config/app.config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
@@ -29,34 +31,37 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 
-const parseEnvNumber = (
-  value: string | undefined,
-  fallback: number
-): number => {
-  const parsed = Number.parseInt(value ?? '', 10);
-  return Number.isNaN(parsed) ? fallback : parsed;
-};
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       validate: validateEnv,
+      load: [securityConfig, appConfig],
     }),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        ttl: parseEnvNumber(process.env.CACHE_TTL, 5), // Time to live in seconds
-        max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
-      }),
-    }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
-        limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
+      useFactory: async (configService: ConfigService) => {
+        const appConfig = configService.get('app');
+        return {
+          ttl: appConfig.cache.ttl,
+          max: appConfig.cache.max,
+        };
       },
-    ]),
+      inject: [ConfigService],
+    }),
+    ThrottlerModule.forRootAsync({
+      useFactory: async (configService: ConfigService) => {
+        const appConfig = configService.get('app');
+        return [
+          {
+            ttl: appConfig.throttling.ttl,
+            limit: appConfig.throttling.limit,
+          },
+        ];
+      },
+      inject: [ConfigService],
+    }),
     AuthModule,
     UserModule,
     ProjectModule,
