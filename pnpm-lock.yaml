@@ -74,6 +74,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.699.0
         version: 3.932.0
+      '@jasaweb/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@nestjs-modules/mailer':
         specifier: ^2.0.2
         version: 2.0.2(@nestjs/common@11.1.9)(@nestjs/core@11.1.9)(nodemailer@7.0.7)

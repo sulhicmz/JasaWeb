@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { config } from '@jasaweb/config';
 
 /**
  * Rate Limit Guard
@@ -15,10 +16,13 @@ import { Request } from 'express';
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly requests = new Map<string, number[]>();
-  private readonly defaultLimit = 5;
-  private readonly defaultWindow = 60000; // 1 minute
+  private readonly defaultLimit: number;
+  private readonly defaultWindow: number;
 
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) {
+    this.defaultLimit = config.get('security').rateLimitMax;
+    this.defaultWindow = config.get('security').rateLimitTtl * 1000; // Convert to milliseconds
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();

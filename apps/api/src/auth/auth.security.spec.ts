@@ -10,7 +10,9 @@ describe('Security Configuration Tests', () => {
   describe('Environment Validation', () => {
     it('should fail validation when JWT_SECRET is missing', () => {
       const invalidConfig = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
       };
 
       expect(() => validateEnv(invalidConfig)).toThrow(
@@ -20,7 +22,9 @@ describe('Security Configuration Tests', () => {
 
     it('should fail validation when JWT_SECRET is too short', () => {
       const invalidConfig = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
         JWT_SECRET: 'short',
         JWT_REFRESH_SECRET: 'valid_refresh_secret_that_is_long_enough',
       };
@@ -32,7 +36,9 @@ describe('Security Configuration Tests', () => {
 
     it('should fail validation when JWT_REFRESH_SECRET is missing', () => {
       const invalidConfig = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
         JWT_SECRET: 'valid_jwt_secret_that_is_long_enough',
       };
 
@@ -43,7 +49,9 @@ describe('Security Configuration Tests', () => {
 
     it('should fail validation when JWT_REFRESH_SECRET is too short', () => {
       const invalidConfig = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
         JWT_SECRET: 'valid_jwt_secret_that_is_long_enough',
         JWT_REFRESH_SECRET: 'short',
       };
@@ -55,7 +63,9 @@ describe('Security Configuration Tests', () => {
 
     it('should pass validation with proper JWT secrets', () => {
       const validConfig = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
         JWT_SECRET: 'valid_jwt_secret_that_is_long_enough',
         JWT_REFRESH_SECRET: 'valid_refresh_secret_that_is_long_enough',
       };
@@ -67,7 +77,9 @@ describe('Security Configuration Tests', () => {
   describe('Module Configuration', () => {
     it('should fail to create AuthModule without JWT_SECRET', async () => {
       const invalidEnv = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
         JWT_REFRESH_SECRET: 'valid_refresh_secret_that_is_long_enough',
       };
 
@@ -92,7 +104,9 @@ describe('Security Configuration Tests', () => {
 
     it('should fail to create SessionModule without JWT_SECRET', async () => {
       const invalidEnv = {
-        DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+        DATABASE_URL:
+          process.env.TEST_DATABASE_URL ||
+          'postgresql://test:test@localhost:5432/test',
         JWT_REFRESH_SECRET: 'valid_refresh_secret_that_is_long_enough',
       };
 

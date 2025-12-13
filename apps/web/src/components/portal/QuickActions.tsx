@@ -30,7 +30,8 @@ const QuickActions: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/projects', {
+      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/projects`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,7 +72,8 @@ const QuickActions: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/tickets', {
+      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/tickets`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

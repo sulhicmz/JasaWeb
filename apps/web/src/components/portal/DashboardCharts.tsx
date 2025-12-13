@@ -35,7 +35,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       setError(null);
 
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/dashboard/stats', {
+      const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/dashboard/stats`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

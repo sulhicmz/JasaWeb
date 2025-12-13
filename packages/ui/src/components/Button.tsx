@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, DetailedHTMLProps } from 'react';
 import React from 'react';
+import { designTokens } from '../design-tokens';
 
 export interface ButtonProps
   extends DetailedHTMLProps<
@@ -17,19 +18,16 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
 
     const variantClasses = {
-      primary:
-        'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 border border-white/10',
-      secondary:
-        'bg-slate-800 text-white hover:bg-slate-700 border border-white/10 hover:border-white/20',
-      outline:
-        'border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 hover:text-blue-300',
-      ghost: 'text-gray-400 hover:text-white hover:bg-white/5',
+      primary: `bg-gradient-to-r from-[${designTokens.getColor('primary', '600')}] to-[${designTokens.getColor('primary', '700')}] text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 border border-white/10`,
+      secondary: `bg-[${designTokens.getColor('neutral', '800')}] text-white hover:bg-[${designTokens.getColor('neutral', '700')}] border border-white/10 hover:border-white/20`,
+      outline: `border border-[${designTokens.getColor('primary', '500')}] text-[${designTokens.getColor('primary', '400')}] hover:bg-[${designTokens.getColor('primary', '500')}] hover:border-[${designTokens.getColor('primary', '400')}] hover:text-[${designTokens.getColor('primary', '300')}]`,
+      ghost: `text-[${designTokens.getColor('neutral', '400')}] hover:text-white hover:bg-white/5`,
     };
 
     const sizeClasses = {
-      sm: 'h-8 px-3 text-sm',
-      md: 'h-10 px-4 py-2',
-      lg: 'h-12 px-8 text-lg',
+      sm: `h-8 px-3 text-[${designTokens.getFontSize('sm')}]`,
+      md: `h-10 px-4 py-2 text-[${designTokens.getFontSize('base')}]`,
+      lg: `h-12 px-8 text-[${designTokens.getFontSize('lg')}]`,
     };
 
     const disabled = props.disabled || loading;
