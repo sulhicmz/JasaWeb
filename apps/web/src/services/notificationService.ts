@@ -336,7 +336,7 @@ class NotificationService {
     notificationEl.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
 
     // Set color based on type
-    const colors = {
+    const colors: Record<string, string> = {
       success: 'bg-green-500',
       error: 'bg-red-500',
       warning: 'bg-yellow-500',
@@ -379,7 +379,7 @@ class NotificationService {
   }
 
   private getNotificationIcon(type: string) {
-    const icons = {
+    const icons: Record<string, string> = {
       success: '<i class="fas fa-check-circle"></i>',
       error: '<i class="fas fa-exclamation-circle"></i>',
       warning: '<i class="fas fa-exclamation-triangle"></i>',
