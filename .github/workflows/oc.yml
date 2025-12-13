@@ -62,10 +62,10 @@ jobs:
 
             **Objective**:
             Choose **ONE** high-impact, clearly scoped task for JasaWeb:
-            - Improve client portal functionality and project management features.
-            - Fix critical bugs in API endpoints or database operations.
-            - Optimize frontend performance and SEO for marketing pages.
-            - Enhance admin dashboard and CRM capabilities.
+            - Improve stability and performance.
+            - Standarize and consolidate.
+            - Find and fix bug/error.
+            - Improve modularization.
 
             **CRITICAL: EPHEMERAL ENVIRONMENT WARNING**:
             - This runs in a temporary GitHub Action runner. **ALL CHANGES WILL BE LOST** if you do not push.
@@ -74,19 +74,18 @@ jobs:
               2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
               3. `git add .`
               4. `git commit -m "feat: [Task Name] implementation"`
-              5. `git push origin dev` (OR create a PR to dev if you cannot push directly)
+              5. `git push origin dev`
 
             **Execution Protocol**:
             1. **Analysis**: Understand JasaWeb's business model (web development services).
             2. **Implementation**: Incremental changes respecting monorepo structure.
             3. **Verification**: Code MUST build and pass quality checks.
-            4. **Persistence**: **EXECUTE GIT PUSH TO DEV**.
+            4. **Persistence**: push to 'dev' branch
 
             **Deliverables**:
-            - Clearly state the selected task and business impact.
             - Provide the code changes with proper documentation.
             - Update relevant documentation and tests.
-            - **SUCCESSFUL GIT PUSH TO DEV**.
+            - Succesful push to 'dev' branch.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
@@ -132,7 +131,7 @@ jobs:
               2. `git config --global user.email "22936450+sulhicmz@users.noreply.github.com"`
               3. `git add .`
               4. `git commit -m "feat: [Task Name] implementation"`
-              5. `git push origin dev` (OR create a PR to dev if you cannot push directly)
+              5. `git push origin dev`
 
             **Execution Protocol**:
             1. **Analysis**: Understand JasaWeb's business model (web development services).
