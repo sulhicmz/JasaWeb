@@ -141,7 +141,7 @@ export class AnalyticsService {
         memberships: {
           where: { organizationId },
         },
-        Task: {
+        assignedTasks: {
           where: {
             project: {
               organizationId,
