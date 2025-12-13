@@ -1,0 +1,1176 @@
+---
+// src/pages/portal/projects/[id].astro
+import Layout from '../../../layouts/Layout.astro';
+import DashboardHeader from '../../../components/portal/DashboardHeader.astro';
+
+export interface Props {
+  title?: string;
+}
+
+const { title } = Astro.props;
+const projectId = Astro.params.id;
+---
+
+<Layout title={`Project Details - Client Portal`}>
+  <div class="min-h-screen bg-gray-50">
+    <DashboardHeader />
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Page Header -->
+      <div class="mb-8 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <button onclick="window.location.href='/portal/projects'" class="text-indigo-600 hover:text-indigo-800 font-medium">
+            ← Back to Projects
+          </button>
+          <div class="h-6 w-px bg-gray-300"></div>
+          <div>
+            <h1 id="project-title" class="text-3xl font-bold text-gray-900">Loading Project...</h1>
+            <p id="project-description" class="mt-1 text-gray-600">Loading project details...</p>
+          </div>
+        </div>
+        <div class="flex space-x-3">
+          <button onclick="editProject()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700">
+            Edit Project
+          </button>
+          <button onclick="openUploadModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">
+            Upload Files
+          </button>
+        </div>
+      </div>
+
+      <!-- Project Status and Progress -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Project Status Card -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Project Status</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-500">Status</span>
+              <span id="project-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                Loading...
+              </span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-500">Created</span>
+              <span id="project-created" class="text-sm text-gray-900">Loading...</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-500">Last Updated</span>
+              <span id="project-updated" class="text-sm text-gray-900">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Overall Progress</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Completion</span>
+              <span id="progress-percentage">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div id="progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="text-center">
+                <div id="milestones-completed" class="text-2xl font-bold text-green-600">0</div>
+                <div class="text-xs text-gray-500">Completed</div>
+              </div>
+              <div class="text-center">
+                <div id="milestones-total" class="text-2xl font-bold text-gray-600">0</div>
+                <div class="text-xs text-gray-500">Total Milestones</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+          <div class="space-y-2">
+            <button onclick="createMilestone()" class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md">
+              ➕ Add Milestone
+            </button>
+            <button onclick="viewAllFiles()" class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md">
+              📁 View All Files
+            </button>
+            <button onclick="createApprovalRequest()" class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md">
+              ✅ Request Approval
+            </button>
+            <button onclick="createTicket()" class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md">
+              🎫 Create Ticket
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="border-b border-gray-200 mb-8">
+        <nav class="-mb-px flex space-x-8">
+          <button onclick="switchTab('milestones')" id="tab-milestones" class="tab-button py-2 px-1 border-b-2 border-indigo-500 font-medium text-sm text-indigo-600">
+            Milestones
+          </button>
+          <button onclick="switchTab('files')" id="tab-files" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Files
+          </button>
+          <button onclick="switchTab('approvals')" id="tab-approvals" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Approvals
+          </button>
+          <button onclick="switchTab('tickets')" id="tab-tickets" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            Tickets
+          </button>
+        </nav>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="tab-content">
+        <!-- Milestones Tab -->
+        <div id="milestones-content" class="tab-content">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Project Milestones</h2>
+            <button onclick="createMilestone()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+              Add Milestone
+            </button>
+          </div>
+          
+          <!-- Loading State -->
+          <div id="milestones-loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading milestones...</p>
+          </div>
+
+          <!-- Milestones List -->
+          <div id="milestones-list" class="space-y-4 hidden">
+            <!-- Milestones will be dynamically inserted here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="milestones-empty" class="text-center py-12 hidden">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p class="mt-2 text-gray-500">No milestones yet</p>
+            <button onclick="createMilestone()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+              Create First Milestone
+            </button>
+          </div>
+        </div>
+
+        <!-- Files Tab -->
+        <div id="files-content" class="tab-content hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Project Files</h2>
+            <button onclick="openUploadModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+              Upload Files
+            </button>
+          </div>
+          
+          <!-- Loading State -->
+          <div id="files-loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading files...</p>
+          </div>
+
+          <!-- Files Grid -->
+          <div id="files-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 hidden">
+            <!-- Files will be dynamically inserted here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="files-empty" class="text-center py-12 hidden">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <p class="mt-2 text-gray-500">No files uploaded yet</p>
+            <button onclick="openUploadModal()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+              Upload First File
+            </button>
+          </div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div id="approvals-content" class="tab-content hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Approval Requests</h2>
+            <button onclick="openApprovalModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+              Request Approval
+            </button>
+          </div>
+          
+          <!-- Loading State -->
+          <div id="approvals-loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-500">Loading approvals...</p>
+          </div>
+
+          <!-- Approvals List -->
+          <div id="approvals-list" class="space-y-4 hidden">
+            <!-- Approvals will be dynamically inserted here -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="approvals-empty" class="text-center py-12 hidden">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="mt-2 text-gray-500">No approval requests yet</p>
+            <button onclick="openApprovalModal()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+              Create First Approval Request
+            </button>
+          </div>
+        </div>
+
+        <!-- Tickets Tab -->
+        <div id="tickets-content" class="tab-content hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Project Tickets</h2>
+            <button onclick="createTicket()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+              Create Ticket
+            </button>
+          </div>
+          
+          <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+            </svg>
+            <p class="mt-2 text-gray-500">Ticket management coming soon</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Upload Modal -->
+  <div id="upload-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Files</h3>
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <div class="flex text-sm text-gray-600">
+            <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+              <span>Upload files</span>
+              <input id="file-upload" name="file-upload" type="file" class="sr-only" multiple accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+            </label>
+            <p class="pl-1">or drag and drop</p>
+          </div>
+          <p class="text-xs text-gray-500">PNG, JPG, PDF, DOC up to 10MB</p>
+        </div>
+        <div id="upload-progress" class="mt-4 hidden">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Uploading...</span>
+            <span id="upload-percentage">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="upload-progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button onclick="closeUploadModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700">
+            Cancel
+          </button>
+          <button onclick="uploadFiles()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">
+            Upload
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approval Request Modal -->
+  <div id="approval-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Request Approval</h3>
+        <form id="approval-form" class="space-y-4">
+          <div>
+            <label for="item-type" class="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
+            <select id="item-type" name="itemType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+              <option value="">Select item type...</option>
+              <option value="page">Page</option>
+              <option value="content">Content</option>
+              <option value="design">Design</option>
+              <option value="feature">Feature</option>
+              <option value="milestone">Milestone</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div>
+            <label for="item-id" class="block text-sm font-medium text-gray-700 mb-1">Item ID/Name</label>
+            <input type="text" id="item-id" name="itemId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Homepage Design, Milestone 1" required>
+          </div>
+          
+          <div>
+            <label for="approval-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea id="approval-description" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Describe what needs approval..."></textarea>
+          </div>
+          
+          <div class="mt-6 flex justify-end space-x-3">
+            <button type="button" onclick="closeApprovalModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">
+              Request Approval
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approval Decision Modal -->
+  <div id="approval-decision-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <h3 id="decision-title" class="text-lg font-medium text-gray-900 mb-4">Review Approval Request</h3>
+        <div id="decision-content" class="mb-4">
+          <!-- Content will be dynamically inserted -->
+        </div>
+        <form id="decision-form" class="space-y-4">
+          <div>
+            <label for="decision-note" class="block text-sm font-medium text-gray-700 mb-1">Note (optional)</label>
+            <textarea id="decision-note" name="note" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Add a note to your decision..."></textarea>
+          </div>
+          
+          <div class="mt-6 flex justify-end space-x-3">
+            <button type="button" onclick="closeDecisionModal()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium text-gray-700">
+              Cancel
+            </button>
+            <button type="button" id="reject-btn" onclick="submitDecision('reject')" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium">
+              Reject
+            </button>
+            <button type="button" id="approve-btn" onclick="submitDecision('approve')" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+              Approve
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script client:load>
+    // API configuration
+    const API_BASE_URL = 'http://localhost:3001';
+    const PROJECT_ID = '{projectId}';
+    
+    // State management
+    let currentProject = null;
+    let currentTab = 'milestones';
+    let milestones = [];
+    let files = [];
+    let approvals = [];
+    let currentApprovalId = null;
+    let comments = {}; // Store comments by milestone ID
+
+    // Check authentication
+    const isAuthenticated = localStorage.getItem('authToken');
+    if (!isAuthenticated) {
+      window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProject();
+      loadMilestones();
+      loadFiles();
+      loadApprovals();
+      
+      // Setup approval form
+      document.getElementById('approval-form').addEventListener('submit', submitApprovalRequest);
+    });
+
+    // Load project details
+    async function loadProject() {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/projects/${PROJECT_ID}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch project');
+        }
+
+        currentProject = await response.json();
+        displayProjectDetails();
+        updateProgress();
+
+      } catch (error) {
+        console.error('Error loading project:', error);
+        showError('Failed to load project details');
+      }
+    }
+
+    // Display project details
+    function displayProjectDetails() {
+      document.getElementById('project-title').textContent = currentProject.name;
+      document.getElementById('project-description').textContent = currentProject.description || 'No description';
+      
+      // Update status badge
+      const statusEl = document.getElementById('project-status');
+      statusEl.textContent = currentProject.status || 'Active';
+      statusEl.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(currentProject.status)}`;
+      
+      // Update dates
+      document.getElementById('project-created').textContent = formatDate(currentProject.createdAt);
+      document.getElementById('project-updated').textContent = formatDate(currentProject.updatedAt);
+    }
+
+    // Load milestones
+    async function loadMilestones() {
+      const loadingEl = document.getElementById('milestones-loading');
+      const listEl = document.getElementById('milestones-list');
+      const emptyEl = document.getElementById('milestones-empty');
+
+      try {
+        loadingEl.classList.remove('hidden');
+        listEl.classList.add('hidden');
+        emptyEl.classList.add('hidden');
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/milestones?projectId=${PROJECT_ID}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch milestones');
+        }
+
+        milestones = await response.json();
+        displayMilestones();
+
+      } catch (error) {
+        console.error('Error loading milestones:', error);
+        loadingEl.classList.add('hidden');
+        showError('Failed to load milestones');
+      }
+    }
+
+    // Display milestones
+    function displayMilestones() {
+      const loadingEl = document.getElementById('milestones-loading');
+      const listEl = document.getElementById('milestones-list');
+      const emptyEl = document.getElementById('milestones-empty');
+
+      if (milestones.length === 0) {
+        emptyEl.classList.remove('hidden');
+      } else {
+        listEl.innerHTML = milestones.map(milestone => createMilestoneCard(milestone)).join('');
+        listEl.classList.remove('hidden');
+      }
+
+      loadingEl.classList.add('hidden');
+      updateProgress();
+    }
+
+    // Create milestone card
+    function createMilestoneCard(milestone) {
+      const statusColor = getMilestoneStatusColor(milestone.status);
+      const progress = milestone.progress || 0;
+      const isOverdue = new Date(milestone.dueDate) < new Date() && milestone.status !== 'completed';
+      const milestoneComments = comments[milestone.id] || [];
+      
+      return `
+        <div class="bg-white rounded-lg shadow p-6 ${isOverdue ? 'border-l-4 border-red-500' : ''}">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-medium text-gray-900">${milestone.title}</h3>
+              <p class="text-sm text-gray-500 mt-1">${milestone.description || 'No description'}</p>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+              ${milestone.status || 'pending'}
+            </span>
+          </div>
+          
+          <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Progress</span>
+              <span>${progress}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+            </div>
+          </div>
+          
+          <div class="space-y-2 mb-4">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-500">Due Date</span>
+              <span class="${isOverdue ? 'text-red-600 font-medium' : 'text-gray-900'}">${formatDate(milestone.dueDate)}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-500">Created</span>
+              <span class="text-gray-900">${formatDate(milestone.createdAt)}</span>
+            </div>
+          </div>
+          
+          <div class="flex space-x-2 mb-4">
+            <button onclick="editMilestone('${milestone.id}')" class="flex-1 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm">
+              Edit
+            </button>
+            <button onclick="updateMilestoneProgress('${milestone.id}')" class="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+              Update Progress
+            </button>
+          </div>
+          
+          <!-- Comments Section -->
+          <div class="border-t pt-4">
+            <div class="flex justify-between items-center mb-3">
+              <h4 class="text-sm font-medium text-gray-900">Comments & Feedback</h4>
+              <button onclick="toggleCommentForm('${milestone.id}')" class="text-xs text-indigo-600 hover:text-indigo-800">
+                Add Comment
+              </button>
+            </div>
+            
+            <!-- Comment Form (Hidden by default) -->
+            <div id="comment-form-${milestone.id}" class="hidden mb-3">
+              <div class="flex space-x-2">
+                <input type="text" id="comment-input-${milestone.id}" placeholder="Add a comment or feedback..." 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="addComment('${milestone.id}')" class="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm">
+                  Post
+                </button>
+              </div>
+            </div>
+            
+            <!-- Comments List -->
+            <div id="comments-${milestone.id}" class="space-y-2">
+              ${milestoneComments.length > 0 ? milestoneComments.map(comment => createComment(comment)).join('') : 
+                '<p class="text-xs text-gray-500 italic">No comments yet</p>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Load files
+    async function loadFiles() {
+      const loadingEl = document.getElementById('files-loading');
+      const gridEl = document.getElementById('files-grid');
+      const emptyEl = document.getElementById('files-empty');
+
+      try {
+        loadingEl.classList.remove('hidden');
+        gridEl.classList.add('hidden');
+        emptyEl.classList.add('hidden');
+
+        const token = localStorage.getItem('authToken');
+        // Note: API doesn't have a specific endpoint for files by project yet, this is a placeholder
+        const response = await fetch(`${API_BASE_URL}/files`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch files');
+        }
+
+        files = await response.json();
+        displayFiles();
+
+      } catch (error) {
+        console.error('Error loading files:', error);
+        loadingEl.classList.add('hidden');
+        // Show empty state for now since files endpoint might not be fully implemented
+        emptyEl.classList.remove('hidden');
+      }
+    }
+
+    // Display files
+    function displayFiles() {
+      const loadingEl = document.getElementById('files-loading');
+      const gridEl = document.getElementById('files-grid');
+      const emptyEl = document.getElementById('files-empty');
+
+      if (files.length === 0) {
+        emptyEl.classList.remove('hidden');
+      } else {
+        gridEl.innerHTML = files.map(file => createFileCard(file)).join('');
+        gridEl.classList.remove('hidden');
+      }
+
+      loadingEl.classList.add('hidden');
+    }
+
+    // Create file card
+    function createFileCard(file) {
+      const fileIcon = getFileIcon(file.filename);
+      const fileSize = formatFileSize(file.size);
+      
+      return `
+        <div class="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0">
+              <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                ${fileIcon}
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-medium text-gray-900 truncate">${file.filename}</h4>
+              <p class="text-xs text-gray-500">${fileSize} • ${formatDate(file.uploadedAt)}</p>
+            </div>
+          </div>
+          <div class="mt-3 flex space-x-2">
+            <button onclick="downloadFile('${file.id}')" class="flex-1 px-2 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700">
+              Download
+            </button>
+            <button onclick="deleteFile('${file.id}')" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50">
+              Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Update progress
+    function updateProgress() {
+      if (!milestones.length) return;
+      
+      const completedMilestones = milestones.filter(m => m.status === 'completed').length;
+      const totalProgress = milestones.reduce((sum, m) => sum + (m.progress || 0), 0);
+      const averageProgress = Math.round(totalProgress / milestones.length);
+      
+      document.getElementById('progress-percentage').textContent = `${averageProgress}%`;
+      document.getElementById('progress-bar').style.width = `${averageProgress}%`;
+      document.getElementById('milestones-completed').textContent = completedMilestones;
+      document.getElementById('milestones-total').textContent = milestones.length;
+    }
+
+    // Tab switching
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('border-indigo-500', 'text-indigo-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+      });
+      
+      const activeTabBtn = document.getElementById(`tab-${tabName}`);
+      activeTabBtn.classList.remove('border-transparent', 'text-gray-500');
+      activeTabBtn.classList.add('border-indigo-500', 'text-indigo-600');
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      document.getElementById(`${tabName}-content`).classList.remove('hidden');
+      currentTab = tabName;
+    }
+
+    // Modal functions
+    function openUploadModal() {
+      document.getElementById('upload-modal').classList.remove('hidden');
+    }
+
+    function closeUploadModal() {
+      document.getElementById('upload-modal').classList.add('hidden');
+      document.getElementById('upload-progress').classList.add('hidden');
+      document.getElementById('file-upload').value = '';
+    }
+
+    // Upload files
+    async function uploadFiles() {
+      const fileInput = document.getElementById('file-upload');
+      const files = fileInput.files;
+      
+      if (files.length === 0) {
+        alert('Please select files to upload');
+        return;
+      }
+
+      const progressEl = document.getElementById('upload-progress');
+      const progressBar = document.getElementById('upload-progress-bar');
+      const percentageEl = document.getElementById('upload-percentage');
+      
+      progressEl.classList.remove('hidden');
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          // Update progress
+          const progress = Math.round(((i + 1) / files.length) * 100);
+          progressBar.style.width = `${progress}%`;
+          percentageEl.textContent = `${progress}%`;
+          
+          const response = await fetch(`${API_BASE_URL}/files?projectId=${PROJECT_ID}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to upload ${file.name}`);
+          }
+        }
+        
+        closeUploadModal();
+        loadFiles(); // Refresh files list
+        showSuccess('Files uploaded successfully');
+        
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        showError('Failed to upload files');
+      }
+    }
+
+    // Load approvals
+    async function loadApprovals() {
+      const loadingEl = document.getElementById('approvals-loading');
+      const listEl = document.getElementById('approvals-list');
+      const emptyEl = document.getElementById('approvals-empty');
+
+      try {
+        loadingEl.classList.remove('hidden');
+        listEl.classList.add('hidden');
+        emptyEl.classList.add('hidden');
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/approvals`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch approvals');
+        }
+
+        const allApprovals = await response.json();
+        // Filter approvals for current project
+        approvals = allApprovals.filter(approval => approval.projectId === PROJECT_ID);
+        displayApprovals();
+
+      } catch (error) {
+        console.error('Error loading approvals:', error);
+        loadingEl.classList.add('hidden');
+        // Show empty state for now since approvals endpoint might not be fully implemented
+        emptyEl.classList.remove('hidden');
+      }
+    }
+
+    // Display approvals
+    function displayApprovals() {
+      const loadingEl = document.getElementById('approvals-loading');
+      const listEl = document.getElementById('approvals-list');
+      const emptyEl = document.getElementById('approvals-empty');
+
+      if (approvals.length === 0) {
+        emptyEl.classList.remove('hidden');
+      } else {
+        listEl.innerHTML = approvals.map(approval => createApprovalCard(approval)).join('');
+        listEl.classList.remove('hidden');
+      }
+
+      loadingEl.classList.add('hidden');
+    }
+
+    // Create approval card
+    function createApprovalCard(approval) {
+      const statusColor = getApprovalStatusColor(approval.status);
+      const itemTypeIcon = getItemTypeIcon(approval.itemType);
+      
+      return `
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                  ${itemTypeIcon}
+                </div>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-lg font-medium text-gray-900">${approval.itemType} - ${approval.itemId}</h3>
+                <p class="text-sm text-gray-500 mt-1">Requested ${formatDate(approval.createdAt)}</p>
+              </div>
+            </div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+              ${approval.status}
+            </span>
+          </div>
+          
+          ${approval.note ? `
+            <div class="mb-4 p-3 bg-gray-50 rounded-md">
+              <p class="text-sm text-gray-700">${approval.note}</p>
+            </div>
+          ` : ''}
+          
+          ${approval.status === 'pending' ? `
+            <div class="flex space-x-2">
+              <button onclick="openDecisionModal('${approval.id}', 'approve')" class="flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                Approve
+              </button>
+              <button onclick="openDecisionModal('${approval.id}', 'reject')" class="flex-1 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                Reject
+              </button>
+            </div>
+          ` : `
+            <div class="flex items-center justify-between text-sm text-gray-500">
+              <span>${approval.status === 'approved' ? 'Approved' : 'Rejected'} ${formatDate(approval.decidedAt)}</span>
+              ${approval.decisionNote ? `<span class="text-gray-700">Note: ${approval.decisionNote}</span>` : ''}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // Modal functions for approvals
+    function openApprovalModal() {
+      document.getElementById('approval-modal').classList.remove('hidden');
+    }
+
+    function closeApprovalModal() {
+      document.getElementById('approval-modal').classList.add('hidden');
+      document.getElementById('approval-form').reset();
+    }
+
+    function openDecisionModal(approvalId, action) {
+      currentApprovalId = approvalId;
+      const modal = document.getElementById('approval-decision-modal');
+      const title = document.getElementById('decision-title');
+      const content = document.getElementById('decision-content');
+      
+      const approval = approvals.find(a => a.id === approvalId);
+      if (!approval) return;
+      
+      title.textContent = action === 'approve' ? 'Approve Request' : 'Reject Request';
+      content.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Item:</span>
+            <span class="text-gray-900">${approval.itemType} - ${approval.itemId}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500">Requested:</span>
+            <span class="text-gray-900">${formatDate(approval.createdAt)}</span>
+          </div>
+          ${approval.note ? `
+            <div class="mt-2">
+              <span class="text-sm text-gray-500">Description:</span>
+              <p class="text-sm text-gray-700 mt-1">${approval.note}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeDecisionModal() {
+      document.getElementById('approval-decision-modal').classList.add('hidden');
+      document.getElementById('decision-form').reset();
+      currentApprovalId = null;
+    }
+
+    // Submit approval request
+    async function submitApprovalRequest(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(event.target);
+      const approvalData = {
+        projectId: PROJECT_ID,
+        itemType: formData.get('itemType'),
+        itemId: formData.get('itemId'),
+        requesterId: 'user_id_placeholder', // Would come from JWT
+        note: formData.get('description')
+      };
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/approvals`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(approvalData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create approval request');
+        }
+        
+        closeApprovalModal();
+        loadApprovals(); // Refresh approvals list
+        showSuccess('Approval request created successfully');
+        
+      } catch (error) {
+        console.error('Error creating approval request:', error);
+        showError('Failed to create approval request');
+      }
+    }
+
+    // Submit approval decision
+    async function submitDecision(action) {
+      if (!currentApprovalId) return;
+      
+      const formData = new FormData(document.getElementById('decision-form'));
+      const decisionData = {
+        note: formData.get('note'),
+        approverId: action === 'approve' ? 'user_id_placeholder' : undefined,
+        rejecterId: action === 'reject' ? 'user_id_placeholder' : undefined
+      };
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/approvals/${currentApprovalId}/${action}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(decisionData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to ${action} approval request`);
+        }
+        
+        closeDecisionModal();
+        loadApprovals(); // Refresh approvals list
+        showSuccess(`Approval request ${action}d successfully`);
+        
+      } catch (error) {
+        console.error(`Error ${action}ing approval request:`, error);
+        showError(`Failed to ${action} approval request`);
+      }
+    }
+
+    // Helper functions
+    function getStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'completed':
+          return 'bg-green-100 text-green-800';
+        case 'in-progress':
+          return 'bg-blue-100 text-blue-800';
+        case 'on-hold':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'cancelled':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    function getMilestoneStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'completed':
+          return 'bg-green-100 text-green-800';
+        case 'in-progress':
+          return 'bg-blue-100 text-blue-800';
+        case 'pending':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'blocked':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    function getApprovalStatusColor(status) {
+      switch (status?.toLowerCase()) {
+        case 'approved':
+          return 'bg-green-100 text-green-800';
+        case 'rejected':
+          return 'bg-red-100 text-red-800';
+        case 'pending':
+          return 'bg-yellow-100 text-yellow-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    function getItemTypeIcon(itemType) {
+      const iconMap = {
+        'page': '📄',
+        'content': '📝',
+        'design': '🎨',
+        'feature': '⚡',
+        'milestone': '🎯',
+        'other': '📋'
+      };
+      return iconMap[itemType] || iconMap.other;
+    }
+
+    function getFileIcon(filename) {
+      const ext = filename.split('.').pop()?.toLowerCase();
+      const iconMap = {
+        'pdf': '📄',
+        'doc': '📝', 'docx': '📝',
+        'xls': '📊', 'xlsx': '📊',
+        'ppt': '📈', 'pptx': '📈',
+        'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+        'txt': '📃',
+        'default': '📎'
+      };
+      return iconMap[ext] || iconMap.default;
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+
+    // Comment functions
+    function toggleCommentForm(milestoneId) {
+      const formEl = document.getElementById(`comment-form-${milestoneId}`);
+      formEl.classList.toggle('hidden');
+      if (!formEl.classList.contains('hidden')) {
+        document.getElementById(`comment-input-${milestoneId}`).focus();
+      }
+    }
+
+    function addComment(milestoneId) {
+      const inputEl = document.getElementById(`comment-input-${milestoneId}`);
+      const commentText = inputEl.value.trim();
+      
+      if (!commentText) {
+        showError('Please enter a comment');
+        return;
+      }
+      
+      const comment = {
+        id: Date.now().toString(),
+        text: commentText,
+        author: 'Current User', // Would come from JWT
+        timestamp: new Date().toISOString(),
+        milestoneId: milestoneId
+      };
+      
+      // Initialize comments array for this milestone if it doesn't exist
+      if (!comments[milestoneId]) {
+        comments[milestoneId] = [];
+      }
+      
+      comments[milestoneId].unshift(comment);
+      
+      // Update the comments display
+      const commentsEl = document.getElementById(`comments-${milestoneId}`);
+      commentsEl.innerHTML = comments[milestoneId].map(c => createComment(c)).join('');
+      
+      // Clear input and hide form
+      inputEl.value = '';
+      document.getElementById(`comment-form-${milestoneId}`).classList.add('hidden');
+      
+      showSuccess('Comment added successfully');
+    }
+
+    function createComment(comment) {
+      return `
+        <div class="flex space-x-2 text-sm">
+          <div class="flex-shrink-0">
+            <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center">
+              <span class="text-xs font-medium text-indigo-600">${comment.author.charAt(0).toUpperCase()}</span>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center space-x-2">
+              <span class="font-medium text-gray-900">${comment.author}</span>
+              <span class="text-xs text-gray-500">${formatDate(comment.timestamp)}</span>
+            </div>
+            <p class="text-gray-700 mt-1">${comment.text}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function showError(message) {
+      // Simple error display - could be enhanced with a toast component
+      alert(`Error: ${message}`);
+    }
+
+    function showSuccess(message) {
+      // Simple success display - could be enhanced with a toast component
+      alert(`Success: ${message}`);
+    }
+
+    // Placeholder functions for features not yet implemented
+    function editProject() {
+      alert('Edit project functionality coming soon!');
+    }
+
+    function createMilestone() {
+      alert('Create milestone functionality coming soon!');
+    }
+
+    function editMilestone(id) {
+      alert(`Edit milestone ${id} functionality coming soon!`);
+    }
+
+    function updateMilestoneProgress(id) {
+      alert(`Update progress for milestone ${id} functionality coming soon!`);
+    }
+
+    function viewAllFiles() {
+      switchTab('files');
+    }
+
+    function createApprovalRequest() {
+      openApprovalModal();
+    }
+
+    function createTicket() {
+      alert('Create ticket functionality coming soon!');
+    }
+
+    function downloadFile(id) {
+      window.open(`${API_BASE_URL}/files/download/${id}`, '_blank');
+    }
+
+    async function deleteFile(id) {
+      if (!confirm('Are you sure you want to delete this file?')) return;
+      
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/files/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete file');
+        }
+        
+        loadFiles(); // Refresh files list
+        showSuccess('File deleted successfully');
+        
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        showError('Failed to delete file');
+      }
+    }
+  </script>
+</Layout>
