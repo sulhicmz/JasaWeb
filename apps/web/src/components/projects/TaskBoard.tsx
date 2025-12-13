@@ -7,6 +7,7 @@ interface Task {
   description?: string;
   status: 'todo' | 'in-progress' | 'review' | 'done';
   priority: 'low' | 'medium' | 'high' | 'critical';
+  assigneeId?: string;
   assignee?: {
     id: string;
     name: string;
@@ -14,15 +15,19 @@ interface Task {
     profilePicture?: string;
   };
   dueAt?: string;
-  labels: string[];
+  startAt?: string;
   estimatedHours?: number;
   actualHours?: number;
-  subtasks: Array<{
+  labels: string[];
+  tags: string[];
+  parentTaskId?: string;
+  milestoneId?: string;
+  subtasks?: Array<{
     id: string;
     title: string;
     status: string;
   }>;
-  comments: Array<{
+  comments?: Array<{
     id: string;
     content: string;
     author: {
@@ -30,7 +35,7 @@ interface Task {
     };
     createdAt: string;
   }>;
-  _count: {
+  _count?: {
     subtasks: number;
     comments: number;
   };
@@ -280,13 +285,13 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ projectId }) => {
       {/* Task stats */}
       <div className="flex items-center justify-between text-xs text-gray-400">
         <div className="flex items-center space-x-3">
-          {task._count.subtasks > 0 && (
+          {task._count?.subtasks && task._count.subtasks > 0 && (
             <div className="flex items-center space-x-1">
               <i className="fas fa-tasks"></i>
               <span>{task._count.subtasks}</span>
             </div>
           )}
-          {task._count.comments > 0 && (
+          {task._count?.comments && task._count.comments > 0 && (
             <div className="flex items-center space-x-1">
               <i className="fas fa-comment"></i>
               <span>{task._count.comments}</span>

@@ -1,11 +1,18 @@
-import type { APIRoute from 'astro';
+import type { APIRoute } from 'astro';
+
+interface SitemapPage {
+  url: string;
+  priority: number;
+  changefreq: string;
+  lastmod?: Date | string;
+}
 
 const SITE_URL = 'https://jasaweb.id';
 
 export const GET: APIRoute = async () => {
   try {
     // Static pages with proper priorities and update frequencies
-    const staticPages = [
+    const staticPages: SitemapPage[] = [
       { url: '', priority: 1.0, changefreq: 'daily' },
       { url: '/about', priority: 0.8, changefreq: 'monthly' },
       { url: '/services', priority: 0.9, changefreq: 'monthly' },
@@ -16,31 +23,33 @@ export const GET: APIRoute = async () => {
     ];
 
     // Dynamic pages (would typically come from CMS)
-    const dynamicPages = [];
-    
+    const dynamicPages: SitemapPage[] = [];
+
     try {
       // Try to get blog posts and portfolio items if collections exist
       const { getCollection } = await import('astro:content');
-      
+
       // Add blog posts
       const blogPosts = await getCollection('blog').catch(() => []);
-      blogPosts.forEach(post => {
+      blogPosts.forEach((post) => {
         dynamicPages.push({
           url: `/blog/${post.slug}`,
           priority: 0.6,
           changefreq: 'monthly',
-          lastmod: post.data.updatedDate || post.data.pubDate
+          lastmod: post.data.updatedDate || post.data.pubDate,
         });
       });
 
       // Add portfolio projects
-      const portfolioProjects = await getCollection('portfolio').catch(() => []);
-      portfolioProjects.forEach(project => {
+      const portfolioProjects = await getCollection('portfolio').catch(
+        () => []
+      );
+      portfolioProjects.forEach((project) => {
         dynamicPages.push({
           url: `/portfolio/${project.slug}`,
           priority: 0.6,
           changefreq: 'monthly',
-          lastmod: project.data.updatedDate || project.data.pubDate
+          lastmod: project.data.updatedDate || project.data.pubDate,
         });
       });
     } catch (error) {
@@ -65,9 +74,13 @@ export const GET: APIRoute = async () => {
     <lastmod>${page.lastmod ? new Date(page.lastmod).toISOString() : new Date().toISOString()}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-    ${page.url === '' ? `
+    ${
+      page.url === ''
+        ? `
     <xhtml:link rel="alternate" hreflang="id" href="${SITE_URL}/" />
-    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}/en/" />` : ''}
+    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}/en/" />`
+        : ''
+    }
   </url>`
     )
     .join('')}
@@ -77,7 +90,7 @@ export const GET: APIRoute = async () => {
       headers: {
         'Content-Type': 'application/xml',
         'Cache-Control': 'public, max-age=3600, s-maxage=86400',
-        'X-Content-Type-Options': 'nosniff'
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error) {

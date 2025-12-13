@@ -24,6 +24,8 @@
     "@jasaweb/ui": "workspace:*"
   },
   "devDependencies": {
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
     "wrangler": "^4.47.0"
   }
 }
