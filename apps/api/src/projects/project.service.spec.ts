@@ -89,7 +89,7 @@ describe('ProjectService', () => {
         mockProject
       );
 
-      const result = await service.create(createProjectDto, 'org1');
+      const result = await service.create(createProjectDto);
 
       expect(mockMultiTenantPrismaService.project.create).toHaveBeenCalledWith({
         data: {
@@ -110,7 +110,7 @@ describe('ProjectService', () => {
         mockProject
       );
 
-      await service.create(createProjectWithoutStatus, 'org1');
+      await service.create(createProjectWithoutStatus);
 
       expect(mockMultiTenantPrismaService.project.create).toHaveBeenCalledWith({
         data: {
