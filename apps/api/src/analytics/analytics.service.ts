@@ -299,14 +299,17 @@ export class AnalyticsService {
     const byCurrency = invoices.reduce(
       (acc, inv) => {
         const currency = inv.currency;
-        if (!acc[currency]) {
-          acc[currency] = { count: 0, amount: 0, paid: 0 };
-        }
-        const currencyData = acc[currency]!;
-        currencyData.count++;
-        currencyData.amount += inv.amount;
-        if (inv.status === 'paid') {
-          currencyData.paid += inv.amount;
+        // Validate currency to prevent object injection
+        if (typeof currency === 'string' && /^[A-Z]{3}$/.test(currency)) {
+          if (!acc[currency]) {
+            acc[currency] = { count: 0, amount: 0, paid: 0 };
+          }
+          const currencyData = acc[currency]!;
+          currencyData.count++;
+          currencyData.amount += inv.amount;
+          if (inv.status === 'paid') {
+            currencyData.paid += inv.amount;
+          }
         }
         return acc;
       },
@@ -317,13 +320,16 @@ export class AnalyticsService {
     const byMonth = invoices.reduce(
       (acc, inv) => {
         const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
-        if (!acc[month]) {
-          acc[month] = { count: 0, amount: 0, paid: 0 };
-        }
-        acc[month].count++;
-        acc[month].amount += inv.amount;
-        if (inv.status === 'paid') {
-          acc[month].paid += inv.amount;
+        // Validate month format to prevent object injection
+        if (typeof month === 'string' && /^\d{4}-\d{2}$/.test(month)) {
+          if (!acc[month]) {
+            acc[month] = { count: 0, amount: 0, paid: 0 };
+          }
+          acc[month].count++;
+          acc[month].amount += inv.amount;
+          if (inv.status === 'paid') {
+            acc[month].paid += inv.amount;
+          }
         }
         return acc;
       },
@@ -473,7 +479,7 @@ export class AnalyticsService {
 
     // Group by time period
     const trends = auditLogs.reduce(
-      (acc, log) => {
+      (acc: Record<string, ActivityTrendData>, log) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
 
@@ -488,34 +494,38 @@ export class AnalyticsService {
             key = date.toFormat('yyyy-MM-dd');
         }
 
-        // Initialize if not exists
-        if (!acc[key]) {
-          acc[key] = {
-            date: key,
-            total: 0,
-            user_login: 0,
-            file_upload: 0,
-            approval_request: 0,
-            project_created: 0,
-            task_completed: 0,
-          };
-        }
+        // Initialize if not exists - validate key to prevent object injection
+        const datePattern = /^\d{4}-\d{2}(-\d{2})?$/;
+        if (typeof key === 'string' && datePattern.test(key)) {
+          if (!acc[key]) {
+            acc[key] = {
+              date: key,
+              total: 0,
+              user_login: 0,
+              file_upload: 0,
+              approval_request: 0,
+              project_created: 0,
+              task_completed: 0,
+            };
+          }
 
-        const trendData = acc[key]!;
-        trendData.total++;
+          const trendData = acc[key]!;
+          trendData.total++;
 
-        // Handle known actions
-        const knownActions = [
-          'user_login',
-          'file_upload',
-          'approval_request',
-          'project_created',
-          'task_completed',
-        ];
-        if (knownActions.includes(log.action)) {
-          const currentCount =
-            (trendData as Record<string, number>)[log.action] || 0;
-          (trendData as Record<string, number>)[log.action] = currentCount + 1;
+          // Handle known actions
+          const knownActions = [
+            'user_login',
+            'file_upload',
+            'approval_request',
+            'project_created',
+            'task_completed',
+          ];
+          if (knownActions.includes(log.action)) {
+            const currentCount =
+              (trendData as Record<string, number>)[log.action] || 0;
+            (trendData as Record<string, number>)[log.action] =
+              currentCount + 1;
+          }
         }
 
         return acc;

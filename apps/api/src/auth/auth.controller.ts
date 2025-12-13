@@ -6,17 +6,16 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { RefreshTokenService } from './refresh-token.service';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Request as ExpressRequest } from 'express';
+import { User } from '../users/entities/user.entity';
 
-type AuthenticatedRequest = ExpressRequest & { user?: unknown };
+type AuthenticatedRequest = ExpressRequest & { user?: Omit<User, 'password'> };
 
 @Controller('auth')
 export class AuthController {
@@ -27,20 +26,38 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async register(@Body() createUserDto: CreateUserDto): Promise<any> {
+  async register(@Body() createUserDto: CreateUserDto): Promise<{
+    access_token: string;
+    refreshToken: string;
+    expiresAt: Date;
+    user: { id: string; email: string; name: string; profilePicture?: string };
+  }> {
     return await this.authService.register(createUserDto);
   }
 
   @Public()
   @Post('login')
-  async login(@Body() loginUserDto: LoginUserDto): Promise<any> {
+  async login(@Body() loginUserDto: LoginUserDto): Promise<{
+    access_token: string;
+    refreshToken: string;
+    expiresAt: Date;
+    user: { id: string; email: string; name: string; profilePicture?: string };
+  }> {
     return await this.authService.login(loginUserDto);
   }
 
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body('refreshToken') refreshToken: string): Promise<any> {
+  async refresh(@Body('refreshToken') refreshToken: string): Promise<{
+    statusCode: number;
+    message: string;
+    data?: {
+      token: string;
+      refreshToken: string;
+      expiresAt: Date;
+    };
+  }> {
     if (!refreshToken) {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
@@ -77,7 +94,10 @@ export class AuthController {
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Body('refreshToken') refreshToken: string): Promise<any> {
+  async logout(@Body('refreshToken') refreshToken: string): Promise<{
+    statusCode: number;
+    message: string;
+  }> {
     if (!refreshToken) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,

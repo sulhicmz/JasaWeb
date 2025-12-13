@@ -6,14 +6,12 @@ import {
   Param,
   UseGuards,
   BadRequestException,
-  Req,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import type { Request } from 'express';
 
 interface CreateApprovalDto {
   projectId: string;
