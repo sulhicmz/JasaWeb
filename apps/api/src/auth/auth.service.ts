@@ -35,8 +35,9 @@ export class AuthService {
     }
 
     // Hash the password
-    const { hash: hashedPassword, version: hashVersion } =
-      await this.passwordService.hashPassword(createUserDto.password);
+    const { hash: hashedPassword } = await this.passwordService.hashPassword(
+      createUserDto.password
+    );
 
     // Create the user
     const user = await this.usersService.create({

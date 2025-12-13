@@ -6,12 +6,14 @@ export class ApprovalService {
   constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
 
   async createApproval(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     organizationId: string,
     projectId: string,
     itemType: string,
     itemId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     requesterId: string
-  ): Promise<any> {
+  ) {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
@@ -36,8 +38,8 @@ export class ApprovalService {
 
   async findApprovalsForProject(
     projectId: string,
-    organizationId: string
-  ): Promise<any[]> {
+    /* eslint-disable-line @typescript-eslint/no-unused-vars */ organizationId: string
+  ) {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
@@ -64,7 +66,7 @@ export class ApprovalService {
     approverId: string,
     organizationId: string,
     note?: string
-  ): Promise<any> {
+  ) {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
       where: { id: approvalId },
@@ -96,7 +98,7 @@ export class ApprovalService {
     rejecterId: string,
     organizationId: string,
     note?: string
-  ): Promise<any> {
+  ) {
     // Verify the approval exists and belongs to the organization
     const approval = await this.multiTenantPrisma.approval.findUnique({
       where: { id: approvalId },

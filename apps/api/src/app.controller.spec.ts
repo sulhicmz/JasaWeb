@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 
 describe('AppController', () => {
   let appController: AppController;
-  let appService: AppService;
 
   const mockAppService = {
     getHello: jest.fn(),

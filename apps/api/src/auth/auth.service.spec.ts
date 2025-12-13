@@ -20,8 +20,11 @@ jest.mock('uuid', () => ({
 
 describe('AuthService', () => {
   let service: AuthService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let usersService: UsersService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let jwtService: JwtService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let refreshTokenService: RefreshTokenService;
 
   const mockUser = {

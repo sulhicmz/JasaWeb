@@ -128,11 +128,12 @@ const ActivityFeed: React.FC = () => {
     switch (activity.type) {
       case 'project':
         return `Project ${activity.status.toLowerCase()}`;
-      case 'ticket':
+      case 'ticket': {
         const priorityText = activity.priority
           ? ` (${activity.priority} priority)`
           : '';
         return `Ticket ${activity.status.toLowerCase()}${priorityText}`;
+      }
       case 'milestone':
         return `Milestone ${activity.status.toLowerCase()}`;
       case 'invoice':

@@ -14,14 +14,14 @@ export class ValidationExceptionFilter implements ExceptionFilter {
 
     const responseObj = exception.getResponse();
     let message = 'Validation failed';
-    let errors: any[] = [];
+    let errors: string[] = [];
 
     if (typeof responseObj === 'object' && responseObj !== null) {
-      const obj = responseObj as any;
+      const obj = responseObj as { message?: string | string[] };
       if (obj.message && Array.isArray(obj.message)) {
         errors = obj.message;
         if (errors.length > 0) {
-          message = errors[0];
+          message = errors[0] || message;
         }
       }
     }

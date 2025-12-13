@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const CACHE_NAME = 'jasaweb-v1';
 const urlsToCache = [
   '/',

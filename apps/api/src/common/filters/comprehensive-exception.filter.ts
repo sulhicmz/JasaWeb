@@ -4,13 +4,22 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Inject,
   Optional,
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ErrorHandlingService } from '../services/error-handling.service';
 import { v4 as uuidv4 } from 'uuid';
+
+interface RequestWithUser extends Request {
+  user?: {
+    id: string;
+    _id?: string;
+    email: string;
+    organizationId: string;
+  };
+  organizationId?: string;
+}
 
 @Catch()
 export class ComprehensiveExceptionFilter implements ExceptionFilter {
@@ -38,9 +47,9 @@ export class ComprehensiveExceptionFilter implements ExceptionFilter {
       const responseObj = exception.getResponse();
 
       if (typeof responseObj === 'object' && responseObj !== null) {
-        message = (responseObj as any).message || exception.message || message;
-        error =
-          (responseObj as any).error || exception.constructor.name || error;
+        const obj = responseObj as { message?: string; error?: string };
+        message = obj.message || exception.message || message;
+        error = obj.error || exception.constructor.name || error;
       } else {
         message = (responseObj as string) || exception.message || message;
         error = exception.constructor.name || error;
@@ -51,8 +60,10 @@ export class ComprehensiveExceptionFilter implements ExceptionFilter {
     }
 
     // Get user and organization context if available
-    const user = (request as any).user?.id || (request as any).user?._id;
-    const organizationId = (request as any).organizationId;
+    const user =
+      (request as RequestWithUser).user?.id ||
+      (request as RequestWithUser).user?._id;
+    const organizationId = (request as RequestWithUser).organizationId;
 
     // Log the error if we have the error handling service
     if (this.errorHandlingService) {

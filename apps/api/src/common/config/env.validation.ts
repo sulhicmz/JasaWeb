@@ -3,7 +3,6 @@ import {
   IsEnum,
   IsNumber,
   IsString,
-  IsUrl,
   validateSync,
   IsOptional,
   Min,

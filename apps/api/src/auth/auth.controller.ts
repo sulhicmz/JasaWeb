@@ -83,7 +83,7 @@ export class AuthController {
           expiresAt: result.expiresAt,
         },
       };
-    } catch (error) {
+    } catch {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid refresh token',
@@ -120,7 +120,7 @@ export class AuthController {
         statusCode: HttpStatus.OK,
         message: 'Logged out successfully',
       };
-    } catch (error) {
+    } catch {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid refresh token',
