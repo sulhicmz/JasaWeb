@@ -75,6 +75,37 @@ class EnvironmentVariables {
   @IsNumber()
   @IsOptional()
   REDIS_PORT: number = 6379;
+
+  // Argon2 Configuration
+  @IsNumber()
+  @Min(1024)
+  @Max(1073741824)
+  @IsOptional()
+  ARGON2_MEMORY: number = 65536;
+
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  ARGON2_ITERATIONS: number = 3;
+
+  @IsNumber()
+  @Min(1)
+  @Max(32)
+  @IsOptional()
+  ARGON2_PARALLELISM: number = 1;
+
+  @IsNumber()
+  @Min(16)
+  @Max(64)
+  @IsOptional()
+  ARGON2_SALT_LENGTH: number = 32;
+
+  @IsNumber()
+  @Min(16)
+  @Max(64)
+  @IsOptional()
+  ARGON2_HASH_LENGTH: number = 32;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

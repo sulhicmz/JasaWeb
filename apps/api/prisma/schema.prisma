@@ -11,25 +11,26 @@ datasource db {
 }
 
 model User {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  name           String?
-  password       String
-  profilePicture String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  memberships    Membership[]
-  approvals      Approval[]
-  tickets        Ticket[]
-  invoices       Invoice[]
-  auditLogs      AuditLog[]
-  File           File[]
-  Task           Task[]
-  refreshTokens  RefreshToken[]
-  sessions       Session[]
-  kbArticles     KbArticle[]
-  kbFeedback     KbFeedback[]
-  kbSearchLogs   KbSearchLog[]
+  id                  String         @id @default(cuid())
+  email               String         @unique
+  name                String?
+  password            String
+  passwordHashVersion String         @default("bcrypt")
+  profilePicture      String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  memberships         Membership[]
+  approvals           Approval[]
+  tickets             Ticket[]
+  invoices            Invoice[]
+  auditLogs           AuditLog[]
+  File                File[]
+  Task                Task[]
+  refreshTokens       RefreshToken[]
+  sessions            Session[]
+  kbArticles          KbArticle[]
+  kbFeedback          KbFeedback[]
+  kbSearchLogs        KbSearchLog[]
 }
 
 model Organization {
