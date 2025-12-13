@@ -17,7 +17,13 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
-import { Project, Milestone, Ticket } from '@prisma/client';
+import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
+
+// Type for Project with relations
+type ProjectWithRelations = Project & {
+  milestones?: Milestone[];
+  tickets?: Ticket[];
+};
 
 // Type definitions for project with relations
 type ProjectWithMilestonesAndTickets = Project & {
@@ -301,7 +307,7 @@ export class DashboardController {
     return { total, pending, overdue, totalAmount, pendingAmount };
   }
 
-  private async getMilestonesStats(organizationId: string) {
+  private async getMilestonesStats(_organizationId: string) {
     const now = new Date();
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
@@ -439,7 +445,7 @@ export class DashboardController {
   @Post('notify-update')
   @Roles(Role.OrgOwner, Role.OrgAdmin)
   async notifyDashboardUpdate(
-    @Body() body: { type: string; data: any },
+    @Body() body: { type: string; data: Record<string, unknown> },
     @CurrentOrganizationId() organizationId: string,
     @CurrentUserId() userId: string
   ) {
@@ -521,12 +527,16 @@ export class DashboardController {
         trends: trends.reduce(
           (acc, trend, index) => {
             const metric = selectedMetrics[index];
-            if (metric) {
+            if (
+              metric &&
+              typeof metric === 'string' &&
+              /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric)
+            ) {
               acc[metric] = trend;
             }
             return acc;
           },
-          {} as Record<string, any>
+          {} as Record<string, unknown>
         ),
       };
     } catch (error) {
@@ -934,10 +944,12 @@ export class DashboardController {
       },
     });
 
-    const upcomingMilestones = activeProjects.flatMap(
+    const upcomingMilestones = (
+      activeProjects as ProjectWithRelations[]
+    ).flatMap(
       (p) =>
-        (p as any).milestones?.filter(
-          (m: any) =>
+        p.milestones?.filter(
+          (m) =>
             m.status !== 'completed' &&
             m.dueAt &&
             new Date(m.dueAt) <= forecastDate
@@ -1077,7 +1089,7 @@ export class DashboardController {
 
   // Helper methods for calculations
   private groupByDay(
-    items: any[],
+    items: Array<Record<string, unknown>>,
     dateField: string,
     startDate: Date,
     endDate: Date
@@ -1094,7 +1106,8 @@ export class DashboardController {
     }
 
     items.forEach((item) => {
-      const date = new Date(item[dateField]);
+      const dateValue = item[dateField] as string | number | Date;
+      const date = new Date(dateValue);
       const dateKey = date.toISOString().split('T')[0];
       if (dateKey && Object.prototype.hasOwnProperty.call(dailyData, dateKey)) {
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
@@ -1104,7 +1117,7 @@ export class DashboardController {
     return Object.entries(dailyData).map(([date, count]) => ({ date, count }));
   }
 
-  private calculateAverageProjectDuration(projects: any[]) {
+  private calculateAverageProjectDuration(projects: ProjectWithRelations[]) {
     const completedProjects = projects.filter(
       (p) => p.status === 'completed' && p.startAt && p.dueAt
     );
@@ -1133,14 +1146,14 @@ export class DashboardController {
         m.status === 'completed' && m.updatedAt
           ? new Date(m.updatedAt)
           : new Date();
-      const dueDate = new Date(m.dueAt);
+      const dueDate = new Date(m.dueAt!);
       return completedAt <= dueDate;
     });
 
     return Math.round((onTime.length / completedMilestones.length) * 100);
   }
 
-  private calculateOnTimeCompletionRate(projects: any[]) {
+  private calculateOnTimeCompletionRate(projects: ProjectWithRelations[]) {
     const completedProjects = projects.filter(
       (p) => p.status === 'completed' && p.dueAt
     );
@@ -1149,20 +1162,20 @@ export class DashboardController {
     const onTime = completedProjects.filter((p) => {
       // Assuming updatedAt represents completion date for completed projects
       const completedAt = p.updatedAt ? new Date(p.updatedAt) : new Date();
-      const dueDate = new Date(p.dueAt);
+      const dueDate = new Date(p.dueAt!);
       return completedAt <= dueDate;
     });
 
     return Math.round((onTime.length / completedProjects.length) * 100);
   }
 
-  private calculateBudgetAdherence(projects: any[]) {
+  private calculateBudgetAdherence(projects: ProjectWithRelations[]) {
     // Simplified budget adherence calculation
     // In a real implementation, this would compare actual vs. budgeted costs
     return 85; // Placeholder value
   }
 
-  private calculateAverageResolutionTime(tickets: any[]) {
+  private calculateAverageResolutionTime(tickets: Ticket[]) {
     if (tickets.length === 0) return 0;
 
     const totalHours = tickets.reduce((sum, ticket) => {
@@ -1176,7 +1189,7 @@ export class DashboardController {
     return Math.round(totalHours / tickets.length);
   }
 
-  private calculateResolutionRateByPriority(tickets: any[]) {
+  private calculateResolutionRateByPriority(tickets: Ticket[]) {
     const priorities = ['low', 'medium', 'high', 'critical'];
     return priorities.reduce(
       (acc, priority) => {
@@ -1192,7 +1205,7 @@ export class DashboardController {
     );
   }
 
-  private calculateSLAComplianceRate(tickets: any[]) {
+  private calculateSLAComplianceRate(tickets: Ticket[]) {
     // Simplified SLA calculation (24 hours for high/critical, 48 hours for medium, 72 hours for low)
     const slaHours = { critical: 24, high: 24, medium: 48, low: 72 };
 
@@ -1213,7 +1226,7 @@ export class DashboardController {
     return Math.round((compliant.length / resolvedTickets.length) * 100);
   }
 
-  private calculateAverageMilestoneCompletionTime(milestones: any[]) {
+  private calculateAverageMilestoneCompletionTime(milestones: Milestone[]) {
     const completedMilestones = milestones.filter(
       (m) => m.status === 'completed' && m.createdAt
     );
@@ -1236,15 +1249,15 @@ export class DashboardController {
     return Math.round(totalDays / completedMilestones.length);
   }
 
-  private calculateAveragePaymentTime(invoices: any[]) {
+  private calculateAveragePaymentTime(invoices: Invoice[]) {
     const paidInvoices = invoices.filter(
-      (inv) => inv.status === 'paid' && inv.createdAt && inv.paidAt
+      (inv) => inv.status === 'paid' && inv.createdAt
     );
     if (paidInvoices.length === 0) return 0;
 
     const totalDays = paidInvoices.reduce((sum, invoice) => {
       const created = new Date(invoice.createdAt);
-      const paid = new Date(invoice.paidAt);
+      const paid = new Date(invoice.updatedAt); // Use updatedAt as proxy for payment date
       return (
         sum +
         Math.ceil((paid.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
@@ -1255,8 +1268,8 @@ export class DashboardController {
   }
 
   private calculateProjectRiskLevel(
-    projects: any[],
-    upcomingMilestones: any[]
+    projects: ProjectWithRelations[],
+    upcomingMilestones: Milestone[]
   ) {
     const overdueMilestones = upcomingMilestones.filter(
       (m) => m.dueAt && new Date(m.dueAt) < new Date()
@@ -1403,20 +1416,22 @@ export class DashboardController {
 
     // Predict project outcomes
     const predictions = activeProjects.map((project) => {
-      const totalMilestones = (project as any).milestones?.length || 0;
+      const totalMilestones =
+        (project as ProjectWithRelations).milestones?.length || 0;
       const completedMilestones =
-        (project as any).milestones?.filter(
-          (m: any) => m.status === 'completed'
+        (project as ProjectWithRelations).milestones?.filter(
+          (m) => m.status === 'completed'
         ).length || 0;
       const milestoneProgress =
         totalMilestones > 0 ? completedMilestones / totalMilestones : 0;
 
       const openTickets =
-        (project as any).tickets?.filter((t: any) => t.status === 'open')
-          .length || 0;
+        (project as ProjectWithRelations).tickets?.filter(
+          (t) => t.status === 'open'
+        ).length || 0;
       const criticalTickets =
-        (project as any).tickets?.filter(
-          (t: any) => t.priority === 'critical' && t.status !== 'closed'
+        (project as ProjectWithRelations).tickets?.filter(
+          (t) => t.priority === 'critical' && t.status !== 'closed'
         ).length || 0;
 
       // Calculate risk factors
@@ -1567,8 +1582,8 @@ export class DashboardController {
 
   private async getRiskPredictions(
     organizationId: string,
-    forecastDate: Date,
-    confidenceLevel: number
+    _forecastDate: Date,
+    _confidenceLevel: number
   ) {
     // Current risk indicators
     const [criticalTickets, overdueMilestones, overdueInvoices] =
@@ -1639,8 +1654,8 @@ export class DashboardController {
 
   private async getCapacityPredictions(
     organizationId: string,
-    forecastDate: Date,
-    confidenceLevel: number
+    _forecastDate: Date,
+    _confidenceLevel: number
   ) {
     const activeProjects = await this.multiTenantPrisma.project.findMany({
       where: {
@@ -1675,7 +1690,7 @@ export class DashboardController {
     // Predict future capacity needs
     const projectedWorkload = this.projectWorkloadGrowth(
       activeProjects,
-      forecastDate
+      _forecastDate
     );
     const projectedUtilization = Math.min(
       (projectedWorkload / availableCapacity) * 100,
@@ -1706,14 +1721,13 @@ export class DashboardController {
 
   // Helper methods for predictive calculations
   private calculateScheduleRisk(
-    project: any,
+    project: ProjectWithRelations,
     milestoneProgress: number,
     avgDuration: number
   ): number {
     if (!project.dueAt) return 0.3; // Medium risk if no due date
 
     const now = new Date();
-    const dueDate = new Date(project.dueAt);
     const timeElapsed = project.startAt
       ? (now.getTime() - new Date(project.startAt).getTime()) /
         (1000 * 60 * 60 * 24)
@@ -1747,7 +1761,7 @@ export class DashboardController {
   }
 
   private predictCompletionDate(
-    project: any,
+    project: ProjectWithRelations,
     milestoneProgress: number,
     avgDuration: number
   ): Date {
@@ -1794,13 +1808,11 @@ export class DashboardController {
     return recommendations;
   }
 
-  private calculateMonthlyRevenue(invoices: any[]): number[] {
+  private calculateMonthlyRevenue(invoices: Invoice[]): number[] {
     const monthlyData = new Map<string, number>();
 
     invoices.forEach((invoice) => {
-      const month = new Date(invoice.paidAt || invoice.createdAt)
-        .toISOString()
-        .slice(0, 7);
+      const month = new Date(invoice.updatedAt).toISOString().slice(0, 7);
       monthlyData.set(
         month,
         (monthlyData.get(month) || 0) + (invoice.amount || 0)
@@ -1841,7 +1853,7 @@ export class DashboardController {
     return totalRevenue;
   }
 
-  private calculatePaymentProbability(historicalInvoices: any[]): number {
+  private calculatePaymentProbability(historicalInvoices: Invoice[]): number {
     if (historicalInvoices.length === 0) return 0.8;
 
     const paidInvoices = historicalInvoices.filter(
@@ -1936,7 +1948,7 @@ export class DashboardController {
   }
 
   private projectWorkloadGrowth(
-    activeProjects: any[],
+    activeProjects: ProjectWithRelations[],
     forecastDate: Date
   ): number {
     // Simplified workload projection based on current trends
@@ -1947,8 +1959,8 @@ export class DashboardController {
     const currentWorkload = activeProjects.reduce((sum, project) => {
       return (
         sum +
-        (project.milestones?.length || 0) * 8 +
-        (project.tickets?.length || 0) * 2
+        ((project as ProjectWithRelations).milestones?.length || 0) * 8 +
+        ((project as ProjectWithRelations).tickets?.length || 0) * 2
       );
     }, 0);
 
@@ -1988,19 +2000,19 @@ export class DashboardController {
   }
 
   private generatePredictiveRecommendations(
-    projectPredictions: any,
-    revenuePredictions: any,
-    riskPredictions: any
+    projectPredictions: Record<string, unknown>,
+    revenuePredictions: Record<string, unknown>,
+    riskPredictions: Record<string, unknown>
   ): string[] {
     const recommendations = [];
 
-    if (projectPredictions.highRiskProjects > 0) {
+    if ((projectPredictions as any).highRiskProjects > 0) {
       recommendations.push(
         `${projectPredictions.highRiskProjects} projects require immediate attention`
       );
     }
 
-    if (revenuePredictions.revenueGrowthRate < 0) {
+    if ((revenuePredictions as any).revenueGrowthRate < 0) {
       recommendations.push(
         'Revenue declining - review pricing and sales strategy'
       );

@@ -66,7 +66,8 @@ export class RateLimitGuard implements CanActivate {
    */
   private getKey(request: Request): string {
     const ip = request.ip || request.socket.remoteAddress || 'unknown';
-    const userId = (request as any).user?.id || 'anonymous';
+    const userId =
+      (request as Request & { user?: { id: string } }).user?.id || 'anonymous';
     return `${ip}:${userId}:${request.path}`;
   }
 
@@ -92,7 +93,11 @@ export class RateLimitGuard implements CanActivate {
  * Decorator to set rate limit for a specific endpoint
  */
 export const RateLimit = (limit: number, window?: number) => {
-  return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (
+    target: object,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) => {
     Reflect.defineMetadata('rateLimit', limit, descriptor.value);
     if (window) {
       Reflect.defineMetadata('rateLimitWindow', window, descriptor.value);

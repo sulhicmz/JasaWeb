@@ -28,7 +28,7 @@ interface AuthenticatedSocket extends Socket {
 
 interface DashboardUpdatePayload {
   type: 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice';
-  data: any;
+  data: Record<string, unknown>;
   timestamp: Date;
   organizationId: string;
 }

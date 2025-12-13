@@ -154,7 +154,7 @@ export class KnowledgeBaseService {
             : null,
         status: articleData.status || KbArticleStatus.DRAFT,
         tags: {
-          connect: tags.map((tag: any) => ({ id: tag.id })),
+          connect: tags.map((tag: { id: string }) => ({ id: tag.id })),
         },
       },
       include: {
@@ -174,7 +174,7 @@ export class KnowledgeBaseService {
     categoryId?: string,
     featured?: boolean
   ) {
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (status) where.status = status;
     if (categoryId) where.categoryId = categoryId;
@@ -281,7 +281,7 @@ export class KnowledgeBaseService {
     const tags = tagNames ? await this.getOrCreateTags(tagNames) : undefined;
 
     // Update publishedAt if status changes to published
-    const updateData: any = { ...articleData };
+    const updateData: Record<string, unknown> = { ...articleData };
     if (articleData.status === KbArticleStatus.PUBLISHED) {
       const currentArticle = await this.prisma.kbArticle.findUnique({
         where: { id },
@@ -297,7 +297,7 @@ export class KnowledgeBaseService {
         ...updateData,
         ...(tags && {
           tags: {
-            set: tags.map((tag: any) => ({ id: tag.id })),
+            set: tags.map((tag: { id: string }) => ({ id: tag.id })),
           },
         }),
       },
@@ -333,7 +333,7 @@ export class KnowledgeBaseService {
     });
 
     // Build search conditions
-    const where: any = {
+    const where: Record<string, unknown> = {
       status: KbArticleStatus.PUBLISHED,
       OR: [
         { title: { contains: query, mode: 'insensitive' } },
@@ -492,7 +492,7 @@ export class KnowledgeBaseService {
       },
     });
 
-    const existingTagNames = tags.map((tag: any) => tag.name);
+    const existingTagNames = tags.map((tag: { name: string }) => tag.name);
     const newTagNames = tagNames.filter(
       (name) => !existingTagNames.includes(name)
     );

@@ -50,6 +50,9 @@ module.exports = {
     '^@jasaweb/testing/(.*)$': '<rootDir>/../../packages/testing/$1',
   },
 
+  // Transform ignore patterns (needed for UUID and other ESM modules)
+  transformIgnorePatterns: ['node_modules/(?!(uuid|@nestjs/.*|.*\\.mjs$))'],
+
   // Clear mocks between tests
   clearMocks: true,
 

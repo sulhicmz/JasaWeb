@@ -18,6 +18,7 @@ export class RefreshTokenService {
    */
   async createRefreshToken(
     userId: string,
+    organizationId: string,
     expiresIn: string = '7d'
   ): Promise<{ token: string; refreshToken: string; expiresAt: Date }> {
     // Generate a unique refresh token and a separate identifier for lookups
@@ -39,7 +40,7 @@ export class RefreshTokenService {
     });
 
     // Generate a new JWT access token
-    const payload = { sub: userId };
+    const payload = { sub: userId, organizationId };
     const accessToken = await this.jwtService.signAsync(payload);
 
     this.logger.log(`Created new refresh token for user ${userId}`);
@@ -185,8 +186,22 @@ export class RefreshTokenService {
       data: { revokedAt: new Date() },
     });
 
+    // Get organizationId from the current JWT payload (we need to extract it from the request context)
+    // For now, we'll need to pass it in or get it from user's default organization
+    const userMembership = await this.prisma.membership.findFirst({
+      where: { userId },
+      select: { organizationId: true },
+    });
+
+    if (!userMembership) {
+      throw new UnauthorizedException('User has no organization membership');
+    }
+
     // Create a new refresh token
-    const newTokens = await this.createRefreshToken(userId);
+    const newTokens = await this.createRefreshToken(
+      userId,
+      userMembership.organizationId
+    );
 
     this.logger.log(`Refresh token rotated for user ${userId}`);
 

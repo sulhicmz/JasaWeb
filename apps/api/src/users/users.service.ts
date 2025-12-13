@@ -3,6 +3,7 @@ import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordService, PasswordHashVersion } from '../auth/password.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -11,7 +12,7 @@ export class UsersService {
     private passwordService: PasswordService
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<any> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     // Hash the password before saving
     const { hash: hashedPassword, version: hashVersion } =
       await this.passwordService.hashPassword(createUserDto.password);
@@ -29,24 +30,24 @@ export class UsersService {
     });
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<User[]> {
     return await this.prisma.user.findMany();
   }
 
-  async findOne(id: string): Promise<any> {
+  async findOne(id: string): Promise<User | null> {
     return await this.prisma.user.findUnique({
       where: { id },
     });
   }
 
-  async findByEmail(email: string): Promise<any> {
+  async findByEmail(email: string): Promise<User | null> {
     return await this.prisma.user.findUnique({
       where: { email },
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<any> {
-    const updateData: any = {};
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const updateData: Partial<User> = {};
 
     if (updateUserDto.email) updateData.email = updateUserDto.email;
     if (updateUserDto.name) updateData.name = updateUserDto.name;
@@ -71,7 +72,7 @@ export class UsersService {
     id: string,
     hash: string,
     version: PasswordHashVersion
-  ): Promise<any> {
+  ): Promise<User> {
     return await this.prisma.user.update({
       where: { id },
       data: {
@@ -81,7 +82,7 @@ export class UsersService {
     });
   }
 
-  async remove(id: string): Promise<any> {
+  async remove(id: string): Promise<User> {
     return await this.prisma.user.delete({
       where: { id },
     });

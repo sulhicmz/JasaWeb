@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { KnowledgeBaseService } from './knowledge-base.service';
+import { User } from '@prisma/client';
 import {
   CreateKbCategoryDto,
   UpdateKbCategoryDto,
@@ -91,7 +92,7 @@ export class KnowledgeBaseController {
   @ApiOperation({ summary: 'Create a new knowledge base article' })
   async createArticle(
     @Body() createArticleDto: CreateKbArticleDto,
-    @Request() req: any
+    @Request() req: Request & { user: User }
   ) {
     return this.knowledgeBaseService.createArticle(createArticleDto, req.user);
   }
@@ -146,7 +147,10 @@ export class KnowledgeBaseController {
   // Search
   @Post('search')
   @ApiOperation({ summary: 'Search knowledge base articles' })
-  async search(@Body() searchDto: KbSearchDto, @Request() req: any) {
+  async search(
+    @Body() searchDto: KbSearchDto,
+    @Request() req: Request & { user: User }
+  ) {
     return this.knowledgeBaseService.search(searchDto, req.user);
   }
 
@@ -156,7 +160,7 @@ export class KnowledgeBaseController {
   async createFeedback(
     @Param('id') articleId: string,
     @Body() createFeedbackDto: CreateKbFeedbackDto,
-    @Request() req: any
+    @Request() req: Request & { user: User }
   ) {
     return this.knowledgeBaseService.createFeedback(
       articleId,

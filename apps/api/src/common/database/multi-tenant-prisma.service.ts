@@ -8,9 +8,12 @@ interface RequestWithOrganization {
   user?: {
     id: string;
     email: string;
-    organizationId: string;
+    name: string;
+    profilePicture?: string;
   };
 }
+
+type UserCreateArgs = Prisma.UserCreateArgs;
 
 // Type definitions for Prisma operations
 type ProjectFindManyArgs = Omit<Prisma.ProjectFindManyArgs, 'where'> & {
@@ -262,41 +265,6 @@ type InvoiceCountArgs = Omit<Prisma.InvoiceCountArgs, 'where'> & {
 // User types
 type UserFindManyArgs = Omit<Prisma.UserFindManyArgs, 'where'> & {
   where?: Omit<Prisma.UserWhereInput, 'memberships'> & {
-    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
-      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
-        id?: string;
-      };
-    };
-  };
-};
-
-type UserFindUniqueArgs = Omit<Prisma.UserFindUniqueArgs, 'where'> & {
-  where: Omit<Prisma.UserWhereUniqueInput, 'memberships'> & {
-    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
-      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
-        id?: string;
-      };
-    };
-  };
-};
-
-type UserCreateArgs = Omit<Prisma.UserCreateArgs, 'data'> & {
-  data: Prisma.UserCreateInput;
-};
-
-type UserUpdateArgs = Omit<Prisma.UserUpdateArgs, 'where' | 'data'> & {
-  where: Omit<Prisma.UserWhereUniqueInput, 'memberships'> & {
-    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
-      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
-        id?: string;
-      };
-    };
-  };
-  data: Prisma.UserUpdateInput;
-};
-
-type UserDeleteArgs = Omit<Prisma.UserDeleteArgs, 'where'> & {
-  where: Omit<Prisma.UserWhereUniqueInput, 'memberships'> & {
     memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
       organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
         id?: string;

@@ -364,7 +364,10 @@ export class FileService {
     const byType: { [key: string]: number } = {};
     files.forEach((file) => {
       const ext = path.extname(file.filename).toLowerCase();
-      byType[ext] = (byType[ext] || 0) + 1;
+      // Validate extension to prevent injection
+      if (/^\.[a-z0-9]+$/i.test(ext)) {
+        byType[ext] = (byType[ext] || 0) + 1;
+      }
     });
 
     return {
@@ -380,6 +383,11 @@ export class FileService {
    */
   private getMimeType(filename: string): string {
     const ext = path.extname(filename).toLowerCase();
+
+    // Validate extension to prevent injection
+    if (!/^\.[a-z0-9]+$/i.test(ext)) {
+      return 'application/octet-stream';
+    }
 
     const mimeTypes: { [key: string]: string } = {
       '.jpg': 'image/jpeg',

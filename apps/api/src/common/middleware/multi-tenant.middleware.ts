@@ -8,6 +8,17 @@ import { Request, Response, NextFunction } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { OrganizationMembershipService } from '../services/organization-membership.service';
 
+interface EnhancedRequest extends Omit<Request, 'user'> {
+  organizationId: string;
+  organization: unknown;
+  userId: string;
+  user: unknown;
+  membership: {
+    id: string;
+    role: string;
+  };
+}
+
 @Injectable()
 export class MultiTenantMiddleware implements NestMiddleware {
   private readonly logger = new Logger(MultiTenantMiddleware.name);
@@ -42,11 +53,12 @@ export class MultiTenantMiddleware implements NestMiddleware {
       );
 
       // Attach organization and user context to request
-      (req as any).organizationId = membershipContext.organizationId;
-      (req as any).organization = membershipContext.organization;
-      (req as any).userId = membershipContext.userId;
-      (req as any).user = membershipContext.user;
-      (req as any).membership = {
+      (req as EnhancedRequest).organizationId =
+        membershipContext.organizationId;
+      (req as EnhancedRequest).organization = membershipContext.organization;
+      (req as EnhancedRequest).userId = membershipContext.userId;
+      (req as EnhancedRequest).user = membershipContext.user;
+      (req as EnhancedRequest).membership = {
         id: 'membership-id', // Would be actual membership ID
         role: membershipContext.role,
       };

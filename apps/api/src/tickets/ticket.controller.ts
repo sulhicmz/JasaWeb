@@ -386,7 +386,10 @@ export class TicketController {
       low: 168, // 1 week
     };
 
-    const hoursToAdd = slaTimeframes[priority] || 168; // Default to 1 week for low priority
+    // Validate priority to prevent injection
+    const validPriorities = ['critical', 'high', 'medium', 'low'];
+    const safePriority = validPriorities.includes(priority) ? priority : 'low';
+    const hoursToAdd = slaTimeframes[safePriority] || 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

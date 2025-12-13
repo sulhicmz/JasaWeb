@@ -17,11 +17,11 @@ import { Request } from 'express';
 export class SecurityAuditInterceptor implements NestInterceptor {
   private readonly logger = new Logger(SecurityAuditInterceptor.name);
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<Request>();
     const { method, url, ip, headers } = request;
     const userAgent = headers['user-agent'] || 'unknown';
-    const user = (request as any).user;
+    const user = (request as Request & { user?: { id: string } }).user;
     const tenantId = headers['x-tenant-id'];
 
     const securityContext = {
@@ -42,7 +42,7 @@ export class SecurityAuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: (data) => {
+        next: (_data) => {
           const duration = Date.now() - now;
           this.logger.log(
             `Security Event Completed: ${method} ${url} - ${duration}ms - Success`

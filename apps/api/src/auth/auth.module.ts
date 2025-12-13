@@ -8,7 +8,7 @@ import { UserModule } from '../users/user.module';
 import { PrismaModule } from '../common/database/prisma.module';
 import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
-import { getRequiredEnv, getOptionalEnv } from '@jasaweb/config/env-validation';
+import { getRequiredEnv } from '@jasaweb/config/env-validation';
 
 @Module({
   imports: [

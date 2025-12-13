@@ -31,7 +31,7 @@ export class AuditInterceptor implements NestInterceptor {
   async intercept(
     context: ExecutionContext,
     next: CallHandler
-  ): Promise<Observable<any>> {
+  ): Promise<Observable<unknown>> {
     const options = this.reflector.get<AuditLogOptions>(
       'audit',
       context.getHandler()
@@ -43,11 +43,11 @@ export class AuditInterceptor implements NestInterceptor {
     }
 
     const request = context.switchToHttp().getRequest();
-    const response = context.switchToHttp().getResponse();
 
     // Get user and organization context
     const user = request.user;
-    const organizationId = (request as any).organizationId;
+    const organizationId = (request as Request & { organizationId?: string })
+      .organizationId;
 
     // Only proceed with audit if we have user and organization context
     if (user && organizationId) {
@@ -81,7 +81,10 @@ export class AuditInterceptor implements NestInterceptor {
   }
 
   private extractTargetId(
-    request: any,
+    request: Request & {
+      params?: Record<string, string>;
+      body?: Record<string, unknown>;
+    },
     targetType?: string
   ): string | undefined {
     // Extract target ID based on the request parameters
@@ -98,11 +101,19 @@ export class AuditInterceptor implements NestInterceptor {
     // For specific cases, we can customize further
     switch (targetType) {
       case 'File':
-        return request.params.fileId || request.body.fileId;
+        return (
+          (request.params?.fileId as string) || (request.body?.fileId as string)
+        );
       case 'Project':
-        return request.params.projectId || request.body.projectId;
+        return (
+          (request.params?.projectId as string) ||
+          (request.body?.projectId as string)
+        );
       case 'Ticket':
-        return request.params.ticketId || request.body.ticketId;
+        return (
+          (request.params?.ticketId as string) ||
+          (request.body?.ticketId as string)
+        );
       default:
         return undefined;
     }

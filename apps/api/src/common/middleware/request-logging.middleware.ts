@@ -7,7 +7,7 @@ export interface RequestLog {
   headers: Record<string, string>;
   params: Record<string, string>;
   query: Record<string, string>;
-  body?: any;
+  body?: unknown;
   statusCode: number;
   responseTime: number;
   ip: string;
@@ -110,11 +110,6 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       return realIp;
     }
 
-    return (
-      req.socket?.remoteAddress ||
-      (req.connection as any)?.remoteAddress ||
-      req.ip ||
-      ''
-    );
+    return req.socket?.remoteAddress || req.ip || '';
   }
 }

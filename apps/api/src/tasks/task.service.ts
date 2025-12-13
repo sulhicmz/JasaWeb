@@ -177,7 +177,7 @@ export class TaskService {
 
   // Business logic methods
   async findByStatus(status: string, projectId?: string) {
-    const whereClause: any = { status };
+    const whereClause: Record<string, unknown> = { status };
     if (projectId) {
       whereClause.projectId = projectId;
     }
@@ -203,7 +203,7 @@ export class TaskService {
   }
 
   async findByAssignee(assignedTo: string, projectId?: string) {
-    const whereClause: any = { assignedTo };
+    const whereClause: Record<string, unknown> = { assignedTo };
     if (projectId) {
       whereClause.projectId = projectId;
     }

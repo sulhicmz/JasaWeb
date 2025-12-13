@@ -287,6 +287,11 @@ export class FileController {
   private getMimeType(filename: string): string {
     const ext = path.extname(filename).toLowerCase();
 
+    // Validate extension to prevent injection
+    if (!/^\.[a-z0-9]+$/i.test(ext)) {
+      return 'application/octet-stream';
+    }
+
     const mimeTypes: { [key: string]: string } = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',

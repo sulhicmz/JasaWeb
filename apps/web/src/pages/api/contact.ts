@@ -100,7 +100,7 @@ export const POST: APIRoute = async ({ request }) => {
         },
       }
     );
-  } catch (error) {
+  } catch (_error) {
     // Error processing contact form - handled gracefully
 
     return new Response(

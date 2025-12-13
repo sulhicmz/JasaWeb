@@ -9,8 +9,7 @@ export class ApprovalService {
     organizationId: string,
     projectId: string,
     itemType: string,
-    itemId: string,
-    requesterId: string
+    itemId: string
   ) {
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },

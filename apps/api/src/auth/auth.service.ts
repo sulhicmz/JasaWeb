@@ -9,7 +9,8 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService, PasswordHashVersion } from './password.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { User } from '../users/entities/user.entity';
+import { User } from '@prisma/client';
+import { PrismaService } from '../common/database/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +18,8 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private refreshTokenService: RefreshTokenService,
-    private passwordService: PasswordService
+    private passwordService: PasswordService,
+    private prisma: PrismaService
   ) {}
 
   async register(createUserDto: CreateUserDto): Promise<{
@@ -45,9 +47,45 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    // For registration, we'll use the first organization or create a default one
+    // This is a simplified approach - in production, you might want a separate organization creation flow
+    let organizationId: string;
+
+    // Check if user has any existing memberships
+    const existingMembership = await this.prisma.membership.findFirst({
+      where: { userId: user.id },
+      select: { organizationId: true },
+    });
+
+    if (existingMembership) {
+      organizationId = existingMembership.organizationId;
+    } else {
+      // Create a default organization for the user
+      const newOrg = await this.prisma.organization.create({
+        data: {
+          name: `${user.name || user.email}'s Organization`,
+          billingEmail: user.email,
+        },
+      });
+
+      // Create owner membership
+      await this.prisma.membership.create({
+        data: {
+          userId: user.id,
+          organizationId: newOrg.id,
+          role: 'owner',
+        },
+      });
+
+      organizationId = newOrg.id;
+    }
+
     // Generate JWT token and refresh token
     const { token, refreshToken, expiresAt } =
-      await this.refreshTokenService.createRefreshToken(user.id);
+      await this.refreshTokenService.createRefreshToken(
+        user.id,
+        organizationId
+      );
 
     return {
       access_token: token,
@@ -56,8 +94,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
-        profilePicture: user.profilePicture,
+        name: user.name || '',
+        profilePicture: user.profilePicture || undefined,
       },
     };
   }
@@ -96,9 +134,26 @@ export class AuthService {
       );
     }
 
-    // Generate JWT token and refresh token
+    // Verify user has membership in the specified organization
+    const membership = await this.prisma.membership.findFirst({
+      where: {
+        userId: user.id,
+        organizationId: loginUserDto.organizationId,
+      },
+    });
+
+    if (!membership) {
+      throw new UnauthorizedException(
+        'User is not a member of this organization'
+      );
+    }
+
+    // Generate JWT token and refresh token with organization context
     const { token, refreshToken, expiresAt } =
-      await this.refreshTokenService.createRefreshToken(user.id);
+      await this.refreshTokenService.createRefreshToken(
+        user.id,
+        loginUserDto.organizationId
+      );
 
     return {
       access_token: token,
@@ -107,8 +162,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
-        profilePicture: user.profilePicture,
+        name: user.name || '',
+        profilePicture: user.profilePicture || undefined,
       },
     };
   }
