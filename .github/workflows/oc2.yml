@@ -1,0 +1,168 @@
+name: OC Refactor & Stabilize Swarm
+
+on:
+  schedule:
+    - cron: '0 */4 * * *' # Jalan tiap 4 jam (intensif tapi tidak spamming)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: oc-refactor-swarm
+  cancel-in-progress: false
+
+jobs:
+  opencode-agents:
+    name: 🛡️ Code Quality Swarm
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      # --- HOLISTIC CONTEXT ---
+      BASE_CONTEXT: |
+        **Context**: JasaWeb Platform (Astro, NestJS, PostgreSQL, Prisma, Tailwind).
+        
+        **Your Core Directives (The 7 Pillars)**:
+        1. **Modularity**: Break monolithic files. Follow Single Responsibility Principle.
+        2. **Dynamic**: NO HARDCODED VALUES. Use Env/Config/Constants.
+        3. **Standardization**: Enforce consistent naming (PascalCase components, camelCase funcs).
+        4. **Bug Hunting**: Fix logical errors, race conditions, and TypeErrors.
+        5. **Consolidation**: Merge duplicate logic/utils (DRY Principle).
+        6. **Stabilization**: Ensure build passes and error handling is robust.
+        7. **Efficiency**: Remove dead code, optimize loops/queries.
+
+        **CRITICAL PROTOCOL**:
+        - **Incremental**: Do not rewrite the whole app. Pick one targeted area.
+        - **Verify**: Code MUST compile/build.
+        - **Persistence**: You act in a temp runner. You MUST `git push`.
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: dev
+
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "OC Refactor Agent"
+          git config --global user.email "refactor@opencode.ai"
+          git config --global pull.rebase true
+
+      # --- AGENT 1: ARCHITECT (Modular & Dynamic) ---
+      - name: 🏗️ Run 1 - Modularization & Dynamic Architect
+        id: run_architect
+        timeout-minutes: 35
+        continue-on-error: true
+        run: |
+          git pull origin dev || echo "Branch ready"
+
+          FULL_PROMPT=$(cat <<EOF
+          ${{ env.BASE_CONTEXT }}
+
+          **Role**: Senior Software Architect (Refactoring Specialist)
+          
+          **Mission**: Transform rigid code into flexible, modular architecture.
+          
+          **Target Tasks (Pick ONE High-Impact Area)**:
+          1. **Hardcode Extermination**: Scan for hardcoded strings/URLs/Colors. Move them to `constants/`, `.env`, or `tailwind.config`.
+          2. **Component Decoupling**: Identify components/functions > 200 lines. Extract sub-logic into separate files (hooks/utils).
+          3. **Interface Abstraction**: Replace `any` or loose objects with strict TypeScript Interfaces/Types.
+
+          **Output Requirement**:
+          - Refactored code that is cleaner and more readable.
+          - No change in functionality (Regression Testing mentality).
+          EOF
+          )
+
+          opencode run "$FULL_PROMPT" --model iflowcn/glm-4.6 --share false
+          
+          # Fail-safe push
+          if [ -n "$(git cherry -v)" ]; then git push origin dev; fi
+
+      # --- AGENT 2: STABILIZER (Fixer & Consolidator) ---
+      - name: 🚑 Run 2 - Bug Hunter & Stabilizer
+        id: run_fixer
+        timeout-minutes: 35
+        continue-on-error: true
+        run: |
+          git pull origin dev || echo "Branch ready"
+
+          FULL_PROMPT=$(cat <<EOF
+          ${{ env.BASE_CONTEXT }}
+
+          **Role**: QA Automation Engineer & Logic Expert
+          
+          **Mission**: Hunt bugs, fix errors, and consolidate duplicates.
+          
+          **Target Tasks (Pick ONE)**:
+          1. **Error Elimination**: Fix any TypeScript errors, Lint warnings, or build failures found in logs.
+          2. **Logic Consolidation**: Find 2+ functions doing similar things. Merge them into one robust utility.
+          3. **Guard Clause Injection**: Add validation/try-catch blocks to fragile functions to prevent crashes.
+          4. **Race Condition Check**: Ensure async/await is used correctly in database calls.
+
+          **Output Requirement**:
+          - A more stable codebase.
+          - Strictly typed fixes.
+          EOF
+          )
+
+          opencode run "$FULL_PROMPT" --model iflowcn/glm-4.6 --share false
+
+          if [ -n "$(git cherry -v)" ]; then git push origin dev; fi
+
+      # --- AGENT 3: PERFECTIONIST (Standardize & Efficient) ---
+      - name: 🧹 Run 3 - Standardization & Cleanup
+        id: run_cleanup
+        timeout-minutes: 35
+        continue-on-error: true
+        run: |
+          git pull origin dev || echo "Branch ready"
+
+          FULL_PROMPT=$(cat <<EOF
+          ${{ env.BASE_CONTEXT }}
+
+          **Role**: Lead Developer (Code Reviewer Mode)
+          
+          **Mission**: Polish, standardize, and optimize.
+          
+          **Target Tasks**:
+          1. **Dead Code Removal**: Delete unused imports, variables, and comments.
+          2. **Standardization**: Rename files/functions to match the project convention (e.g., ensure all React hooks start with `use`).
+          3. **Performance Tune**: Optimize heavy loops or unnecessary re-renders.
+          4. **Documentation**: Update JSDoc/Comments to reflect recent changes.
+
+          **Output Requirement**:
+          - "Pixel-perfect" code structure.
+          - Highly legible and standardized file organization.
+          EOF
+          )
+
+          opencode run "$FULL_PROMPT" --model iflowcn/glm-4.6 --share false
+
+          if [ -n "$(git cherry -v)" ]; then git push origin dev; fi
+
+      # --- SUMMARY ---
+      - name: 📊 Efficiency Report
+        if: always()
+        run: |
+          echo "### 🛡️ Refactor & Stabilization Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Focus: Modularity, Dynamics, Stability" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Agent Strategy | Status | Intent |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Architect | ${{ steps.run_architect.outcome }} | Hardcode Removal & Modularization |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🚑 Stabilizer | ${{ steps.run_fixer.outcome }} | Bug Fixes & Logic Consolidation |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧹 Perfectionist | ${{ steps.run_cleanup.outcome }} | Standardization & Efficiency |" >> $GITHUB_STEP_SUMMARY
