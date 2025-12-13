@@ -520,7 +520,6 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 - [📋 Project Plan](./plan.md) - Detailed specifications and roadmap
 - [📝 Implementation TODO](./todo.md) - Current development progress and tasks
-- [🐛 Bug Tracker](./bug.md) - Known issues and fixes
 - [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
 - [🤖 Agent Guidelines](./AGENTS.md) - Development conventions
 - [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
@@ -530,7 +529,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 ### Documentation Archive
 
-Historical documentation and implementation notes are available in [docs/archive/](./docs/archive/) for reference.
+Historical documentation and implementation notes have been cleaned up and consolidated into the main documentation structure for better maintainability.
 
 ## 🐛 Troubleshooting
 

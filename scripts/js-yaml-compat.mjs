@@ -4,8 +4,12 @@
 // This script patches the gray-matter module to replace safeLoad with load
 // since safeLoad was removed in js-yaml 4.x
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Path to gray-matter engines.js
 const grayMatterEnginesPath = path.join(
