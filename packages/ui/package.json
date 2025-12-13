@@ -6,8 +6,8 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.tsx --format cjs,esm --dts",
+    "dev": "tsup src/index.tsx --format cjs,esm --dts --watch",
     "lint": "eslint . --fix"
   },
   "dependencies": {
@@ -18,7 +18,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "tsup": "^8.5.1",
-    "typescript": "^5.0.0"
+    "typescript": "^5.6.3"
   },
   "peerDependencies": {
     "react": "^18.2.0",
