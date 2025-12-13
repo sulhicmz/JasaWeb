@@ -1,0 +1,440 @@
+---
+interface ProjectTicketsProps {
+  projectId: string;
+}
+
+const { projectId } = Astro.props;
+---
+
+<div class="space-y-4">
+  <!-- Quick Add Ticket -->
+  <form class="p-4 bg-slate-800 rounded-lg" data-ticket-form>
+    <div class="space-y-3">
+      <input type="text" 
+             name="title" 
+             placeholder="Ticket title..." 
+             class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+             required>
+      <div class="flex space-x-2">
+        <select name="priority" 
+                class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+          <option value="low">Low Priority</option>
+          <option value="medium" selected>Medium Priority</option>
+          <option value="high">High Priority</option>
+          <option value="critical">Critical</option>
+        </select>
+        <select name="type" 
+                class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+          <option value="bug">Bug</option>
+          <option value="feature">Feature</option>
+          <option value="improvement">Improvement</option>
+          <option value="question">Question</option>
+        </select>
+      </div>
+      <textarea name="description" 
+                placeholder="Describe the issue or request..." 
+                rows="2"
+                class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"></textarea>
+      <button type="submit" 
+              class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Create Ticket</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Tickets List -->
+  <div class="space-y-3" data-ticket-list>
+    <!-- Loading State -->
+    <div class="flex items-center justify-center py-8" data-tickets-loading>
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-spinner fa-spin text-blue-400"></i>
+        <span class="text-gray-400">Loading tickets...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- View All Tickets Link -->
+  <div class="text-center">
+    <a href="#" class="text-blue-400 hover:text-blue-300 text-sm transition-colors">
+      View all tickets →
+    </a>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const projectId = '{{projectId}}';
+    await loadTickets(projectId);
+    setupTicketForm();
+  });
+
+  async function loadTickets(projectId) {
+    try {
+      const tickets = await fetchTickets(projectId);
+      renderTickets(tickets);
+    } catch (error) {
+      console.error('Failed to load tickets:', error);
+      showTicketsError();
+    }
+  }
+
+  async function fetchTickets(projectId) {
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([
+          {
+            id: '1',
+            title: 'Fix responsive navigation on mobile',
+            description: 'Navigation menu doesn\'t close properly on mobile devices',
+            type: 'bug',
+            priority: 'high',
+            status: 'open',
+            assignee: { initials: 'JD', name: 'John Doe' },
+            createdBy: { initials: 'AS', name: 'Alice Smith' },
+            createdAt: '2024-01-28T10:30:00Z',
+            updatedAt: '2024-01-28T10:30:00Z'
+          },
+          {
+            id: '2',
+            title: 'Add dark mode toggle',
+            description: 'Users should be able to switch between light and dark themes',
+            type: 'feature',
+            priority: 'medium',
+            status: 'in-progress',
+            assignee: { initials: 'MK', name: 'Mike Johnson' },
+            createdBy: { initials: 'JD', name: 'John Doe' },
+            createdAt: '2024-01-26T14:20:00Z',
+            updatedAt: '2024-01-27T09:15:00Z'
+          },
+          {
+            id: '3',
+            title: 'Optimize image loading performance',
+            description: 'Large images are slowing down page load times',
+            type: 'improvement',
+            priority: 'medium',
+            status: 'open',
+            assignee: null,
+            createdBy: { initials: 'AS', name: 'Alice Smith' },
+            createdAt: '2024-01-25T16:45:00Z',
+            updatedAt: '2024-01-25T16:45:00Z'
+          }
+        ]);
+      }, 1000);
+    });
+  }
+
+  function renderTickets(tickets) {
+    const container = document.querySelector('[data-ticket-list]');
+    const loadingEl = document.querySelector('[data-tickets-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    if (tickets.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <i class="fas fa-ticket-alt text-gray-400 text-3xl mb-3"></i>
+          <p class="text-gray-400 text-sm">No tickets yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = tickets.map(ticket => `
+      <div class="p-4 bg-slate-800 rounded-lg border-l-4 ${getPriorityBorderColor(ticket.priority)} hover:bg-slate-700 transition-colors cursor-pointer"
+           data-ticket-item="${ticket.id}">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1 min-w-0">
+            <h4 class="text-white font-medium text-sm truncate mb-1">${ticket.title}</h4>
+            <p class="text-gray-400 text-xs line-clamp-2">${ticket.description}</p>
+          </div>
+          <button class="ml-2 p-1 text-gray-400 hover:text-white transition-colors">
+            <i class="fas fa-ellipsis-v text-xs"></i>
+          </button>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <!-- Status Badge -->
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(ticket.status)}">
+              ${ticket.status}
+            </span>
+            
+            <!-- Type Badge -->
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeStyle(ticket.type)}">
+              ${ticket.type}
+            </span>
+            
+            <!-- Priority Badge -->
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getPriorityStyle(ticket.priority)}">
+              ${ticket.priority}
+            </span>
+          </div>
+          
+          <!-- Assignee -->
+          <div class="flex items-center space-x-2">
+            ${ticket.assignee ? `
+              <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold" 
+                   title="${ticket.assignee.name}">
+                ${ticket.assignee.initials}
+              </div>
+            ` : `
+              <div class="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs">
+                <i class="fas fa-user-minus"></i>
+              </div>
+            `}
+            <span class="text-xs text-gray-500">${formatDate(ticket.updatedAt)}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    setupTicketActions();
+  }
+
+  function setupTicketForm() {
+    const form = document.querySelector('[data-ticket-form]');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const ticketData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        priority: formData.get('priority'),
+        type: formData.get('type')
+      };
+
+      await createTicket(ticketData);
+    });
+  }
+
+  async function createTicket(ticketData) {
+    const submitBtn = document.querySelector('[data-ticket-form] button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+    submitBtn.disabled = true;
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Add new ticket to the list
+      const newTicket = {
+        id: Date.now().toString(),
+        ...ticketData,
+        status: 'open',
+        assignee: null,
+        createdBy: { initials: 'CU', name: 'Current User' },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      addTicketToList(newTicket);
+      
+      // Reset form
+      document.querySelector('[data-ticket-form]').reset();
+      
+      // Show success message
+      showNotification('Ticket created successfully', 'success');
+    } catch (error) {
+      console.error('Failed to create ticket:', error);
+      showNotification('Failed to create ticket', 'error');
+    } finally {
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    }
+  }
+
+  function addTicketToList(ticket) {
+    const container = document.querySelector('[data-ticket-list]');
+    if (!container) return;
+
+    // Remove empty state if exists
+    const emptyState = container.querySelector('.fa-ticket-alt')?.closest('.text-center');
+    if (emptyState) emptyState.remove();
+
+    const ticketHtml = `
+      <div class="p-4 bg-slate-800 rounded-lg border-l-4 ${getPriorityBorderColor(ticket.priority)} hover:bg-slate-700 transition-colors cursor-pointer animate-fade-in"
+           data-ticket-item="${ticket.id}">
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex-1 min-w-0">
+            <h4 class="text-white font-medium text-sm truncate mb-1">${ticket.title}</h4>
+            <p class="text-gray-400 text-xs line-clamp-2">${ticket.description}</p>
+          </div>
+          <button class="ml-2 p-1 text-gray-400 hover:text-white transition-colors">
+            <i class="fas fa-ellipsis-v text-xs"></i>
+          </button>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(ticket.status)}">
+              ${ticket.status}
+            </span>
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeStyle(ticket.type)}">
+              ${ticket.type}
+            </span>
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${getPriorityStyle(ticket.priority)}">
+              ${ticket.priority}
+            </span>
+          </div>
+          
+          <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs">
+              <i class="fas fa-user-minus"></i>
+            </div>
+            <span class="text-xs text-gray-500">Just now</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', ticketHtml);
+    setupTicketActions();
+  }
+
+  function setupTicketActions() {
+    const ticketItems = document.querySelectorAll('[data-ticket-item]');
+    
+    ticketItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) {
+          const ticketId = item.dataset.ticketItem;
+          openTicketDetails(ticketId);
+        }
+      });
+    });
+  }
+
+  function openTicketDetails(ticketId) {
+    console.log('Opening ticket details:', ticketId);
+    // Implement ticket details modal
+  }
+
+  function getPriorityBorderColor(priority) {
+    const colors = {
+      critical: 'border-red-500',
+      high: 'border-orange-500',
+      medium: 'border-yellow-500',
+      low: 'border-green-500'
+    };
+    return colors[priority] || colors.medium;
+  }
+
+  function getStatusStyle(status) {
+    const styles = {
+      open: 'bg-blue-500/20 text-blue-300',
+      'in-progress': 'bg-yellow-500/20 text-yellow-300',
+      resolved: 'bg-green-500/20 text-green-300',
+      closed: 'bg-gray-500/20 text-gray-300'
+    };
+    return styles[status] || styles.open;
+  }
+
+  function getTypeStyle(type) {
+    const styles = {
+      bug: 'bg-red-500/20 text-red-300',
+      feature: 'bg-purple-500/20 text-purple-300',
+      improvement: 'bg-blue-500/20 text-blue-300',
+      question: 'bg-gray-500/20 text-gray-300'
+    };
+    return styles[type] || styles.question;
+  }
+
+  function getPriorityStyle(priority) {
+    const styles = {
+      critical: 'bg-red-500/20 text-red-300',
+      high: 'bg-orange-500/20 text-orange-300',
+      medium: 'bg-yellow-500/20 text-yellow-300',
+      low: 'bg-green-500/20 text-green-300'
+    };
+    return styles[priority] || styles.medium;
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      if (diffHours === 0) {
+        const diffMins = Math.floor(diffTime / (1000 * 60));
+        return diffMins <= 1 ? 'Just now' : `${diffMins}m ago`;
+      }
+      return `${diffHours}h ago`;
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  }
+
+  function showTicketsError() {
+    const container = document.querySelector('[data-ticket-list]');
+    const loadingEl = document.querySelector('[data-tickets-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="text-center py-8">
+        <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-3"></i>
+        <p class="text-gray-400 text-sm">Failed to load tickets</p>
+      </div>
+    `;
+  }
+
+  function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+    
+    const colors = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      warning: 'bg-yellow-500',
+      info: 'bg-blue-500'
+    };
+
+    notification.classList.add(colors[type] || colors.info);
+    notification.innerHTML = `
+      <div class="flex items-center space-x-3 text-white">
+        <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle"></i>
+        <span>${message}</span>
+        <button class="ml-4 text-white hover:text-gray-200" onclick="this.parentElement.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => {
+      notification.classList.remove('translate-x-full');
+      notification.classList.add('translate-x-0');
+    }, 100);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => notification.remove(), 300);
+      }
+    }, 5000);
+  }
+</script>
