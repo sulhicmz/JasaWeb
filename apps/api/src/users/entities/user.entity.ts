@@ -1,5 +1,3 @@
-import { IsEmail, IsString, IsOptional, MinLength } from 'class-validator';
-
 export class User {
   id: string = '';
   email: string = '';

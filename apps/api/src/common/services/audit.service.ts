@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { Prisma } from '@prisma/client';
 
 export interface AuditLogEntry {
   actorId: string; // ID of the user performing the action
@@ -7,7 +8,7 @@ export interface AuditLogEntry {
   action: string; // Description of the action (e.g., 'file_upload', 'project_update', 'user_login')
   target?: string; // Target of the action (e.g., 'User', 'Project', 'File')
   targetId?: string; // ID of the specific target
-  meta?: Record<string, any>; // Additional metadata about the action
+  meta?: Record<string, unknown>; // Additional metadata about the action
 }
 
 @Injectable()
@@ -24,7 +25,7 @@ export class AuditService {
           organizationId: entry.organizationId,
           action: entry.action,
           target: entry.target || '',
-          meta: entry.meta || {},
+          meta: (entry.meta as Prisma.JsonObject) || {},
         },
       });
 
@@ -32,10 +33,10 @@ export class AuditService {
         `Audit log created: ${entry.action} by user ${entry.actorId} in org ${entry.organizationId}`
       );
       // We don't throw an error here because failing to log shouldn't break the main functionality
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error(
-        `Failed to create audit log: ${error.message}`,
-        error.stack
+        `Failed to create audit log: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined
       );
       // We don't throw an error here because failing to log shouldn't break the main functionality
     }
@@ -124,7 +125,7 @@ export class AuditService {
     userId: string,
     organizationId: string,
     projectId: string,
-    changes: Record<string, any>
+    changes: Record<string, unknown>
   ): Promise<void> {
     await this.log({
       actorId: userId,
@@ -208,7 +209,7 @@ export class AuditService {
     userId: string,
     organizationId: string,
     ticketId: string,
-    changes: Record<string, any>
+    changes: Record<string, unknown>
   ): Promise<void> {
     await this.log({
       actorId: userId,

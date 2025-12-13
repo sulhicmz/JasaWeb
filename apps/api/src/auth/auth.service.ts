@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { RefreshTokenService } from './refresh-token.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -18,13 +19,11 @@ export class AuthService {
     private refreshTokenService: RefreshTokenService
   ) {}
 
-  async register(
-    createUserDto: CreateUserDto
-  ): Promise<{
+  async register(createUserDto: CreateUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
-    user: { id: any; email: any; name: any; profilePicture: any };
+    user: { id: string; email: string; name: string; profilePicture?: string };
   }> {
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(
@@ -60,13 +59,11 @@ export class AuthService {
     };
   }
 
-  async login(
-    loginUserDto: LoginUserDto
-  ): Promise<{
+  async login(loginUserDto: LoginUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
-    user: { id: any; email: any; name: any; profilePicture: any };
+    user: { id: string; email: string; name: string; profilePicture?: string };
   }> {
     const user = await this.usersService.findByEmail(loginUserDto.email);
     if (!user) {
@@ -98,9 +95,13 @@ export class AuthService {
     };
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(
+    email: string,
+    pass: string
+  ): Promise<Omit<User, 'password'> | null> {
     const user = await this.usersService.findByEmail(email);
     if (user && (await bcrypt.compare(pass, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }

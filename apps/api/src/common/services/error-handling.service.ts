@@ -56,10 +56,10 @@ export class ErrorHandlingService {
             userAgent: errorLogData.userAgent,
           },
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         this.logger.error(
-          `Failed to create audit log for error: ${error.message}`,
-          error.stack
+          `Failed to create audit log for error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error instanceof Error ? error.stack : undefined
         );
       }
     }
@@ -74,8 +74,22 @@ export class ErrorHandlingService {
     message: string,
     path?: string,
     errorId?: string
-  ): any {
-    const response: any = {
+  ): {
+    statusCode: number;
+    error: string;
+    message: string;
+    timestamp: string;
+    path?: string;
+    errorId?: string;
+  } {
+    const response: {
+      statusCode: number;
+      error: string;
+      message: string;
+      timestamp: string;
+      path?: string;
+      errorId?: string;
+    } = {
       statusCode,
       error,
       message,
