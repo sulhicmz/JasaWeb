@@ -495,6 +495,7 @@ export class AnalyticsService {
         }
 
         // Initialize if not exists - validate key to prevent object injection
+        // eslint-disable-next-line security/detect-unsafe-regex
         const datePattern = /^\d{4}-\d{2}(-\d{2})?$/;
         if (typeof key === 'string' && datePattern.test(key)) {
           if (!acc[key]) {
