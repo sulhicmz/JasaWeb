@@ -43,7 +43,6 @@ jasaweb/
 │   ├── config/        # ⚙️ Shared configurations
 │   └── testing/       # 🧪 Testing utilities
 ├── docs/              # 📚 Project documentation
-│   ├── archive/       # 📦 Historical documentation
 │   └── deployment/    # 🚀 Deployment guides
 ├── scripts/           # 🔧 Development and setup scripts
 ├── .github/           # 🤖 GitHub workflows & templates
@@ -520,17 +519,18 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 - [📋 Project Plan](./plan.md) - Detailed specifications and roadmap
 - [📝 Implementation TODO](./todo.md) - Current development progress and tasks
-- [🐛 Bug Tracker](./bug.md) - Known issues and fixes
 - [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
 - [🤖 Agent Guidelines](./AGENTS.md) - Development conventions
 - [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [🛡️ Security Policy](./SECURITY.md) - Security guidelines
 - [📄 Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
 - [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
-
-### Documentation Archive
-
-Historical documentation and implementation notes are available in [docs/archive/](./docs/archive/) for reference.
+- [📊 API Endpoints](./docs/api-endpoints.md) - API documentation
+- [🔒 Security Best Practices](./docs/SECURITY_BEST_PRACTICES.md) - Security guidelines
+- [📋 Security Checklist](./docs/SECURITY_CHECKLIST.md) - Security validation
+- [🔍 OWASP Compliance](./docs/OWASP_COMPLIANCE.md) - Security compliance
+- [📈 Testing Summary](./docs/TESTING_SUMMARY.md) - Testing documentation
+- [📊 Performance Summary](./PERFORMANCE_SUMMARY.md) - Performance metrics
 
 ## 🐛 Troubleshooting
 
@@ -579,6 +579,16 @@ pnpm lint
 - 🐛 [Issue Tracker](https://github.com/sulhicmz/JasaWeb/issues)
 - 💬 [Discussions](https://github.com/sulhicmz/JasaWeb/discussions)
 - 📧 [Email Support](mailto:support@jasaweb.com)
+
+### Repository Maintenance
+
+This repository follows strict hygiene standards with automated cleanup and organization:
+
+- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, archived docs in `/docs/obsolete/`
+- **Script Organization**: Essential scripts in `/scripts/`, one-time scripts removed after use
+- **Workflow Management**: Active workflows in `.github/workflows/`, duplicates removed
+- **File Naming**: Consistent kebab-case for files, PascalCase for components
+- **Regular Cleanup**: Automated removal of unused dependencies and temporary files
 
 ## 📄 License
 

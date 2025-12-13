@@ -5,24 +5,26 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { RefreshTokenService } from './refresh-token.service';
+import { PasswordService, PasswordHashVersion } from './password.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private refreshTokenService: RefreshTokenService
+    private refreshTokenService: RefreshTokenService,
+    private passwordService: PasswordService
   ) {}
 
   async register(createUserDto: CreateUserDto): Promise<{
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
-    user: { id: any; email: any; name: any; profilePicture: any };
+    user: { id: string; email: string; name: string; profilePicture?: string };
   }> {
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(
@@ -33,7 +35,8 @@ export class AuthService {
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const { hash: hashedPassword, version: hashVersion } =
+      await this.passwordService.hashPassword(createUserDto.password);
 
     // Create the user
     const user = await this.usersService.create({
@@ -62,19 +65,34 @@ export class AuthService {
     access_token: string;
     refreshToken: string;
     expiresAt: Date;
-    user: { id: any; email: any; name: any; profilePicture: any };
+    user: { id: string; email: string; name: string; profilePicture?: string };
   }> {
     const user = await this.usersService.findByEmail(loginUserDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(
+    const passwordResult = await this.passwordService.verifyPassword(
       loginUserDto.password,
-      user.password
+      user.password,
+      user.passwordHashVersion as PasswordHashVersion
     );
-    if (!isPasswordValid) {
+
+    if (!passwordResult.isValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Update password hash if migration is needed
+    if (
+      passwordResult.needsRehash &&
+      passwordResult.newHash &&
+      passwordResult.newVersion
+    ) {
+      await this.usersService.updatePasswordHash(
+        user.id,
+        passwordResult.newHash,
+        passwordResult.newVersion
+      );
     }
 
     // Generate JWT token and refresh token
@@ -94,11 +112,36 @@ export class AuthService {
     };
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(
+    email: string,
+    pass: string
+  ): Promise<Omit<User, 'password'> | null> {
     const user = await this.usersService.findByEmail(email);
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      const { password, ...result } = user;
-      return result;
+    if (user) {
+      const passwordResult = await this.passwordService.verifyPassword(
+        pass,
+        user.password,
+        user.passwordHashVersion as PasswordHashVersion
+      );
+
+      if (passwordResult.isValid) {
+        // Update password hash if migration is needed
+        if (
+          passwordResult.needsRehash &&
+          passwordResult.newHash &&
+          passwordResult.newVersion
+        ) {
+          await this.usersService.updatePasswordHash(
+            user.id,
+            passwordResult.newHash,
+            passwordResult.newVersion
+          );
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...result } = user;
+        return result;
+      }
     }
     return null;
   }

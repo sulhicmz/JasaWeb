@@ -1,0 +1,376 @@
+---
+interface MilestoneTimelineProps {
+  projectId: string;
+}
+
+const { projectId } = Astro.props;
+---
+
+<div class="relative" data-milestone-timeline>
+  <!-- Timeline Line -->
+  <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-700"></div>
+
+  <!-- Milestones Container -->
+  <div class="space-y-6" data-milestones-container>
+    <!-- Loading State -->
+    <div class="flex items-center justify-center py-12" data-milestones-loading>
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-spinner fa-spin text-blue-400"></i>
+        <span class="text-gray-400">Loading milestones...</span>
+      </div>
+    </div>
+
+    <!-- Milestones will be populated here -->
+    <div data-milestones-list></div>
+  </div>
+
+  <!-- Add Milestone Button -->
+  <div class="mt-8 text-center">
+    <button class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2 mx-auto"
+            data-add-milestone-btn>
+      <i class="fas fa-plus"></i>
+      <span>Add Milestone</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const projectId = '{{projectId}}';
+    await loadMilestones(projectId);
+    setupMilestoneInteractions();
+  });
+
+  async function loadMilestones(projectId) {
+    try {
+      const milestones = await fetchMilestones(projectId);
+      renderMilestones(milestones);
+    } catch (error) {
+      console.error('Failed to load milestones:', error);
+      showMilestonesError();
+    }
+  }
+
+  async function fetchMilestones(projectId) {
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([
+          {
+            id: '1',
+            title: 'Project Kickoff',
+            description: 'Initial project setup and team alignment',
+            status: 'completed',
+            dueDate: '2024-01-20',
+            completedDate: '2024-01-18',
+            assignee: { initials: 'JD', name: 'John Doe', color: 'blue' },
+            dependencies: [],
+            deliverables: ['Project charter', 'Team setup', 'Tools configuration']
+          },
+          {
+            id: '2',
+            title: 'Design Phase',
+            description: 'Create wireframes, mockups, and design system',
+            status: 'completed',
+            dueDate: '2024-02-10',
+            completedDate: '2024-02-08',
+            assignee: { initials: 'AS', name: 'Alice Smith', color: 'green' },
+            dependencies: ['1'],
+            deliverables: ['Wireframes', 'UI mockups', 'Design system', 'Brand guidelines']
+          },
+          {
+            id: '3',
+            title: 'Development Sprint 1',
+            description: 'Implement core functionality and backend setup',
+            status: 'completed',
+            dueDate: '2024-02-25',
+            completedDate: '2024-02-24',
+            assignee: { initials: 'MK', name: 'Mike Johnson', color: 'purple' },
+            dependencies: ['2'],
+            deliverables: ['Backend API', 'Database schema', 'Authentication system']
+          },
+          {
+            id: '4',
+            title: 'Development Sprint 2',
+            description: 'Implement frontend components and integrations',
+            status: 'in-progress',
+            dueDate: '2024-03-10',
+            completedDate: null,
+            assignee: { initials: 'JD', name: 'John Doe', color: 'blue' },
+            dependencies: ['3'],
+            deliverables: ['React components', 'API integrations', 'State management']
+          },
+          {
+            id: '5',
+            title: 'Testing & QA',
+            description: 'Comprehensive testing and bug fixes',
+            status: 'pending',
+            dueDate: '2024-03-20',
+            completedDate: null,
+            assignee: { initials: 'AS', name: 'Alice Smith', color: 'green' },
+            dependencies: ['4'],
+            deliverables: ['Test cases', 'Bug reports', 'Performance optimization']
+          },
+          {
+            id: '6',
+            title: 'Deployment',
+            description: 'Deploy to production and go-live',
+            status: 'pending',
+            dueDate: '2024-03-30',
+            completedDate: null,
+            assignee: { initials: 'MK', name: 'Mike Johnson', color: 'purple' },
+            dependencies: ['5'],
+            deliverables: ['Production deployment', 'Monitoring setup', 'Documentation']
+          }
+        ]);
+      }, 1000);
+    });
+  }
+
+  function renderMilestones(milestones) {
+    const container = document.querySelector('[data-milestones-list]');
+    const loadingEl = document.querySelector('[data-milestones-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    container.innerHTML = milestones.map((milestone, index) => {
+      const isCompleted = milestone.status === 'completed';
+      const isInProgress = milestone.status === 'in-progress';
+      const isOverdue = !isCompleted && new Date(milestone.dueDate) < new Date();
+      
+      return `
+        <div class="relative flex items-start space-x-6 group" data-milestone="${milestone.id}">
+          <!-- Milestone Marker -->
+          <div class="relative flex-shrink-0">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
+              isCompleted ? 'bg-green-500 border-green-600' : 
+              isInProgress ? 'bg-blue-500 border-blue-600' : 
+              isOverdue ? 'bg-red-500 border-red-600' : 
+              'bg-slate-700 border-slate-600 group-hover:border-slate-500'
+            }">
+              ${isCompleted ? '<i class="fas fa-check text-white text-xl"></i>' : 
+                isInProgress ? '<i class="fas fa-spinner fa-spin text-white text-xl"></i>' : 
+                '<i class="fas fa-circle text-white text-xs"></i>'}
+            </div>
+            <!-- Milestone Number -->
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center text-xs text-gray-400 font-bold border border-slate-700">
+              ${index + 1}
+            </div>
+          </div>
+
+          <!-- Milestone Content -->
+          <div class="flex-1 min-w-0">
+            <div class="glass-panel p-6 rounded-xl hover:bg-slate-800/60 transition-all duration-300 ${
+              isCompleted ? 'border-green-500/20' : 
+              isInProgress ? 'border-blue-500/20' : 
+              isOverdue ? 'border-red-500/20' : ''
+            }">
+              <!-- Milestone Header -->
+              <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold text-white mb-2">${milestone.title}</h3>
+                  <p class="text-gray-400 text-sm">${milestone.description}</p>
+                </div>
+                <div class="flex items-center space-x-2 ml-4">
+                  <!-- Status Badge -->
+                  <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                    isCompleted ? 'bg-green-500/20 text-green-300' : 
+                    isInProgress ? 'bg-blue-500/20 text-blue-300' : 
+                    isOverdue ? 'bg-red-500/20 text-red-300' : 
+                    'bg-gray-500/20 text-gray-300'
+                  }">
+                    ${milestone.status.charAt(0).toUpperCase() + milestone.status.slice(1)}
+                  </span>
+                  
+                  <!-- Actions Dropdown -->
+                  <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          data-milestone-actions="${milestone.id}">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Milestone Details -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Due Date -->
+                <div class="flex items-center space-x-3">
+                  <i class="fas fa-calendar text-gray-400"></i>
+                  <div>
+                    <p class="text-xs text-gray-500">Due Date</p>
+                    <p class="text-sm text-white ${isOverdue ? 'text-red-400' : ''}">
+                      ${formatDate(milestone.dueDate)}
+                      ${isOverdue ? ' (Overdue)' : ''}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Assignee -->
+                <div class="flex items-center space-x-3">
+                  <i class="fas fa-user text-gray-400"></i>
+                  <div>
+                    <p class="text-xs text-gray-500">Assignee</p>
+                    <div class="flex items-center space-x-2">
+                      <div class="w-6 h-6 bg-${milestone.assignee.color}-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        ${milestone.assignee.initials}
+                      </div>
+                      <span class="text-sm text-white">${milestone.assignee.name}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Completed Date -->
+                ${isCompleted ? `
+                  <div class="flex items-center space-x-3">
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <div>
+                      <p class="text-xs text-gray-500">Completed</p>
+                      <p class="text-sm text-green-400">${formatDate(milestone.completedDate)}</p>
+                    </div>
+                  </div>
+                ` : ''}
+
+                <!-- Dependencies -->
+                ${milestone.dependencies.length > 0 ? `
+                  <div class="flex items-center space-x-3">
+                    <i class="fas fa-link text-gray-400"></i>
+                    <div>
+                      <p class="text-xs text-gray-500">Dependencies</p>
+                      <p class="text-sm text-white">${milestone.dependencies.length} milestone${milestone.dependencies.length > 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Deliverables -->
+              <div class="border-t border-slate-700 pt-4">
+                <h4 class="text-sm font-medium text-white mb-3">Deliverables</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  ${milestone.deliverables.map(deliverable => `
+                    <div class="flex items-center space-x-2 p-2 bg-slate-800 rounded-lg">
+                      <i class="fas ${isCompleted ? 'fa-check-square text-green-400' : 'fa-square text-gray-400'} text-sm"></i>
+                      <span class="text-sm text-gray-300">${deliverable}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Progress Bar (for in-progress milestones) -->
+              ${isInProgress ? `
+                <div class="border-t border-slate-700 pt-4 mt-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-400">Progress</span>
+                    <span class="text-sm text-white font-medium">65%</span>
+                  </div>
+                  <div class="w-full bg-slate-700 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: 65%"></div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Setup milestone interactions
+    setupMilestoneActions();
+  }
+
+  function setupMilestoneInteractions() {
+    // Add milestone button
+    const addBtn = document.querySelector('[data-add-milestone-btn]');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        openAddMilestoneModal();
+      });
+    }
+  }
+
+  function setupMilestoneActions() {
+    const actionButtons = document.querySelectorAll('[data-milestone-actions]');
+    
+    actionButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const milestoneId = button.dataset.milestoneActions;
+        showMilestoneActions(milestoneId, button);
+      });
+    });
+  }
+
+  function showMilestoneActions(milestoneId, button) {
+    // Create actions dropdown
+    const existingDropdown = document.querySelector('.milestone-actions-dropdown');
+    if (existingDropdown) existingDropdown.remove();
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'milestone-actions-dropdown absolute top-full right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50';
+    dropdown.innerHTML = `
+      <div class="py-2">
+        <button class="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center space-x-2">
+          <i class="fas fa-edit"></i>
+          <span>Edit Milestone</span>
+        </button>
+        <button class="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center space-x-2">
+          <i class="fas fa-copy"></i>
+          <span>Duplicate</span>
+        </button>
+        <button class="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors flex items-center space-x-2">
+          <i class="fas fa-link"></i>
+          <span>Manage Dependencies</span>
+        </button>
+        <hr class="my-2 border-slate-700">
+        <button class="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors flex items-center space-x-2">
+          <i class="fas fa-trash"></i>
+          <span>Delete</span>
+        </button>
+      </div>
+    `;
+
+    button.appendChild(dropdown);
+
+    // Close dropdown when clicking outside
+    setTimeout(() => {
+      document.addEventListener('click', function closeDropdown(e) {
+        if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+          dropdown.remove();
+          document.removeEventListener('click', closeDropdown);
+        }
+      });
+    }, 100);
+  }
+
+  function openAddMilestoneModal() {
+    // Implement add milestone modal
+    console.log('Opening add milestone modal...');
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  }
+
+  function showMilestonesError() {
+    const container = document.querySelector('[data-milestones-list]');
+    const loadingEl = document.querySelector('[data-milestones-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="text-center py-12">
+        <i class="fas fa-exclamation-triangle text-red-400 text-4xl mb-4"></i>
+        <p class="text-gray-400">Failed to load milestones</p>
+        <button class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                onclick="location.reload()">
+          Try Again
+        </button>
+      </div>
+    `;
+  }
+</script>

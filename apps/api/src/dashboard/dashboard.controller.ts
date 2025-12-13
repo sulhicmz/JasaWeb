@@ -15,7 +15,7 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject } from '@nestjs/common';
+import { Inject, InternalServerErrorException } from '@nestjs/common';
 import { DashboardGateway } from './dashboard.gateway';
 
 interface DashboardStats {

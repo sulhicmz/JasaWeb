@@ -1,0 +1,301 @@
+---
+interface ProjectHeaderProps {
+  projectId: string;
+}
+
+const { projectId } = Astro.props;
+---
+
+<header class="container mx-auto px-4 py-6">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <!-- Project Title and Status -->
+    <div class="flex items-center space-x-4">
+      <button class="p-2 text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div>
+        <h1 class="text-2xl font-bold text-white flex items-center space-x-3">
+          <span data-project-name>Loading project...</span>
+          <span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm font-medium" data-project-status>
+            Active
+          </span>
+        </h1>
+        <p class="text-gray-400 mt-1" data-project-description>
+          Loading project description...
+        </p>
+      </div>
+    </div>
+
+    <!-- Project Actions -->
+    <div class="flex items-center space-x-3">
+      <!-- Progress Indicator -->
+      <div class="hidden md:flex items-center space-x-3 px-4 py-2 bg-slate-800 rounded-lg">
+        <div class="flex items-center space-x-2">
+          <span class="text-gray-400 text-sm">Progress</span>
+          <span class="text-white font-bold" data-project-progress>0%</span>
+        </div>
+        <div class="w-24 bg-slate-700 rounded-full h-2">
+          <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500" 
+               data-project-progress-bar style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Team Members -->
+      <div class="hidden md:flex items-center -space-x-2" data-project-team>
+        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900">
+          JD
+        </div>
+        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900">
+          AS
+        </div>
+        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900">
+          MK
+        </div>
+        <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900">
+          +3
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2">
+        <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" 
+                data-project-edit title="Edit Project">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" 
+                data-project-settings title="Project Settings">
+          <i class="fas fa-cog"></i>
+        </button>
+        <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" 
+                data-project-notifications title="Notifications">
+          <i class="fas fa-bell"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Navigation Tabs -->
+  <nav class="mt-6 border-b border-slate-800">
+    <ul class="flex space-x-8" data-project-tabs>
+      <li>
+        <a href="#overview" class="py-3 px-1 border-b-2 border-blue-500 text-blue-400 font-medium text-sm transition-colors">
+          Overview
+        </a>
+      </li>
+      <li>
+        <a href="#milestones" class="py-3 px-1 border-b-2 border-transparent text-gray-400 hover:text-white font-medium text-sm transition-colors">
+          Milestones
+        </a>
+      </li>
+      <li>
+        <a href="#files" class="py-3 px-1 border-b-2 border-transparent text-gray-400 hover:text-white font-medium text-sm transition-colors">
+          Files
+        </a>
+      </li>
+      <li>
+        <a href="#tickets" class="py-3 px-1 border-b-2 border-transparent text-gray-400 hover:text-white font-medium text-sm transition-colors">
+          Tickets
+        </a>
+      </li>
+      <li>
+        <a href="#activity" class="py-3 px-1 border-b-2 border-transparent text-gray-400 hover:text-white font-medium text-sm transition-colors">
+          Activity
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  // Load project data and update header
+  document.addEventListener('DOMContentLoaded', async () => {
+    const projectId = '{{projectId}}';
+    await loadProjectData(projectId);
+    setupTabNavigation();
+    setupProjectActions();
+  });
+
+  async function loadProjectData(projectId) {
+    try {
+      // Simulate API call (replace with actual API call)
+      const projectData = await fetchProjectData(projectId);
+      updateProjectHeader(projectData);
+    } catch (error) {
+      console.error('Failed to load project data:', error);
+      showErrorMessage('Failed to load project data');
+    }
+  }
+
+  async function fetchProjectData(projectId) {
+    // Simulate API response
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          id: projectId,
+          name: 'Company Website Redesign',
+          description: 'Complete redesign of the company website with modern UI/UX and improved performance',
+          status: 'active',
+          progress: 65,
+          team: [
+            { initials: 'JD', name: 'John Doe', color: 'blue' },
+            { initials: 'AS', name: 'Alice Smith', color: 'green' },
+            { initials: 'MK', name: 'Mike Johnson', color: 'purple' }
+          ],
+          startDate: '2024-01-15',
+          dueDate: '2024-03-30',
+          milestones: {
+            total: 8,
+            completed: 5
+          },
+          tickets: {
+            total: 12,
+            open: 3
+          }
+        });
+      }, 1000);
+    });
+  }
+
+  function updateProjectHeader(data) {
+    // Update project name
+    const nameEl = document.querySelector('[data-project-name]');
+    if (nameEl) nameEl.textContent = data.name;
+
+    // Update project description
+    const descEl = document.querySelector('[data-project-description]');
+    if (descEl) descEl.textContent = data.description;
+
+    // Update project status
+    const statusEl = document.querySelector('[data-project-status]');
+    if (statusEl) {
+      statusEl.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+      statusEl.className = `px-3 py-1 ${
+        data.status === 'active' ? 'bg-green-500/20 text-green-300' : 
+        data.status === 'completed' ? 'bg-blue-500/20 text-blue-300' : 
+        'bg-yellow-500/20 text-yellow-300'
+      } rounded-full text-sm font-medium`;
+    }
+
+    // Update progress
+    const progressEl = document.querySelector('[data-project-progress]');
+    const progressBarEl = document.querySelector('[data-project-progress-bar]');
+    if (progressEl) progressEl.textContent = `${data.progress}%`;
+    if (progressBarEl) progressBarEl.style.width = `${data.progress}%`;
+
+    // Update team members
+    const teamEl = document.querySelector('[data-project-team]');
+    if (teamEl && data.team) {
+      teamEl.innerHTML = data.team.slice(0, 4).map(member => `
+        <div class="w-8 h-8 bg-${member.color}-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900" 
+             title="${member.name}">
+          ${member.initials}
+        </div>
+      `).join('');
+      
+      if (data.team.length > 4) {
+        teamEl.innerHTML += `
+          <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900">
+            +${data.team.length - 4}
+          </div>
+        `;
+      }
+    }
+  }
+
+  function setupTabNavigation() {
+    const tabs = document.querySelectorAll('[data-project-tabs] a');
+    
+    tabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Remove active state from all tabs
+        tabs.forEach(t => {
+          t.classList.remove('border-blue-500', 'text-blue-400');
+          t.classList.add('border-transparent', 'text-gray-400');
+        });
+        
+        // Add active state to clicked tab
+        tab.classList.remove('border-transparent', 'text-gray-400');
+        tab.classList.add('border-blue-500', 'text-blue-400');
+        
+        // Scroll to corresponding section
+        const targetId = tab.getAttribute('href').substring(1);
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Update active tab on scroll
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('section[id]');
+      const scrollPosition = window.scrollY + 100;
+
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        const sectionId = section.getAttribute('id');
+        
+        if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+          tabs.forEach(tab => {
+            tab.classList.remove('border-blue-500', 'text-blue-400');
+            tab.classList.add('border-transparent', 'text-gray-400');
+            
+            if (tab.getAttribute('href') === `#${sectionId}`) {
+              tab.classList.remove('border-transparent', 'text-gray-400');
+              tab.classList.add('border-blue-500', 'text-blue-400');
+            }
+          });
+        }
+      });
+    });
+  }
+
+  function setupProjectActions() {
+    // Edit project
+    const editBtn = document.querySelector('[data-project-edit]');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        openEditProjectModal();
+      });
+    }
+
+    // Project settings
+    const settingsBtn = document.querySelector('[data-project-settings]');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        openProjectSettings();
+      });
+    }
+
+    // Notifications
+    const notificationsBtn = document.querySelector('[data-project-notifications]');
+    if (notificationsBtn) {
+      notificationsBtn.addEventListener('click', () => {
+        toggleProjectNotifications();
+      });
+    }
+  }
+
+  function openEditProjectModal() {
+    // Implement edit project modal
+    console.log('Opening edit project modal...');
+  }
+
+  function openProjectSettings() {
+    // Implement project settings
+    console.log('Opening project settings...');
+  }
+
+  function toggleProjectNotifications() {
+    // Implement notification toggle
+    console.log('Toggling project notifications...');
+  }
+
+  function showErrorMessage(message) {
+    // Show error notification
+    console.error(message);
+  }
+</script>
