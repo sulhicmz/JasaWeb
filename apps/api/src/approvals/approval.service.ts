@@ -10,7 +10,7 @@ export class ApprovalService {
     projectId: string,
     itemType: string,
     itemId: string,
-    requesterId: string
+    _requesterId: string
   ): Promise<any> {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
@@ -36,7 +36,7 @@ export class ApprovalService {
 
   async findApprovalsForProject(
     projectId: string,
-    organizationId: string
+    _organizationId: string
   ): Promise<any[]> {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({

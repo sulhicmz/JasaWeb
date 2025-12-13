@@ -6,7 +6,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -66,7 +65,7 @@ export class AuthController {
           expiresAt: result.expiresAt,
         },
       };
-    } catch (error) {
+    } catch {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid refresh token',
@@ -100,7 +99,7 @@ export class AuthController {
         statusCode: HttpStatus.OK,
         message: 'Logged out successfully',
       };
-    } catch (error) {
+    } catch {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid refresh token',

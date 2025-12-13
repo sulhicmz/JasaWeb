@@ -6,7 +6,6 @@ import {
   Param,
   UseGuards,
   BadRequestException,
-  Req,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
@@ -38,7 +37,7 @@ export class ApprovalController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Allow multiple roles to create approvals
   async create(
     @Body() createApprovalDto: CreateApprovalDto,
-    @CurrentOrganizationId() organizationId: string
+    @CurrentOrganizationId() _organizationId: string
   ) {
     // Validate that the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({

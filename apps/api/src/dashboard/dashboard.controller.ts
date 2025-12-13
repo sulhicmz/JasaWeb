@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Query,
+  Post,
+  Body,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -494,12 +502,12 @@ export class DashboardController {
         trends: trends.reduce(
           (acc, trend, index) => {
             const metric = selectedMetrics[index];
-            if (metric) {
+            if (metric && Object.prototype.hasOwnProperty.call(acc, metric)) {
               acc[metric] = trend;
             }
             return acc;
           },
-          {} as Record<string, any>
+          {} as Record<string, unknown>
         ),
       };
     } catch (error) {
@@ -1064,7 +1072,7 @@ export class DashboardController {
 
     while (current <= endDate) {
       const dateKey = current.toISOString().split('T')[0];
-      if (dateKey) {
+      if (dateKey && Object.prototype.hasOwnProperty.call(dailyData, dateKey)) {
         dailyData[dateKey] = 0;
       }
       current.setDate(current.getDate() + 1);
@@ -1073,7 +1081,7 @@ export class DashboardController {
     items.forEach((item) => {
       const date = new Date(item[dateField]);
       const dateKey = date.toISOString().split('T')[0];
-      if (dateKey && dailyData.hasOwnProperty(dateKey)) {
+      if (dateKey && Object.prototype.hasOwnProperty.call(dailyData, dateKey)) {
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
       }
     });
@@ -1150,16 +1158,22 @@ export class DashboardController {
     return Math.round(totalHours / tickets.length);
   }
 
-  private calculateResolutionRateByPriority(tickets: any[]) {
+  private calculateResolutionRateByPriority(tickets: unknown[]) {
     const priorities = ['low', 'medium', 'high', 'critical'];
     return priorities.reduce(
       (acc, priority) => {
-        const priorityTickets = tickets.filter((t) => t.priority === priority);
-        const resolved = priorityTickets.filter((t) => t.status === 'closed');
-        acc[priority] =
-          priorityTickets.length > 0
-            ? Math.round((resolved.length / priorityTickets.length) * 100)
-            : 0;
+        const priorityTickets = tickets.filter(
+          (t) => (t as any).priority === priority
+        );
+        const resolved = priorityTickets.filter(
+          (t) => (t as any).status === 'closed'
+        );
+        if (Object.prototype.hasOwnProperty.call(acc, priority)) {
+          acc[priority] =
+            priorityTickets.length > 0
+              ? Math.round((resolved.length / priorityTickets.length) * 100)
+              : 0;
+        }
         return acc;
       },
       {} as Record<string, number>

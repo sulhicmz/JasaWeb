@@ -1,14 +1,30 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 
+export type NotificationType =
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'personal';
+
 export interface Notification {
   id: string;
-  type: string;
+  type: NotificationType;
   title: string;
   message: string;
   data: any;
   isRead: boolean;
   createdAt: Date;
+}
+
+export interface RealtimeNotification {
+  id: number;
+  message: string;
+  type: NotificationType;
+  data: any;
+  timestamp: Date;
+  read: boolean;
 }
 
 export interface NotificationUpdate {
@@ -42,7 +58,7 @@ class NotificationService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private notificationQueue: any[] = [];
+  private notificationQueue: RealtimeNotification[] = [];
   private isVisible = true;
 
   constructor() {
@@ -330,13 +346,13 @@ class NotificationService {
     );
   }
 
-  private displayNotification(notification: any) {
+  private displayNotification(notification: RealtimeNotification) {
     // Create notification element
     const notificationEl = document.createElement('div');
     notificationEl.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
 
     // Set color based on type
-    const colors = {
+    const colors: Record<NotificationType, string> = {
       success: 'bg-green-500',
       error: 'bg-red-500',
       warning: 'bg-yellow-500',
@@ -378,8 +394,8 @@ class NotificationService {
     }, 5000);
   }
 
-  private getNotificationIcon(type: string) {
-    const icons = {
+  private getNotificationIcon(type: NotificationType) {
+    const icons: Record<NotificationType, string> = {
       success: '<i class="fas fa-check-circle"></i>',
       error: '<i class="fas fa-exclamation-circle"></i>',
       warning: '<i class="fas fa-exclamation-triangle"></i>',
@@ -410,7 +426,9 @@ class NotificationService {
   private processNotificationQueue() {
     while (this.notificationQueue.length > 0) {
       const notification = this.notificationQueue.shift();
-      this.displayNotification(notification);
+      if (notification) {
+        this.displayNotification(notification);
+      }
     }
   }
 
