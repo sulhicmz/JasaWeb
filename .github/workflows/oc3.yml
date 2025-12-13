@@ -1,0 +1,273 @@
+name: oc - PR Guardian
+
+on:
+  # 1. Trigger untuk Bersih-bersih Branch
+  schedule:
+    - cron: '0 0 * * 0' # Setiap Minggu tengah malam
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Force Run Mode'
+        required: true
+        default: 'cleanup'
+        type: choice
+        options:
+          - cleanup
+          - check-conflicts
+
+  # 2. Trigger untuk Conflict Check & Auto Merge Setup
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+  # 3. Trigger untuk Handle Comments & Fix Code
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: guardian-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  guardian-dispatcher:
+    name: Guardian Brain
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      matrix: ${{ steps.decide.outputs.matrix }}
+      has_task: ${{ steps.decide.outputs.has_task }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analyze Context & Dispatch
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -e
+          
+          # === CONFIGURATION ===
+          # Definisi Tugas Spesialis
+          CLEANUP_SPEC='{"name":"janitor","role":"REPO JANITOR","task":"cleanup-branches","desc":"Delete merged and stale branches"}'
+          CONFLICT_SPEC='{"name":"surgeon","role":"CONFLICT SURGEON","task":"resolve-conflict","desc":"Fix merge conflicts with main"}'
+          REFINE_SPEC='{"name":"developer","role":"SENIOR DEV","task":"refine-code","desc":"Implement feedback from review comments"}'
+
+          MATRIX_JSON="[]"
+          HAS_TASK="false"
+
+          echo "🔍 Event Trigger: $EVENT"
+
+          # --- SCENARIO 1: SCHEDULE / MANUAL CLEANUP ---
+          if [[ "$EVENT" == "schedule" ]] || [[ "${{ inputs.mode }}" == "cleanup" ]]; then
+            echo "🧹 Mode: Cleanup detected."
+            MATRIX_JSON="[$CLEANUP_SPEC]"
+            HAS_TASK="true"
+
+          # --- SCENARIO 2: PR UPDATED (Check Conflict & Auto Merge) ---
+          elif [[ "$EVENT" == "pull_request" ]]; then
+            echo "🕵️ Mode: PR Check."
+            # Cek status mergeable
+            PR_DATA=$(gh pr view $PR_NUMBER --json mergeable,mergeableState,baseRefName,headRefName)
+            STATE=$(echo "$PR_DATA" | jq -r '.mergeable')
+            BASE=$(echo "$PR_DATA" | jq -r '.baseRefName')
+            
+            # Set Auto Merge dulu jika belum (Optimistic)
+            gh pr merge $PR_NUMBER --auto --merge || echo "Auto-merge already set or not allowed yet"
+
+            if [[ "$STATE" == "CONFLICTING" ]]; then
+              echo "⚠️ Conflict Detected!"
+              # Inject data tambahan ke spec
+              PAYLOAD=$(echo "$CONFLICT_SPEC" | jq --arg b "$BASE" '. + {target_branch: $b, pr_number: "'"$PR_NUMBER"'"}')
+              MATRIX_JSON="[$PAYLOAD]"
+              HAS_TASK="true"
+            else
+              echo "✅ PR is clean. No conflict surgery needed."
+            fi
+
+          # --- SCENARIO 3: REVIEW COMMENT (Fix Code) ---
+          elif [[ "$EVENT" == "pull_request_review_comment" ]]; then
+            echo "💬 Mode: Review Comment Handling."
+            COMMENT_BODY="${{ github.event.comment.body }}"
+            FILE_PATH="${{ github.event.comment.path }}"
+            LINE="${{ github.event.comment.line }}"
+            PR_NUM="${{ github.event.pull_request.number }}"
+            COMMENT_ID="${{ github.event.comment.id }}"
+
+            # Filter: Hanya jalankan jika comment mengandung instruksi perintah (opsional, atau jalankan semua)
+            # Disini kita anggap semua comment baru adalah instruksi perbaikan
+            
+            PAYLOAD=$(echo "$REFINE_SPEC" | jq \
+              --arg body "$COMMENT_BODY" \
+              --arg path "$FILE_PATH" \
+              --arg line "$LINE" \
+              --arg pr "$PR_NUM" \
+              --arg cid "$COMMENT_ID" \
+              '. + {comment_body: $body, file_path: $path, line_number: $line, pr_number: $pr, comment_id: $cid}')
+            
+            MATRIX_JSON="[$PAYLOAD]"
+            HAS_TASK="true"
+          fi
+
+          echo "matrix=$MATRIX_JSON" >> "$GITHUB_OUTPUT"
+          echo "has_task=$HAS_TASK" >> "$GITHUB_OUTPUT"
+
+  execute-guardian:
+    name: ${{ matrix.role }}
+    needs: guardian-dispatcher
+    if: ${{ needs.guardian-dispatcher.outputs.has_task == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.guardian-dispatcher.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Penting untuk operasi git branch/merge
+
+      - name: Install Tools
+        run: |
+          # Setup gh cli & git identity
+          git config --global user.name "Guardian AI"
+          git config --global user.email "guardian@bot.com"
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
+
+      # === TUGAS 1: BRANCH CLEANUP ===
+      - name: 🧹 Run Janitor (Cleanup)
+        if: ${{ matrix.task == 'cleanup-branches' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Fetching prune..."
+          git fetch -p
+          
+          # List branch yang sudah merged ke main/master, kecuali main/master/dev itu sendiri
+          MERGED_BRANCHES=$(git branch -r --merged origin/main | grep -v 'HEAD\|main\|master\|dev' | sed 's/origin\///' || true)
+          
+          if [[ -z "$MERGED_BRANCHES" ]]; then
+            echo "No merged branches to clean."
+          else
+            for branch in $MERGED_BRANCHES; do
+              # Double check via API untuk safety
+              echo "Deleting $branch..."
+              git push origin --delete "$branch" || true
+            done
+          fi
+          
+          # Optional: Hapus branch tua (stale) > 30 hari yang tidak aktif (Logic tambahan bisa ditaruh sini)
+
+      # === TUGAS 2: CONFLICT RESOLVER ===
+      - name: 🚑 Run Surgeon (Resolve Conflict)
+        if: ${{ matrix.task == 'resolve-conflict' }}
+        id: surgeon
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ matrix.target_branch }}
+        run: |
+          git checkout "refs/pull/${{ matrix.pr_number }}/head"
+          
+          # Coba merge untuk memicu conflict markers
+          git merge "origin/$TARGET" || true
+          
+          # Cek file yang konflik
+          CONFLICT_FILES=$(git diff --name-only --diff-filter=U)
+          
+          if [[ -z "$CONFLICT_FILES" ]]; then
+            echo "Weird. GitHub said conflict, but git didn't find one."
+            exit 0
+          fi
+
+          echo "Files with conflict: $CONFLICT_FILES"
+          
+          # Baca konten file yang konflik (dengan marker <<<< ==== >>>>)
+          CONTENT=$(cat $CONFLICT_FILES)
+
+          # Generate Prompt
+          cat > prompt.txt <<EOF
+          You are a Senior Developer handling a Merge Conflict.
+          Target Branch: $TARGET
+          Conflicting Files: $CONFLICT_FILES
+          
+          Content with Conflict Markers:
+          \`\`\`
+          $CONTENT
+          \`\`\`
+          
+          Task:
+          1. Analyze the conflict markers carefully.
+          2. Intelligently combine the code, preserving logic from BOTH sides if possible, or favoring the Incoming Change if it's a feature update.
+          3. Output ONLY the resolved code content for the file(s).
+          EOF
+
+          # Call AI (Opencode)
+          opencode run "$(cat prompt.txt)" --model iflowcn/glm-4.6 > resolved_code.txt
+          
+          # Tulis balik (Sederhana untuk 1 file, perlu loop untuk multi-file. Disini asumsi 1 file utama)
+          # Untuk multi-file, kita butuh script python parser output JSON.
+          # Versi simple: Langsung overwrite file pertama.
+          cp resolved_code.txt $(echo $CONFLICT_FILES | awk '{print $1}')
+          
+          git add .
+          git commit -m "chore: AI auto-resolve merge conflicts"
+          git push origin HEAD:${{ github.head_ref }}
+
+      # === TUGAS 3: PR REFINER (Fix Comments) ===
+      - name: 🔨 Run Developer (Refine Code)
+        if: ${{ matrix.task == 'refine-code' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUM: ${{ matrix.pr_number }}
+          FILE: ${{ matrix.file_path }}
+          LINE: ${{ matrix.line_number }}
+          COMMENT: ${{ matrix.comment_body }}
+          COMMENT_ID: ${{ matrix.comment_id }}
+        run: |
+          git checkout "refs/pull/$PR_NUM/head"
+          
+          # Baca konteks file sekitar baris yang dikomentari
+          # Mengambil seluruh file untuk konteks penuh
+          FILE_CONTENT=$(cat "$FILE")
+          
+          cat > prompt.txt <<EOF
+          You are a Senior Developer fixing a PR based on review comments.
+          File: $FILE
+          Line Trigger: $LINE
+          Reviewer Comment: "$COMMENT"
+          
+          Current File Content:
+          \`\`\`
+          $FILE_CONTENT
+          \`\`\`
+          
+          Action:
+          1. Apply the change requested in the comment.
+          2. Ensure the code still compiles/runs logically.
+          3. Output the FULL corrected file content.
+          EOF
+          
+          # Execute AI
+          opencode run "$(cat prompt.txt)" --model iflowcn/glm-4.6 > fixed_file.txt
+          
+          # Update File
+          mv fixed_file.txt "$FILE"
+          
+          # Commit & Push
+          git add "$FILE"
+          git commit -m "fix: resolve review comment on $FILE"
+          git push origin HEAD:${{ github.head_ref }}
+          
+          # Resolve Thread di PR
+          gh api -X POST /repos/${{ github.repository }}/pulls/$PR_NUM/reviews/$COMMENT_ID/dismissals \
+             -f message="Resolved by AI Guardian" || \
+             gh pr review $PR_NUM --comment "✅ Fix applied automatically based on feedback."
