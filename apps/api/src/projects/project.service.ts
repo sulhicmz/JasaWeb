@@ -164,9 +164,16 @@ export class ProjectService {
         }),
       ]);
 
-    const milestoneCount = (project as any)._count?.milestones || 0;
-    const fileCount = (project as any)._count?.files || 0;
-    const taskCount = (project as any)._count?.tasks || 0;
+    const projectWithCount = project as typeof project & {
+      _count?: {
+        milestones?: number;
+        files?: number;
+        tasks?: number;
+      };
+    };
+    const milestoneCount = projectWithCount._count?.milestones || 0;
+    const fileCount = projectWithCount._count?.files || 0;
+    const taskCount = projectWithCount._count?.tasks || 0;
 
     return {
       milestoneCount,

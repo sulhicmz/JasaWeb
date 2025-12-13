@@ -36,8 +36,22 @@ export class TaskService {
 
     return await this.multiTenantPrisma.task.create({
       data: {
-        ...createTaskDto,
+        title: createTaskDto.title,
+        description: createTaskDto.description,
+        assignedUser: createTaskDto.assignedTo
+          ? {
+              connect: { id: createTaskDto.assignedTo },
+            }
+          : undefined,
         status: createTaskDto.status || 'todo',
+        dueAt: createTaskDto.dueAt,
+        labels: [],
+        createdBy: {
+          connect: { id: 'user_id_placeholder' }, // Would come from JWT
+        },
+        project: {
+          connect: { id: createTaskDto.projectId },
+        },
       },
     });
   }

@@ -75,14 +75,12 @@ export class DashboardGateway
       client.userRole = payload.role;
 
       // Verify user exists and has access to the organization
-      const user = await this.multiTenantPrisma.user.findUnique({
-        where: { id: payload.sub },
-        include: {
-          memberships: {
-            where: { organizationId: payload.organizationId },
-          },
+      const users = await this.multiTenantPrisma.user.findMany({
+        where: {
+          id: payload.sub,
         },
       });
+      const user = users[0];
 
       if (!user || (user as any).memberships?.length === 0) {
         throw new WsException(

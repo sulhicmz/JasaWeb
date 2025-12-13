@@ -886,7 +886,6 @@ export class DashboardController {
         amount: true,
         dueAt: true,
         createdAt: true,
-        paidAt: true,
       },
     });
 
@@ -1495,7 +1494,6 @@ export class DashboardController {
       select: {
         amount: true,
         createdAt: true,
-        paidAt: true,
       },
     });
 

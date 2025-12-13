@@ -147,11 +147,15 @@ export class FileService {
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
-          projectId,
+          project: {
+            connect: { id: projectId },
+          },
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
-          uploadedById,
+          uploadedBy: {
+            connect: { id: uploadedById },
+          },
         },
       });
 
@@ -173,7 +177,15 @@ export class FileService {
     }
   }
 
-  async downloadFile(id: string, organizationId: string, response: any) {
+  async downloadFile(
+    id: string,
+    organizationId: string,
+    response: {
+      redirect: (url: string) => void;
+      setHeader: (name: string, value: string | number) => void;
+      send: (data: Buffer) => void;
+    }
+  ) {
     try {
       // Find the file in the database (with multi-tenant isolation)
       const fileRecord = await this.multiTenantPrisma.file.findUnique({
@@ -211,7 +223,7 @@ export class FileService {
           'Content-Disposition',
           `attachment; filename="${fileRecord.filename}"`
         );
-        response.setHeader('Content-Length', fileRecord.size);
+        response.setHeader('Content-Length', fileRecord.size || 0);
 
         // Send the file
         response.send(fileBuffer);
@@ -267,7 +279,7 @@ export class FileService {
   }
 
   async findAll(projectId?: string, organizationId?: string) {
-    const whereClause: any = {};
+    const whereClause: { projectId?: string } = {};
 
     if (projectId) {
       whereClause.projectId = projectId;
@@ -331,15 +343,19 @@ export class FileService {
   }
 
   async getFileStats(projectId?: string, organizationId?: string) {
-    const whereClause: any = {};
+    const whereClause: { projectId?: string } = {};
 
     if (projectId) {
       whereClause.projectId = projectId;
     }
 
-    const files = (await this.multiTenantPrisma.file.findMany({
+    const files = await this.multiTenantPrisma.file.findMany({
       where: whereClause,
-    })) as Array<{ size: number | null; filename: string }>;
+      select: {
+        size: true,
+        filename: true,
+      },
+    });
 
     const total = files.length;
     const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);

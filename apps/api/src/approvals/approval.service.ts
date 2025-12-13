@@ -25,16 +25,17 @@ export class ApprovalService {
     // Create the approval
     return await this.multiTenantPrisma.approval.create({
       data: {
-        projectId,
         itemType,
         itemId,
         status: 'pending',
-        requesterId,
+        project: {
+          connect: { id: projectId },
+        },
       },
     });
   }
 
-  async findApprovalsForProject(projectId: string, organizationId: string) {
+  async findApprovalsForProject(projectId: string, _organizationId: string) {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
@@ -81,7 +82,11 @@ export class ApprovalService {
       where: { id: approvalId },
       data: {
         status: 'approved',
-        decidedById: approverId,
+        decidedBy: approverId
+          ? {
+              connect: { id: approverId },
+            }
+          : undefined,
         decidedAt: new Date(),
         note,
       },
@@ -113,7 +118,11 @@ export class ApprovalService {
       where: { id: approvalId },
       data: {
         status: 'rejected',
-        decidedById: rejecterId,
+        decidedBy: rejecterId
+          ? {
+              connect: { id: rejecterId },
+            }
+          : undefined,
         decidedAt: new Date(),
         note,
       },

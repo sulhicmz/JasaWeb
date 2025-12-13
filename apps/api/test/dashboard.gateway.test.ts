@@ -22,6 +22,7 @@ describe('DashboardGateway', () => {
 
     mockJwtService = {
       verify: jest.fn(),
+      verifyAsync: jest.fn(),
     } as any;
 
     mockPrismaService = {
@@ -82,15 +83,52 @@ describe('DashboardGateway', () => {
         role: 'owner',
       };
 
-      (mockJwtService.verify as jest.Mock).mockReturnValue(payload);
+      (mockJwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
       (mockPrismaService.user as any).findUnique.mockResolvedValue({
         id: 'user-123',
-        memberships: [{ organizationId: 'org-123' }],
+        email: 'test@example.com',
+        memberships: [{ organizationId: 'org-123', role: 'owner' }],
       });
+
+      // Mock dashboard stats
+      (mockCacheManager.get as jest.Mock).mockResolvedValue({
+        projects: { total: 5, active: 3, completed: 2, onHold: 0 },
+        tickets: {
+          total: 10,
+          open: 4,
+          inProgress: 3,
+          highPriority: 2,
+          critical: 1,
+        },
+        invoices: {
+          total: 3,
+          pending: 1,
+          overdue: 0,
+          totalAmount: 15000,
+          pendingAmount: 5000,
+        },
+        milestones: { total: 8, completed: 5, overdue: 1, dueThisWeek: 2 },
+      });
+
+      // Mock recent activity
+      jest.spyOn(gateway, 'getRecentActivity' as any).mockResolvedValue([
+        {
+          type: 'project',
+          id: 'p1',
+          title: 'Test Project',
+          timestamp: new Date(),
+        },
+        {
+          type: 'ticket',
+          id: 't1',
+          title: 'Test Ticket',
+          timestamp: new Date(),
+        },
+      ]);
 
       await gateway.handleConnection(mockClient);
 
-      expect(mockJwtService.verify).toHaveBeenCalledWith('test-token');
+      expect(mockJwtService.verifyAsync).toHaveBeenCalledWith('test-token');
       expect(mockClient.join).toHaveBeenCalledWith('org-org-123');
       expect(mockClient.join).toHaveBeenCalledWith('user-user-123');
       expect(mockClient.emit).toHaveBeenCalledWith(
@@ -100,9 +138,9 @@ describe('DashboardGateway', () => {
     });
 
     it('should reject connection with invalid token', async () => {
-      (mockJwtService.verify as jest.Mock).mockImplementation(() => {
-        throw new Error('Invalid token');
-      });
+      (mockJwtService.verifyAsync as jest.Mock).mockRejectedValue(
+        new Error('Invalid token')
+      );
 
       await gateway.handleConnection(mockClient);
 

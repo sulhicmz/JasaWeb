@@ -99,17 +99,23 @@ export class TicketController {
     });
 
     // Send notification email to the assigned user if any
-    if ((ticket as any).assignee) {
+    const ticketWithRelations = ticket as typeof ticket & {
+      assignee?: { email: string };
+      project?: { name: string };
+      title: string;
+      description: string;
+    };
+    if (ticketWithRelations.assignee) {
       await this.emailService.sendTicketCreatedNotification(
-        (ticket as any).assignee?.email,
-        (ticket as any).title,
-        (ticket as any).project?.name || 'General',
-        (ticket as any).description
+        ticketWithRelations.assignee?.email,
+        ticketWithRelations.title,
+        ticketWithRelations.project?.name || 'General',
+        ticketWithRelations.description
       );
     }
 
     this.logger.log(
-      `Ticket created: ${(ticket as any).title} for organization ${organizationId}`
+      `Ticket created: ${ticketWithRelations.title} for organization ${organizationId}`
     );
 
     return ticket;
@@ -124,7 +130,12 @@ export class TicketController {
     @CurrentOrganizationId() organizationId: string = ''
   ) {
     // Build query based on filters
-    const whereClause: any = { organizationId }; // Ensure multi-tenant isolation
+    const whereClause: {
+      organizationId: string;
+      projectId?: string;
+      status?: string;
+      assigneeId?: string;
+    } = { organizationId }; // Ensure multi-tenant isolation
 
     if (projectId) {
       whereClause.projectId = projectId;
@@ -286,11 +297,17 @@ export class TicketController {
       });
 
       if (assigneeUser) {
+        const updatedTicketWithRelations =
+          updatedTicket as typeof updatedTicket & {
+            title: string;
+            description: string;
+            project?: { name: string };
+          };
         await this.emailService.sendTicketCreatedNotification(
           assigneeUser.email,
-          (updatedTicket as any).title,
-          (updatedTicket as any).project?.name || 'General',
-          (updatedTicket as any).description
+          updatedTicketWithRelations.title,
+          updatedTicketWithRelations.project?.name || 'General',
+          updatedTicketWithRelations.description
         );
       }
     }
@@ -306,10 +323,14 @@ export class TicketController {
         });
 
         if (assigneeUser) {
+          const updatedTicketWithTitle =
+            updatedTicket as typeof updatedTicket & {
+              title: string;
+            };
           await this.emailService.sendTicketStatusChangedNotification(
             assigneeUser.email,
             updatedTicket.id,
-            (updatedTicket as any).title,
+            updatedTicketWithTitle.title,
             updatedTicket.status
           );
         }
@@ -317,7 +338,7 @@ export class TicketController {
     }
 
     this.logger.log(
-      `Ticket updated: ${(updatedTicket as any).title} for organization ${organizationId}`
+      `Ticket updated: ${(updatedTicket as typeof updatedTicket & { title: string }).title} for organization ${organizationId}`
     );
 
     return updatedTicket;
@@ -332,11 +353,6 @@ export class TicketController {
   ) {
     const ticket = await this.multiTenantPrisma.ticket.findUnique({
       where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-      },
     });
 
     if (!ticket) {
@@ -347,15 +363,10 @@ export class TicketController {
 
     const deletedTicket = await this.multiTenantPrisma.ticket.delete({
       where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-      },
     });
 
     this.logger.log(
-      `Ticket deleted: ${(deletedTicket as any).title} for organization ${organizationId}`
+      `Ticket deleted: ${(deletedTicket as typeof deletedTicket & { title: string }).title} for organization ${organizationId}`
     );
 
     return { message: 'Ticket deleted successfully' };

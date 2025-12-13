@@ -101,7 +101,11 @@ export class InvoiceController {
     @CurrentOrganizationId() organizationId: string = ''
   ) {
     // Build query based on filters
-    const whereClause: any = { organizationId }; // Ensure multi-tenant isolation
+    const whereClause: {
+      organizationId: string;
+      projectId?: string;
+      status?: string;
+    } = { organizationId }; // Ensure multi-tenant isolation
 
     if (projectId) {
       whereClause.projectId = projectId;
@@ -235,7 +239,9 @@ export class InvoiceController {
     });
 
     // Send notification email about payment
-    const updatedInvoiceWithOrg = updatedInvoice as any;
+    const updatedInvoiceWithOrg = updatedInvoice as typeof updatedInvoice & {
+      organization: { billingEmail: string };
+    };
     if (
       updatedInvoiceWithOrg.organization &&
       updatedInvoiceWithOrg.organization.billingEmail
@@ -320,7 +326,9 @@ export class InvoiceController {
       updateInvoiceDto.status === 'issued' &&
       existingInvoice.status !== 'issued'
     ) {
-      const updatedInvoiceWithOrg = updatedInvoice as any;
+      const updatedInvoiceWithOrg = updatedInvoice as typeof updatedInvoice & {
+        organization: { billingEmail: string };
+      };
       if (
         updatedInvoiceWithOrg.organization &&
         updatedInvoiceWithOrg.organization.billingEmail

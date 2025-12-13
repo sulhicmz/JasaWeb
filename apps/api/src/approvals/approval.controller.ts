@@ -51,8 +51,12 @@ export class ApprovalController {
 
     return await this.multiTenantPrisma.approval.create({
       data: {
-        ...createApprovalDto,
+        itemType: createApprovalDto.itemType,
+        itemId: createApprovalDto.itemId,
         status: 'pending', // Set initial status
+        project: {
+          connect: { id: createApprovalDto.projectId },
+        },
       },
     });
   }
@@ -129,7 +133,11 @@ export class ApprovalController {
       where: { id },
       data: {
         status: 'approved',
-        decidedById: approveDto.approverId,
+        decidedBy: approveDto.approverId
+          ? {
+              connect: { id: approveDto.approverId },
+            }
+          : undefined,
         decidedAt: new Date(),
         note: approveDto.note,
       },
@@ -169,7 +177,11 @@ export class ApprovalController {
       where: { id },
       data: {
         status: 'rejected',
-        decidedById: rejectDto.rejecterId,
+        decidedBy: rejectDto.rejecterId
+          ? {
+              connect: { id: rejectDto.rejecterId },
+            }
+          : undefined,
         decidedAt: new Date(),
         note: rejectDto.note,
       },

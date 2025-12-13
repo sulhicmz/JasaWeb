@@ -148,11 +148,15 @@ export class FileController {
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
         data: {
-          projectId,
+          project: {
+            connect: { id: projectId },
+          },
           filename: file.originalname,
           version: '1.0', // Initial version
           size: file.size,
-          uploadedById: 'user_id_placeholder', // Would come from JWT
+          uploadedBy: {
+            connect: { id: 'user_id_placeholder' }, // Would come from JWT
+          },
         },
       });
 

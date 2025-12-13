@@ -74,7 +74,11 @@ export class InvoiceService {
     organizationId: string = ''
   ) {
     // Build query based on filters
-    const whereClause: any = { organizationId }; // Ensure multi-tenant isolation
+    const whereClause: {
+      organizationId: string;
+      projectId?: string;
+      status?: string;
+    } = { organizationId }; // Ensure multi-tenant isolation
 
     if (projectId) {
       whereClause.projectId = projectId;
@@ -197,7 +201,9 @@ export class InvoiceService {
     });
 
     // Send notification email about payment
-    const updatedInvoiceWithOrg = updatedInvoice as any;
+    const updatedInvoiceWithOrg = updatedInvoice as typeof updatedInvoice & {
+      organization: { billingEmail: string };
+    };
     if (
       updatedInvoiceWithOrg.organization &&
       updatedInvoiceWithOrg.organization.billingEmail
@@ -279,7 +285,9 @@ export class InvoiceService {
       updateInvoiceDto.status === 'issued' &&
       existingInvoice.status !== 'issued'
     ) {
-      const updatedInvoiceWithOrg = updatedInvoice as any;
+      const updatedInvoiceWithOrg = updatedInvoice as typeof updatedInvoice & {
+        organization: { billingEmail: string };
+      };
       if (
         updatedInvoiceWithOrg.organization &&
         updatedInvoiceWithOrg.organization.billingEmail
@@ -347,22 +355,18 @@ export class InvoiceService {
     });
 
     const total = invoices.length;
-    const draft = invoices.filter((inv: any) => inv.status === 'draft').length;
-    const issued = invoices.filter(
-      (inv: any) => inv.status === 'issued'
-    ).length;
-    const paid = invoices.filter((inv: any) => inv.status === 'paid').length;
-    const overdue = invoices.filter(
-      (inv: any) => inv.status === 'overdue'
-    ).length;
+    const draft = invoices.filter((inv) => inv.status === 'draft').length;
+    const issued = invoices.filter((inv) => inv.status === 'issued').length;
+    const paid = invoices.filter((inv) => inv.status === 'paid').length;
+    const overdue = invoices.filter((inv) => inv.status === 'overdue').length;
 
     const totalAmount = invoices.reduce(
-      (sum: number, inv: any) => sum + inv.amount,
+      (sum: number, inv) => sum + inv.amount,
       0
     );
     const paidAmount = invoices
-      .filter((inv: any) => inv.status === 'paid')
-      .reduce((sum: number, inv: any) => sum + inv.amount, 0);
+      .filter((inv) => inv.status === 'paid')
+      .reduce((sum: number, inv) => sum + inv.amount, 0);
 
     return {
       total,

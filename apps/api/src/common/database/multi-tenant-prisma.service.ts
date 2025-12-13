@@ -1,24 +1,6 @@
 import { Injectable, Scope, Inject, BadRequestException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import {
-  Prisma,
-  Project,
-  Milestone,
-  Task,
-  Ticket,
-  Invoice,
-  File,
-  Approval,
-  AuditLog,
-  User,
-  KbArticle,
-  KbFeedback,
-  KbSearchLog,
-  RefreshToken,
-  Session,
-  Organization,
-  Membership,
-} from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from './prisma.service';
 
 interface RequestWithOrganization {
@@ -103,6 +85,276 @@ type MilestoneUpdateArgs = Omit<
 
 type MilestoneDeleteArgs = Omit<Prisma.MilestoneDeleteArgs, 'where'> & {
   where: Omit<Prisma.MilestoneWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+// File types
+type FileFindManyArgs = Omit<Prisma.FileFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.FileWhereInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type FileFindUniqueArgs = Omit<Prisma.FileFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.FileWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type FileCreateArgs = Omit<Prisma.FileCreateArgs, 'data'> & {
+  data: Prisma.FileCreateInput;
+};
+
+type FileUpdateArgs = Omit<Prisma.FileUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.FileWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+  data: Prisma.FileUpdateInput;
+};
+
+type FileDeleteArgs = Omit<Prisma.FileDeleteArgs, 'where'> & {
+  where: Omit<Prisma.FileWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type FileCountArgs = Omit<Prisma.FileCountArgs, 'where'> & {
+  where?: Omit<Prisma.FileWhereInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+// Approval types
+type ApprovalFindManyArgs = Omit<Prisma.ApprovalFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.ApprovalWhereInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type ApprovalFindUniqueArgs = Omit<Prisma.ApprovalFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.ApprovalWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type ApprovalCreateArgs = Omit<Prisma.ApprovalCreateArgs, 'data'> & {
+  data: Prisma.ApprovalCreateInput;
+};
+
+type ApprovalUpdateArgs = Omit<Prisma.ApprovalUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.ApprovalWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+  data: Prisma.ApprovalUpdateInput;
+};
+
+type ApprovalDeleteArgs = Omit<Prisma.ApprovalDeleteArgs, 'where'> & {
+  where: Omit<Prisma.ApprovalWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type ApprovalCountArgs = Omit<Prisma.ApprovalCountArgs, 'where'> & {
+  where?: Omit<Prisma.ApprovalWhereInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+// Ticket types
+type TicketFindManyArgs = Omit<Prisma.TicketFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.TicketWhereInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type TicketFindUniqueArgs = Omit<Prisma.TicketFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.TicketWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type TicketCreateArgs = Omit<Prisma.TicketCreateArgs, 'data'> & {
+  data: Omit<Prisma.TicketUncheckedCreateInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type TicketUpdateArgs = Omit<Prisma.TicketUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.TicketWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+  data: Prisma.TicketUpdateInput;
+};
+
+type TicketDeleteArgs = Omit<Prisma.TicketDeleteArgs, 'where'> & {
+  where: Omit<Prisma.TicketWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type TicketCountArgs = Omit<Prisma.TicketCountArgs, 'where'> & {
+  where?: Omit<Prisma.TicketWhereInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+// Invoice types
+type InvoiceFindManyArgs = Omit<Prisma.InvoiceFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.InvoiceWhereInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type InvoiceFindUniqueArgs = Omit<Prisma.InvoiceFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.InvoiceWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type InvoiceCreateArgs = Omit<Prisma.InvoiceCreateArgs, 'data'> & {
+  data: Omit<Prisma.InvoiceUncheckedCreateInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type InvoiceUpdateArgs = Omit<Prisma.InvoiceUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.InvoiceWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+  data: Prisma.InvoiceUpdateInput;
+};
+
+type InvoiceDeleteArgs = Omit<Prisma.InvoiceDeleteArgs, 'where'> & {
+  where: Omit<Prisma.InvoiceWhereUniqueInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+type InvoiceCountArgs = Omit<Prisma.InvoiceCountArgs, 'where'> & {
+  where?: Omit<Prisma.InvoiceWhereInput, 'organizationId'> & {
+    organizationId?: string;
+  };
+};
+
+// User types
+type UserFindManyArgs = Omit<Prisma.UserFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.UserWhereInput, 'memberships'> & {
+    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
+      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
+        id?: string;
+      };
+    };
+  };
+};
+
+type UserFindUniqueArgs = Omit<Prisma.UserFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.UserWhereUniqueInput, 'memberships'> & {
+    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
+      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
+        id?: string;
+      };
+    };
+  };
+};
+
+type UserCreateArgs = Omit<Prisma.UserCreateArgs, 'data'> & {
+  data: Prisma.UserCreateInput;
+};
+
+type UserUpdateArgs = Omit<Prisma.UserUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.UserWhereUniqueInput, 'memberships'> & {
+    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
+      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
+        id?: string;
+      };
+    };
+  };
+  data: Prisma.UserUpdateInput;
+};
+
+type UserDeleteArgs = Omit<Prisma.UserDeleteArgs, 'where'> & {
+  where: Omit<Prisma.UserWhereUniqueInput, 'memberships'> & {
+    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
+      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
+        id?: string;
+      };
+    };
+  };
+};
+
+type UserCountArgs = Omit<Prisma.UserCountArgs, 'where'> & {
+  where?: Omit<Prisma.UserWhereInput, 'memberships'> & {
+    memberships?: Omit<Prisma.MembershipWhereInput, 'organization'> & {
+      organization?: Omit<Prisma.OrganizationWhereInput, 'id'> & {
+        id?: string;
+      };
+    };
+  };
+};
+
+// Task types
+type TaskFindManyArgs = Omit<Prisma.TaskFindManyArgs, 'where'> & {
+  where?: Omit<Prisma.TaskWhereInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type TaskFindUniqueArgs = Omit<Prisma.TaskFindUniqueArgs, 'where'> & {
+  where: Omit<Prisma.TaskWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type TaskCreateArgs = Omit<Prisma.TaskCreateArgs, 'data'> & {
+  data: Prisma.TaskCreateInput;
+};
+
+type TaskUpdateArgs = Omit<Prisma.TaskUpdateArgs, 'where' | 'data'> & {
+  where: Omit<Prisma.TaskWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+  data: Prisma.TaskUpdateInput;
+};
+
+type TaskDeleteArgs = Omit<Prisma.TaskDeleteArgs, 'where'> & {
+  where: Omit<Prisma.TaskWhereUniqueInput, 'project'> & {
+    project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+      organizationId?: string;
+    };
+  };
+};
+
+type TaskCountArgs = Omit<Prisma.TaskCountArgs, 'where'> & {
+  where?: Omit<Prisma.TaskWhereInput, 'project'> & {
     project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
       organizationId?: string;
     };
@@ -302,7 +554,7 @@ export class MultiTenantPrismaService {
    * Files service methods
    */
   file = {
-    findMany: (args?: any) => {
+    findMany: (args?: FileFindManyArgs) => {
       return this.prisma.file.findMany({
         ...args,
         where: {
@@ -315,7 +567,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: FileFindUniqueArgs) => {
       return this.prisma.file.findUnique({
         ...args,
         where: {
@@ -328,18 +580,30 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
-      const projectId = args.data.project.connect.id;
+    create: (args: FileCreateArgs) => {
+      const projectConnect = args.data.project as { connect?: { id: string } };
+      const projectId = projectConnect?.connect?.id;
+      if (!projectId) {
+        throw new BadRequestException(
+          'Project connection is required for file creation'
+        );
+      }
       return this.prisma.file.create({
-        ...args,
         data: {
-          ...args.data,
-          projectId,
+          folder: args.data.folder,
+          filename: args.data.filename,
+          version: args.data.version,
+          size: args.data.size,
+          checksum: args.data.checksum,
+          uploadedBy: args.data.uploadedBy,
+          project: {
+            connect: { id: projectId },
+          },
         },
       });
     },
 
-    update: (args: any) => {
+    update: (args: FileUpdateArgs) => {
       return this.prisma.file.update({
         ...args,
         where: {
@@ -353,7 +617,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: FileDeleteArgs) => {
       return this.prisma.file.delete({
         ...args,
         where: {
@@ -366,7 +630,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: FileCountArgs) => {
       return this.prisma.file.count({
         ...args,
         where: {
@@ -384,7 +648,7 @@ export class MultiTenantPrismaService {
    * Approvals service methods
    */
   approval = {
-    findMany: (args?: any) => {
+    findMany: (args?: ApprovalFindManyArgs) => {
       return this.prisma.approval.findMany({
         ...args,
         where: {
@@ -397,7 +661,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: ApprovalFindUniqueArgs) => {
       return this.prisma.approval.findUnique({
         ...args,
         where: {
@@ -410,18 +674,30 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
-      const projectId = args.data.project.connect.id;
+    create: (args: ApprovalCreateArgs) => {
+      const projectConnect = args.data.project as { connect?: { id: string } };
+      const projectId = projectConnect?.connect?.id;
+      if (!projectId) {
+        throw new BadRequestException(
+          'Project connection is required for approval creation'
+        );
+      }
       return this.prisma.approval.create({
-        ...args,
         data: {
-          ...args.data,
-          projectId,
+          itemType: args.data.itemType,
+          itemId: args.data.itemId,
+          status: args.data.status,
+          decidedBy: args.data.decidedBy,
+          decidedAt: args.data.decidedAt,
+          note: args.data.note,
+          project: {
+            connect: { id: projectId },
+          },
         },
       });
     },
 
-    update: (args: any) => {
+    update: (args: ApprovalUpdateArgs) => {
       return this.prisma.approval.update({
         ...args,
         where: {
@@ -435,7 +711,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: ApprovalDeleteArgs) => {
       return this.prisma.approval.delete({
         ...args,
         where: {
@@ -448,7 +724,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: ApprovalCountArgs) => {
       return this.prisma.approval.count({
         ...args,
         where: {
@@ -466,7 +742,7 @@ export class MultiTenantPrismaService {
    * Tickets service methods
    */
   ticket = {
-    findMany: (args?: any) => {
+    findMany: (args?: TicketFindManyArgs) => {
       return this.prisma.ticket.findMany({
         ...args,
         where: {
@@ -476,7 +752,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: TicketFindUniqueArgs) => {
       return this.prisma.ticket.findUnique({
         ...args,
         where: {
@@ -486,7 +762,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
+    create: (args: TicketCreateArgs) => {
       return this.prisma.ticket.create({
         ...args,
         data: {
@@ -496,7 +772,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: any) => {
+    update: (args: TicketUpdateArgs) => {
       return this.prisma.ticket.update({
         ...args,
         where: {
@@ -507,7 +783,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: TicketDeleteArgs) => {
       return this.prisma.ticket.delete({
         ...args,
         where: {
@@ -517,7 +793,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: TicketCountArgs) => {
       return this.prisma.ticket.count({
         ...args,
         where: {
@@ -532,7 +808,7 @@ export class MultiTenantPrismaService {
    * Invoices service methods
    */
   invoice = {
-    findMany: (args?: any) => {
+    findMany: (args?: InvoiceFindManyArgs) => {
       return this.prisma.invoice.findMany({
         ...args,
         where: {
@@ -542,7 +818,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: InvoiceFindUniqueArgs) => {
       return this.prisma.invoice.findUnique({
         ...args,
         where: {
@@ -552,7 +828,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
+    create: (args: InvoiceCreateArgs) => {
       return this.prisma.invoice.create({
         ...args,
         data: {
@@ -562,7 +838,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    update: (args: any) => {
+    update: (args: InvoiceUpdateArgs) => {
       return this.prisma.invoice.update({
         ...args,
         where: {
@@ -573,7 +849,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: InvoiceDeleteArgs) => {
       return this.prisma.invoice.delete({
         ...args,
         where: {
@@ -583,7 +859,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: InvoiceCountArgs) => {
       return this.prisma.invoice.count({
         ...args,
         where: {
@@ -598,63 +874,90 @@ export class MultiTenantPrismaService {
    * Users service methods
    */
   user = {
-    findMany: (args?: any) => {
+    findMany: (args?: UserFindManyArgs) => {
       return this.prisma.user.findMany({
         ...args,
         where: {
           ...args?.where,
-          organizationId: this.organizationId,
+          memberships: {
+            some: {
+              organizationId: this.organizationId,
+              ...args?.where?.memberships,
+            },
+          },
         },
       });
     },
 
-    findUnique: (args: any) => {
-      return this.prisma.user.findUnique({
-        ...args,
+    findUnique: (args: { where: { id: string } | { email: string } }) => {
+      return this.prisma.user.findFirst({
         where: {
           ...args.where,
-          organizationId: this.organizationId,
+          memberships: {
+            some: {
+              organizationId: this.organizationId,
+            },
+          },
         },
       });
     },
 
-    create: (args: any) => {
+    create: (args: UserCreateArgs) => {
       return this.prisma.user.create({
         ...args,
         data: {
           ...args.data,
-          organizationId: this.organizationId,
+          memberships: {
+            create: {
+              organizationId: this.organizationId,
+              role: 'member',
+            },
+          },
         },
       });
     },
 
-    update: (args: any) => {
-      return this.prisma.user.update({
-        ...args,
+    update: (args: {
+      where: { id: string } | { email: string };
+      data: Prisma.UserUpdateInput;
+    }) => {
+      return this.prisma.user.updateMany({
         where: {
           ...args.where,
-          organizationId: this.organizationId,
+          memberships: {
+            some: {
+              organizationId: this.organizationId,
+            },
+          },
         },
         data: args.data,
       });
     },
 
-    delete: (args: any) => {
-      return this.prisma.user.delete({
-        ...args,
+    delete: (args: { where: { id: string } | { email: string } }) => {
+      return this.prisma.user.deleteMany({
         where: {
           ...args.where,
-          organizationId: this.organizationId,
+          memberships: {
+            some: {
+              organizationId: this.organizationId,
+            },
+          },
         },
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: UserCountArgs) => {
       return this.prisma.user.count({
         ...args,
         where: {
           ...args?.where,
-          organizationId: this.organizationId,
+          memberships: {
+            some: {
+              organizationId: this.organizationId,
+              ...args?.where?.memberships,
+            },
+          },
         },
       });
     },
@@ -664,7 +967,7 @@ export class MultiTenantPrismaService {
    * Tasks service methods
    */
   task = {
-    findMany: (args?: any) => {
+    findMany: (args?: TaskFindManyArgs) => {
       return this.prisma.task.findMany({
         ...args,
         where: {
@@ -677,7 +980,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    findUnique: (args: any) => {
+    findUnique: (args: TaskFindUniqueArgs) => {
       return this.prisma.task.findUnique({
         ...args,
         where: {
@@ -690,18 +993,31 @@ export class MultiTenantPrismaService {
       });
     },
 
-    create: (args: any) => {
-      const projectId = args.data.project.connect.id;
+    create: (args: TaskCreateArgs) => {
+      const projectConnect = args.data.project as { connect?: { id: string } };
+      const projectId = projectConnect?.connect?.id;
+      if (!projectId) {
+        throw new BadRequestException(
+          'Project connection is required for task creation'
+        );
+      }
       return this.prisma.task.create({
-        ...args,
         data: {
-          ...args.data,
-          projectId,
+          title: args.data.title,
+          description: args.data.description,
+          assignedUser: args.data.assignedUser,
+          status: args.data.status,
+          dueAt: args.data.dueAt,
+          labels: args.data.labels,
+          createdBy: args.data.createdBy,
+          project: {
+            connect: { id: projectId },
+          },
         },
       });
     },
 
-    update: (args: any) => {
+    update: (args: TaskUpdateArgs) => {
       return this.prisma.task.update({
         ...args,
         where: {
@@ -715,7 +1031,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    delete: (args: any) => {
+    delete: (args: TaskDeleteArgs) => {
       return this.prisma.task.delete({
         ...args,
         where: {
@@ -728,7 +1044,7 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: any) => {
+    count: (args?: TaskCountArgs) => {
       return this.prisma.task.count({
         ...args,
         where: {

@@ -1,15 +1,15 @@
 ---
-import DashboardLayout from '../layouts/DashboardLayout.astro';
-import DashboardStats from '../components/dashboard/DashboardStats.astro';
-import RecentActivity from '../components/dashboard/RecentActivity.astro';
-import ProjectsOverview from '../components/dashboard/ProjectsOverview.astro';
-import NotificationToast from '../components/dashboard/NotificationToast.astro';
-import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
-import DashboardExport from '../components/dashboard/DashboardExport.astro';
-import NotificationPreferences from '../components/dashboard/NotificationPreferences.astro';
-import AdvancedAnalytics from '../components/dashboard/AdvancedAnalytics.astro';
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import DashboardStats from '../../components/dashboard/DashboardStats.astro';
+import RecentActivity from '../../components/dashboard/RecentActivity.astro';
+import ProjectsOverview from '../../components/dashboard/ProjectsOverview.astro';
+import NotificationToast from '../../components/dashboard/NotificationToast.astro';
+import DashboardCharts from '../../components/dashboard/DashboardCharts.astro';
+import DashboardExport from '../../components/dashboard/DashboardExport.astro';
+import NotificationPreferences from '../../components/dashboard/NotificationPreferences.astro';
+import AdvancedAnalytics from '../../components/dashboard/AdvancedAnalytics.astro';
 // Import notification service
-import '../services/notificationService.ts';
+import '../../services/notificationService.ts';
 ---
 
 <DashboardLayout title="Dashboard - Client Portal">
@@ -86,19 +86,19 @@ import '../services/notificationService.ts';
           <div class="glass-panel p-6 rounded-xl">
             <h2 class="text-xl font-bold text-white mb-4">Quick Actions</h2>
             <div class="grid grid-cols-2 gap-4">
-              <a href="/projects/new" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
+              <a href="/portal/projects/new" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
                 <i class="fas fa-plus text-2xl text-blue-400 mb-2"></i>
                 <p class="text-white font-medium">New Project</p>
               </a>
-              <a href="/tickets/new" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
+              <a href="/portal/tickets/new" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
                 <i class="fas fa-ticket-alt text-2xl text-green-400 mb-2"></i>
                 <p class="text-white font-medium">Create Ticket</p>
               </a>
-              <a href="/files/upload" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
+              <a href="/portal/files/upload" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
                 <i class="fas fa-upload text-2xl text-yellow-400 mb-2"></i>
                 <p class="text-white font-medium">Upload File</p>
               </a>
-              <a href="/invoices" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
+              <a href="/portal/invoices" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
                 <i class="fas fa-file-invoice text-2xl text-purple-400 mb-2"></i>
                 <p class="text-white font-medium">View Invoices</p>
               </a>
