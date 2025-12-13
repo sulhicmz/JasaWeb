@@ -59,12 +59,12 @@ export interface UserWithRelations extends User {
     createdAt: Date;
     updatedAt: Date;
   }>;
-  Task: Array<{
+  assignedTasks: Array<{
     id: string;
     status: string;
     title: string;
     projectId: string;
-    assigneeId?: string;
+    assignedTo?: string;
     createdAt: Date;
     updatedAt: Date;
   }>;

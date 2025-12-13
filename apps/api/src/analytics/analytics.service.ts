@@ -206,8 +206,8 @@ export class AnalyticsService {
     })) as UserWithRelations[];
 
     return users.map((user) => {
-      const totalTasks = user.Task.length;
-      const completedTasks = user.Task.filter(
+      const totalTasks = user.assignedTasks.length;
+      const completedTasks = user.assignedTasks.filter(
         (t) => t.status === 'completed'
       ).length;
       const totalApprovals = user.approvals.length;

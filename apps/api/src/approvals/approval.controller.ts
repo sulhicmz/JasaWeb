@@ -43,7 +43,7 @@ export class ApprovalController {
       where: { id: createApprovalDto.projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project does not exist or does not belong to your organization'
       );

@@ -5,6 +5,7 @@ import {
   Query,
   Post,
   Body,
+  Inject,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
@@ -15,7 +16,6 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, InternalServerErrorException } from '@nestjs/common';
 import { DashboardGateway } from './dashboard.gateway';
 
 interface DashboardStats {
