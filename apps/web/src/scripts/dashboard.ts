@@ -107,9 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       onConnect: () => updateConnectionStatus(true),
       onDisconnect: () => updateConnectionStatus(false),
       onError: () => updateConnectionStatus(false),
-      onRealtimeNotification: (notification: any) => {
-        console.log('Real-time notification:', notification);
-      },
+      onRealtimeNotification: (notification: any) => {},
     });
   }
 

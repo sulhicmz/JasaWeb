@@ -189,7 +189,6 @@ class NotificationService {
     if (!this.dashboardSocket) return;
 
     this.dashboardSocket.on('connect', () => {
-      console.log('Connected to dashboard WebSocket');
       this.callbacks.onConnect?.();
 
       // Subscribe to dashboard updates
@@ -200,7 +199,6 @@ class NotificationService {
     });
 
     this.dashboardSocket.on('disconnect', (reason: any) => {
-      console.log('Disconnected from dashboard WebSocket:', reason);
       this.callbacks.onDisconnect?.();
     });
 
@@ -210,7 +208,6 @@ class NotificationService {
     });
 
     this.dashboardSocket.on('initial-data', (data: any) => {
-      console.log('Received initial dashboard data:', data);
       // Dispatch custom event for dashboard components
       window.dispatchEvent(
         new CustomEvent('dashboard-initial-data', { detail: data })
@@ -218,7 +215,6 @@ class NotificationService {
     });
 
     this.dashboardSocket.on('stats-updated', (data: any) => {
-      console.log('Stats updated:', data);
       this.callbacks.onStatsUpdated?.(data);
 
       // Dispatch custom event for dashboard components
@@ -229,7 +225,6 @@ class NotificationService {
     });
 
     this.dashboardSocket.on('dashboard-update', (update: DashboardUpdate) => {
-      console.log('Dashboard update:', update);
       this.callbacks.onDashboardUpdate?.(update);
 
       // Dispatch custom event for dashboard components
@@ -246,8 +241,6 @@ class NotificationService {
     });
 
     this.dashboardSocket.on('personal-update', (data: any) => {
-      console.log('Personal update:', data);
-
       // Show personal notification
       this.showRealtimeNotification(
         `You have a new ${data.type} update`,
