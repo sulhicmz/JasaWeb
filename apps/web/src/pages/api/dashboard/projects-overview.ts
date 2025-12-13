@@ -1,11 +1,11 @@
-// API endpoint for recent activity
-export async function GET({ request, url }) {
+// API endpoint for projects overview
+export async function GET({ request, url }: { request: Request; url: URL }) {
   try {
     // Get query parameters
-    const limit = url.searchParams.get('limit') || '10';
+    const limit = url.searchParams.get('limit') || '6';
 
     // Forward the request to the backend API
-    const backendUrl = `http://localhost:3001/dashboard/recent-activity?limit=${limit}`;
+    const backendUrl = `http://localhost:3001/dashboard/projects-overview?limit=${limit}`;
 
     const response = await fetch(backendUrl, {
       method: 'GET',
@@ -13,11 +13,11 @@ export async function GET({ request, url }) {
         'Content-Type': 'application/json',
         // Forward authorization header if present
         ...(request.headers.get('authorization') && {
-          Authorization: request.headers.get('authorization'),
+          Authorization: request.headers.get('authorization')!,
         }),
         // Forward organization header if present
         ...(request.headers.get('x-organization-id') && {
-          'x-organization-id': request.headers.get('x-organization-id'),
+          'x-organization-id': request.headers.get('x-organization-id')!,
         }),
       },
     });
@@ -35,13 +35,13 @@ export async function GET({ request, url }) {
         'Cache-Control': 'no-cache',
       },
     });
-  } catch (error) {
-    console.error('Recent activity API error:', error);
+  } catch (error: unknown) {
+    console.error('Projects overview API error:', error);
 
     return new Response(
       JSON.stringify({
-        error: 'Failed to fetch recent activity',
-        message: error.message,
+        error: 'Failed to fetch projects overview',
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,

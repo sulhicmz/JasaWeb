@@ -1,11 +1,8 @@
-// API endpoint for projects overview
-export async function GET({ request, url }) {
+// API endpoint for dashboard stats
+export async function GET({ request }: { request: Request }) {
   try {
-    // Get query parameters
-    const limit = url.searchParams.get('limit') || '6';
-
     // Forward the request to the backend API
-    const backendUrl = `http://localhost:3001/dashboard/projects-overview?limit=${limit}`;
+    const backendUrl = 'http://localhost:3001/dashboard/stats';
 
     const response = await fetch(backendUrl, {
       method: 'GET',
@@ -13,11 +10,11 @@ export async function GET({ request, url }) {
         'Content-Type': 'application/json',
         // Forward authorization header if present
         ...(request.headers.get('authorization') && {
-          Authorization: request.headers.get('authorization'),
+          Authorization: request.headers.get('authorization')!,
         }),
         // Forward organization header if present
         ...(request.headers.get('x-organization-id') && {
-          'x-organization-id': request.headers.get('x-organization-id'),
+          'x-organization-id': request.headers.get('x-organization-id')!,
         }),
       },
     });
@@ -35,13 +32,13 @@ export async function GET({ request, url }) {
         'Cache-Control': 'no-cache',
       },
     });
-  } catch (error) {
-    console.error('Projects overview API error:', error);
+  } catch (error: unknown) {
+    console.error('Dashboard stats API error:', error);
 
     return new Response(
       JSON.stringify({
-        error: 'Failed to fetch projects overview',
-        message: error.message,
+        error: 'Failed to fetch dashboard stats',
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,

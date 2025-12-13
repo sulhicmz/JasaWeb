@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 
 export interface CreateTaskDto {
@@ -32,7 +28,7 @@ export class TaskService {
       where: { id: createTaskDto.projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project does not exist or does not belong to your organization'
       );

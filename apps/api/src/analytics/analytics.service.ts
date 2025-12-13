@@ -296,45 +296,44 @@ export class AnalyticsService {
     );
 
     // Group by currency
-    const byCurrency = invoices.reduce(
-      (acc, inv) => {
-        const currency = inv.currency;
-        // Validate currency to prevent object injection
-        if (typeof currency === 'string' && /^[A-Z]{3}$/.test(currency)) {
-          if (!acc[currency]) {
-            acc[currency] = { count: 0, amount: 0, paid: 0 };
-          }
-          const currencyData = acc[currency]!;
-          currencyData.count++;
-          currencyData.amount += inv.amount;
-          if (inv.status === 'paid') {
-            currencyData.paid += inv.amount;
-          }
+    const byCurrencyMap = invoices.reduce((acc, inv) => {
+      const currency = inv.currency;
+      // Validate currency to prevent object injection
+      if (typeof currency === 'string' && /^[A-Z]{3}$/.test(currency)) {
+        if (!acc.has(currency)) {
+          acc.set(currency, { count: 0, amount: 0, paid: 0 });
         }
-        return acc;
-      },
-      {} as Record<string, { count: number; amount: number; paid: number }>
-    );
+        const currencyData = acc.get(currency)!;
+        currencyData.count++;
+        currencyData.amount += inv.amount;
+        if (inv.status === 'paid') {
+          currencyData.paid += inv.amount;
+        }
+      }
+      return acc;
+    }, new Map<string, { count: number; amount: number; paid: number }>());
+
+    const byCurrency = Object.fromEntries(byCurrencyMap);
 
     // Group by month
-    const byMonth = invoices.reduce(
-      (acc, inv) => {
-        const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
-        // Validate month format to prevent object injection
-        if (typeof month === 'string' && /^\d{4}-\d{2}$/.test(month)) {
-          if (!acc[month]) {
-            acc[month] = { count: 0, amount: 0, paid: 0 };
-          }
-          acc[month].count++;
-          acc[month].amount += inv.amount;
-          if (inv.status === 'paid') {
-            acc[month].paid += inv.amount;
-          }
+    const byMonthMap = invoices.reduce((acc, inv) => {
+      const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
+      // Validate month format to prevent object injection
+      if (typeof month === 'string' && /^\d{4}-\d{2}$/.test(month)) {
+        if (!acc.has(month)) {
+          acc.set(month, { count: 0, amount: 0, paid: 0 });
         }
-        return acc;
-      },
-      {} as Record<string, { count: number; amount: number; paid: number }>
-    );
+        const monthData = acc.get(month)!;
+        monthData.count++;
+        monthData.amount += inv.amount;
+        if (inv.status === 'paid') {
+          monthData.paid += inv.amount;
+        }
+      }
+      return acc;
+    }, new Map<string, { count: number; amount: number; paid: number }>());
+
+    const byMonth = Object.fromEntries(byMonthMap);
 
     return {
       summary: {
@@ -395,21 +394,20 @@ export class AnalyticsService {
     ).length;
 
     // Group by type
-    const byType = tickets.reduce(
-      (acc, ticket) => {
-        const type = ticket.type;
-        if (!acc[type]) {
-          acc[type] = { total: 0, resolved: 0 };
-        }
-        const typeData = acc[type]!;
-        typeData.total++;
-        if (ticket.status === 'resolved' || ticket.status === 'closed') {
-          typeData.resolved++;
-        }
-        return acc;
-      },
-      {} as Record<string, { total: number; resolved: number }>
-    );
+    const byTypeMap = tickets.reduce((acc, ticket) => {
+      const type = ticket.type;
+      if (!acc.has(type)) {
+        acc.set(type, { total: 0, resolved: 0 });
+      }
+      const typeData = acc.get(type)!;
+      typeData.total++;
+      if (ticket.status === 'resolved' || ticket.status === 'closed') {
+        typeData.resolved++;
+      }
+      return acc;
+    }, new Map<string, { total: number; resolved: number }>());
+
+    const byType = Object.fromEntries(byTypeMap);
 
     // Group by priority
     const byPriority = {
@@ -478,8 +476,8 @@ export class AnalyticsService {
     });
 
     // Group by time period
-    const trends = auditLogs.reduce(
-      (acc: Record<string, ActivityTrendData>, log) => {
+    const trendsMap = auditLogs.reduce(
+      (acc: Map<string, ActivityTrendData>, log) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
 
@@ -498,8 +496,8 @@ export class AnalyticsService {
         // eslint-disable-next-line security/detect-unsafe-regex
         const datePattern = /^\d{4}-\d{2}(-\d{2})?$/;
         if (typeof key === 'string' && datePattern.test(key)) {
-          if (!acc[key]) {
-            acc[key] = {
+          if (!acc.has(key)) {
+            acc.set(key, {
               date: key,
               total: 0,
               user_login: 0,
@@ -507,10 +505,10 @@ export class AnalyticsService {
               approval_request: 0,
               project_created: 0,
               task_completed: 0,
-            };
+            });
           }
 
-          const trendData = acc[key]!;
+          const trendData = acc.get(key)!;
           trendData.total++;
 
           // Handle known actions
@@ -531,10 +529,10 @@ export class AnalyticsService {
 
         return acc;
       },
-      {} as Record<string, ActivityTrendData>
+      new Map<string, ActivityTrendData>()
     );
 
-    return Object.values(trends) as ActivityTrendData[];
+    return Object.values(trendsMap) as ActivityTrendData[];
   }
 
   // Overview Analytics - combines all analytics for dashboard
