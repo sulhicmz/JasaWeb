@@ -77,10 +77,12 @@ export class SecurityMiddleware implements NestMiddleware {
   private sanitizeQueryParams(req: Request): void {
     if (req.query) {
       Object.keys(req.query).forEach((key) => {
-        const value = req.query[key];
-        if (typeof value === 'string') {
-          // Remove potentially dangerous characters
-          req.query[key] = value.replace(/[<>]/g, '').trim();
+        if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+          const value = req.query[key];
+          if (typeof value === 'string') {
+            // Remove potentially dangerous characters
+            req.query[key] = value.replace(/[<>]/g, '').trim();
+          }
         }
       });
     }

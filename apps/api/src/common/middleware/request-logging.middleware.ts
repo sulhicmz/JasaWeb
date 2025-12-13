@@ -55,12 +55,18 @@ export class RequestLoggingMiddleware implements NestMiddleware {
         )
       ) {
         if (Array.isArray(value)) {
-          safeHeaders[key] = value.join(', ');
+          if (Object.prototype.hasOwnProperty.call(safeHeaders, key)) {
+            safeHeaders[key] = value.join(', ');
+          }
         } else if (typeof value === 'string') {
-          safeHeaders[key] = value;
+          if (Object.prototype.hasOwnProperty.call(safeHeaders, key)) {
+            safeHeaders[key] = value;
+          }
         }
       } else {
-        safeHeaders[key] = '[REDACTED]';
+        if (Object.prototype.hasOwnProperty.call(safeHeaders, key)) {
+          safeHeaders[key] = '[REDACTED]';
+        }
       }
     }
     return safeHeaders;

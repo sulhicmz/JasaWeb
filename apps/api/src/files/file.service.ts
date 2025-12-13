@@ -140,7 +140,7 @@ export class FileService {
           }
         );
 
-        fileIdentifier = uploadResult.filename;
+        // fileIdentifier = uploadResult.filename; // Commented out as unused
       }
 
       // Save file record to database

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service';
 import { DateTime } from 'luxon';
+import type { WhereClause, AnalyticsFilters } from '../types/common.types';
 
 @Injectable()
 export class AnalyticsService {
@@ -9,13 +10,9 @@ export class AnalyticsService {
   // Project Analytics
   async getProjectAnalytics(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-      projectId?: string;
-    }
+    filters?: AnalyticsFilters
   ) {
-    const whereClause: any = {
+    const whereClause: Record<string, unknown> = {
       organizationId,
     };
 
@@ -24,12 +21,12 @@ export class AnalyticsService {
     }
 
     if (filters?.dateFrom || filters?.dateTo) {
-      whereClause.createdAt = {};
+      (whereClause as any).createdAt = {};
       if (filters?.dateFrom) {
-        whereClause.createdAt.gte = new Date(filters.dateFrom);
+        (whereClause as any).createdAt.gte = new Date(filters.dateFrom);
       }
       if (filters?.dateTo) {
-        whereClause.createdAt.lte = new Date(filters.dateTo);
+        (whereClause as any).createdAt.lte = new Date(filters.dateTo);
       }
     }
 
@@ -291,7 +288,7 @@ export class AnalyticsService {
     const byCurrency = invoices.reduce(
       (acc: any, inv: any) => {
         const currency = inv.currency;
-        if (!acc[currency]) {
+        if (!Object.prototype.hasOwnProperty.call(acc, currency)) {
           acc[currency] = { count: 0, amount: 0, paid: 0 };
         }
         const currencyData = acc[currency]!;
@@ -307,15 +304,17 @@ export class AnalyticsService {
 
     // Group by month
     const byMonth = invoices.reduce(
-      (acc: any, inv: any) => {
-        const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
-        if (!acc[month]) {
+      (acc: Record<string, unknown>, inv: unknown) => {
+        const invoice = inv as any;
+        const month = DateTime.fromJSDate(invoice.issuedAt).toFormat('yyyy-MM');
+        if (!Object.prototype.hasOwnProperty.call(acc, month)) {
           acc[month] = { count: 0, amount: 0, paid: 0 };
         }
-        acc[month].count++;
-        acc[month].amount += inv.amount;
-        if (inv.status === 'paid') {
-          acc[month].paid += inv.amount;
+        const monthData = acc[month] as any;
+        monthData.count++;
+        monthData.amount += invoice.amount;
+        if (invoice.status === 'paid') {
+          monthData.paid += invoice.amount;
         }
         return acc;
       },

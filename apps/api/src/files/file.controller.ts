@@ -141,7 +141,7 @@ export class FileController {
           }
         );
 
-        fileIdentifier = uploadResult.filename;
+        // fileIdentifier = uploadResult.filename; // Commented out as unused
       }
 
       // Save file record to database
@@ -300,7 +300,10 @@ export class FileController {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
 
-    return mimeTypes[ext] || 'application/octet-stream';
+    return Object.prototype.hasOwnProperty.call(mimeTypes, ext) &&
+      mimeTypes[ext]
+      ? mimeTypes[ext]
+      : 'application/octet-stream';
   }
 
   private getErrorMessage(error: unknown): string {
