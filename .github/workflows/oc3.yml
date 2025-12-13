@@ -21,7 +21,7 @@ on:
 
   # 3. Trigger untuk Handle Comments & Fix Code
   pull_request_review_comment:
-    types: [created]
+    types: [synchronize]
 
 permissions:
   contents: write
@@ -75,7 +75,7 @@ jobs:
           elif [[ "$EVENT" == "pull_request" ]]; then
             echo "🕵️ Mode: PR Check."
             # Cek status mergeable
-            PR_DATA=$(gh pr view $PR_NUMBER --json mergeable,mergeableState,baseRefName,headRefName)
+            PR_DATA=$(gh pr view $PR_NUMBER --json mergeable,mergeStateStatus,baseRefName,headRefName)
             STATE=$(echo "$PR_DATA" | jq -r '.mergeable')
             BASE=$(echo "$PR_DATA" | jq -r '.baseRefName')
             
