@@ -245,9 +245,7 @@ const ProjectOverview: React.FC = () => {
                 </div>
                 <button
                   onClick={() =>
-                    alert(
-                      `Viewing project ${project.id} - Details page coming soon!`
-                    )
+                    (window.location.href = `/portal/projects/${project.id}`)
                   }
                   className="text-indigo-600 hover:text-indigo-800 font-medium"
                 >

@@ -206,7 +206,7 @@ class RecentActivityComponent extends HTMLElement {
                     </div>
                     
                     <div class="text-xs text-gray-400 ml-4 flex-shrink-0">
-                      ${this.formatDate(activity.createdAt)}
+                      ${this.formatDate(activity.createdAt.toString())}
                     </div>
                   </div>
                 </div>

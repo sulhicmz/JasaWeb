@@ -61,4 +61,10 @@ export class ProjectController {
   remove(@Param('id') id: string) {
     return this.projectService.remove(id);
   }
+
+  @Get(':id/stats')
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
+  getProjectStats(@Param('id') id: string) {
+    return this.projectService.getProjectStats(id);
+  }
 }

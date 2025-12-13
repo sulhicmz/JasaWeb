@@ -320,15 +320,15 @@ This comprehensive security checklist ensures that all security measures are pro
 
 ### Development Team
 
-- [ ] Lead Developer: ********\_******** Date: **\_\_\_**
-- [ ] Security Engineer: ********\_******** Date: **\_\_\_**
-- [ ] DevOps Engineer: ********\_******** Date: **\_\_\_**
+- [ ] Lead Developer: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
+- [ ] Security Engineer: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
+- [ ] DevOps Engineer: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
 
 ### Management
 
-- [ ] Technical Lead: ********\_******** Date: **\_\_\_**
-- [ ] Project Manager: ********\_******** Date: **\_\_\_**
-- [ ] Security Officer: ********\_******** Date: **\_\_\_**
+- [ ] Technical Lead: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
+- [ ] Project Manager: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
+- [ ] Security Officer: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
 
 ---
 

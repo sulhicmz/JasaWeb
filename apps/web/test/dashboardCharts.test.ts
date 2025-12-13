@@ -47,8 +47,9 @@ describe('DashboardCharts', () => {
     `;
 
     // Dynamic import
-    const module =
-      await import('../src/components/dashboard/DashboardCharts.astro');
+    const module = await import(
+      '../src/components/dashboard/DashboardCharts.astro'
+    );
     // Note: Since this is an Astro component, we'll test the JavaScript logic separately
   });
 

@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
 import { ProjectModule } from './projects/project.module';
 import { MilestoneModule } from './milestones/milestone.module';
+import { TaskModule } from './tasks/task.module';
 import { TicketModule } from './tickets/ticket.module';
 import { InvoiceModule } from './invoices/invoice.module';
 import { FileModule } from './files/file.module';
@@ -61,6 +62,7 @@ const parseEnvNumber = (
     UserModule,
     ProjectModule,
     MilestoneModule,
+    TaskModule,
     TicketModule,
     InvoiceModule,
     FileModule,
