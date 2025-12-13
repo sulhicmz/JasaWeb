@@ -41,14 +41,27 @@ describe('ProjectService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
     milestone: {
       count: jest.fn(),
+      findMany: jest.fn(),
     },
     approval: {
       count: jest.fn(),
     },
     task: {
+      count: jest.fn(),
+    },
+    ticket: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+    },
+    invoice: {
+      count: jest.fn(),
+      findMany: jest.fn(),
+    },
+    file: {
       count: jest.fn(),
     },
   };

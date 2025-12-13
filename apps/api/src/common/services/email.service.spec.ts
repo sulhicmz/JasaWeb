@@ -9,7 +9,10 @@ describe('EmailService', () => {
   let mailerService: MailerService;
 
   const mockMailerService = {
-    sendMail: jest.fn(),
+    sendMail: jest.fn().mockResolvedValue({
+      messageId: 'test-message-id',
+      response: '250 OK',
+    }),
   };
 
   beforeEach(async () => {

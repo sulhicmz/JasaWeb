@@ -33,6 +33,8 @@ describe('UsersService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    $connect: jest.fn(),
+    $disconnect: jest.fn(),
   };
 
   beforeEach(async () => {
