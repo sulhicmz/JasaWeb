@@ -33,12 +33,16 @@ export class MilestoneService {
 
     return await this.multiTenantPrisma.milestone.create({
       data: {
-        ...createMilestoneDto,
+        title: createMilestoneDto.title,
+        dueAt: createMilestoneDto.dueAt,
         status:
           createMilestoneDto.dueAt &&
           new Date(createMilestoneDto.dueAt) < new Date()
             ? 'overdue'
             : 'todo',
+        project: {
+          connect: { id: createMilestoneDto.projectId },
+        },
       },
     });
   }

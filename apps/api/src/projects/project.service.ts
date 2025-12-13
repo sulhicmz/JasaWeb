@@ -60,11 +60,10 @@ export interface UpdateProjectDto {
 export class ProjectService {
   constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
 
-  async create(createProjectDto: CreateProjectDto, organizationId: string) {
+  async create(createProjectDto: CreateProjectDto) {
     return this.multiTenantPrisma.project.create({
       data: {
         ...createProjectDto,
-        organizationId,
         status: createProjectDto.status || 'draft',
       },
     });

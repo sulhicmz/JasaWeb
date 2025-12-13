@@ -44,7 +44,7 @@ type ProjectFindUniqueArgs = Omit<Prisma.ProjectFindUniqueArgs, 'where'> & {
 };
 
 type ProjectCreateArgs = Omit<Prisma.ProjectCreateArgs, 'data'> & {
-  data: Omit<Prisma.ProjectCreateInput, 'organizationId'> & {
+  data: Omit<Prisma.ProjectUncheckedCreateInput, 'organizationId'> & {
     organizationId?: string;
   };
 };
@@ -233,10 +233,17 @@ export class MultiTenantPrismaService {
       const projectId = (
         args.data.project as Prisma.ProjectCreateNestedOneWithoutMilestonesInput
       ).connect?.id;
+      if (!projectId) {
+        throw new BadRequestException(
+          'Project connection is required for milestone creation'
+        );
+      }
       return this.prisma.milestone.create({
         ...args,
         data: {
-          ...args.data,
+          title: args.data.title,
+          dueAt: args.data.dueAt,
+          status: args.data.status,
           projectId,
         },
       });
@@ -269,7 +276,15 @@ export class MultiTenantPrismaService {
       });
     },
 
-    count: (args?: MilestoneFindManyArgs) => {
+    count: (
+      args?: Omit<Prisma.MilestoneCountArgs, 'where'> & {
+        where?: Omit<Prisma.MilestoneWhereInput, 'project'> & {
+          project?: Omit<Prisma.ProjectWhereInput, 'organizationId'> & {
+            organizationId?: string;
+          };
+        };
+      }
+    ) => {
       return this.prisma.milestone.count({
         ...args,
         where: {

@@ -348,7 +348,7 @@ export class DashboardGateway
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: { organizationId },
+      where: {},
       select: { status: true, dueAt: true },
     });
 
@@ -419,7 +419,7 @@ export class DashboardGateway
 
   private async getRecentMilestones(organizationId: string, limit: number) {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: { organizationId },
+      where: {},
       select: {
         id: true,
         title: true,

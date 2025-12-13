@@ -293,9 +293,6 @@ export class DashboardController {
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: {
-        organizationId,
-      },
       select: { status: true, dueAt: true },
     });
 
@@ -375,7 +372,7 @@ export class DashboardController {
     limit: number
   ): Promise<RecentActivity[]> {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: { organizationId },
+      where: {},
       select: {
         id: true,
         title: true,
@@ -706,7 +703,6 @@ export class DashboardController {
   ) {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
       where: {
-        organizationId,
         createdAt: { gte: startDate, lte: endDate },
       },
       select: {
@@ -783,7 +779,7 @@ export class DashboardController {
       },
       include: {
         milestones: {
-          select: { status: true, dueAt: true, completedAt: true },
+          select: { status: true, dueAt: true, updatedAt: true },
         },
         tickets: {
           select: {
@@ -851,13 +847,12 @@ export class DashboardController {
   ) {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
       where: {
-        organizationId,
         createdAt: { gte: startDate },
       },
       select: {
         status: true,
         dueAt: true,
-        completedAt: true,
+        updatedAt: true,
         createdAt: true,
       },
     });
@@ -956,7 +951,6 @@ export class DashboardController {
   ) {
     const pendingMilestones = await this.multiTenantPrisma.milestone.findMany({
       where: {
-        organizationId,
         status: { not: 'completed' },
         dueAt: { lte: forecastDate },
       },
@@ -1123,7 +1117,10 @@ export class DashboardController {
     if (completedMilestones.length === 0) return 0;
 
     const onTime = completedMilestones.filter((m) => {
-      const completedAt = m.completedAt ? new Date(m.completedAt) : new Date();
+      const completedAt =
+        m.status === 'completed' && m.updatedAt
+          ? new Date(m.updatedAt)
+          : new Date();
       const dueDate = new Date(m.dueAt);
       return completedAt <= dueDate;
     });
@@ -1212,9 +1209,10 @@ export class DashboardController {
 
     const totalDays = completedMilestones.reduce((sum, milestone) => {
       const created = new Date(milestone.createdAt);
-      const completed = milestone.completedAt
-        ? new Date(milestone.completedAt)
-        : new Date();
+      const completed =
+        milestone.status === 'completed' && milestone.updatedAt
+          ? new Date(milestone.updatedAt)
+          : new Date();
       return (
         sum +
         Math.ceil(
@@ -1362,7 +1360,7 @@ export class DashboardController {
         },
         include: {
           milestones: {
-            select: { status: true, dueAt: true, completedAt: true },
+            select: { status: true, dueAt: true, updatedAt: true },
           },
           tickets: {
             select: { status: true, priority: true, createdAt: true },
@@ -1573,7 +1571,6 @@ export class DashboardController {
         }),
         this.multiTenantPrisma.milestone.count({
           where: {
-            organizationId,
             status: { not: 'completed' },
             dueAt: { lt: new Date() },
           },
