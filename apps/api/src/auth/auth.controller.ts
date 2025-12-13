@@ -13,7 +13,7 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { RefreshTokenService } from './refresh-token.service';
-import { ThrottlerGuard } from '@nestjs/throttler';
+
 import type { Request as ExpressRequest } from 'express';
 
 type AuthenticatedRequest = ExpressRequest & { user?: unknown };
@@ -66,7 +66,7 @@ export class AuthController {
           expiresAt: result.expiresAt,
         },
       };
-    } catch (error) {
+    } catch {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid refresh token',
@@ -100,7 +100,7 @@ export class AuthController {
         statusCode: HttpStatus.OK,
         message: 'Logged out successfully',
       };
-    } catch (error) {
+    } catch {
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Invalid refresh token',

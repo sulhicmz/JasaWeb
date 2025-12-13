@@ -6,7 +6,6 @@ import {
   Param,
   UseGuards,
   BadRequestException,
-  Req,
 } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
@@ -44,6 +43,12 @@ export class ApprovalController {
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: createApprovalDto.projectId },
     });
+
+    if (!project || project.organizationId !== organizationId) {
+      throw new BadRequestException(
+        'Project does not exist or does not belong to your organization'
+      );
+    }
 
     if (!project) {
       throw new BadRequestException(

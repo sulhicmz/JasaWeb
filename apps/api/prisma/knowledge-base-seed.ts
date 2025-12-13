@@ -47,7 +47,8 @@ async function main() {
     },
   });
 
-  // Create tags
+  // Create tags (seeded for future use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const tags = await Promise.all([
     prisma.kbTag.create({ data: { name: 'beginner', color: '#10B981' } }),
     prisma.kbTag.create({ data: { name: 'tutorial', color: '#3B82F6' } }),

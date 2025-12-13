@@ -6,7 +6,6 @@ import { AppService } from './app.service';
 
 describe('AppController', () => {
   let appController: AppController;
-  let appService: AppService;
 
   const mockAppService = {
     getHello: jest.fn(),
@@ -25,7 +24,6 @@ describe('AppController', () => {
     }).compile();
 
     appController = module.get<AppController>(AppController);
-    appService = module.get<AppService>(AppService);
   });
 
   afterEach(() => {

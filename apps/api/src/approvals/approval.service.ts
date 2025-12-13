@@ -17,7 +17,7 @@ export class ApprovalService {
       where: { id: projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project not found or does not belong to your organization'
       );
@@ -29,6 +29,7 @@ export class ApprovalService {
         projectId,
         itemType,
         itemId,
+        requesterId,
         status: 'pending',
       },
     });
@@ -43,7 +44,7 @@ export class ApprovalService {
       where: { id: projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project not found or does not belong to your organization'
       );

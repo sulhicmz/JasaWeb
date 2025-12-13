@@ -484,9 +484,10 @@ export class DashboardController {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
+    const allowedMetrics = ['projects', 'tickets', 'milestones', 'invoices'];
     const selectedMetrics = metrics
-      ? metrics.split(',')
-      : ['projects', 'tickets', 'milestones', 'invoices'];
+      ? metrics.split(',').filter((metric) => allowedMetrics.includes(metric))
+      : allowedMetrics;
 
     try {
       const trends = await Promise.all(
@@ -1081,7 +1082,7 @@ export class DashboardController {
     items.forEach((item) => {
       const date = new Date(item[dateField]);
       const dateKey = date.toISOString().split('T')[0];
-      if (dateKey && dailyData.hasOwnProperty(dateKey)) {
+      if (dateKey && Object.prototype.hasOwnProperty.call(dailyData, dateKey)) {
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
       }
     });
