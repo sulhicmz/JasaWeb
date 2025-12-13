@@ -1,0 +1,44 @@
+User-agent: *
+Allow: /
+
+# Prioritize important pages
+Allow: /$
+Allow: /about$
+Allow: /services$
+Allow: /portfolio$
+Allow: /contact$
+
+# Allow blog and portfolio content
+Allow: /blog/
+Allow: /portfolio/
+
+# Block admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_astro/
+Disallow: /.well-known/
+
+# Block search and filter pages with parameters
+Disallow: /*?*
+Disallow: /search*
+Disallow: /*/filter/*
+
+# Allow specific parameterized pages for SEO
+Allow: /portfolio?category=*
+Allow: /blog?tag=*
+
+# Sitemap location
+Sitemap: https://jasaweb.id/sitemap.xml
+
+# Crawl delay (optional, be respectful)
+Crawl-delay: 1
+
+# Special instructions for common bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

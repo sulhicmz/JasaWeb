@@ -22,20 +22,22 @@ const {
   priority = false 
 } = Astro.props;
 
-// Generate responsive image sizes with WebP support
-const srcSet = typeof width === 'number' ? [
-  `${src}?w=${Math.round(width * 0.5)}&format=webp ${Math.round(width * 0.5)}w`,
-  `${src}?w=${width}&format=webp ${width}w`,
-  `${src}?w=${Math.round(width * 1.5)}&format=webp ${Math.round(width * 1.5)}w`,
-  `${src}?w=${Math.round(width * 2)}&format=webp ${Math.round(width * 2)}w`
-].join(', ') : undefined;
+// Generate responsive image sizes with modern format support
+const generateSrcSet = (format: string) => {
+  if (typeof width !== 'number') return undefined;
+  const sizes = [0.5, 1, 1.5, 2];
+  return sizes.map(scale => 
+    `${src}?w=${Math.round(width * scale)}&format=${format}&q=80 ${Math.round(width * scale)}w`
+  ).join(', ');
+};
 
-// Generate fallback srcset
+const webpSrcSet = generateSrcSet('webp');
+const avifSrcSet = generateSrcSet('avif');
 const fallbackSrcSet = typeof width === 'number' ? [
-  `${src}?w=${Math.round(width * 0.5)} ${Math.round(width * 0.5)}w`,
-  `${src}?w=${width} ${width}w`,
-  `${src}?w=${Math.round(width * 1.5)} ${Math.round(width * 1.5)}w`,
-  `${src}?w=${Math.round(width * 2)} ${Math.round(width * 2)}w`
+  `${src}?w=${Math.round(width * 0.5)}&q=75 ${Math.round(width * 0.5)}w`,
+  `${src}?w=${width}&q=75 ${width}w`,
+  `${src}?w=${Math.round(width * 1.5)}&q=75 ${Math.round(width * 1.5)}w`,
+  `${src}?w=${Math.round(width * 2)}&q=75 ${Math.round(width * 2)}w`
 ].join(', ') : undefined;
 ---
 
@@ -45,11 +47,19 @@ const fallbackSrcSet = typeof width === 'number' ? [
 ) : null}
 
 <picture>
+  <!-- AVIF format - best compression -->
   <source 
-    type="image/webp" 
-    srcset={srcSet}
+    type="image/avif" 
+    srcset={avifSrcSet}
     sizes={sizes}
   />
+  <!-- WebP format - wide support -->
+  <source 
+    type="image/webp" 
+    srcset={webpSrcSet}
+    sizes={sizes}
+  />
+  <!-- Fallback for older browsers -->
   <img 
     src={src}
     alt={alt}
@@ -61,12 +71,15 @@ const fallbackSrcSet = typeof width === 'number' ? [
     sizes={sizes}
     srcset={fallbackSrcSet}
     style={`
-      content-visibility: ${priority ? 'auto' : 'auto'}; 
+      content-visibility: ${priority ? 'visible' : 'auto'}; 
       contain-intrinsic-size: ${width || 400}px ${height || 300}px;
       will-change: opacity;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     `}
     onload="this.classList.add('loaded')"
-    onerror="this.classList.add('error')"
+    onerror="this.classList.add('error'); this.src='/images/placeholder.jpg';"
+    fetchpriority={priority ? 'high' : 'auto'}
   />
 </picture>
 

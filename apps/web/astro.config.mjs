@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import tailwindcss from '@tailwindcss/vite';
+import tailwind from '@astrojs/tailwind';
 import cloudflare from '@astrojs/cloudflare';
 
 // https://astro.build/config
@@ -17,7 +17,6 @@ export default defineConfig({
     quality: 80,
   },
   vite: {
-    plugins: [tailwindcss()],
     resolve: {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.astro'],
     },
@@ -44,7 +43,7 @@ export default defineConfig({
     // Enable CSS code splitting
     cssCodeSplit: true,
   },
-  integrations: [react()],
+  integrations: [react(), tailwind()],
   // Performance optimizations
   compressHTML: true,
   // Security headers
