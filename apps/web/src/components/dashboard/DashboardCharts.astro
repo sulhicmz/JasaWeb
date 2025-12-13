@@ -62,6 +62,61 @@
       <canvas id="milestoneTimelineChart"></canvas>
     </div>
   </div>
+
+  <!-- KPI Metrics Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+    <!-- Project Health Score -->
+    <div class="bg-gradient-to-br from-blue-600/20 to-blue-800/20 p-4 rounded-lg border border-blue-500/30">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-blue-300 font-medium text-sm">Project Health</h4>
+        <i class="fas fa-heartbeat text-blue-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1" id="projectHealthScore">--</div>
+      <div class="text-xs text-gray-400">Overall Score</div>
+      <div class="mt-2 w-full bg-slate-700 rounded-full h-1.5">
+        <div id="projectHealthBar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Team Productivity -->
+    <div class="bg-gradient-to-br from-green-600/20 to-green-800/20 p-4 rounded-lg border border-green-500/30">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-green-300 font-medium text-sm">Productivity</h4>
+        <i class="fas fa-rocket text-green-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1" id="productivityScore">--</div>
+      <div class="text-xs text-gray-400">Tasks/Week</div>
+      <div class="mt-2 w-full bg-slate-700 rounded-full h-1.5">
+        <div id="productivityBar" class="bg-green-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Client Satisfaction -->
+    <div class="bg-gradient-to-br from-purple-600/20 to-purple-800/20 p-4 rounded-lg border border-purple-500/30">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-purple-300 font-medium text-sm">Satisfaction</h4>
+        <i class="fas fa-smile text-purple-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1" id="satisfactionScore">--</div>
+      <div class="text-xs text-gray-400">Client Rating</div>
+      <div class="mt-2 w-full bg-slate-700 rounded-full h-1.5">
+        <div id="satisfactionBar" class="bg-purple-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Budget Efficiency -->
+    <div class="bg-gradient-to-br from-yellow-600/20 to-yellow-800/20 p-4 rounded-lg border border-yellow-500/30">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-yellow-300 font-medium text-sm">Budget Efficiency</h4>
+        <i class="fas fa-dollar-sign text-yellow-400"></i>
+      </div>
+      <div class="text-2xl font-bold text-white mb-1" id="budgetEfficiency">--</div>
+      <div class="text-xs text-gray-400">On Budget</div>
+      <div class="mt-2 w-full bg-slate-700 rounded-full h-1.5">
+        <div id="budgetBar" class="bg-yellow-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Chart.js CDN -->
@@ -72,21 +127,29 @@
     constructor() {
       this.charts = {};
       this.currentTimeRange = 30;
+      this.kpiData = {};
       this.init();
     }
 
     init() {
       this.initCharts();
       this.setupEventListeners();
+      this.loadKPIData();
       
       // Listen for data updates
       window.addEventListener('stats-updated', (e) => {
         this.updateCharts(e.detail.stats);
+        this.updateKPIs(e.detail.stats);
       });
 
       // Listen for real-time updates
       window.addEventListener('dashboard-update', (e) => {
         this.handleRealtimeUpdate(e.detail);
+      });
+
+      // Listen for analytics updates
+      window.addEventListener('analytics-updated', (e) => {
+        this.updateAdvancedKPIs(e.detail);
       });
     }
 
@@ -547,10 +610,14 @@
       }
 
       // Fetch fresh data and update all charts
-      fetch('/api/dashboard/stats')
-        .then(response => response.json())
-        .then(stats => {
+      Promise.all([
+        fetch('/api/dashboard/stats').then(r => r.json()),
+        fetch('/api/dashboard/analytics/performance?period=30d').then(r => r.json())
+      ])
+        .then(([stats, performance]) => {
           this.updateCharts(stats);
+          this.updateKPIs(stats);
+          this.updateAdvancedKPIs(performance);
           
           // Update time-based charts with new data
           this.updateTimeBasedCharts();
@@ -563,6 +630,143 @@
             setTimeout(() => icon.classList.remove('fa-spin'), 1000);
           }
         });
+    }
+
+    loadKPIData() {
+      // Load initial KPI data
+      Promise.all([
+        fetch('/api/dashboard/stats').then(r => r.json()),
+        fetch('/api/dashboard/analytics/performance?period=30d').then(r => r.json())
+      ])
+        .then(([stats, performance]) => {
+          this.updateKPIs(stats);
+          this.updateAdvancedKPIs(performance);
+        })
+        .catch(error => {
+          console.error('Error loading KPI data:', error);
+        });
+    }
+
+    updateKPIs(stats) {
+      // Calculate project health score
+      const projectHealth = this.calculateProjectHealth(stats);
+      this.updateKPIMetric('projectHealthScore', 'projectHealthBar', projectHealth, 100);
+
+      // Calculate productivity score
+      const productivity = this.calculateProductivity(stats);
+      this.updateKPIMetric('productivityScore', 'productivityBar', productivity, 50);
+
+      // Calculate satisfaction score (mock data for now)
+      const satisfaction = this.calculateSatisfaction(stats);
+      this.updateKPIMetric('satisfactionScore', 'satisfactionBar', satisfaction, 5);
+
+      // Calculate budget efficiency
+      const budgetEff = this.calculateBudgetEfficiency(stats);
+      this.updateKPIMetric('budgetEfficiency', 'budgetBar', budgetEff, 100);
+    }
+
+    updateAdvancedKPIs(performance) {
+      // Update KPIs with advanced analytics data
+      if (performance.projectPerformance) {
+        const healthScore = Math.round(
+          (performance.projectPerformance.onTimeCompletionRate || 0) * 0.4 +
+          (performance.milestoneCompletion.completedMilestones || 0) * 0.3 +
+          (performance.ticketResolution.resolutionRate || 0) * 0.3
+        );
+        this.updateKPIMetric('projectHealthScore', 'projectHealthBar', healthScore, 100);
+      }
+
+      if (performance.ticketResolution) {
+        const productivity = Math.round(
+          (performance.ticketResolution.resolutionRate || 0) * 0.6 +
+          (performance.ticketResolution.slaComplianceRate || 0) * 0.4
+        );
+        this.updateKPIMetric('productivityScore', 'productivityBar', productivity, 100);
+      }
+    }
+
+    updateKPIMetric(scoreId, barId, value, maxValue) {
+      const scoreEl = document.getElementById(scoreId);
+      const barEl = document.getElementById(barId);
+      
+      if (scoreEl && barEl) {
+        // Animate the score
+        const currentValue = parseFloat(scoreEl.textContent) || 0;
+        const targetValue = value;
+        const duration = 1000;
+        const startTime = Date.now();
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+          
+          const currentVal = currentValue + (targetValue - currentValue) * easeProgress;
+          
+          // Format based on metric type
+          if (scoreId === 'satisfactionScore') {
+            scoreEl.textContent = currentVal.toFixed(1);
+          } else if (scoreId === 'budgetEfficiency') {
+            scoreEl.textContent = `${Math.round(currentVal)}%`;
+          } else {
+            scoreEl.textContent = Math.round(currentVal);
+          }
+
+          // Update progress bar
+          const percentage = (currentVal / maxValue) * 100;
+          barEl.style.width = `${Math.min(percentage, 100)}%`;
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }
+    }
+
+    calculateProjectHealth(stats) {
+      if (!stats.projects || !stats.milestones) return 75;
+
+      const projectScore = (stats.projects.completed / Math.max(stats.projects.total, 1)) * 40;
+      const milestoneScore = (stats.milestones.completed / Math.max(stats.milestones.total, 1)) * 35;
+      const ticketScore = stats.tickets.total > 0 ? 
+        ((stats.tickets.total - stats.tickets.open) / stats.tickets.total) * 25 : 25;
+
+      return Math.round(projectScore + milestoneScore + ticketScore);
+    }
+
+    calculateProductivity(stats) {
+      if (!stats.tickets || !stats.milestones) return 25;
+
+      const resolvedTickets = stats.tickets.total - stats.tickets.open - stats.tickets.inProgress;
+      const completedMilestones = stats.milestones.completed;
+      
+      // Productivity = resolved tickets + completed milestones * 2
+      return Math.round(resolvedTickets + (completedMilestones * 2));
+    }
+
+    calculateSatisfaction(stats) {
+      // Mock satisfaction calculation based on project completion and ticket resolution
+      if (!stats.projects || !stats.tickets) return 4.2;
+
+      const completionRate = stats.projects.completed / Math.max(stats.projects.total, 1);
+      const resolutionRate = stats.tickets.total > 0 ? 
+        (stats.tickets.total - stats.tickets.open) / stats.tickets.total : 1;
+
+      // Scale to 1-5 rating
+      const satisfaction = (completionRate * 0.6 + resolutionRate * 0.4) * 5;
+      return Math.round(satisfaction * 10) / 10;
+    }
+
+    calculateBudgetEfficiency(stats) {
+      if (!stats.invoices) return 85;
+
+      // Mock budget efficiency based on invoice payment rates
+      const paidRate = stats.invoices.total > 0 ? 
+        (stats.invoices.total - stats.invoices.pending) / stats.invoices.total : 1;
+
+      return Math.round(paidRate * 100);
     }
 
     updateTimeBasedCharts() {

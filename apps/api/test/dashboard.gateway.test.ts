@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+/// <reference types="@types/jest" />
+
 import { DashboardGateway } from '../src/dashboard/dashboard.gateway';
 import { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
@@ -14,32 +15,32 @@ describe('DashboardGateway', () => {
 
   beforeEach(() => {
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
     };
 
     mockJwtService = {
-      verify: vi.fn(),
-    };
+      verify: jest.fn(),
+    } as any;
 
     mockPrismaService = {
       user: {
-        findUnique: vi.fn(),
-      },
+        findUnique: jest.fn(),
+      } as any,
       project: {
-        findMany: vi.fn(),
-      },
+        findMany: jest.fn(),
+      } as any,
       ticket: {
-        findMany: vi.fn(),
-      },
+        findMany: jest.fn(),
+      } as any,
       invoice: {
-        findMany: vi.fn(),
-      },
+        findMany: jest.fn(),
+      } as any,
       milestone: {
-        findMany: vi.fn(),
-      },
-    };
+        findMany: jest.fn(),
+      } as any,
+    } as any;
 
     mockClient = {
       id: 'test-client-id',
@@ -49,15 +50,15 @@ describe('DashboardGateway', () => {
         },
         headers: {},
       },
-      join: vi.fn(),
-      leave: vi.fn(),
-      emit: vi.fn(),
-      disconnect: vi.fn(),
+      join: jest.fn(),
+      leave: jest.fn(),
+      emit: jest.fn(),
+      disconnect: jest.fn(),
     };
 
     mockServer = {
-      to: vi.fn().mockReturnThis(),
-      emit: vi.fn(),
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
     };
 
     gateway = new DashboardGateway(
@@ -70,7 +71,7 @@ describe('DashboardGateway', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('handleConnection', () => {
@@ -81,8 +82,8 @@ describe('DashboardGateway', () => {
         role: 'owner',
       };
 
-      mockJwtService.verify!.mockReturnValue(payload);
-      mockPrismaService.user!.findUnique!.mockResolvedValue({
+      (mockJwtService.verify as jest.Mock).mockReturnValue(payload);
+      (mockPrismaService.user as any).findUnique.mockResolvedValue({
         id: 'user-123',
         memberships: [{ organizationId: 'org-123' }],
       });
@@ -99,7 +100,7 @@ describe('DashboardGateway', () => {
     });
 
     it('should reject connection with invalid token', async () => {
-      mockJwtService.verify!.mockImplementation(() => {
+      (mockJwtService.verify as jest.Mock).mockImplementation(() => {
         throw new Error('Invalid token');
       });
 
@@ -205,7 +206,7 @@ describe('DashboardGateway', () => {
         milestones: { total: 8, completed: 5, overdue: 1, dueThisWeek: 2 },
       };
 
-      mockCacheManager.get!.mockResolvedValue(cachedStats);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(cachedStats);
 
       const result = await gateway['getDashboardStats']('org-123');
 
@@ -213,7 +214,9 @@ describe('DashboardGateway', () => {
       expect(mockCacheManager.get).toHaveBeenCalledWith(
         'dashboard-stats-org-123'
       );
-      expect(mockPrismaService.project!.findMany).not.toHaveBeenCalled();
+      expect(
+        (mockPrismaService.project as any).findMany
+      ).not.toHaveBeenCalled();
     });
 
     it('should fetch fresh stats if not cached', async () => {
@@ -224,11 +227,17 @@ describe('DashboardGateway', () => {
       ];
       const milestonesData = [{ status: 'completed', dueAt: new Date() }];
 
-      mockCacheManager.get!.mockResolvedValue(null);
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(null);
+      (mockPrismaService.project as any).findMany.mockResolvedValue(
+        projectsData
+      );
+      (mockPrismaService.ticket as any).findMany.mockResolvedValue(ticketsData);
+      (mockPrismaService.invoice as any).findMany.mockResolvedValue(
+        invoicesData
+      );
+      (mockPrismaService.milestone as any).findMany.mockResolvedValue(
+        milestonesData
+      );
 
       const result = await gateway['getDashboardStats']('org-123');
 
@@ -280,16 +289,22 @@ describe('DashboardGateway', () => {
         },
       ];
 
-      mockPrismaService.project!.findMany!.mockResolvedValue(projectsData);
-      mockPrismaService.ticket!.findMany!.mockResolvedValue(ticketsData);
-      mockPrismaService.milestone!.findMany!.mockResolvedValue(milestonesData);
-      mockPrismaService.invoice!.findMany!.mockResolvedValue(invoicesData);
+      (mockPrismaService.project as any).findMany.mockResolvedValue(
+        projectsData
+      );
+      (mockPrismaService.ticket as any).findMany.mockResolvedValue(ticketsData);
+      (mockPrismaService.milestone as any).findMany.mockResolvedValue(
+        milestonesData
+      );
+      (mockPrismaService.invoice as any).findMany.mockResolvedValue(
+        invoicesData
+      );
 
       const result = await gateway['getRecentActivity']('org-123', 10);
 
       expect(result).toHaveLength(4);
-      expect(result[0].type).toBe('invoice'); // Most recent
-      expect(result[3].type).toBe('project'); // Oldest
+      expect(result[0]?.type).toBe('invoice'); // Most recent
+      expect(result[3]?.type).toBe('project'); // Oldest
     });
   });
 });

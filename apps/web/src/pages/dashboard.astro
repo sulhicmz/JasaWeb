@@ -7,6 +7,7 @@ import NotificationToast from '../components/dashboard/NotificationToast.astro';
 import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
 import DashboardExport from '../components/dashboard/DashboardExport.astro';
 import NotificationPreferences from '../components/dashboard/NotificationPreferences.astro';
+import AdvancedAnalytics from '../components/dashboard/AdvancedAnalytics.astro';
 // Import notification service
 import '../services/notificationService.ts';
 ---
@@ -58,6 +59,11 @@ import '../services/notificationService.ts';
       <!-- Analytics Charts -->
       <section class="mb-8">
         <DashboardCharts client:load />
+      </section>
+
+      <!-- Advanced Analytics -->
+      <section class="mb-8">
+        <AdvancedAnalytics client:load />
       </section>
 
       <!-- Grid Layout for Activity and Projects -->
