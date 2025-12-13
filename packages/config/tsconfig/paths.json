@@ -8,10 +8,6 @@
       "@jasaweb/ui/*": ["../packages/ui/src/*"],
       "@jasaweb/config": ["../packages/config/src"],
       "@jasaweb/config/*": ["../packages/config/src/*"],
-      "@jasaweb/testing": ["../packages/testing/src"],
-      "@jasaweb/testing/*": ["../packages/testing/src/*"],
-      "@jasaweb/shared": ["../packages/shared/src"],
-      "@jasaweb/shared/*": ["../packages/shared/src/*"],
       "@jasaweb/api/*": ["../apps/api/src/*"],
       "@jasaweb/web/*": ["../apps/web/src/*"]
     },

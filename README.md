@@ -40,10 +40,8 @@ jasaweb/
 │   └── api/           # 🔧 NestJS client portal API
 ├── packages/
 │   ├── ui/            # 🎭 Shared UI components
-│   ├── config/        # ⚙️ Shared configurations
-│   └── testing/       # 🧪 Testing utilities
+│   └── config/        # ⚙️ Shared configurations
 ├── docs/              # 📚 Project documentation
-│   ├── archive/       # 📦 Historical documentation
 │   └── deployment/    # 🚀 Deployment guides
 ├── scripts/           # 🔧 Development and setup scripts
 ├── .github/           # 🤖 GitHub workflows & templates
