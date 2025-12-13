@@ -1,4 +1,11 @@
-import { IsEmail, IsString, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  MinLength,
+  IsEnum,
+} from 'class-validator';
+import { PasswordHashVersion } from '../../auth/password.service';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -21,4 +28,8 @@ export class UpdateUserDto {
 
   @IsOptional()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsEnum(PasswordHashVersion)
+  passwordHashVersion?: PasswordHashVersion;
 }

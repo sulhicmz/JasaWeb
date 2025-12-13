@@ -7,6 +7,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { UserModule } from '../users/user.module';
 import { PrismaModule } from '../common/database/prisma.module';
 import { RefreshTokenService } from './refresh-token.service';
+import { PasswordService } from './password.service';
 
 @Module({
   imports: [
@@ -20,7 +21,13 @@ import { RefreshTokenService } from './refresh-token.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, RefreshTokenService, LocalStrategy, JwtStrategy],
-  exports: [AuthService, RefreshTokenService],
+  providers: [
+    AuthService,
+    RefreshTokenService,
+    PasswordService,
+    LocalStrategy,
+    JwtStrategy,
+  ],
+  exports: [AuthService, RefreshTokenService, PasswordService],
 })
 export class AuthModule {}

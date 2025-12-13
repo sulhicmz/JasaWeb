@@ -35,6 +35,8 @@
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^11.0.0",
+    "@types/argon2": "^0.15.4",
+    "argon2": "^0.44.0",
     "bcrypt": "^5.1.0",
     "cache-manager": "^7.2.3",
     "class-transformer": "^0.5.1",
