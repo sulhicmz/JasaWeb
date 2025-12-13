@@ -154,7 +154,17 @@ export class DashboardController {
 
     const projects = await this.multiTenantPrisma.project.findMany({
       where: { organizationId },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        startAt: true,
+        dueAt: true,
+        createdAt: true,
+        updatedAt: true,
+        stagingUrl: true,
+        productionUrl: true,
+        repositoryUrl: true,
         milestones: {
           select: {
             id: true,
@@ -218,6 +228,9 @@ export class DashboardController {
           updatedAt: project.updatedAt,
           startAt: project.startAt,
           dueAt: project.dueAt,
+          stagingUrl: project.stagingUrl,
+          productionUrl: project.productionUrl,
+          repositoryUrl: project.repositoryUrl,
         };
       }
     );

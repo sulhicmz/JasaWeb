@@ -1,0 +1,32 @@
+{
+  "name": "@jasaweb/testing",
+  "version": "1.0.0",
+  "description": "Shared testing utilities and configurations for JasaWeb monorepo",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "testing",
+    "utilities",
+    "jasaweb"
+  ],
+  "author": "JasaWeb Team",
+  "license": "MIT",
+  "dependencies": {
+    "@jasaweb/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "vitest": "^1.0.0"
+  }
+}

@@ -70,6 +70,9 @@ model Project {
   status         String // draft, progress, review, completed, paused, cancelled
   startAt        DateTime?
   dueAt          DateTime?
+  stagingUrl     String?      // Staging environment URL
+  productionUrl  String?      // Production/live URL
+  repositoryUrl  String?      // Git repository URL
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   milestones     Milestone[]

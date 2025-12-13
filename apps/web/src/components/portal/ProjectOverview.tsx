@@ -14,6 +14,9 @@ interface Project {
   updatedAt?: string;
   startAt?: string;
   dueAt?: string;
+  stagingUrl?: string;
+  productionUrl?: string;
+  repositoryUrl?: string;
 }
 
 const ProjectOverview: React.FC = () => {
@@ -205,6 +208,79 @@ const ProjectOverview: React.FC = () => {
                     style={{ width: `${project.progress}%` }}
                   ></div>
                 </div>
+              </div>
+
+              {/* Project Links */}
+              <div className="mb-3 flex flex-wrap gap-2">
+                {project.stagingUrl && (
+                  <a
+                    href={project.stagingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded hover:bg-yellow-200 transition-colors"
+                  >
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
+                      />
+                    </svg>
+                    Staging
+                  </a>
+                )}
+                {project.productionUrl && (
+                  <a
+                    href={project.productionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded hover:bg-green-200 transition-colors"
+                  >
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Live
+                  </a>
+                )}
+                {project.repositoryUrl && (
+                  <a
+                    href={project.repositoryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded hover:bg-gray-200 transition-colors"
+                  >
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                      />
+                    </svg>
+                    Repo
+                  </a>
+                )}
               </div>
 
               <div className="flex justify-between items-center text-sm">

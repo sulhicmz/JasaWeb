@@ -14,10 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Advanced branch protection and code review workflows
 - Comprehensive issue templates and project management
 - Team collaboration guidelines and documentation
+- Proper package.json configuration for packages/testing
 
 ### Changed
 
 - Improved repository structure and organization
+- Standardized test file locations and naming conventions
+- Consolidated duplicate dashboard components
+- Removed obsolete documentation and unused configuration files
+
+### Removed
+
+- Removed obsolete docs/obsolete/ directory
+- Removed unused configuration files (.nycrc.json, playwright.config.ts)
+- Removed temporary files (basic.test.ts, verify-typescript-config.js, performance-test.sh)
+- Removed duplicate dashboard components directory
 - Enhanced development environment setup
 - Optimized API performance with query improvements
 - Updated documentation with detailed guides
