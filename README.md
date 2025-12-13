@@ -43,7 +43,6 @@ jasaweb/
 │   ├── config/        # ⚙️ Shared configurations
 │   └── testing/       # 🧪 Testing utilities
 ├── docs/              # 📚 Project documentation
-│   ├── archive/       # 📦 Historical documentation
 │   └── deployment/    # 🚀 Deployment guides
 ├── scripts/           # 🔧 Development and setup scripts
 ├── .github/           # 🤖 GitHub workflows & templates
@@ -520,17 +519,12 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 - [📋 Project Plan](./plan.md) - Detailed specifications and roadmap
 - [📝 Implementation TODO](./todo.md) - Current development progress and tasks
-- [🐛 Bug Tracker](./bug.md) - Known issues and fixes
 - [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
 - [🤖 Agent Guidelines](./AGENTS.md) - Development conventions
 - [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [🛡️ Security Policy](./SECURITY.md) - Security guidelines
 - [📄 Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
 - [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
-
-### Documentation Archive
-
-Historical documentation and implementation notes are available in [docs/archive/](./docs/archive/) for reference.
 
 ## 🐛 Troubleshooting
 

@@ -1,0 +1,569 @@
+---
+interface ProjectFilesProps {
+  projectId: string;
+}
+
+const { projectId } = Astro.props;
+---
+
+<div class="space-y-4">
+  <!-- File Upload Area -->
+  <div class="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer"
+       data-file-upload>
+    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+    <p class="text-white font-medium mb-2">Drop files here or click to upload</p>
+    <p class="text-gray-400 text-sm mb-4">Support for PDFs, images, documents, and more</p>
+    <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+      Choose Files
+    </button>
+    <input type="file" class="hidden" multiple data-file-input>
+  </div>
+
+  <!-- Upload Progress -->
+  <div class="hidden" data-upload-progress></div>
+
+  <!-- File Search and Filter -->
+  <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+    <div class="relative flex-1 max-w-md">
+      <input type="text" 
+             placeholder="Search files..." 
+             class="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+             data-file-search>
+      <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+    </div>
+    <div class="flex items-center space-x-2">
+      <select class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              data-file-filter>
+        <option value="all">All Files</option>
+        <option value="documents">Documents</option>
+        <option value="images">Images</option>
+        <option value="videos">Videos</option>
+        <option value="other">Other</option>
+      </select>
+      <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+              data-file-view-toggle>
+        <i class="fas fa-th-large"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Files List -->
+  <div class="space-y-2" data-file-list>
+    <!-- Loading State -->
+    <div class="flex items-center justify-center py-8" data-files-loading>
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-spinner fa-spin text-blue-400"></i>
+        <span class="text-gray-400">Loading files...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const projectId = '{{projectId}}';
+    await loadFiles(projectId);
+    setupFileInteractions();
+  });
+
+  async function loadFiles(projectId) {
+    try {
+      const files = await fetchFiles(projectId);
+      renderFiles(files);
+    } catch (error) {
+      console.error('Failed to load files:', error);
+      showFilesError();
+    }
+  }
+
+  async function fetchFiles(projectId) {
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([
+          {
+            id: '1',
+            name: 'Project_Brief.pdf',
+            type: 'document',
+            size: 2048576,
+            uploadedBy: { initials: 'JD', name: 'John Doe' },
+            uploadedAt: '2024-01-15T10:30:00Z',
+            description: 'Initial project requirements and scope document'
+          },
+          {
+            id: '2',
+            name: 'Wireframes.fig',
+            type: 'design',
+            size: 8388608,
+            uploadedBy: { initials: 'AS', name: 'Alice Smith' },
+            uploadedAt: '2024-01-18T14:20:00Z',
+            description: 'Complete wireframe designs for all pages'
+          },
+          {
+            id: '3',
+            name: 'Brand_Guidelines.pdf',
+            type: 'document',
+            size: 5242880,
+            uploadedBy: { initials: 'AS', name: 'Alice Smith' },
+            uploadedAt: '2024-01-20T09:15:00Z',
+            description: 'Brand colors, typography, and design guidelines'
+          },
+          {
+            id: '4',
+            name: 'Homepage_Mockup.png',
+            type: 'image',
+            size: 3145728,
+            uploadedBy: { initials: 'AS', name: 'Alice Smith' },
+            uploadedAt: '2024-01-22T16:45:00Z',
+            description: 'High-fidelity homepage design mockup'
+          },
+          {
+            id: '5',
+            name: 'Database_Schema.sql',
+            type: 'code',
+            size: 1048576,
+            uploadedBy: { initials: 'MK', name: 'Mike Johnson' },
+            uploadedAt: '2024-01-25T11:30:00Z',
+            description: 'Complete database schema with relationships'
+          },
+          {
+            id: '6',
+            name: 'Demo_Video.mp4',
+            type: 'video',
+            size: 52428800,
+            uploadedBy: { initials: 'JD', name: 'John Doe' },
+            uploadedAt: '2024-01-28T15:00:00Z',
+            description: 'Product demonstration video for stakeholders'
+          }
+        ]);
+      }, 1000);
+    });
+  }
+
+  function renderFiles(files) {
+    const container = document.querySelector('[data-file-list]');
+    const loadingEl = document.querySelector('[data-files-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    if (files.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-12">
+          <i class="fas fa-folder-open text-gray-400 text-4xl mb-4"></i>
+          <p class="text-gray-400">No files uploaded yet</p>
+          <p class="text-gray-500 text-sm mt-2">Upload your first file to get started</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = files.map(file => `
+      <div class="flex items-center justify-between p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors group"
+           data-file-item="${file.id}">
+        <div class="flex items-center space-x-4 flex-1 min-w-0">
+          <!-- File Icon -->
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center ${getFileIconBackground(file.type)}">
+              <i class="${getFileIcon(file.type)} text-white text-lg"></i>
+            </div>
+          </div>
+
+          <!-- File Info -->
+          <div class="flex-1 min-w-0">
+            <h4 class="text-white font-medium truncate">${file.name}</h4>
+            <p class="text-gray-400 text-sm truncate">${file.description || 'No description'}</p>
+            <div class="flex items-center space-x-4 mt-1">
+              <span class="text-xs text-gray-500">
+                <i class="fas fa-hdd mr-1"></i>
+                ${formatFileSize(file.size)}
+              </span>
+              <span class="text-xs text-gray-500">
+                <i class="fas fa-user mr-1"></i>
+                ${file.uploadedBy.name}
+              </span>
+              <span class="text-xs text-gray-500">
+                <i class="fas fa-clock mr-1"></i>
+                ${formatDate(file.uploadedAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- File Actions -->
+        <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
+                  data-file-preview="${file.id}"
+                  title="Preview">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
+                  data-file-download="${file.id}"
+                  title="Download">
+            <i class="fas fa-download"></i>
+          </button>
+          <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
+                  data-file-share="${file.id}"
+                  title="Share">
+            <i class="fas fa-share"></i>
+          </button>
+          <button class="p-2 text-gray-400 hover:text-red-400 hover:bg-slate-600 rounded-lg transition-colors"
+                  data-file-delete="${file.id}"
+                  title="Delete">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    setupFileActions();
+  }
+
+  function setupFileInteractions() {
+    const uploadArea = document.querySelector('[data-file-upload]');
+    const fileInput = document.querySelector('[data-file-input]');
+    const searchInput = document.querySelector('[data-file-search]');
+    const filterSelect = document.querySelector('[data-file-filter]');
+
+    // File upload
+    if (uploadArea && fileInput) {
+      uploadArea.addEventListener('click', () => fileInput.click());
+      
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('border-blue-500', 'bg-blue-500/10');
+      });
+
+      uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('border-blue-500', 'bg-blue-500/10');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('border-blue-500', 'bg-blue-500/10');
+        handleFileUpload(Array.from(e.dataTransfer.files));
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        handleFileUpload(Array.from(e.target.files));
+      });
+    }
+
+    // Search
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        filterFiles(e.target.value, filterSelect?.value || 'all');
+      });
+    }
+
+    // Filter
+    if (filterSelect) {
+      filterSelect.addEventListener('change', (e) => {
+        filterFiles(searchInput?.value || '', e.target.value);
+      });
+    }
+  }
+
+  function setupFileActions() {
+    // Preview
+    document.querySelectorAll('[data-file-preview]').forEach(button => {
+      button.addEventListener('click', () => {
+        const fileId = button.dataset.filePreview;
+        previewFile(fileId);
+      });
+    });
+
+    // Download
+    document.querySelectorAll('[data-file-download]').forEach(button => {
+      button.addEventListener('click', () => {
+        const fileId = button.dataset.fileDownload;
+        downloadFile(fileId);
+      });
+    });
+
+    // Share
+    document.querySelectorAll('[data-file-share]').forEach(button => {
+      button.addEventListener('click', () => {
+        const fileId = button.dataset.fileShare;
+        shareFile(fileId);
+      });
+    });
+
+    // Delete
+    document.querySelectorAll('[data-file-delete]').forEach(button => {
+      button.addEventListener('click', () => {
+        const fileId = button.dataset.fileDelete;
+        deleteFile(fileId);
+      });
+    });
+  }
+
+  function handleFileUpload(files) {
+    if (files.length === 0) return;
+
+    const progressContainer = document.querySelector('[data-upload-progress]');
+    if (progressContainer) {
+      progressContainer.classList.remove('hidden');
+      progressContainer.innerHTML = files.map(file => `
+        <div class="flex items-center justify-between p-3 bg-slate-800 rounded-lg mb-2" data-upload-progress="${file.name}">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-file text-blue-400"></i>
+            <span class="text-white text-sm">${file.name}</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="w-32 bg-slate-700 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span class="text-gray-400 text-xs">0%</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Simulate upload progress
+    files.forEach((file, index) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          
+          // Add file to list after upload
+          setTimeout(() => {
+            addFileToList(file);
+            removeUploadProgress(file.name);
+          }, 500);
+        }
+        
+        updateUploadProgress(file.name, Math.round(progress));
+      }, 200 + (index * 100));
+    });
+  }
+
+  function updateUploadProgress(filename, progress) {
+    const progressEl = document.querySelector(`[data-upload-progress="${filename}"]`);
+    if (!progressEl) return;
+
+    const progressBar = progressEl.querySelector('.bg-blue-500');
+    const progressText = progressEl.querySelector('.text-gray-400');
+    
+    if (progressBar) progressBar.style.width = `${progress}%`;
+    if (progressText) progressText.textContent = `${progress}%`;
+  }
+
+  function removeUploadProgress(filename) {
+    const progressEl = document.querySelector(`[data-upload-progress="${filename}"]`);
+    if (progressEl) {
+      progressEl.style.opacity = '0';
+      setTimeout(() => progressEl.remove(), 300);
+    }
+  }
+
+  function addFileToList(file) {
+    const container = document.querySelector('[data-file-list]');
+    if (!container) return;
+
+    const newFile = {
+      id: Date.now().toString(),
+      name: file.name,
+      type: getFileType(file.name),
+      size: file.size,
+      uploadedBy: { initials: 'CU', name: 'Current User' },
+      uploadedAt: new Date().toISOString(),
+      description: 'Newly uploaded file'
+    };
+
+    // Remove empty state if exists
+    const emptyState = container.querySelector('.fa-folder-open')?.closest('.text-center');
+    if (emptyState) emptyState.remove();
+
+    // Add new file to the top of the list
+    const fileHtml = `
+      <div class="flex items-center justify-between p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors group animate-fade-in"
+           data-file-item="${newFile.id}">
+        <div class="flex items-center space-x-4 flex-1 min-w-0">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center ${getFileIconBackground(newFile.type)}">
+              <i class="${getFileIcon(newFile.type)} text-white text-lg"></i>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-white font-medium truncate">${newFile.name}</h4>
+            <p class="text-gray-400 text-sm truncate">${newFile.description}</p>
+            <div class="flex items-center space-x-4 mt-1">
+              <span class="text-xs text-gray-500">
+                <i class="fas fa-hdd mr-1"></i>
+                ${formatFileSize(newFile.size)}
+              </span>
+              <span class="text-xs text-gray-500">
+                <i class="fas fa-user mr-1"></i>
+                ${newFile.uploadedBy.name}
+              </span>
+              <span class="text-xs text-gray-500">
+                <i class="fas fa-clock mr-1"></i>
+                Just now
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors">
+            <i class="fas fa-download"></i>
+          </button>
+          <button class="p-2 text-gray-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors">
+            <i class="fas fa-share"></i>
+          </button>
+          <button class="p-2 text-gray-400 hover:text-red-400 hover:bg-slate-600 rounded-lg transition-colors">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', fileHtml);
+    setupFileActions(); // Re-setup actions for new elements
+  }
+
+  function filterFiles(searchTerm, filterType) {
+    const fileItems = document.querySelectorAll('[data-file-item]');
+    
+    fileItems.forEach(item => {
+      const fileName = item.querySelector('h4')?.textContent.toLowerCase() || '';
+      const fileDescription = item.querySelector('.text-gray-400')?.textContent.toLowerCase() || '';
+      const fileType = item.dataset.fileType || 'all';
+      
+      const matchesSearch = !searchTerm || fileName.includes(searchTerm.toLowerCase()) || fileDescription.includes(searchTerm.toLowerCase());
+      const matchesFilter = filterType === 'all' || fileType === filterType;
+      
+      item.style.display = matchesSearch && matchesFilter ? 'flex' : 'none';
+    });
+  }
+
+  function previewFile(fileId) {
+    console.log('Previewing file:', fileId);
+    // Implement file preview modal
+  }
+
+  function downloadFile(fileId) {
+    console.log('Downloading file:', fileId);
+    // Implement file download
+  }
+
+  function shareFile(fileId) {
+    console.log('Sharing file:', fileId);
+    // Implement file sharing
+  }
+
+  function deleteFile(fileId) {
+    if (confirm('Are you sure you want to delete this file?')) {
+      const fileItem = document.querySelector(`[data-file-item="${fileId}"]`);
+      if (fileItem) {
+        fileItem.style.opacity = '0';
+        fileItem.style.transform = 'translateX(100%)';
+        setTimeout(() => fileItem.remove(), 300);
+      }
+    }
+  }
+
+  function getFileIcon(type) {
+    const icons = {
+      document: 'fas fa-file-alt',
+      design: 'fas fa-palette',
+      image: 'fas fa-image',
+      video: 'fas fa-video',
+      code: 'fas fa-code',
+      default: 'fas fa-file'
+    };
+    return icons[type] || icons.default;
+  }
+
+  function getFileIconBackground(type) {
+    const backgrounds = {
+      document: 'bg-blue-500',
+      design: 'bg-purple-500',
+      image: 'bg-green-500',
+      video: 'bg-red-500',
+      code: 'bg-orange-500',
+      default: 'bg-gray-500'
+    };
+    return backgrounds[type] || backgrounds.default;
+  }
+
+  function getFileType(filename) {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    const typeMap = {
+      pdf: 'document',
+      doc: 'document',
+      docx: 'document',
+      txt: 'document',
+      fig: 'design',
+      sketch: 'design',
+      png: 'image',
+      jpg: 'image',
+      jpeg: 'image',
+      gif: 'image',
+      svg: 'image',
+      mp4: 'video',
+      mov: 'video',
+      avi: 'video',
+      sql: 'code',
+      js: 'code',
+      ts: 'code',
+      html: 'code',
+      css: 'code'
+    };
+    return typeMap[extension] || 'default';
+  }
+
+  function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  }
+
+  function showFilesError() {
+    const container = document.querySelector('[data-file-list]');
+    const loadingEl = document.querySelector('[data-files-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="text-center py-12">
+        <i class="fas fa-exclamation-triangle text-red-400 text-4xl mb-4"></i>
+        <p class="text-gray-400">Failed to load files</p>
+        <button class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                onclick="location.reload()">
+          Try Again
+        </button>
+      </div>
+    `;
+  }
+</script>

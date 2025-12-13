@@ -1,0 +1,382 @@
+---
+interface ProjectActivityProps {
+  projectId: string;
+}
+
+const { projectId } = Astro.props;
+---
+
+<div class="space-y-4">
+  <!-- Activity Feed -->
+  <div class="space-y-4" data-activity-list>
+    <!-- Loading State -->
+    <div class="flex items-center justify-center py-8" data-activity-loading>
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-spinner fa-spin text-blue-400"></i>
+        <span class="text-gray-400">Loading activity...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load More -->
+  <div class="text-center">
+    <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm"
+            data-load-more-activity>
+      Load More Activity
+    </button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const projectId = '{{projectId}}';
+    await loadActivity(projectId);
+    setupActivityInteractions();
+  });
+
+  async function loadActivity(projectId, page = 1) {
+    try {
+      const activities = await fetchActivity(projectId, page);
+      renderActivity(activities, page === 1);
+    } catch (error) {
+      console.error('Failed to load activity:', error);
+      showActivityError();
+    }
+  }
+
+  async function fetchActivity(projectId, page = 1) {
+    // Simulate API call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const allActivities = [
+          {
+            id: '1',
+            type: 'milestone_completed',
+            actor: { initials: 'AS', name: 'Alice Smith' },
+            target: { type: 'milestone', name: 'Design Phase' },
+            description: 'completed the "Design Phase" milestone',
+            createdAt: '2024-01-28T15:30:00Z',
+            metadata: {
+              completedDate: '2024-01-28T15:30:00Z',
+              wasOverdue: false
+            }
+          },
+          {
+            id: '2',
+            type: 'file_uploaded',
+            actor: { initials: 'JD', name: 'John Doe' },
+            target: { type: 'file', name: 'Homepage_Mockup.png' },
+            description: 'uploaded "Homepage_Mockup.png"',
+            createdAt: '2024-01-28T14:20:00Z',
+            metadata: {
+              fileSize: '3.1 MB',
+              fileType: 'image'
+            }
+          },
+          {
+            id: '3',
+            type: 'ticket_created',
+            actor: { initials: 'AS', name: 'Alice Smith' },
+            target: { type: 'ticket', name: 'Fix responsive navigation on mobile' },
+            description: 'created a new ticket "Fix responsive navigation on mobile"',
+            createdAt: '2024-01-28T10:30:00Z',
+            metadata: {
+              priority: 'high',
+              type: 'bug'
+            }
+          },
+          {
+            id: '4',
+            type: 'ticket_assigned',
+            actor: { initials: 'JD', name: 'John Doe' },
+            target: { type: 'ticket', name: 'Add dark mode toggle' },
+            description: 'assigned ticket "Add dark mode toggle" to Mike Johnson',
+            createdAt: '2024-01-27T16:45:00Z',
+            metadata: {
+              assignee: { initials: 'MK', name: 'Mike Johnson' }
+            }
+          },
+          {
+            id: '5',
+            type: 'comment_added',
+            actor: { initials: 'MK', name: 'Mike Johnson' },
+            target: { type: 'milestone', name: 'Development Sprint 1' },
+            description: 'commented on "Development Sprint 1"',
+            createdAt: '2024-01-27T14:15:00Z',
+            metadata: {
+              commentPreview: 'Backend API is complete, starting frontend integration...'
+            }
+          },
+          {
+            id: '6',
+            type: 'project_updated',
+            actor: { initials: 'JD', name: 'John Doe' },
+            target: { type: 'project', name: 'Company Website Redesign' },
+            description: 'updated project status to "Active"',
+            createdAt: '2024-01-26T09:30:00Z',
+            metadata: {
+              field: 'status',
+              oldValue: 'Planning',
+              newValue: 'Active'
+            }
+          }
+        ];
+
+        // Simulate pagination
+        const pageSize = 5;
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageActivities = allActivities.slice(startIndex, endIndex);
+
+        resolve({
+          activities: pageActivities,
+          hasMore: endIndex < allActivities.length,
+          page: page
+        });
+      }, 1000);
+    });
+  }
+
+  function renderActivity(data, replace = true) {
+    const container = document.querySelector('[data-activity-list]');
+    const loadingEl = document.querySelector('[data-activity-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    if (data.activities.length === 0 && replace) {
+      container.innerHTML = `
+        <div class="text-center py-8">
+          <i class="fas fa-history text-gray-400 text-3xl mb-3"></i>
+          <p class="text-gray-400 text-sm">No activity yet</p>
+        </div>
+      `;
+      return;
+    }
+
+    const activityHtml = data.activities.map(activity => `
+      <div class="flex items-start space-x-3 p-3 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors animate-fade-in"
+           data-activity-item="${activity.id}">
+        <!-- Actor Avatar -->
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+            ${activity.actor.initials}
+          </div>
+        </div>
+
+        <!-- Activity Content -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-white">
+                <span class="font-medium">${activity.actor.name}</span>
+                <span class="text-gray-400"> ${activity.description}</span>
+              </p>
+              
+              <!-- Activity Metadata -->
+              <div class="mt-2 space-y-1">
+                ${getActivityMetadata(activity)}
+              </div>
+            </div>
+            
+            <!-- Activity Time -->
+            <div class="flex-shrink-0 ml-2">
+              <span class="text-xs text-gray-500 whitespace-nowrap">
+                ${formatActivityTime(activity.createdAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Icon -->
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center ${getActivityIconBackground(activity.type)}">
+            <i class="${getActivityIcon(activity.type)} text-white text-xs"></i>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    if (replace) {
+      container.innerHTML = activityHtml;
+    } else {
+      container.insertAdjacentHTML('beforeend', activityHtml);
+    }
+
+    // Update load more button
+    const loadMoreBtn = document.querySelector('[data-load-more-activity]');
+    if (loadMoreBtn) {
+      if (data.hasMore) {
+        loadMoreBtn.style.display = 'block';
+        loadMoreBtn.textContent = 'Load More Activity';
+        loadMoreBtn.disabled = false;
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    }
+
+    // Setup activity item interactions
+    setupActivityItems();
+  }
+
+  function setupActivityInteractions() {
+    const loadMoreBtn = document.querySelector('[data-load-more-activity]');
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener('click', async () => {
+        const currentPage = parseInt(loadMoreBtn.dataset.page || '1');
+        const nextPage = currentPage + 1;
+        
+        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+        loadMoreBtn.disabled = true;
+        
+        await loadActivity('{{projectId}}', nextPage);
+        
+        loadMoreBtn.dataset.page = nextPage.toString();
+      });
+    }
+  }
+
+  function setupActivityItems() {
+    const activityItems = document.querySelectorAll('[data-activity-item]');
+    
+    activityItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) {
+          const activityId = item.dataset.activityItem;
+          // Handle activity item click
+          console.log('Activity clicked:', activityId);
+        }
+      });
+    });
+  }
+
+  function getActivityMetadata(activity) {
+    switch (activity.type) {
+      case 'milestone_completed':
+        return `
+          <div class="flex items-center space-x-2 text-xs text-gray-400">
+            <i class="fas fa-check-circle text-green-400"></i>
+            <span>Completed on ${formatDate(activity.metadata.completedDate)}</span>
+            ${activity.metadata.wasOverdue ? '<span class="text-yellow-400">(Completed late)</span>' : ''}
+          </div>
+        `;
+
+      case 'file_uploaded':
+        return `
+          <div class="flex items-center space-x-2 text-xs text-gray-400">
+            <i class="fas fa-file text-blue-400"></i>
+            <span>${activity.metadata.fileSize} • ${activity.metadata.fileType}</span>
+          </div>
+        `;
+
+      case 'ticket_created':
+        return `
+          <div class="flex items-center space-x-2 text-xs text-gray-400">
+            <i class="fas fa-ticket-alt text-purple-400"></i>
+            <span>${activity.metadata.type} • ${activity.metadata.priority} priority</span>
+          </div>
+        `;
+
+      case 'ticket_assigned':
+        return `
+          <div class="flex items-center space-x-2 text-xs text-gray-400">
+            <i class="fas fa-user-check text-green-400"></i>
+            <span>Assigned to ${activity.metadata.assignee.name}</span>
+          </div>
+        `;
+
+      case 'comment_added':
+        return `
+          <div class="p-2 bg-slate-700 rounded text-xs text-gray-300 italic">
+            "${activity.metadata.commentPreview}"
+          </div>
+        `;
+
+      case 'project_updated':
+        return `
+          <div class="flex items-center space-x-2 text-xs text-gray-400">
+            <i class="fas fa-edit text-yellow-400"></i>
+            <span>Changed ${activity.metadata.field} from "${activity.metadata.oldValue}" to "${activity.metadata.newValue}"</span>
+          </div>
+        `;
+
+      default:
+        return '';
+    }
+  }
+
+  function getActivityIcon(type) {
+    const icons = {
+      milestone_completed: 'fas fa-check-circle',
+      file_uploaded: 'fas fa-upload',
+      ticket_created: 'fas fa-plus-circle',
+      ticket_assigned: 'fas fa-user-check',
+      comment_added: 'fas fa-comment',
+      project_updated: 'fas fa-edit',
+      default: 'fas fa-circle'
+    };
+    return icons[type] || icons.default;
+  }
+
+  function getActivityIconBackground(type) {
+    const backgrounds = {
+      milestone_completed: 'bg-green-500',
+      file_uploaded: 'bg-blue-500',
+      ticket_created: 'bg-purple-500',
+      ticket_assigned: 'bg-orange-500',
+      comment_added: 'bg-yellow-500',
+      project_updated: 'bg-gray-500',
+      default: 'bg-gray-500'
+    };
+    return backgrounds[type] || backgrounds.default;
+  }
+
+  function formatActivityTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      if (diffHours === 0) {
+        const diffMins = Math.floor(diffTime / (1000 * 60));
+        return diffMins <= 1 ? 'Just now' : `${diffMins}m ago`;
+      }
+      return `${diffHours}h ago`;
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  }
+
+  function showActivityError() {
+    const container = document.querySelector('[data-activity-list]');
+    const loadingEl = document.querySelector('[data-activity-loading]');
+    
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="text-center py-8">
+        <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-3"></i>
+        <p class="text-gray-400 text-sm">Failed to load activity</p>
+      </div>
+    `;
+  }
+</script>

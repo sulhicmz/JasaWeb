@@ -1,6 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service';
 import { DateTime } from 'luxon';
+import {
+  ProjectWithRelations,
+  UserWithRelations,
+  InvoiceWithProject,
+  TicketWithRelations,
+  ProjectWhereClause,
+  UserWhereClause,
+  InvoiceWhereClause,
+  TicketWhereClause,
+  ProjectFilters,
+  TeamPerformanceFilters,
+  FinancialFilters,
+  ActivityTrendsFilters,
+  ProjectAnalytics,
+  TeamPerformanceAnalytics,
+  FinancialAnalytics,
+  ClientInsightsAnalytics,
+  ActivityTrendData,
+  OverviewAnalytics,
+} from './analytics.types';
 
 @Injectable()
 export class AnalyticsService {
@@ -9,13 +29,9 @@ export class AnalyticsService {
   // Project Analytics
   async getProjectAnalytics(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-      projectId?: string;
-    }
-  ) {
-    const whereClause: any = {
+    filters?: ProjectFilters
+  ): Promise<ProjectAnalytics> {
+    const whereClause: ProjectWhereClause = {
       organizationId,
     };
 
@@ -33,7 +49,7 @@ export class AnalyticsService {
       }
     }
 
-    const projects = await this.prisma.project.findMany({
+    const projects = (await this.prisma.project.findMany({
       where: whereClause,
       include: {
         milestones: true,
@@ -42,45 +58,45 @@ export class AnalyticsService {
         tickets: true,
         invoices: true,
       },
-    });
+    })) as ProjectWithRelations[];
 
     const totalProjects = projects.length;
     const completedProjects = projects.filter(
-      (p: any) => p.status === 'completed'
+      (p) => p.status === 'completed'
     ).length;
     const inProgressProjects = projects.filter(
-      (p: any) => p.status === 'progress'
+      (p) => p.status === 'progress'
     ).length;
     const overdueProjects = projects.filter(
-      (p: any) =>
+      (p) =>
         p.dueAt && new Date(p.dueAt) < new Date() && p.status !== 'completed'
     ).length;
 
     // Calculate milestone completion
     const totalMilestones = projects.reduce(
-      (sum: number, p: any) => sum + p.milestones.length,
+      (sum: number, p) => sum + p.milestones.length,
       0
     );
     const completedMilestones = projects.reduce(
-      (sum: number, p: any) =>
-        sum + p.milestones.filter((m: any) => m.status === 'completed').length,
+      (sum: number, p) =>
+        sum + p.milestones.filter((m) => m.status === 'completed').length,
       0
     );
 
     // Calculate task completion
     const totalTasks = projects.reduce(
-      (sum: number, p: any) => sum + p.tasks.length,
+      (sum: number, p) => sum + p.tasks.length,
       0
     );
     const completedTasks = projects.reduce(
-      (sum: number, p: any) =>
-        sum + p.tasks.filter((t: any) => t.status === 'completed').length,
+      (sum: number, p) =>
+        sum + p.tasks.filter((t) => t.status === 'completed').length,
       0
     );
 
     // Timeline adherence (projects completed on time)
     const completedOnTime = projects.filter(
-      (p: any) =>
+      (p) =>
         p.status === 'completed' && p.dueAt && p.updatedAt <= new Date(p.dueAt)
     ).length;
 
@@ -117,13 +133,9 @@ export class AnalyticsService {
   // Team Performance Analytics
   async getTeamPerformanceAnalytics(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-      userId?: string;
-    }
-  ) {
-    const whereClause: any = {
+    filters?: TeamPerformanceFilters
+  ): Promise<TeamPerformanceAnalytics[]> {
+    const whereClause: UserWhereClause = {
       memberships: {
         some: {
           organizationId,
@@ -135,7 +147,7 @@ export class AnalyticsService {
       whereClause.id = filters.userId;
     }
 
-    const users = await this.prisma.user.findMany({
+    const users = (await this.prisma.user.findMany({
       where: whereClause,
       include: {
         memberships: {
@@ -191,20 +203,20 @@ export class AnalyticsService {
           },
         },
       },
-    });
+    })) as UserWithRelations[];
 
-    return users.map((user: any) => {
+    return users.map((user) => {
       const totalTasks = user.Task.length;
       const completedTasks = user.Task.filter(
-        (t: any) => t.status === 'completed'
+        (t) => t.status === 'completed'
       ).length;
       const totalApprovals = user.approvals.length;
       const completedApprovals = user.approvals.filter(
-        (a: any) => a.status !== 'pending'
+        (a) => a.status !== 'pending'
       ).length;
       const totalTickets = user.tickets.length;
       const resolvedTickets = user.tickets.filter(
-        (t: any) => t.status === 'resolved' || t.status === 'closed'
+        (t) => t.status === 'resolved' || t.status === 'closed'
       ).length;
 
       return {
@@ -239,13 +251,9 @@ export class AnalyticsService {
   // Financial Analytics
   async getFinancialAnalytics(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-      projectId?: string;
-    }
-  ) {
-    const whereClause: any = {
+    filters?: FinancialFilters
+  ): Promise<FinancialAnalytics> {
+    const whereClause: InvoiceWhereClause = {
       organizationId,
     };
 
@@ -263,25 +271,25 @@ export class AnalyticsService {
       }
     }
 
-    const invoices = await this.prisma.invoice.findMany({
+    const invoices = (await this.prisma.invoice.findMany({
       where: whereClause,
       include: {
         project: true,
       },
-    });
+    })) as InvoiceWithProject[];
 
     const totalInvoices = invoices.length;
     const totalAmount = invoices.reduce(
-      (sum: number, inv: any) => sum + inv.amount,
+      (sum: number, inv) => sum + inv.amount,
       0
     );
-    const paidInvoices = invoices.filter((inv: any) => inv.status === 'paid');
+    const paidInvoices = invoices.filter((inv) => inv.status === 'paid');
     const paidAmount = paidInvoices.reduce(
-      (sum: number, inv: any) => sum + inv.amount,
+      (sum: number, inv) => sum + inv.amount,
       0
     );
     const overdueInvoices = invoices.filter(
-      (inv: any) =>
+      (inv) =>
         inv.status !== 'paid' &&
         inv.status !== 'cancelled' &&
         new Date(inv.dueAt) < new Date()
@@ -289,7 +297,7 @@ export class AnalyticsService {
 
     // Group by currency
     const byCurrency = invoices.reduce(
-      (acc: any, inv: any) => {
+      (acc, inv) => {
         const currency = inv.currency;
         if (!acc[currency]) {
           acc[currency] = { count: 0, amount: 0, paid: 0 };
@@ -307,7 +315,7 @@ export class AnalyticsService {
 
     // Group by month
     const byMonth = invoices.reduce(
-      (acc: any, inv: any) => {
+      (acc, inv) => {
         const month = DateTime.fromJSDate(inv.issuedAt).toFormat('yyyy-MM');
         if (!acc[month]) {
           acc[month] = { count: 0, amount: 0, paid: 0 };
@@ -339,12 +347,9 @@ export class AnalyticsService {
   // Client Insights / SLA Analytics
   async getClientInsightsAnalytics(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-    }
-  ) {
-    const whereClause: any = {
+    filters?: ActivityTrendsFilters
+  ): Promise<ClientInsightsAnalytics> {
+    const whereClause: TicketWhereClause = {
       organizationId,
     };
 
@@ -358,36 +363,34 @@ export class AnalyticsService {
       }
     }
 
-    const tickets = await this.prisma.ticket.findMany({
+    const tickets = (await this.prisma.ticket.findMany({
       where: whereClause,
       include: {
         assignee: true,
         project: true,
       },
-    });
+    })) as TicketWithRelations[];
 
     const totalTickets = tickets.length;
     const resolvedTickets = tickets.filter(
-      (t: any) => t.status === 'resolved' || t.status === 'closed'
+      (t) => t.status === 'resolved' || t.status === 'closed'
     );
     const resolvedCount = resolvedTickets.length;
 
     // Calculate average resolution time (simplified - in real implementation, track resolution time)
-    const criticalTickets = tickets.filter(
-      (t: any) => t.priority === 'critical'
-    );
-    const highTickets = tickets.filter((t: any) => t.priority === 'high');
-    const mediumTickets = tickets.filter((t: any) => t.priority === 'medium');
-    const lowTickets = tickets.filter((t: any) => t.priority === 'low');
+    const criticalTickets = tickets.filter((t) => t.priority === 'critical');
+    const highTickets = tickets.filter((t) => t.priority === 'high');
+    const mediumTickets = tickets.filter((t) => t.priority === 'medium');
+    const lowTickets = tickets.filter((t) => t.priority === 'low');
 
     // SLA compliance (tickets resolved within SLA)
     const slaCompliantTickets = resolvedTickets.filter(
-      (t: any) => !t.slaDueAt || t.updatedAt <= new Date(t.slaDueAt)
+      (t) => !t.slaDueAt || t.updatedAt <= new Date(t.slaDueAt)
     ).length;
 
     // Group by type
     const byType = tickets.reduce(
-      (acc: any, ticket: any) => {
+      (acc, ticket) => {
         const type = ticket.type;
         if (!acc[type]) {
           acc[type] = { total: 0, resolved: 0 };
@@ -407,25 +410,25 @@ export class AnalyticsService {
       critical: {
         total: criticalTickets.length,
         resolved: criticalTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
       high: {
         total: highTickets.length,
         resolved: highTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
       medium: {
         total: mediumTickets.length,
         resolved: mediumTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
       low: {
         total: lowTickets.length,
         resolved: lowTickets.filter(
-          (t: any) => t.status === 'resolved' || t.status === 'closed'
+          (t) => t.status === 'resolved' || t.status === 'closed'
         ).length,
       },
     };
@@ -447,12 +450,8 @@ export class AnalyticsService {
   // Activity trends over time
   async getActivityTrends(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-      granularity?: 'day' | 'week' | 'month';
-    }
-  ) {
+    filters?: ActivityTrendsFilters
+  ): Promise<ActivityTrendData[]> {
     const granularity = filters?.granularity || 'day';
     const dateFrom = filters?.dateFrom
       ? new Date(filters.dateFrom)
@@ -474,7 +473,7 @@ export class AnalyticsService {
 
     // Group by time period
     const trends = auditLogs.reduce(
-      (acc: any, log: any) => {
+      (acc, log) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
 
@@ -489,6 +488,7 @@ export class AnalyticsService {
             key = date.toFormat('yyyy-MM-dd');
         }
 
+        // Initialize if not exists
         if (!acc[key]) {
           acc[key] = {
             date: key,
@@ -501,27 +501,36 @@ export class AnalyticsService {
           };
         }
 
-        acc[key].total++;
-        if (acc[key][log.action] !== undefined) {
-          acc[key][log.action]++;
+        const trendData = acc[key]!;
+        trendData.total++;
+
+        // Handle known actions
+        const knownActions = [
+          'user_login',
+          'file_upload',
+          'approval_request',
+          'project_created',
+          'task_completed',
+        ];
+        if (knownActions.includes(log.action)) {
+          const currentCount =
+            (trendData as Record<string, number>)[log.action] || 0;
+          (trendData as Record<string, number>)[log.action] = currentCount + 1;
         }
 
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<string, ActivityTrendData>
     );
 
-    return Object.values(trends);
+    return Object.values(trends) as ActivityTrendData[];
   }
 
   // Overview Analytics - combines all analytics for dashboard
   async getOverviewAnalytics(
     organizationId: string,
-    filters?: {
-      dateFrom?: string;
-      dateTo?: string;
-    }
-  ) {
+    filters?: ActivityTrendsFilters
+  ): Promise<OverviewAnalytics> {
     const [projects, teamPerformance, financial, clientInsights] =
       await Promise.all([
         this.getProjectAnalytics(organizationId, filters),
