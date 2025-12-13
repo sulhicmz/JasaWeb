@@ -1,0 +1,764 @@
+---
+// ProjectProgressTracker.astro - Advanced project progress visualization component
+---
+
+<div class="glass-panel p-6 rounded-xl mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Project Progress Tracker</h2>
+    <div class="flex items-center space-x-4">
+      <!-- View Mode Selector -->
+      <select id="progressViewMode" class="bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="kanban">Kanban Board</option>
+        <option value="timeline">Timeline View</option>
+        <option value="gantt">Gantt Chart</option>
+        <option value="list">List View</option>
+      </select>
+      
+      <!-- Filter Options -->
+      <select id="progressFilter" class="bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="all">All Projects</option>
+        <option value="active">Active Only</option>
+        <option value="at-risk">At Risk</option>
+        <option value="overdue">Overdue</option>
+        <option value="completed">Completed</option>
+      </select>
+      
+      <!-- Refresh Button -->
+      <button id="refreshProgress" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+        <i class="fas fa-sync-alt"></i>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="progressLoading" class="hidden">
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+    </div>
+  </div>
+
+  <!-- Progress Content -->
+  <div id="progressContent">
+    <!-- Kanban Board View -->
+    <div id="kanbanView" class="progress-view">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <!-- Planning Column -->
+        <div class="bg-slate-800/50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-medium">Planning</h3>
+            <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded-full" id="planningCount">0</span>
+          </div>
+          <div id="planningColumn" class="space-y-3 min-h-[200px]">
+            <!-- Projects will be added here dynamically -->
+          </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="bg-slate-800/50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-medium">In Progress</h3>
+            <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full" id="progressCount">0</span>
+          </div>
+          <div id="progressColumn" class="space-y-3 min-h-[200px]">
+            <!-- Projects will be added here dynamically -->
+          </div>
+        </div>
+
+        <!-- Review Column -->
+        <div class="bg-slate-800/50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-medium">Review</h3>
+            <span class="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full" id="reviewCount">0</span>
+          </div>
+          <div id="reviewColumn" class="space-y-3 min-h-[200px]">
+            <!-- Projects will be added here dynamically -->
+          </div>
+        </div>
+
+        <!-- Testing Column -->
+        <div class="bg-slate-800/50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-medium">Testing</h3>
+            <span class="bg-purple-600 text-white text-xs px-2 py-1 rounded-full" id="testingCount">0</span>
+          </div>
+          <div id="testingColumn" class="space-y-3 min-h-[200px]">
+            <!-- Projects will be added here dynamically -->
+          </div>
+        </div>
+
+        <!-- Completed Column -->
+        <div class="bg-slate-800/50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-medium">Completed</h3>
+            <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full" id="completedCount">0</span>
+          </div>
+          <div id="completedColumn" class="space-y-3 min-h-[200px]">
+            <!-- Projects will be added here dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline View -->
+    <div id="timelineView" class="progress-view hidden">
+      <div class="space-y-4" id="timelineContainer">
+        <!-- Timeline items will be added here dynamically -->
+      </div>
+    </div>
+
+    <!-- Gantt Chart View -->
+    <div id="ganttView" class="progress-view hidden">
+      <div class="bg-slate-800/50 rounded-lg p-4 overflow-x-auto">
+        <canvas id="ganttChart" width="1200" height="400"></canvas>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div id="listView" class="progress-view hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-white">
+          <thead>
+            <tr class="border-b border-slate-700">
+              <th class="text-left py-3 px-4">Project</th>
+              <th class="text-left py-3 px-4">Status</th>
+              <th class="text-left py-3 px-4">Progress</th>
+              <th class="text-left py-3 px-4">Milestones</th>
+              <th class="text-left py-3 px-4">Due Date</th>
+              <th class="text-left py-3 px-4">Team</th>
+              <th class="text-left py-3 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="listTableBody">
+            <!-- Table rows will be added here dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Detail Modal -->
+  <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 id="modalProjectName" class="text-xl font-bold text-white"></h3>
+          <button id="closeModal" class="text-gray-400 hover:text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div id="modalContent">
+          <!-- Modal content will be added here dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Project Progress Tracker functionality
+  let projectsData: any[] = [];
+  let currentView = 'kanban';
+  let currentFilter = 'all';
+
+  // Initialize progress tracker
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeProgressTracker();
+    setupEventListeners();
+    loadProjectsData();
+  });
+
+  function initializeProgressTracker() {
+    // Load Chart.js if not already loaded for Gantt chart
+    if (typeof Chart === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+      script.onload = () => {
+        console.log('Chart.js loaded for progress tracker');
+      };
+      document.head.appendChild(script);
+    }
+  }
+
+  function setupEventListeners() {
+    // View mode selector
+    document.getElementById('progressViewMode')?.addEventListener('change', (e) => {
+      currentView = (e.target as HTMLSelectElement).value;
+      switchView(currentView);
+    });
+
+    // Filter selector
+    document.getElementById('progressFilter')?.addEventListener('change', (e) => {
+      currentFilter = (e.target as HTMLSelectElement).value;
+      applyFilter(currentFilter);
+    });
+
+    // Refresh button
+    document.getElementById('refreshProgress')?.addEventListener('click', loadProjectsData);
+
+    // Modal close button
+    document.getElementById('closeModal')?.addEventListener('click', closeModal);
+    
+    // Close modal on background click
+    document.getElementById('projectModal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'projectModal') {
+        closeModal();
+      }
+    });
+  }
+
+  async function loadProjectsData() {
+    const loadingEl = document.getElementById('progressLoading');
+    const contentEl = document.getElementById('progressContent');
+    
+    loadingEl?.classList.remove('hidden');
+    contentEl?.classList.add('hidden');
+
+    try {
+      const response = await fetch('/api/dashboard/projects-overview?limit=20', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load projects data');
+      }
+
+      projectsData = await response.json();
+      
+      updateProgressDisplay();
+      contentEl?.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      showError('Failed to load projects data');
+    } finally {
+      loadingEl?.classList.add('hidden');
+    }
+  }
+
+  function updateProgressDisplay() {
+    switch (currentView) {
+      case 'kanban':
+        updateKanbanBoard();
+        break;
+      case 'timeline':
+        updateTimelineView();
+        break;
+      case 'gantt':
+        updateGanttChart();
+        break;
+      case 'list':
+        updateListView();
+        break;
+    }
+  }
+
+  function switchView(view: string) {
+    // Hide all views
+    document.querySelectorAll('.progress-view').forEach(v => v.classList.add('hidden'));
+    
+    // Show selected view
+    document.getElementById(`${view}View`)?.classList.remove('hidden');
+    
+    // Update display
+    updateProgressDisplay();
+  }
+
+  function applyFilter(filter: string) {
+    let filteredProjects = projectsData;
+
+    switch (filter) {
+      case 'active':
+        filteredProjects = projectsData.filter(p => p.status === 'active' || p.status === 'in-progress');
+        break;
+      case 'at-risk':
+        filteredProjects = projectsData.filter(p => {
+          const overdueMilestones = p.totalMilestones - p.completedMilestones;
+          return overdueMilestones > 2 || p.highPriorityTickets > 0;
+        });
+        break;
+      case 'overdue':
+        filteredProjects = projectsData.filter(p => 
+          p.dueAt && new Date(p.dueAt) < new Date()
+        );
+        break;
+      case 'completed':
+        filteredProjects = projectsData.filter(p => p.status === 'completed');
+        break;
+    }
+
+    // Update display with filtered data
+    projectsData = filteredProjects;
+    updateProgressDisplay();
+    
+    // Restore original data for next filter
+    loadProjectsData();
+  }
+
+  function updateKanbanBoard() {
+    const columns = {
+      planning: document.getElementById('planningColumn'),
+      progress: document.getElementById('progressColumn'),
+      review: document.getElementById('reviewColumn'),
+      testing: document.getElementById('testingColumn'),
+      completed: document.getElementById('completedColumn')
+    };
+
+    const counts = {
+      planning: document.getElementById('planningCount'),
+      progress: document.getElementById('progressCount'),
+      review: document.getElementById('reviewCount'),
+      testing: document.getElementById('testingCount'),
+      completed: document.getElementById('completedCount')
+    };
+
+    // Clear columns
+    Object.values(columns).forEach(column => {
+      if (column) column.innerHTML = '';
+    });
+
+    // Reset counts
+    Object.values(counts).forEach(count => {
+      if (count) count.textContent = '0';
+    });
+
+    // Categorize and add projects to columns
+    projectsData.forEach(project => {
+      const column = determineProjectColumn(project);
+      const projectCard = createProjectCard(project);
+      
+      if (columns[column]) {
+        columns[column].appendChild(projectCard);
+        
+        // Update count
+        const currentCount = parseInt(counts[column]?.textContent || '0');
+        if (counts[column]) counts[column].textContent = (currentCount + 1).toString();
+      }
+    });
+  }
+
+  function determineProjectColumn(project: any): string {
+    if (project.status === 'completed') return 'completed';
+    if (project.status === 'planning' || project.status === 'draft') return 'planning';
+    
+    const progress = project.progress || 0;
+    if (progress >= 80) return 'testing';
+    if (progress >= 60) return 'review';
+    if (progress >= 20) return 'progress';
+    
+    return 'planning';
+  }
+
+  function createProjectCard(project: any): HTMLElement {
+    const card = document.createElement('div');
+    card.className = 'bg-slate-700 rounded-lg p-4 cursor-pointer hover:bg-slate-600 transition-colors duration-200';
+    card.onclick = () => showProjectDetails(project);
+
+    const statusColor = getStatusColor(project.status);
+    const progressColor = getProgressColor(project.progress);
+    const riskIndicator = project.highPriorityTickets > 0 ? 
+      '<i class="fas fa-exclamation-triangle text-red-400 text-xs"></i>' : '';
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-white font-medium text-sm truncate">${project.name}</h4>
+        ${riskIndicator}
+      </div>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400">Progress</span>
+          <span class="text-white">${project.progress}%</span>
+        </div>
+        <div class="w-full bg-slate-600 rounded-full h-2">
+          <div class="${progressColor} h-2 rounded-full transition-all duration-300" style="width: ${project.progress}%"></div>
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-gray-400">${project.completedMilestones}/${project.totalMilestones} milestones</span>
+          <span class="${statusColor}">${project.status}</span>
+        </div>
+        ${project.dueAt ? `
+          <div class="text-xs text-gray-400">
+            <i class="fas fa-calendar"></i> ${formatDate(project.dueAt)}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    return card;
+  }
+
+  function updateTimelineView() {
+    const container = document.getElementById('timelineContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // Sort projects by start date
+    const sortedProjects = [...projectsData].sort((a, b) => 
+      new Date(a.startAt || a.createdAt).getTime() - new Date(b.startAt || b.createdAt).getTime()
+    );
+
+    sortedProjects.forEach(project => {
+      const timelineItem = createTimelineItem(project);
+      container.appendChild(timelineItem);
+    });
+  }
+
+  function createTimelineItem(project: any): HTMLElement {
+    const item = document.createElement('div');
+    item.className = 'flex items-start space-x-4 p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800/70 transition-colors duration-200 cursor-pointer';
+    item.onclick = () => showProjectDetails(project);
+
+    const startDate = project.startAt || project.createdAt;
+    const endDate = project.dueAt || 'TBD';
+    const statusColor = getStatusColor(project.status);
+
+    item.innerHTML = `
+      <div class="flex-shrink-0">
+        <div class="w-3 h-3 bg-blue-500 rounded-full mt-2"></div>
+      </div>
+      <div class="flex-grow">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-white font-medium">${project.name}</h4>
+          <span class="${statusColor} text-sm">${project.status}</span>
+        </div>
+        <div class="flex items-center space-x-4 text-sm text-gray-400">
+          <span><i class="fas fa-play"></i> ${formatDate(startDate)}</span>
+          <span><i class="fas fa-flag"></i> ${formatDate(endDate)}</span>
+          <span><i class="fas fa-tasks"></i> ${project.completedMilestones}/${project.totalMilestones}</span>
+        </div>
+        <div class="mt-2">
+          <div class="w-full bg-slate-700 rounded-full h-2">
+            <div class="${getProgressColor(project.progress)} h-2 rounded-full" style="width: ${project.progress}%"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return item;
+  }
+
+  function updateGanttChart() {
+    const canvas = document.getElementById('ganttChart') as HTMLCanvasElement;
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    // Destroy existing chart if any
+    if ((canvas as any).chart) {
+      (canvas as any).chart.destroy();
+    }
+
+    const ganttData = prepareGanttData();
+    
+    (canvas as any).chart = new Chart(canvas, {
+      type: 'bar',
+      data: ganttData,
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'day',
+              displayFormats: {
+                day: 'MMM dd'
+              }
+            },
+            ticks: { color: '#9ca3af' },
+            grid: { color: 'rgba(75, 85, 99, 0.3)' }
+          },
+          y: {
+            ticks: { color: '#9ca3af' },
+            grid: { color: 'rgba(75, 85, 99, 0.3)' }
+          }
+        }
+      }
+    });
+  }
+
+  function prepareGanttData() {
+    const datasets = [{
+      label: 'Project Timeline',
+      data: projectsData.map(project => ({
+        x: [project.startAt || project.createdAt, project.dueAt || new Date()],
+        y: project.name
+      })),
+      backgroundColor: projectsData.map(project => {
+        switch (project.status) {
+          case 'completed': return 'rgba(34, 197, 94, 0.6)';
+          case 'active': case 'in-progress': return 'rgba(59, 130, 246, 0.6)';
+          case 'on-hold': return 'rgba(250, 204, 21, 0.6)';
+          default: return 'rgba(156, 163, 175, 0.6)';
+        }
+      }),
+      borderColor: projectsData.map(project => {
+        switch (project.status) {
+          case 'completed': return 'rgb(34, 197, 94)';
+          case 'active': case 'in-progress': return 'rgb(59, 130, 246)';
+          case 'on-hold': return 'rgb(250, 204, 21)';
+          default: return 'rgb(156, 163, 175)';
+        }
+      }),
+      borderWidth: 1
+    }];
+
+    return { datasets };
+  }
+
+  function updateListView() {
+    const tbody = document.getElementById('listTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    projectsData.forEach(project => {
+      const row = createListRow(project);
+      tbody.appendChild(row);
+    });
+  }
+
+  function createListRow(project: any): HTMLElement {
+    const row = document.createElement('tr');
+    row.className = 'border-b border-slate-700 hover:bg-slate-800/50 cursor-pointer';
+    row.onclick = () => showProjectDetails(project);
+
+    const statusColor = getStatusColor(project.status);
+    const progressColor = getProgressColor(project.progress);
+
+    row.innerHTML = `
+      <td class="py-3 px-4">
+        <div>
+          <div class="text-white font-medium">${project.name}</div>
+          <div class="text-gray-400 text-sm">ID: ${project.id.slice(-8)}</div>
+        </div>
+      </td>
+      <td class="py-3 px-4">
+        <span class="${statusColor} px-2 py-1 rounded text-sm">${project.status}</span>
+      </td>
+      <td class="py-3 px-4">
+        <div class="flex items-center space-x-2">
+          <div class="w-16 bg-slate-700 rounded-full h-2">
+            <div class="${progressColor} h-2 rounded-full" style="width: ${project.progress}%"></div>
+          </div>
+          <span class="text-white text-sm">${project.progress}%</span>
+        </div>
+      </td>
+      <td class="py-3 px-4">
+        <div class="text-white">${project.completedMilestones}/${project.totalMilestones}</div>
+        ${project.highPriorityTickets > 0 ? 
+          `<div class="text-red-400 text-sm">${project.highPriorityTickets} high priority tickets</div>` : ''
+        }
+      </td>
+      <td class="py-3 px-4">
+        <div class="text-white">${formatDate(project.dueAt)}</div>
+        ${project.dueAt && new Date(project.dueAt) < new Date() ? 
+          '<div class="text-red-400 text-sm">Overdue</div>' : ''
+        }
+      </td>
+      <td class="py-3 px-4">
+        <div class="flex -space-x-2">
+          <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">U</div>
+          <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">T</div>
+        </div>
+      </td>
+      <td class="py-3 px-4">
+        <div class="flex space-x-2">
+          <button class="text-blue-400 hover:text-blue-300" onclick="event.stopPropagation(); showProjectDetails(${JSON.stringify(project).replace(/"/g, '&quot;')})">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="text-green-400 hover:text-green-300" onclick="event.stopPropagation(); editProject('${project.id}')">
+            <i class="fas fa-edit"></i>
+          </button>
+        </div>
+      </td>
+    `;
+
+    return row;
+  }
+
+  function showProjectDetails(project: any) {
+    const modal = document.getElementById('projectModal');
+    const projectName = document.getElementById('modalProjectName');
+    const content = document.getElementById('modalContent');
+
+    if (!modal || !projectName || !content) return;
+
+    projectName.textContent = project.name;
+    
+    content.innerHTML = `
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Project Overview -->
+        <div>
+          <h4 class="text-lg font-semibold text-white mb-4">Project Overview</h4>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Status:</span>
+              <span class="${getStatusColor(project.status)}">${project.status}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Progress:</span>
+              <span class="text-white">${project.progress}%</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Start Date:</span>
+              <span class="text-white">${formatDate(project.startAt || project.createdAt)}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Due Date:</span>
+              <span class="text-white">${formatDate(project.dueAt)}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Milestones:</span>
+              <span class="text-white">${project.completedMilestones}/${project.totalMilestones}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Open Tickets:</span>
+              <span class="text-white">${project.openTickets}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Chart -->
+        <div>
+          <h4 class="text-lg font-semibold text-white mb-4">Progress Breakdown</h4>
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-gray-400">Overall Progress</span>
+                <span class="text-white">${project.progress}%</span>
+              </div>
+              <div class="w-full bg-slate-700 rounded-full h-3">
+                <div class="${getProgressColor(project.progress)} h-3 rounded-full" style="width: ${project.progress}%"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-gray-400">Milestone Completion</span>
+                <span class="text-white">${Math.round((project.completedMilestones / project.totalMilestones) * 100)}%</span>
+              </div>
+              <div class="w-full bg-slate-700 rounded-full h-3">
+                <div class="bg-purple-500 h-3 rounded-full" style="width: ${(project.completedMilestones / project.totalMilestones) * 100}%"></div>
+              </div>
+            </div>
+
+            ${project.highPriorityTickets > 0 ? `
+              <div class="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                <div class="flex items-center space-x-2">
+                  <i class="fas fa-exclamation-triangle text-red-400"></i>
+                  <span class="text-red-300 font-medium">Attention Needed</span>
+                </div>
+                <p class="text-gray-300 text-sm mt-1">${project.highPriorityTickets} high priority tickets require immediate attention.</p>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="mt-6">
+        <h4 class="text-lg font-semibold text-white mb-4">Recent Activity</h4>
+        <div class="bg-slate-700/50 rounded-lg p-4">
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-sm">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span class="text-gray-400">Project updated</span>
+              <span class="text-gray-500">${formatDate(project.updatedAt)}</span>
+            </div>
+            <div class="flex items-center space-x-3 text-sm">
+              <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span class="text-gray-400">Milestone completed</span>
+              <span class="text-gray-500">2 days ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-6 flex justify-end space-x-3">
+        <button onclick="closeModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors duration-200">
+          Close
+        </button>
+        <button onclick="editProject('${project.id}')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+          Edit Project
+        </button>
+        <a href="/projects/${project.id}" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200">
+          View Details
+        </a>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('projectModal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function editProject(projectId: string) {
+    // Navigate to project edit page
+    window.location.href = `/projects/${projectId}/edit`;
+  }
+
+  // Helper functions
+  function getStatusColor(status: string): string {
+    switch (status) {
+      case 'completed': return 'text-green-400';
+      case 'active': case 'in-progress': return 'text-blue-400';
+      case 'on-hold': return 'text-yellow-400';
+      case 'planning': case 'draft': return 'text-gray-400';
+      default: return 'text-gray-400';
+    }
+  }
+
+  function getProgressColor(progress: number): string {
+    if (progress >= 80) return 'bg-green-500';
+    if (progress >= 60) return 'bg-blue-500';
+    if (progress >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  function formatDate(dateString: string): string {
+    if (!dateString) return 'Not set';
+    
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  function showError(message: string) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 z-50 p-4 bg-red-500 text-white rounded-lg shadow-lg';
+    notification.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.parentElement.remove()" class="ml-4">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 5000);
+  }
+
+  // Listen for real-time updates
+  window.addEventListener('dashboard-update', (e: any) => {
+    if (e.detail.type === 'project') {
+      loadProjectsData();
+    }
+  });
+</script>

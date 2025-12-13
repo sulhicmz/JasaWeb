@@ -8,6 +8,9 @@ import DashboardCharts from '../components/dashboard/DashboardCharts.astro';
 import DashboardExport from '../components/dashboard/DashboardExport.astro';
 import NotificationPreferences from '../components/dashboard/NotificationPreferences.astro';
 import AdvancedAnalytics from '../components/dashboard/AdvancedAnalytics.astro';
+import ProjectProgressTracker from '../components/dashboard/ProjectProgressTracker.astro';
+import PerformanceMetrics from '../components/dashboard/PerformanceMetrics.astro';
+import InteractiveCharts from '../components/dashboard/InteractiveCharts.astro';
 // Import notification service
 import '../services/notificationService.ts';
 ---
@@ -54,6 +57,21 @@ import '../services/notificationService.ts';
       <!-- Stats Overview -->
       <section class="mb-8">
         <DashboardStats client:load />
+      </section>
+
+      <!-- Project Progress Tracker -->
+      <section class="mb-8">
+        <ProjectProgressTracker client:load />
+      </section>
+
+      <!-- Performance Metrics -->
+      <section class="mb-8">
+        <PerformanceMetrics client:load />
+      </section>
+
+      <!-- Interactive Charts -->
+      <section class="mb-8">
+        <InteractiveCharts client:load />
       </section>
 
       <!-- Analytics Charts -->

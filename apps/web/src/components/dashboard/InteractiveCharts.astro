@@ -1,0 +1,860 @@
+---
+// InteractiveCharts.astro - Advanced interactive data visualization component
+---
+
+<div class="glass-panel p-6 rounded-xl mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-white">Interactive Analytics</h2>
+    <div class="flex items-center space-x-4">
+      <!-- Chart Type Selector -->
+      <select id="chartTypeSelector" class="bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="combined">Combined View</option>
+        <option value="projects">Projects Analytics</option>
+        <option value="revenue">Revenue Analytics</option>
+        <option value="performance">Performance Analytics</option>
+        <option value="forecast">Forecast Analytics</option>
+      </select>
+      
+      <!-- Time Period -->
+      <select id="chartTimePeriod" class="bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-700 focus:border-blue-500 focus:outline-none">
+        <option value="7d">Last 7 Days</option>
+        <option value="30d" selected>Last 30 Days</option>
+        <option value="90d">Last 90 Days</option>
+        <option value="1y">Last Year</option>
+      </select>
+      
+      <!-- Interactive Mode -->
+      <div class="flex items-center space-x-2">
+        <input type="checkbox" id="interactiveMode" class="rounded" checked>
+        <label for="interactiveMode" class="text-white text-sm">Interactive Mode</label>
+      </div>
+      
+      <!-- Fullscreen Button -->
+      <button id="fullscreenCharts" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 flex items-center space-x-2">
+        <i class="fas fa-expand"></i>
+        <span>Fullscreen</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="chartsLoading" class="hidden">
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+    </div>
+  </div>
+
+  <!-- Charts Content -->
+  <div id="chartsContent">
+    <!-- Combined Dashboard View -->
+    <div id="combinedView" class="chart-view">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Main Trend Chart -->
+        <div class="lg:col-span-2 bg-slate-800/50 p-4 rounded-lg">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-medium">Business Overview</h3>
+            <div class="flex space-x-2">
+              <button class="chart-dataset-toggle px-3 py-1 bg-blue-600 text-white rounded text-xs" data-dataset="projects">Projects</button>
+              <button class="chart-dataset-toggle px-3 py-1 bg-slate-700 text-gray-300 rounded text-xs" data-dataset="revenue">Revenue</button>
+              <button class="chart-dataset-toggle px-3 py-1 bg-slate-700 text-gray-300 rounded text-xs" data-dataset="tickets">Tickets</button>
+            </div>
+          </div>
+          <canvas id="mainTrendChart" width="800" height="300"></canvas>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Project Distribution -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Project Distribution</h3>
+          <canvas id="projectDistributionChart" width="300" height="200"></canvas>
+        </div>
+
+        <!-- Revenue Breakdown -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Revenue Breakdown</h3>
+          <canvas id="revenueBreakdownChart" width="300" height="200"></canvas>
+        </div>
+
+        <!-- Performance Heatmap -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Performance Heatmap</h3>
+          <canvas id="performanceHeatmapChart" width="300" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects Analytics View -->
+    <div id="projectsView" class="chart-view hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Project Timeline -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Project Timeline</h3>
+          <canvas id="projectTimelineChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Project Status Distribution -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Status Distribution</h3>
+          <canvas id="projectStatusChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Milestone Completion -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Milestone Completion</h3>
+          <canvas id="milestoneCompletionChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Resource Allocation -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Resource Allocation</h3>
+          <canvas id="resourceAllocationChart" width="400" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Analytics View -->
+    <div id="revenueView" class="chart-view hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Trend -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Revenue Trend</h3>
+          <canvas id="revenueTrendChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Revenue by Service -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Revenue by Service</h3>
+          <canvas id="revenueByServiceChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Payment Analysis -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Payment Analysis</h3>
+          <canvas id="paymentAnalysisChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Forecast vs Actual -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Forecast vs Actual</h3>
+          <canvas id="forecastActualChart" width="400" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Analytics View -->
+    <div id="performanceView" class="chart-view hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Performance Metrics -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Performance Metrics</h3>
+          <canvas id="performanceMetricsChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- System Health -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">System Health</h3>
+          <canvas id="systemHealthChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Error Analysis -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Error Analysis</h3>
+          <canvas id="errorAnalysisChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Response Time Distribution -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Response Time Distribution</h3>
+          <canvas id="responseTimeDistChart" width="400" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forecast Analytics View -->
+    <div id="forecastView" class="chart-view hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Growth Forecast -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Growth Forecast</h3>
+          <canvas id="growthForecastChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Risk Assessment</h3>
+          <canvas id="riskAssessmentChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Capacity Planning -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Capacity Planning</h3>
+          <canvas id="capacityPlanningChart" width="400" height="250"></canvas>
+        </div>
+
+        <!-- Predictive Analytics -->
+        <div class="bg-slate-800/50 p-4 rounded-lg">
+          <h3 class="text-white font-medium mb-4">Predictive Analytics</h3>
+          <canvas id="predictiveAnalyticsChart" width="400" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Controls Panel -->
+  <div class="mt-6 bg-slate-800/50 rounded-lg p-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <span class="text-white text-sm">Chart Controls:</span>
+        <button id="exportChart" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors duration-200">
+          <i class="fas fa-download mr-1"></i> Export
+        </button>
+        <button id="refreshCharts" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors duration-200">
+          <i class="fas fa-sync-alt mr-1"></i> Refresh
+        </button>
+        <button id="resetZoom" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors duration-200">
+          <i class="fas fa-search-minus mr-1"></i> Reset Zoom
+        </button>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="text-gray-400 text-sm">Last updated:</span>
+        <span id="lastUpdated" class="text-white text-sm">--</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Fullscreen Modal -->
+<div id="fullscreenModal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-50">
+  <div class="flex items-center justify-center h-full p-4">
+    <div class="bg-slate-900 rounded-xl w-full h-full max-w-7xl max-h-[90vh] overflow-hidden">
+      <div class="flex items-center justify-between p-4 border-b border-slate-700">
+        <h3 class="text-white font-bold text-lg">Fullscreen Analytics</h3>
+        <button id="closeFullscreen" class="text-gray-400 hover:text-white">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-4 h-full overflow-auto">
+        <canvas id="fullscreenChart" width="1200" height="600"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Interactive Charts functionality
+  let chartsData: any = null;
+  let charts: any[] = [];
+  let currentView = 'combined';
+  let interactiveMode = true;
+  let selectedDatasets = ['projects'];
+
+  // Initialize interactive charts
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeCharts();
+    setupEventListeners();
+    loadChartsData();
+    
+    // Set up real-time updates
+    setInterval(loadChartsData, 300000); // Update every 5 minutes
+  });
+
+  function initializeCharts() {
+    // Load Chart.js and additional plugins
+    if (typeof Chart === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+      script.onload = () => {
+        console.log('Chart.js loaded for interactive charts');
+        loadChartPlugins();
+      };
+      document.head.appendChild(script);
+    } else {
+      loadChartPlugins();
+    }
+  }
+
+  function loadChartPlugins() {
+    // Load additional Chart.js plugins for advanced features
+    if (typeof Chart === 'undefined') return;
+    
+    // Register zoom plugin if available
+    if (Chart.zoom) {
+      Chart.zoom.defaults.zoom.mode = 'x';
+    }
+  }
+
+  function setupEventListeners() {
+    // Chart type selector
+    document.getElementById('chartTypeSelector')?.addEventListener('change', (e) => {
+      currentView = (e.target as HTMLSelectElement).value;
+      switchChartView(currentView);
+    });
+
+    // Time period selector
+    document.getElementById('chartTimePeriod')?.addEventListener('change', loadChartsData);
+
+    // Interactive mode toggle
+    document.getElementById('interactiveMode')?.addEventListener('change', (e) => {
+      interactiveMode = (e.target as HTMLInputElement).checked;
+      updateChartsInteractivity();
+    });
+
+    // Dataset toggles
+    document.querySelectorAll('.chart-dataset-toggle').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const dataset = (e.target as HTMLElement).dataset.dataset;
+        toggleDataset(dataset);
+      });
+    });
+
+    // Control buttons
+    document.getElementById('exportChart')?.addEventListener('click', exportCurrentChart);
+    document.getElementById('refreshCharts')?.addEventListener('click', loadChartsData);
+    document.getElementById('resetZoom')?.addEventListener('click', resetAllChartsZoom);
+
+    // Fullscreen
+    document.getElementById('fullscreenCharts')?.addEventListener('click', openFullscreen);
+    document.getElementById('closeFullscreen')?.addEventListener('click', closeFullscreen);
+  }
+
+  async function loadChartsData() {
+    const loadingEl = document.getElementById('chartsLoading');
+    const contentEl = document.getElementById('chartsContent');
+    
+    loadingEl?.classList.remove('hidden');
+    contentEl?.classList.add('hidden');
+
+    try {
+      const timePeriod = (document.getElementById('chartTimePeriod') as HTMLSelectElement)?.value || '30d';
+      
+      // Simulate API call - replace with actual endpoints
+      const mockData = generateMockChartsData(timePeriod);
+      chartsData = mockData;
+      
+      updateChartsDisplay();
+      updateLastUpdated();
+      contentEl?.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error loading charts data:', error);
+      showError('Failed to load charts data');
+    } finally {
+      loadingEl?.classList.add('hidden');
+    }
+  }
+
+  function generateMockChartsData(timePeriod: string) {
+    const dataPoints = timePeriod === '7d' ? 7 : timePeriod === '30d' ? 30 : timePeriod === '90d' ? 90 : 365;
+    
+    return {
+      timePeriod,
+      projects: {
+        timeline: generateTimeSeriesData(dataPoints, 5, 15),
+        status: {
+          active: 8,
+          completed: 12,
+          onHold: 2,
+          planning: 3
+        },
+        milestones: {
+          completed: 45,
+          inProgress: 15,
+          overdue: 5,
+          upcoming: 20
+        },
+        resources: {
+          allocated: 75,
+          available: 25,
+          utilization: 85
+        }
+      },
+      revenue: {
+        trend: generateTimeSeriesData(dataPoints, 50000, 100000),
+        byService: {
+          'School Websites': 45,
+          'News Portals': 30,
+          'Company Profiles': 25
+        },
+        payments: {
+          onTime: 85,
+          late: 10,
+          overdue: 5
+        },
+        forecast: generateTimeSeriesData(dataPoints, 60000, 120000)
+      },
+      performance: {
+        metrics: {
+          uptime: 99.5,
+          responseTime: 350,
+          errorRate: 0.5,
+          throughput: 1500
+        },
+        health: {
+          excellent: 70,
+          good: 20,
+          warning: 8,
+          critical: 2
+        },
+        errors: generateTimeSeriesData(dataPoints, 0, 10),
+        responseTimeDist: {
+          '<100ms': 15,
+          '100-300ms': 45,
+          '300-500ms': 25,
+          '500ms+': 15
+        }
+      },
+      forecast: {
+        growth: generateTimeSeriesData(dataPoints, 100, 200),
+        risk: {
+          low: 60,
+          medium: 25,
+          high: 15
+        },
+        capacity: {
+          current: 75,
+          projected: 85,
+          maximum: 100
+        },
+        predictions: {
+          projects: generateTimeSeriesData(dataPoints, 10, 25),
+          revenue: generateTimeSeriesData(dataPoints, 75000, 150000)
+        }
+      }
+    };
+  }
+
+  function generateTimeSeriesData(points: number, min: number, max: number) {
+    const data = [];
+    let trend = min + (max - min) / 2;
+    
+    for (let i = 0; i < points; i++) {
+      trend += (Math.random() - 0.5) * (max - min) * 0.1;
+      trend = Math.max(min, Math.min(max, trend));
+      data.push(Math.round(trend));
+    }
+    return data;
+  }
+
+  function updateChartsDisplay() {
+    if (!chartsData) return;
+
+    switch (currentView) {
+      case 'combined':
+        updateCombinedView();
+        break;
+      case 'projects':
+        updateProjectsView();
+        break;
+      case 'revenue':
+        updateRevenueView();
+        break;
+      case 'performance':
+        updatePerformanceView();
+        break;
+      case 'forecast':
+        updateForecastView();
+        break;
+    }
+  }
+
+  function updateCombinedView() {
+    // Destroy existing charts
+    destroyCharts();
+
+    // Main trend chart
+    const mainCtx = document.getElementById('mainTrendChart') as HTMLCanvasElement;
+    if (mainCtx) {
+      charts.push(createMainTrendChart(mainCtx));
+    }
+
+    // Project distribution
+    const projectDistCtx = document.getElementById('projectDistributionChart') as HTMLCanvasElement;
+    if (projectDistCtx) {
+      charts.push(createProjectDistributionChart(projectDistCtx));
+    }
+
+    // Revenue breakdown
+    const revenueCtx = document.getElementById('revenueBreakdownChart') as HTMLCanvasElement;
+    if (revenueCtx) {
+      charts.push(createRevenueBreakdownChart(revenueCtx));
+    }
+
+    // Performance heatmap
+    const heatmapCtx = document.getElementById('performanceHeatmapChart') as HTMLCanvasElement;
+    if (heatmapCtx) {
+      charts.push(createPerformanceHeatmapChart(heatmapCtx));
+    }
+  }
+
+  function createMainTrendChart(ctx: HTMLCanvasElement) {
+    const labels = generateTimeLabels(chartsData.timePeriod);
+    
+    const datasets = [];
+    if (selectedDatasets.includes('projects')) {
+      datasets.push({
+        label: 'Projects',
+        data: chartsData.projects.timeline,
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        yAxisID: 'y'
+      });
+    }
+    if (selectedDatasets.includes('revenue')) {
+      datasets.push({
+        label: 'Revenue',
+        data: chartsData.revenue.trend,
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        tension: 0.4,
+        yAxisID: 'y1'
+      });
+    }
+    if (selectedDatasets.includes('tickets')) {
+      datasets.push({
+        label: 'Tickets',
+        data: generateTimeSeriesData(labels.length, 20, 50),
+        borderColor: 'rgb(250, 204, 21)',
+        backgroundColor: 'rgba(250, 204, 21, 0.1)',
+        tension: 0.4,
+        yAxisID: 'y'
+      });
+    }
+
+    return new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: { labels: { color: '#fff' } },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  if (context.dataset.label === 'Revenue') {
+                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                  } else {
+                    label += context.parsed.y;
+                  }
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#9ca3af' },
+            grid: { color: 'rgba(75, 85, 99, 0.3)' }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            ticks: { color: '#9ca3af' },
+            grid: { color: 'rgba(75, 85, 99, 0.3)' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            ticks: { color: '#9ca3af' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+  }
+
+  function createProjectDistributionChart(ctx: HTMLCanvasElement) {
+    const status = chartsData.projects.status;
+    
+    return new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(status).map(key => key.charAt(0).toUpperCase() + key.slice(1)),
+        datasets: [{
+          data: Object.values(status),
+          backgroundColor: [
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(34, 197, 94, 0.8)',
+            'rgba(250, 204, 21, 0.8)',
+            'rgba(156, 163, 175, 0.8)'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#fff' },
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  }
+
+  function createRevenueBreakdownChart(ctx: HTMLCanvasElement) {
+    const byService = chartsData.revenue.byService;
+    
+    return new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: Object.keys(byService),
+        datasets: [{
+          data: Object.values(byService),
+          backgroundColor: [
+            'rgba(34, 197, 94, 0.8)',
+            'rgba(168, 85, 247, 0.8)',
+            'rgba(251, 146, 60, 0.8)'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#fff' },
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  }
+
+  function createPerformanceHeatmapChart(ctx: HTMLCanvasElement) {
+    // Create a simple heatmap using bar chart
+    const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    const performance = generateTimeSeriesData(24, 70, 100);
+    
+    return new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: hours,
+        datasets: [{
+          label: 'Performance Score',
+          data: performance,
+          backgroundColor: performance.map(value => {
+            if (value >= 90) return 'rgba(34, 197, 94, 0.8)';
+            if (value >= 75) return 'rgba(250, 204, 21, 0.8)';
+            return 'rgba(239, 68, 68, 0.8)';
+          })
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 },
+            grid: { color: 'rgba(75, 85, 99, 0.3)' }
+          },
+          y: {
+            ticks: { color: '#9ca3af' },
+            grid: { color: 'rgba(75, 85, 99, 0.3)' },
+            min: 0,
+            max: 100
+          }
+        }
+      }
+    });
+  }
+
+  function switchChartView(view: string) {
+    // Hide all views
+    document.querySelectorAll('.chart-view').forEach(v => v.classList.add('hidden'));
+    
+    // Show selected view
+    document.getElementById(`${view}View`)?.classList.remove('hidden');
+    
+    // Update display
+    updateChartsDisplay();
+  }
+
+  function toggleDataset(dataset: string) {
+    const button = document.querySelector(`[data-dataset="${dataset}"]`) as HTMLElement;
+    
+    if (selectedDatasets.includes(dataset)) {
+      selectedDatasets = selectedDatasets.filter(d => d !== dataset);
+      button.classList.remove('bg-blue-600', 'text-white');
+      button.classList.add('bg-slate-700', 'text-gray-300');
+    } else {
+      selectedDatasets.push(dataset);
+      button.classList.remove('bg-slate-700', 'text-gray-300');
+      button.classList.add('bg-blue-600', 'text-white');
+    }
+
+    updateChartsDisplay();
+  }
+
+  function updateChartsInteractivity() {
+    charts.forEach(chart => {
+      if (chart.options.plugins && chart.options.plugins.zoom) {
+        chart.options.plugins.zoom.enabled = interactiveMode;
+      }
+      chart.update();
+    });
+  }
+
+  function destroyCharts() {
+    charts.forEach(chart => chart.destroy());
+    charts = [];
+  }
+
+  function resetAllChartsZoom() {
+    charts.forEach(chart => {
+      if (chart.resetZoom) {
+        chart.resetZoom();
+      }
+    });
+  }
+
+  function exportCurrentChart() {
+    // Export the first visible chart as image
+    const visibleChart = charts.find(chart => 
+      chart.canvas.closest('.chart-view:not(.hidden)')
+    );
+    
+    if (visibleChart) {
+      const url = visibleChart.toBase64Image();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chart-export-${new Date().toISOString().split('T')[0]}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+
+  function openFullscreen() {
+    const modal = document.getElementById('fullscreenModal');
+    const fullscreenCanvas = document.getElementById('fullscreenChart') as HTMLCanvasElement;
+    
+    if (modal && fullscreenCanvas) {
+      modal.classList.remove('hidden');
+      
+      // Copy the main chart to fullscreen
+      const mainChart = charts[0];
+      if (mainChart) {
+        new Chart(fullscreenCanvas, {
+          type: mainChart.config.type,
+          data: mainChart.config.data,
+          options: {
+            ...mainChart.config.options,
+            responsive: true,
+            maintainAspectRatio: false
+          }
+        });
+      }
+    }
+  }
+
+  function closeFullscreen() {
+    const modal = document.getElementById('fullscreenModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  function updateLastUpdated() {
+    const lastUpdatedEl = document.getElementById('lastUpdated');
+    if (lastUpdatedEl) {
+      lastUpdatedEl.textContent = new Date().toLocaleTimeString();
+    }
+  }
+
+  function generateTimeLabels(timePeriod: string) {
+    const labels = [];
+    const now = new Date();
+    
+    if (timePeriod === '7d') {
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+      }
+    } else if (timePeriod === '30d') {
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+      }
+    } else if (timePeriod === '90d') {
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - (i * 7));
+        labels.push(`Week ${12 - i}`);
+      }
+    } else {
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(now);
+        date.setMonth(date.getMonth() - i);
+        labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+      }
+    }
+    
+    return labels;
+  }
+
+  function showError(message: string) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 z-50 p-4 bg-red-500 text-white rounded-lg shadow-lg';
+    notification.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.parentElement.remove()" class="ml-4">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 5000);
+  }
+
+  // Placeholder functions for other views
+  function updateProjectsView() {
+    // Implementation for projects-specific charts
+    console.log('Updating projects view');
+  }
+
+  function updateRevenueView() {
+    // Implementation for revenue-specific charts
+    console.log('Updating revenue view');
+  }
+
+  function updatePerformanceView() {
+    // Implementation for performance-specific charts
+    console.log('Updating performance view');
+  }
+
+  function updateForecastView() {
+    // Implementation for forecast-specific charts
+    console.log('Updating forecast view');
+  }
+
+  // Listen for real-time updates
+  window.addEventListener('charts-update', (e: any) => {
+    if (e.detail) {
+      chartsData = { ...chartsData, ...e.detail };
+      updateChartsDisplay();
+    }
+  });
+</script>
