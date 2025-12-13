@@ -12,6 +12,8 @@ interface Project {
   updatedAt: string;
   startAt?: string;
   dueAt?: string;
+  stagingUrl?: string;
+  productionUrl?: string;
 }
 
 class ProjectsOverviewComponent extends HTMLElement {
@@ -185,7 +187,7 @@ class ProjectsOverviewComponent extends HTMLElement {
                   </div>
                   
                   <!-- Project Metrics -->
-                  <div class="flex items-center justify-between text-xs">
+                  <div class="flex items-center justify-between text-xs mb-3">
                     <div class="flex items-center space-x-4">
                       <span class="text-gray-400">
                         <i class="fas fa-flag-checkered"></i> 
@@ -207,6 +209,44 @@ class ProjectsOverviewComponent extends HTMLElement {
                         : ''
                     }
                   </div>
+                  
+                  <!-- Environment Links -->
+                  ${
+                    project.stagingUrl || project.productionUrl
+                      ? `
+                    <div class="flex items-center space-x-2 text-xs border-t border-slate-700 pt-3">
+                      ${
+                        project.stagingUrl
+                          ? `
+                        <a href="${project.stagingUrl}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="flex items-center space-x-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30 transition-colors">
+                          <i class="fas fa-flask"></i>
+                          <span>Staging</span>
+                          <i class="fas fa-external-link-alt text-xs"></i>
+                        </a>
+                      `
+                          : ''
+                      }
+                      ${
+                        project.productionUrl
+                          ? `
+                        <a href="${project.productionUrl}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="flex items-center space-x-1 px-2 py-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors">
+                          <i class="fas fa-globe"></i>
+                          <span>Live</span>
+                          <i class="fas fa-external-link-alt text-xs"></i>
+                        </a>
+                      `
+                          : ''
+                      }
+                    </div>
+                  `
+                      : ''
+                  }
                 </div>
               `;
               })

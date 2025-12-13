@@ -202,6 +202,8 @@ export class DashboardController {
         updatedAt: project.updatedAt,
         startAt: project.startAt,
         dueAt: project.dueAt,
+        stagingUrl: (project as any).stagingUrl,
+        productionUrl: (project as any).productionUrl,
       };
     });
 
