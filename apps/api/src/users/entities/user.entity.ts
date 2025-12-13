@@ -1,6 +1,4 @@
 export class User {
-
-export class User {
   id: string = '';
   email: string = '';
   name: string = '';
