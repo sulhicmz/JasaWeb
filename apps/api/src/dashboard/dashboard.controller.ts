@@ -503,7 +503,7 @@ export class DashboardController {
         ),
       };
     } catch (error) {
-      throw new Error(
+      throw new InternalServerErrorException(
         `Failed to get analytics trends: ${error instanceof Error ? error.message : String(error)}`
       );
     }
