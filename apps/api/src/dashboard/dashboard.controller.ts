@@ -1,4 +1,12 @@
-import { Controller, Get, UseGuards, Query, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Query,
+  Post,
+  Body,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -1073,7 +1081,7 @@ export class DashboardController {
     items.forEach((item) => {
       const date = new Date(item[dateField]);
       const dateKey = date.toISOString().split('T')[0];
-      if (dateKey && dailyData.hasOwnProperty(dateKey)) {
+      if (dateKey && Object.prototype.hasOwnProperty.call(dailyData, dateKey)) {
         dailyData[dateKey] = (dailyData[dateKey] || 0) + 1;
       }
     });

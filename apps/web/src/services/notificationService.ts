@@ -1,9 +1,16 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 
+export type NotificationType =
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'personal';
+
 export interface Notification {
   id: string;
-  type: string;
+  type: NotificationType;
   title: string;
   message: string;
   data: any;
@@ -305,13 +312,14 @@ class NotificationService {
     type: 'info' | 'success' | 'warning' | 'error' | 'personal' = 'info',
     data?: any
   ) {
-    const notification = {
-      id: Date.now() + Math.random(),
+    const notification: Notification = {
+      id: String(Date.now() + Math.random()),
+      title: message, // Using message as title for now
       message,
       type,
       data,
-      timestamp: new Date(),
-      read: false,
+      isRead: false,
+      createdAt: new Date(),
     };
 
     this.callbacks.onRealtimeNotification?.(notification);
@@ -330,13 +338,13 @@ class NotificationService {
     );
   }
 
-  private displayNotification(notification: any) {
+  private displayNotification(notification: Notification) {
     // Create notification element
     const notificationEl = document.createElement('div');
     notificationEl.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
 
     // Set color based on type
-    const colors = {
+    const colors: Record<NotificationType, string> = {
       success: 'bg-green-500',
       error: 'bg-red-500',
       warning: 'bg-yellow-500',
@@ -378,8 +386,8 @@ class NotificationService {
     }, 5000);
   }
 
-  private getNotificationIcon(type: string) {
-    const icons = {
+  private getNotificationIcon(type: NotificationType) {
+    const icons: Record<NotificationType, string> = {
       success: '<i class="fas fa-check-circle"></i>',
       error: '<i class="fas fa-exclamation-circle"></i>',
       warning: '<i class="fas fa-exclamation-triangle"></i>',
