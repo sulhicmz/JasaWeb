@@ -9,11 +9,8 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import {
-  ProjectService,
-  CreateProjectDto,
-  UpdateProjectDto,
-} from './project.service';
+import { ProjectService } from './project.service';
+import type { CreateProjectDto, UpdateProjectDto } from './project.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';

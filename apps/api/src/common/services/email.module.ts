@@ -10,14 +10,12 @@ import { EmailService } from './email.service';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          host: configService.get<string>('EMAIL_SERVER_HOST', 'localhost'),
-          port: configService.get<number>('EMAIL_SERVER_PORT', 587),
-          secure:
-            configService.get<string>('EMAIL_SERVER_SECURE', 'false') ===
-            'true', // true for 465, false for other ports
+          host: configService.get<string>('SMTP_HOST', 'localhost'),
+          port: configService.get<number>('SMTP_PORT', 587),
+          secure: configService.get<string>('SMTP_SECURE', 'false') === 'true', // true for 465, false for other ports
           auth: {
-            user: configService.get<string>('EMAIL_SERVER_USER'),
-            pass: configService.get<string>('EMAIL_SERVER_PASSWORD'),
+            user: configService.get<string>('SMTP_USER'),
+            pass: configService.get<string>('SMTP_PASS'),
           },
         },
         defaults: {

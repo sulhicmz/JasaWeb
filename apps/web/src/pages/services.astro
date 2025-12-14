@@ -6,7 +6,8 @@ const services = [
   {
     title: 'Website Sekolah',
     icon: 'fas fa-school',
-    color: 'blue',
+    colorClass: 'service-blue',
+    iconClass: 'service-icon-blue',
     features: [
       'Profil sekolah dan informasi penting',
       'Berita dan agenda sekolah',
@@ -19,7 +20,8 @@ const services = [
   {
     title: 'Portal Berita',
     icon: 'fas fa-newspaper',
-    color: 'green',
+    colorClass: 'service-green',
+    iconClass: 'service-icon-green',
     features: [
       'Manajemen artikel dan kategori',
       'Alur editorial (draft-review-publish)',
@@ -32,7 +34,8 @@ const services = [
   {
     title: 'Company Profile',
     icon: 'fas fa-building',
-    color: 'purple',
+    colorClass: 'service-purple',
+    iconClass: 'service-icon-purple',
     features: [
       'Halaman produk dan layanan',
       'Tentang perusahaan dan tim',
@@ -69,10 +72,10 @@ const pricing = [
   <section class="pb-24">
     <div class="container mx-auto px-4">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {services.map(service => (
+{services.map(service => (
           <div class="glass-panel p-8 rounded-2xl hover:bg-slate-800/60 transition-colors duration-300 group">
-            <div class={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-${service.color}-500/10 border border-${service.color}-500/20 mb-6 group-hover:scale-110 transition-transform`}>
-              <i class={`${service.icon} text-2xl text-${service.color}-400`}></i>
+            <div class={`inline-flex items-center justify-center w-16 h-16 rounded-xl ${service.colorClass} mb-6 group-hover:scale-110 transition-transform`}>
+              <i class={`${service.icon} text-2xl ${service.iconClass}`}></i>
             </div>
             <h2 class="text-2xl font-bold mb-4 text-white">{service.title}</h2>
             <ul class="space-y-3 mb-8">

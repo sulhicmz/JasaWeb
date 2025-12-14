@@ -60,15 +60,18 @@ async function main() {
   ]);
 
   // Get or create a user for article author
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@jasaweb.com';
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+
   let user = await prisma.user.findFirst({
-    where: { email: 'admin@jasaweb.com' },
+    where: { email: adminEmail },
   });
 
   if (!user) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
     user = await prisma.user.create({
       data: {
-        email: 'admin@jasaweb.com',
+        email: adminEmail,
         name: 'JasaWeb Admin',
         password: hashedPassword,
       },

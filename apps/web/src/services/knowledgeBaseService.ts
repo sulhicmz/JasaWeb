@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL;
 
 export interface KbCategory {
   id: string;
@@ -92,22 +92,42 @@ export interface KbAnalytics {
 }
 
 class KnowledgeBaseService {
+  private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem('access_token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    if (!API_BASE_URL) {
+      throw new Error('API_BASE_URL environment variable is required');
+    }
+
     const url = `${API_BASE_URL}/knowledge-base${endpoint}`;
 
     const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
         ...options.headers,
       },
       ...options,
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `HTTP error! status: ${response.status}`
+      );
     }
 
     return response.json();

@@ -47,6 +47,9 @@ model Organization {
   tickets      Ticket[]
   invoices     Invoice[]
   AuditLog     AuditLog[]
+
+  @@index([createdAt])
+  @@index([plan])
 }
 
 model Membership {
@@ -60,6 +63,9 @@ model Membership {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([role])
+  @@index([createdAt])
 }
 
 model Project {
@@ -81,6 +87,12 @@ model Project {
   tasks          Task[]
   tickets        Ticket[]
   invoices       Invoice[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([organizationId, status])
+  @@index([createdAt])
+  @@index([dueAt])
 }
 
 model Milestone {
@@ -155,6 +167,14 @@ model Ticket {
   slaDueAt       DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([priority])
+  @@index([assigneeId])
+  @@index([organizationId, status])
+  @@index([slaDueAt])
+  @@index([createdAt])
 }
 
 model Invoice {
@@ -172,6 +192,14 @@ model Invoice {
   status         String // draft, issued, paid, overdue, cancelled
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([userId])
+  @@index([organizationId, status])
+  @@index([dueAt])
+  @@index([issuedAt])
+  @@index([createdAt])
 }
 
 model Session {
@@ -212,6 +240,12 @@ model AuditLog {
   target         String // User, Project, File, etc.
   meta           Json?
   createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([organizationId, createdAt])
 }
 
 model KnowledgeBaseCategory {

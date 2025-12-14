@@ -60,12 +60,22 @@ jasaweb/
 | **Language**        | TypeScript   | ^5.0.0  |
 | **Package Manager** | pnpm         | ^8.15.0 |
 | **Styling**         | Tailwind CSS | ^4.1.17 |
-| **Testing**         | Vitest       | ^1.0.0  |
+| **Testing**         | Vitest       | ^2.0.5  |
 | **Container**       | Docker       | Latest  |
 
-### 🔄 Recent Migration: Tailwind CSS v4
+### 🔄 Recent Improvements
 
-This project has been migrated from the deprecated `@astrojs/tailwind` integration to Tailwind CSS v4 with the native Vite plugin:
+This project has undergone significant cleanup and optimization:
+
+#### Repository Cleanup (Latest)
+
+- **Removed**: OpenCode development workflows and temporary files
+- **Consolidated**: Security documentation from 13 files into comprehensive guide
+- **Migrated**: Testing framework from Jest to Vitest across all packages
+- **Organized**: Configuration files into `packages/config/` for better maintainability
+- **Removed**: Redundant Babel configuration in favor of native TypeScript
+
+#### Tailwind CSS v4 Migration
 
 - **Before**: Used `@astrojs/tailwind` integration (deprecated)
 - **After**: Uses `@tailwindcss/vite` plugin with Tailwind CSS v4

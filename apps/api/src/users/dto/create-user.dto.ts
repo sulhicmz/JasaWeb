@@ -1,4 +1,11 @@
-import { IsEmail, IsString, IsOptional, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsOptional,
+  MinLength,
+  IsEnum,
+} from 'class-validator';
+import { PasswordHashVersion } from '../../auth/password.service';
 
 export class CreateUserDto {
   @IsEmail()
@@ -15,4 +22,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   profilePicture?: string;
+
+  @IsOptional()
+  @IsEnum(PasswordHashVersion)
+  passwordHashVersion?: PasswordHashVersion;
 }

@@ -11,12 +11,11 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards } from '@nestjs/common';
-import { Cache } from 'cache-manager';
+import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { getOptionalEnv } from '@jasaweb/config/env-validation';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 
@@ -35,7 +34,7 @@ interface DashboardUpdatePayload {
 
 @WebSocketGateway({
   cors: {
-    origin: getOptionalEnv('FRONTEND_URL') || 'http://localhost:4321',
+    origin: process.env.FRONTEND_URL || 'http://localhost:4321',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -347,7 +346,11 @@ export class DashboardGateway
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: {},
+      where: {
+        project: {
+          organizationId,
+        },
+      },
       select: { status: true, dueAt: true },
     });
 
@@ -418,7 +421,11 @@ export class DashboardGateway
 
   private async getRecentMilestones(organizationId: string, limit: number) {
     const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: {},
+      where: {
+        project: {
+          organizationId,
+        },
+      },
       select: {
         id: true,
         title: true,

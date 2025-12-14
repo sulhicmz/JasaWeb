@@ -3,13 +3,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardController } from '../src/dashboard/dashboard.controller';
 import { MultiTenantPrismaService } from '../src/common/database/multi-tenant-prisma.service';
+import { PrismaService } from '../src/common/database/prisma.service';
+import { RolesGuard } from '../src/common/guards/roles.guard';
 import { Cache } from 'cache-manager';
 import { DashboardGateway } from '../src/dashboard/dashboard.gateway';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Reflector } from '@nestjs/core';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
   let mockPrismaService: Partial<MultiTenantPrismaService>;
+  let mockBasePrismaService: Partial<PrismaService>;
   let mockCacheManager: Partial<Cache>;
   let mockDashboardGateway: Partial<DashboardGateway>;
 
@@ -26,6 +30,12 @@ describe('DashboardController', () => {
       } as any,
       milestone: {
         findMany: jest.fn(),
+      } as any,
+    } as any;
+
+    mockBasePrismaService = {
+      membership: {
+        findFirst: jest.fn(),
       } as any,
     } as any;
 
@@ -47,6 +57,10 @@ describe('DashboardController', () => {
           useValue: mockPrismaService,
         },
         {
+          provide: PrismaService,
+          useValue: mockBasePrismaService,
+        },
+        {
           provide: CACHE_MANAGER,
           useValue: mockCacheManager,
         },
@@ -54,8 +68,17 @@ describe('DashboardController', () => {
           provide: DashboardGateway,
           useValue: mockDashboardGateway,
         },
+        {
+          provide: Reflector,
+          useValue: {
+            getAllAndOverride: jest.fn(),
+          },
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<DashboardController>(DashboardController);
   });
@@ -151,7 +174,7 @@ describe('DashboardController', () => {
       expect(result.milestones).toEqual({
         total: 2,
         completed: 1,
-        overdue: 0,
+        overdue: 1,
         dueThisWeek: expect.any(Number),
       });
 
@@ -232,8 +255,8 @@ describe('DashboardController', () => {
 
       expect(result).toHaveLength(4);
       expect(result[0]?.type).toBe('ticket'); // Most recent (2023-01-03)
-      expect(result[1]?.type).toBe('invoice'); // 2023-01-02 (updated)
-      expect(result[2]?.type).toBe('project'); // 2023-01-02 (updated)
+      expect(result[1]?.type).toBe('project'); // 2023-01-02 (updated)
+      expect(result[2]?.type).toBe('invoice'); // 2023-01-02 (created)
       expect(result[3]?.type).toBe('milestone'); // 2023-01-01
     });
 

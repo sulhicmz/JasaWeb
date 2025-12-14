@@ -47,19 +47,25 @@ export class RequestLoggingMiddleware implements NestMiddleware {
 
   private getSafeHeaders(headers: Request['headers']): Record<string, string> {
     const safeHeaders: Record<string, string> = {};
+    const sensitiveKeys = [
+      'authorization',
+      'cookie',
+      'x-api-key',
+      'x-auth-token',
+    ];
+
     for (const [key, value] of Object.entries(headers)) {
       // Don't log sensitive headers
       if (
-        !['authorization', 'cookie', 'x-api-key', 'x-auth-token'].includes(
-          key.toLowerCase()
-        )
+        typeof key === 'string' &&
+        !sensitiveKeys.includes(key.toLowerCase())
       ) {
         if (Array.isArray(value)) {
           safeHeaders[key] = value.join(', ');
         } else if (typeof value === 'string') {
           safeHeaders[key] = value;
         }
-      } else {
+      } else if (typeof key === 'string') {
         // Use safe property assignment
         Object.defineProperty(safeHeaders, key, {
           value: '[REDACTED]',

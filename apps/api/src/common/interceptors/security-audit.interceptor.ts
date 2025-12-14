@@ -42,7 +42,7 @@ export class SecurityAuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: (_data) => {
+        next: () => {
           const duration = Date.now() - now;
           this.logger.log(
             `Security Event Completed: ${method} ${url} - ${duration}ms - Success`

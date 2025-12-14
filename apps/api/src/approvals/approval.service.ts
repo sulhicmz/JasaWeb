@@ -34,13 +34,13 @@ export class ApprovalService {
     });
   }
 
-  async findApprovalsForProject(projectId: string, _organizationId: string) {
+  async findApprovalsForProject(projectId: string, organizationId: string) {
     // Verify the project belongs to the organization
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id: projectId },
     });
 
-    if (!project) {
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Project not found or does not belong to your organization'
       );

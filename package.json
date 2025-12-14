@@ -40,8 +40,7 @@
     "security:audit:fix": "pnpm audit --fix",
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
-    "security:scan": "node scripts/security-scan.js",
-    "postinstall": "node scripts/js-yaml-compat.js"
+    "security:scan": "node scripts/security-scan.js"
   },
   "keywords": [
     "astro",

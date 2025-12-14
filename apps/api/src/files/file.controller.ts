@@ -13,7 +13,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { getRequiredEnv } from '@jasaweb/config/env-validation';

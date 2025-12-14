@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../common/database/prisma.service';
-import { UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
@@ -304,7 +304,7 @@ describe('AuthService - Multi-tenant Authentication', () => {
         expiresAt: new Date(),
       });
 
-      const result = await service.register(createUserDto);
+      await service.register(createUserDto);
 
       expect(prisma.organization.create).toHaveBeenCalledWith({
         data: {

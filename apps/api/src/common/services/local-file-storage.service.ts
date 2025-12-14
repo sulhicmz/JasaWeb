@@ -3,18 +3,42 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+// Allowed base directories for uploads
+const ALLOWED_BASE_DIRECTORIES = [
+  process.env.UPLOAD_DIR || '/tmp/uploads',
+  '/tmp',
+];
+
 // Sanitize file paths to prevent directory traversal
 function sanitizePath(filePath: string): string {
-  return path.normalize(filePath).replace(/\.\./g, '');
+  return path.normalize(filePath).replace(/\.\./g, '').replace(/\/+/g, '/');
 }
 
-// Validate directory path
+// Validate directory path against allowed directories
 function isValidDirectoryPath(dirPath: string): boolean {
   const sanitized = sanitizePath(dirPath);
+  const resolvedPath = path.resolve(sanitized);
+
   return (
     sanitized === dirPath &&
     !sanitized.includes('..') &&
-    path.isAbsolute(sanitized)
+    ALLOWED_BASE_DIRECTORIES.some((allowedDir) =>
+      resolvedPath.startsWith(path.resolve(allowedDir))
+    )
+  );
+}
+
+// Validate file path is within allowed directories
+function isValidFilePath(filePath: string): boolean {
+  const sanitized = sanitizePath(filePath);
+  const resolvedPath = path.resolve(sanitized);
+
+  return (
+    sanitized === filePath &&
+    !sanitized.includes('..') &&
+    ALLOWED_BASE_DIRECTORIES.some((allowedDir) =>
+      resolvedPath.startsWith(path.resolve(allowedDir))
+    )
   );
 }
 
@@ -37,8 +61,15 @@ export class LocalFileStorageService {
     if (!isValidDirectoryPath(options.directory)) {
       throw new Error('Invalid directory path');
     }
-    if (!fs.existsSync(options.directory)) {
-      fs.mkdirSync(options.directory, { recursive: true });
+    // Use try-catch for filesystem operations to handle potential errors
+    try {
+      if (!fs.existsSync(options.directory)) {
+        fs.mkdirSync(options.directory, { recursive: true, mode: 0o755 });
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to create directory: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
 
     // Validate file extension if specified
@@ -66,7 +97,13 @@ export class LocalFileStorageService {
     }
 
     // Write file to the specified path
-    fs.writeFileSync(filePath, fileBuffer);
+    try {
+      fs.writeFileSync(filePath, fileBuffer, { mode: 0o644 });
+    } catch (error) {
+      throw new Error(
+        `Failed to write file: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
 
     return {
       filename: finalFilename,
@@ -78,31 +115,44 @@ export class LocalFileStorageService {
    * Get file from local storage
    */
   async getFile(filePath: string): Promise<Buffer> {
-    // Sanitize and validate file path
-    const sanitizedPath = sanitizePath(filePath);
-    if (!sanitizedPath || sanitizedPath !== filePath) {
+    // Validate file path against allowed directories
+    if (!isValidFilePath(filePath)) {
       throw new Error('Invalid file path');
     }
 
-    if (!fs.existsSync(sanitizedPath)) {
-      throw new Error('File not found');
-    }
+    try {
+      if (!fs.existsSync(filePath)) {
+        throw new Error('File not found');
+      }
 
-    return fs.readFileSync(sanitizedPath);
+      return fs.readFileSync(filePath);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'File not found') {
+        throw error;
+      }
+      throw new Error(
+        `Failed to read file: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   /**
    * Delete file from local storage
    */
   async deleteFile(filePath: string): Promise<void> {
-    // Sanitize and validate file path
-    const sanitizedPath = sanitizePath(filePath);
-    if (!sanitizedPath || sanitizedPath !== filePath) {
+    // Validate file path against allowed directories
+    if (!isValidFilePath(filePath)) {
       throw new Error('Invalid file path');
     }
 
-    if (fs.existsSync(sanitizedPath)) {
-      fs.unlinkSync(sanitizedPath);
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -110,21 +160,29 @@ export class LocalFileStorageService {
    * Get file stats
    */
   async getFileStats(filePath: string) {
-    // Sanitize and validate file path
-    const sanitizedPath = sanitizePath(filePath);
-    if (!sanitizedPath || sanitizedPath !== filePath) {
+    // Validate file path against allowed directories
+    if (!isValidFilePath(filePath)) {
       throw new Error('Invalid file path');
     }
 
-    if (!fs.existsSync(sanitizedPath)) {
-      throw new Error('File not found');
-    }
+    try {
+      if (!fs.existsSync(filePath)) {
+        throw new Error('File not found');
+      }
 
-    const stats = fs.statSync(sanitizedPath);
-    return {
-      size: stats.size,
-      modified: stats.mtime,
-      created: stats.ctime,
-    };
+      const stats = fs.statSync(filePath);
+      return {
+        size: stats.size,
+        modified: stats.mtime,
+        created: stats.ctime,
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message === 'File not found') {
+        throw error;
+      }
+      throw new Error(
+        `Failed to get file stats: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 }

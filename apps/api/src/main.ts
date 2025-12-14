@@ -9,6 +9,7 @@ import {
   validateEnvironmentVariables,
   EnvValidationError,
 } from '@jasaweb/config/env-validation';
+import { AppConfigService } from './common/config/app.config.service';
 import helmet from 'helmet';
 import compression from 'compression';
 
@@ -68,11 +69,12 @@ async function bootstrap() {
   // Enable compression
   app.use(compression());
 
-  // Enhanced CORS configuration
+  // Get configuration service
+  const appConfig = app.get(AppConfigService);
+
+  // Enhanced CORS configuration using dynamic values
   app.enableCors({
-    origin: (
-      process.env.CORS_ORIGIN?.split(',') || ['http://localhost:4321']
-    ).map((o) => o.trim()),
+    origin: appConfig.getCorsOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
     exposedHeaders: ['X-Total-Count', 'X-Page-Count'],

@@ -364,10 +364,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           <div className="p-3 border-t border-gray-200">
             <button
               onClick={() => {
-                // TODO: Navigate to full notifications page
-                if (import.meta.env.DEV) {
-                  console.debug('Navigate to full notifications page');
-                }
+                window.location.href = '/portal/notifications';
               }}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
             >

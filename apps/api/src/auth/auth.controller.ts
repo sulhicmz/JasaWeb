@@ -13,7 +13,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { RefreshTokenService } from './refresh-token.service';
 import type { Request as ExpressRequest } from 'express';
-import { User } from '../users/entities/user.entity';
+import type { User } from '@prisma/client';
 
 type AuthenticatedRequest = ExpressRequest & { user?: Omit<User, 'password'> };
 

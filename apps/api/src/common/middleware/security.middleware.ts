@@ -79,14 +79,17 @@ export class SecurityMiddleware implements NestMiddleware {
       const queryKeys = Object.keys(req.query);
       queryKeys.forEach((key) => {
         // Validate key to prevent injection
-        if (!/^[a-zA-Z0-9_-]+$/.test(key)) {
-          delete req.query[key];
+        const validKeyPattern = /^[a-zA-Z0-9_-]+$/;
+        if (!validKeyPattern.test(key)) {
+          delete (req.query as Record<string, unknown>)[key];
           return;
         }
-        const value = req.query[key];
-        if (typeof value === 'string') {
+        const queryValue = req.query[key];
+        if (typeof queryValue === 'string') {
           // Remove potentially dangerous characters
-          req.query[key] = value.replace(/[<>]/g, '').trim();
+          (req.query as Record<string, unknown>)[key] = queryValue
+            .replace(/[<>]/g, '')
+            .trim();
         }
       });
     }

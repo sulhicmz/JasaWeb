@@ -9,8 +9,8 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import {
-  MilestoneService,
+import { MilestoneService } from './milestone.service';
+import type {
   CreateMilestoneDto,
   UpdateMilestoneDto,
 } from './milestone.service';

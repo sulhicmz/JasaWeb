@@ -1,7 +1,55 @@
-// Testing utilities and helpers will be exported here
-// This file will be populated as testing utilities are developed
+// Testing utilities and helpers for JasaWeb
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 
-export const createTestApp = () => {
-  // Placeholder for test app creation utility
-  console.log('Test app creation utility will be implemented here');
+/**
+ * Creates a test application instance for testing
+ */
+export const createTestApp = async (
+  module: TestingModule
+): Promise<INestApplication> => {
+  const app = module.createNestApplication();
+
+  // Configure test app settings
+  app.useLogger(false); // Disable logging in tests
+
+  return app;
+};
+
+/**
+ * Creates a testing module with common providers
+ */
+export const createTestingModule = (
+  imports: any[],
+  providers: any[] = []
+): Promise<TestingModule> => {
+  return Test.createTestingModule({
+    imports,
+    providers,
+  }).compile();
+};
+
+/**
+ * Common test utilities
+ */
+export const TestUtils = {
+  /**
+   * Generate test user data
+   */
+  createTestUser: (overrides = {}) => ({
+    id: 'test-user-id',
+    email: 'test@example.com',
+    organizationId: 'test-org-id',
+    ...overrides,
+  }),
+
+  /**
+   * Generate test organization data
+   */
+  createTestOrganization: (overrides = {}) => ({
+    id: 'test-org-id',
+    name: 'Test Organization',
+    domain: 'test.jasaweb.com',
+    ...overrides,
+  }),
 };

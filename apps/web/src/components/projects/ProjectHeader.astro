@@ -107,6 +107,21 @@ const { projectId } = Astro.props;
 </header>
 
 <script>
+  // Helper function to map color names to CSS classes
+  function getTeamColorClass(color: string): string {
+    const colorMap: Record<string, string> = {
+      blue: 'team-blue',
+      green: 'team-green',
+      purple: 'team-purple',
+      red: 'team-red',
+      yellow: 'team-yellow',
+      pink: 'team-pink',
+      indigo: 'team-indigo',
+      gray: 'team-gray'
+    };
+    return colorMap[color] || 'team-gray';
+  }
+
   // Load project data and update header
   document.addEventListener('DOMContentLoaded', async () => {
     const projectId = '{{projectId}}';
@@ -185,12 +200,15 @@ const { projectId } = Astro.props;
     // Update team members
     const teamEl = document.querySelector('[data-project-team]');
     if (teamEl && data.team) {
-      teamEl.innerHTML = data.team.slice(0, 4).map(member => `
-        <div class="w-8 h-8 bg-${member.color}-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900" 
+      teamEl.innerHTML = data.team.slice(0, 4).map(member => {
+        const colorClass = getTeamColorClass(member.color);
+        return `
+        <div class="w-8 h-8 ${colorClass} rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-slate-900" 
              title="${member.name}">
           ${member.initials}
         </div>
-      `).join('');
+      `;
+      }).join('');
       
       if (data.team.length > 4) {
         teamEl.innerHTML += `

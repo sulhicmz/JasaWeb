@@ -28,6 +28,7 @@ describe('DashboardGateway', () => {
     mockPrismaService = {
       user: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
       } as any,
       project: {
         findMany: jest.fn(),
@@ -84,11 +85,13 @@ describe('DashboardGateway', () => {
       };
 
       (mockJwtService.verifyAsync as jest.Mock).mockResolvedValue(payload);
-      (mockPrismaService.user as any).findUnique.mockResolvedValue({
-        id: 'user-123',
-        email: 'test@example.com',
-        memberships: [{ organizationId: 'org-123', role: 'owner' }],
-      });
+      (mockPrismaService.user as any).findMany.mockResolvedValue([
+        {
+          id: 'user-123',
+          email: 'test@example.com',
+          memberships: [{ organizationId: 'org-123', role: 'owner' }],
+        },
+      ]);
 
       // Mock dashboard stats
       (mockCacheManager.get as jest.Mock).mockResolvedValue({

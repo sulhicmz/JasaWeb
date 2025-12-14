@@ -15,7 +15,8 @@
     "noImplicitAny": true,
     "skipLibCheck": false,
     "module": "ES2022",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "isolatedModules": true
   },
   "include": ["src/**/*", "src/types/**/*", "../../packages/config/**/*"],
   "exclude": ["node_modules", "dist"],

@@ -7,7 +7,9 @@ export async function GET({ request, url }: { request: Request; url: URL }) {
     const limit = url.searchParams.get('limit') || '10';
 
     // Forward the request to the backend API
-    const backendUrl = `http://localhost:3001/dashboard/recent-activity?limit=${limit}`;
+    const apiBaseUrl =
+      import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3001';
+    const backendUrl = `${apiBaseUrl}/dashboard/recent-activity?limit=${limit}`;
 
     const response = await fetch(backendUrl, {
       method: 'GET',

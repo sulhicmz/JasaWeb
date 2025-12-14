@@ -35,6 +35,22 @@ const { projectId } = Astro.props;
 </div>
 
 <script>
+  // Helper function to map color names to CSS classes
+  function getTeamColorClass(color: string): string {
+    const colorMap: Record<string, string> = {
+      blue: 'team-blue',
+      green: 'team-green',
+      purple: 'team-purple',
+      red: 'team-red',
+      yellow: 'team-yellow',
+      pink: 'team-pink',
+      indigo: 'team-indigo',
+      gray: 'team-gray'
+    };
+    return colorMap[color] || 'team-gray';
+  }
+
+  // Load milestone data and initialize timeline
   document.addEventListener('DOMContentLoaded', async () => {
     const projectId = '{{projectId}}';
     await loadMilestones(projectId);
@@ -211,7 +227,7 @@ const { projectId } = Astro.props;
                   <div>
                     <p class="text-xs text-gray-500">Assignee</p>
                     <div class="flex items-center space-x-2">
-                      <div class="w-6 h-6 bg-${milestone.assignee.color}-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      <div class="w-6 h-6 ${getTeamColorClass(milestone.assignee.color)} rounded-full flex items-center justify-center text-white text-xs font-bold">
                         ${milestone.assignee.initials}
                       </div>
                       <span class="text-sm text-white">${milestone.assignee.name}</span>
