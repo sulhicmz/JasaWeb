@@ -5,6 +5,7 @@ import {
   getEnvBoolean,
   getOptionalEnv,
 } from '@jasaweb/config/env-validation';
+import { DEFAULT_CORS_ORIGINS, DEFAULT_PORTS } from './constants';
 
 export default registerAs('security', () => {
   // Validate required secrets first
@@ -74,7 +75,7 @@ export default registerAs('security', () => {
 
     // CORS Configuration
     cors: {
-      origin: origins.length > 0 ? origins : ['http://localhost:4321'],
+      origin: origins.length > 0 ? origins : [...DEFAULT_CORS_ORIGINS],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],

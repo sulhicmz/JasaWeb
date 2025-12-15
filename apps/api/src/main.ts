@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DEFAULT_PORTS, APP_URLS } from './common/config/constants';
 import { ComprehensiveExceptionFilter } from './common/filters/comprehensive-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { ErrorHandlingService } from './common/services/error-handling.service';
@@ -114,8 +115,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const port = process.env.PORT
+    ? parseInt(process.env.PORT, 10)
+    : DEFAULT_PORTS.API;
   await app.listen(port, '0.0.0.0');
-  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Application is running on: ${APP_URLS.API_URL}:${port}`);
 }
 bootstrap();

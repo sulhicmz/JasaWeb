@@ -13,13 +13,16 @@ Thank you for your interest in contributing to JasaWeb! This guide will help you
 3. **Set up development environment**
    ```bash
    ./scripts/setup.sh
-   # or on Windows
-   scripts\setup.bat
    ```
+
+# Windows users can use WSL or Git Bash
+
+````
 4. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+```bash
+pnpm install
+````
+
 5. **Create a feature branch**
    ```bash
    git checkout -b feature/amazing-feature
@@ -222,8 +225,8 @@ test(auth): add unit tests for login service
 
 #### File Structure
 
-- Components co-located by feature: `apps/web/src/features/<domain>`
-- API modules by domain: `apps/api/src/modules/<domain>`
+- Components co-located by feature: `apps/web/src/components/<domain>`
+- API modules by domain: `apps/api/src/<domain>`
 - Environment defaults in `.env.example`
 - Never commit real secrets
 

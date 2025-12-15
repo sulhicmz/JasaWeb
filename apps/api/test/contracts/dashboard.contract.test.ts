@@ -9,6 +9,9 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from '../../src/dashboard/dashboard.gateway';
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
+import { APP_GUARD } from '@nestjs/core';
 
 describe('DashboardController API Contract Tests', () => {
   let controller: DashboardController;
@@ -58,6 +61,10 @@ describe('DashboardController API Contract Tests', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        CacheModule.register({ ttl: 5, max: 100 }),
+        ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
+      ],
       controllers: [DashboardController],
       providers: [
         {
@@ -88,6 +95,8 @@ describe('DashboardController API Contract Tests', () => {
     })
       .overrideGuard(RolesGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(APP_GUARD)
+      .useValue({ canActivate: () => true }) // Bypass global guards for tests
       .compile();
 
     controller = module.get<DashboardController>(DashboardController);
@@ -306,9 +315,11 @@ describe('DashboardController API Contract Tests', () => {
 
       // Verify sorting by createdAt (most recent first)
       for (let i = 1; i < result.length; i++) {
-        expect(result[i - 1].createdAt.getTime()).toBeGreaterThanOrEqual(
-          result[i].createdAt.getTime()
-        );
+        const prevDate = result[i - 1]?.createdAt;
+        const currDate = result[i]?.createdAt;
+        if (prevDate && currDate) {
+          expect(prevDate.getTime()).toBeGreaterThanOrEqual(currDate.getTime());
+        }
       }
     });
 
@@ -377,43 +388,47 @@ describe('DashboardController API Contract Tests', () => {
       expect(result).toHaveLength(1);
 
       const project = result[0];
-      expect(project).toHaveProperty('id');
-      expect(project).toHaveProperty('name');
-      expect(project).toHaveProperty('description');
-      expect(project).toHaveProperty('status');
-      expect(project).toHaveProperty('progress');
-      expect(project).toHaveProperty('totalMilestones');
-      expect(project).toHaveProperty('completedMilestones');
-      expect(project).toHaveProperty('openTickets');
-      expect(project).toHaveProperty('highPriorityTickets');
-      expect(project).toHaveProperty('createdAt');
-      expect(project).toHaveProperty('updatedAt');
-      expect(project).toHaveProperty('startAt');
-      expect(project).toHaveProperty('dueAt');
+      expect(project).toBeDefined();
 
-      // Type validation
-      expect(typeof project.id).toBe('string');
-      expect(typeof project.name).toBe('string');
-      expect(typeof project.status).toBe('string');
-      expect(typeof project.progress).toBe('number');
-      expect(typeof project.totalMilestones).toBe('number');
-      expect(typeof project.completedMilestones).toBe('number');
-      expect(typeof project.openTickets).toBe('number');
-      expect(typeof project.highPriorityTickets).toBe('number');
+      if (project) {
+        expect(project).toHaveProperty('id');
+        expect(project).toHaveProperty('name');
+        expect(project).toHaveProperty('description');
+        expect(project).toHaveProperty('status');
+        expect(project).toHaveProperty('progress');
+        expect(project).toHaveProperty('totalMilestones');
+        expect(project).toHaveProperty('completedMilestones');
+        expect(project).toHaveProperty('openTickets');
+        expect(project).toHaveProperty('highPriorityTickets');
+        expect(project).toHaveProperty('createdAt');
+        expect(project).toHaveProperty('updatedAt');
+        expect(project).toHaveProperty('startAt');
+        expect(project).toHaveProperty('dueAt');
 
-      // Value validation
-      expect(project.progress).toBeGreaterThanOrEqual(0);
-      expect(project.progress).toBeLessThanOrEqual(100);
-      expect(project.totalMilestones).toBeGreaterThanOrEqual(0);
-      expect(project.completedMilestones).toBeGreaterThanOrEqual(0);
-      expect(project.completedMilestones).toBeLessThanOrEqual(
-        project.totalMilestones
-      );
-      expect(project.openTickets).toBeGreaterThanOrEqual(0);
-      expect(project.highPriorityTickets).toBeGreaterThanOrEqual(0);
-      expect(project.highPriorityTickets).toBeLessThanOrEqual(
-        project.openTickets
-      );
+        // Type validation
+        expect(typeof project.id).toBe('string');
+        expect(typeof project.name).toBe('string');
+        expect(typeof project.status).toBe('string');
+        expect(typeof project.progress).toBe('number');
+        expect(typeof project.totalMilestones).toBe('number');
+        expect(typeof project.completedMilestones).toBe('number');
+        expect(typeof project.openTickets).toBe('number');
+        expect(typeof project.highPriorityTickets).toBe('number');
+
+        // Value validation
+        expect(project.progress).toBeGreaterThanOrEqual(0);
+        expect(project.progress).toBeLessThanOrEqual(100);
+        expect(project.totalMilestones).toBeGreaterThanOrEqual(0);
+        expect(project.completedMilestones).toBeGreaterThanOrEqual(0);
+        expect(project.completedMilestones).toBeLessThanOrEqual(
+          project.totalMilestones
+        );
+        expect(project.openTickets).toBeGreaterThanOrEqual(0);
+        expect(project.highPriorityTickets).toBeGreaterThanOrEqual(0);
+        expect(project.highPriorityTickets).toBeLessThanOrEqual(
+          project.openTickets
+        );
+      }
     });
   });
 

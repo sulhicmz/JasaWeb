@@ -10,6 +10,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
+    include: ['**/*.{test,spec}.{js,ts}'],
+    exclude: ['node_modules', 'dist', '.next', '.astro'],
   },
   resolve: {
     alias: {

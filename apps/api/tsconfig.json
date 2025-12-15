@@ -18,7 +18,12 @@
     "moduleResolution": "bundler",
     "isolatedModules": true
   },
-  "include": ["src/**/*", "src/types/**/*", "../../packages/config/**/*"],
+  "include": [
+    "src/**/*",
+    "src/types/**/*",
+    "../../packages/config/**/*",
+    "test/**/*"
+  ],
   "exclude": ["node_modules", "dist"],
-  "types": ["jest", "node"]
+  "types": ["jest", "node", "vitest/globals"]
 }

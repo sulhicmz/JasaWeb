@@ -4,6 +4,7 @@ import {
   getOptionalEnv,
   getEnvNumber,
 } from '../../../../../packages/config/env-validation';
+import { DEFAULT_PORTS, DEFAULT_DATABASE_CONFIG, APP_URLS } from './constants';
 
 @Injectable()
 export class AppConfigService {
@@ -50,11 +51,17 @@ export class AppConfigService {
 
     // Database Configuration
     this.databaseUrl = getRequiredEnv('DATABASE_URL');
-    this.databaseHost = getOptionalEnv('POSTGRES_HOST', 'localhost')!;
-    this.databasePort = getEnvNumber('POSTGRES_PORT', 5432);
+    this.databaseHost = getOptionalEnv(
+      'POSTGRES_HOST',
+      DEFAULT_DATABASE_CONFIG.HOST
+    )!;
+    this.databasePort = getEnvNumber(
+      'POSTGRES_PORT',
+      DEFAULT_DATABASE_CONFIG.PORT
+    );
 
     // Email Configuration
-    this.emailHost = getOptionalEnv('SMTP_HOST', 'localhost')!;
+    this.emailHost = getOptionalEnv('SMTP_HOST', DEFAULT_DATABASE_CONFIG.HOST)!;
     this.emailPort = getEnvNumber('SMTP_PORT', 587);
     this.emailUser = getOptionalEnv('SMTP_USER');
     this.emailPass = getOptionalEnv('SMTP_PASS');
@@ -66,14 +73,14 @@ export class AppConfigService {
 
   private getDefaultApiUrl(isDevelopment: boolean): string {
     if (isDevelopment) {
-      return 'http://localhost:3000';
+      return APP_URLS.API_URL;
     }
     return 'https://api.jasaweb.com';
   }
 
   private getDefaultWebUrl(isDevelopment: boolean): string {
     if (isDevelopment) {
-      return 'http://localhost:4321';
+      return APP_URLS.FRONTEND_URL;
     }
     return 'https://jasaweb.com';
   }

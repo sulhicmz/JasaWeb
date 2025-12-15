@@ -15,6 +15,7 @@ build/
 .next/
 .nuxt/
 .vercel/
+.astro/
 
 # TypeScript build info
 *.tsbuildinfo
@@ -58,6 +59,8 @@ pids/
 .rts2_cache_es/
 .rts2_cache_umd/
 .npm
+.vite/
+.tsbuildinfo
 
 # Security & Secrets
 *.pem

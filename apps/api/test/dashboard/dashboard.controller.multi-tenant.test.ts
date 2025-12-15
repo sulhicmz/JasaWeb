@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DashboardController } from './dashboard.controller';
-import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
+import { DashboardController } from '../../src/dashboard/dashboard.controller';
+import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant-prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { DashboardGateway } from './dashboard.gateway';
-import { Role } from '../common/decorators/roles.decorator';
+import { DashboardGateway } from '../../src/dashboard/dashboard.gateway';
+import { Role } from '../../src/common/decorators/roles.decorator';
 
 describe('DashboardController', () => {
   let controller: DashboardController;

@@ -8,6 +8,8 @@
     "build": "astro build",
     "preview": "wrangler pages dev dist",
     "cf-build": "astro build && echo '{\"version\":1,\"include\":[\"/*\"],\"exclude\":[\"/api/*\",\"/_astro/*\"]}' > dist/_routes.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "astro": "astro"
   },
   "dependencies": {
@@ -24,6 +26,8 @@
     "@jasaweb/ui": "workspace:*"
   },
   "devDependencies": {
-    "wrangler": "^4.47.0"
+    "wrangler": "^4.47.0",
+    "vitest": "^2.1.9",
+    "jsdom": "^24.1.3"
   }
 }

@@ -25,14 +25,12 @@ chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-### `setup.bat` (Windows)
+### Windows Setup
 
-Windows batch script equivalent of `setup.sh`.
+Windows users should use WSL (Windows Subsystem for Linux) or Git Bash to run the setup script:
 
-**Usage:**
-
-```cmd
-scripts\setup.bat
+```bash
+./scripts/setup.sh
 ```
 
 ### `quick-start.sh` (Linux/macOS)

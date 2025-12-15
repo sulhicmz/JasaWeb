@@ -20,7 +20,7 @@ The project is structured as an early-stage monorepo with plans for:
 
 ## Technical Architecture
 
-- **Frontend**: Next.js 14 (SSR/ISR), Tailwind CSS, shadcn/ui
+- **Frontend**: Astro, Tailwind CSS, shadcn/ui
 - **Backend**: Node.js (NestJS) with REST/tRPC API
 - **Database**: PostgreSQL (multi-tenant via organization_id)
 - **ORM**: Prisma
@@ -92,8 +92,8 @@ pnpm vitest run example.test.ts
 
 ### File Structure
 
-- Components co-located by feature: `apps/web/src/features/<domain>`
-- API modules by domain: `apps/api/src/modules/<domain>`
+- Components co-located by feature: `apps/web/src/components/<domain>`
+- API modules by domain: `apps/api/src/<domain>`
 - Environment defaults in `.env.example`
 - Never commit real secrets
 

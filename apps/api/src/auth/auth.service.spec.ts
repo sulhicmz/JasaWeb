@@ -122,6 +122,7 @@ describe('AuthService', () => {
     const loginUserDto = {
       email: 'test@example.com',
       password: 'test-pass-123',
+      organizationId: 'org-1',
     };
 
     it('should successfully login user', async () => {

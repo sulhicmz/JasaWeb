@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service';
+import { DEFAULT_DATABASE_CONFIG } from '../common/config/constants';
 import {
   CreateKbCategoryDto,
   UpdateKbCategoryDto,
@@ -327,8 +328,8 @@ export class KnowledgeBaseService {
       data: {
         query,
         userId: user?.id,
-        ipAddress: '127.0.0.1', // Would get from request in real implementation
-        userAgent: 'Mozilla/5.0', // Would get from request in real implementation
+        ipAddress: DEFAULT_DATABASE_CONFIG.HOST, // Would be extracted from request context in real implementation
+        userAgent: 'unknown', // Would be extracted from request headers in real implementation
       },
     });
 

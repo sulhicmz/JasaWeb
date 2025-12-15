@@ -28,7 +28,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
-import { KnowledgeBaseModule } from './knowledgeBase/knowledge-base.module';
+import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
 // import { DashboardModule } from './dashboard/dashboard.module';
 import { OrganizationModule } from './common/services/organization.module';
 import { AppConfigModule } from './common/config/app.config.module';

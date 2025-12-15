@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthModule } from './auth.module';
+import { AuthModule } from '../../src/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { validateEnv } from '../common/config/env.validation';
+import { validateEnv } from '../../src/common/config/env.validation';
 
 describe('AuthModule Security', () => {
   it('should fail to initialize without JWT_SECRET', async () => {

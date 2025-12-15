@@ -9,6 +9,7 @@ import {
   OnGatewayInit,
   WsException,
 } from '@nestjs/websockets';
+import { APP_URLS, CACHE_KEYS } from '../common/config/constants';
 import { Server, Socket } from 'socket.io';
 import { Logger, UseGuards } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
@@ -34,7 +35,7 @@ interface DashboardUpdatePayload {
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:4321',
+    origin: APP_URLS.FRONTEND_URL,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -171,7 +172,9 @@ export class DashboardGateway
       });
 
       // Clear cache to force fresh data on next request
-      await this.cacheManager.del(`dashboard-stats-${data.organizationId}`);
+      await this.cacheManager.del(
+        CACHE_KEYS.DASHBOARD_STATS(data.organizationId)
+      );
     } catch (error) {
       this.logger.error(
         `Error refreshing stats: ${error instanceof Error ? error.message : String(error)}`
@@ -228,7 +231,7 @@ export class DashboardGateway
   }
 
   private async getDashboardStats(organizationId: string) {
-    const cacheKey = `dashboard-stats-${organizationId}`;
+    const cacheKey = CACHE_KEYS.DASHBOARD_STATS(organizationId);
     let stats = await this.cacheManager.get(cacheKey);
 
     if (!stats) {

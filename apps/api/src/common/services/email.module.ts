@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { EmailService } from './email.service';
+import { DEFAULT_EMAIL_CONFIG } from '../config/constants';
 
 @Module({
   imports: [
@@ -10,7 +11,10 @@ import { EmailService } from './email.service';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         transport: {
-          host: configService.get<string>('SMTP_HOST', 'localhost'),
+          host: configService.get<string>(
+            'SMTP_HOST',
+            DEFAULT_EMAIL_CONFIG.HOST
+          ),
           port: configService.get<number>('SMTP_PORT', 587),
           secure: configService.get<string>('SMTP_SECURE', 'false') === 'true', // true for 465, false for other ports
           auth: {

@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
+import { AuthService } from '../../src/auth/auth.service';
+import { UsersService } from '../../src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenService } from './refresh-token.service';
-import { PasswordService } from './password.service';
-import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { LoginUserDto } from './dto/login-user.dto';
+import { RefreshTokenService } from '../../src/auth/refresh-token.service';
+import { PasswordService } from '../../src/auth/password.service';
+import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant-prisma.service';
+import { LoginUserDto } from '../../src/auth/dto/login-user.dto';
 import { vi } from 'vitest';
 
 describe('AuthService - Multi-tenant Integration', () => {
@@ -85,6 +85,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     const loginUserDto: LoginUserDto = {
       email: 'user@example.com',
       password: 'password123',
+      organizationId: 'org-1',
     };
 
     const mockUser = {
@@ -163,6 +164,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     const loginUserDto: LoginUserDto = {
       email: 'nonexistent@example.com',
       password: 'password123',
+      organizationId: 'org-1',
     };
 
     mockUsersService.findByEmail.mockResolvedValue(null);
@@ -176,6 +178,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     const loginUserDto: LoginUserDto = {
       email: 'user@example.com',
       password: 'wrongpassword',
+      organizationId: 'org-1',
     };
 
     const mockUser = {

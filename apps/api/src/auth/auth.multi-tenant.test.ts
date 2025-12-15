@@ -6,7 +6,7 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { UnauthorizedException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
 // Mock UUID

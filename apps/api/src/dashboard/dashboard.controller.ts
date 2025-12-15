@@ -8,6 +8,7 @@ import {
   Inject,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { CACHE_KEYS, CACHE_CONFIG } from '../common/config/constants';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -85,7 +86,7 @@ export class DashboardController {
     @CurrentOrganizationId() organizationId: string,
     @Query('refresh') refresh?: string
   ): Promise<DashboardStats> {
-    const cacheKey = `dashboard-stats-${organizationId}`;
+    const cacheKey = CACHE_KEYS.DASHBOARD_STATS(organizationId);
 
     // Return cached data if available and not forcing refresh
     if (!refresh || refresh !== 'true') {
@@ -485,7 +486,7 @@ export class DashboardController {
     try {
       // Clear all dashboard-related cache keys for this organization
       await Promise.all([
-        this.cacheManager.del(`dashboard-stats-${organizationId}`),
+        this.cacheManager.del(CACHE_KEYS.DASHBOARD_STATS(organizationId)),
         this.cacheManager.del(`dashboard-activity-${organizationId}`),
         this.cacheManager.del(`dashboard-projects-${organizationId}`),
       ]);

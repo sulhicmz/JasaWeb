@@ -45,14 +45,14 @@ vi.mock('@nestjs/jwt', () => ({
 
 // Mock @nestjs/config
 vi.mock('@nestjs/config', () => ({
+  ConfigModule: {
+    forRoot: vi.fn(() => ({ module: 'ConfigModule' })),
+    isGlobal: true,
+  },
   ConfigService: vi.fn().mockImplementation(() => ({
     get: vi.fn(),
   })),
 }));
 
-// Global test utilities
-declare global {
-  namespace Vi {
-    interface JestAssertion<T = any> extends jest.Matchers<void, T> {}
-  }
-}
+// Export empty to make this a module
+export {};
