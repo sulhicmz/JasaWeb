@@ -11,11 +11,6 @@ import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 
 describe('AuthService API Contract Tests', () => {
   let service: AuthService;
-  let usersService: UsersService;
-  let jwtService: JwtService;
-  let refreshTokenService: RefreshTokenService;
-  let passwordService: PasswordService;
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockUsersService = {
     findByEmail: vi.fn(),
@@ -80,13 +75,6 @@ describe('AuthService API Contract Tests', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    usersService = module.get<UsersService>(UsersService);
-    jwtService = module.get<JwtService>(JwtService);
-    refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
-    passwordService = module.get<PasswordService>(PasswordService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
 
     vi.clearAllMocks();
   });

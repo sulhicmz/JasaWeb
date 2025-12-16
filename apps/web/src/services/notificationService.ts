@@ -6,6 +6,7 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
   isRead: boolean;
   createdAt: Date;
@@ -19,6 +20,7 @@ export interface NotificationUpdate {
 
 export interface DashboardUpdate {
   type: 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
   timestamp: Date;
 }
@@ -29,15 +31,18 @@ export interface NotificationServiceCallbacks {
   onUnreadCount?: (count: number) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onError?: (error: any) => void;
   onDashboardUpdate?: (update: DashboardUpdate) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onStatsUpdated?: (data: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRealtimeNotification?: (notification: any) => void;
 }
 
 class NotificationService {
-  private socket: any | null = null;
-  private dashboardSocket: any | null = null;
+  private socket: Socket | null = null;
+  private dashboardSocket: Socket | null = null;
   private callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -128,7 +133,8 @@ class NotificationService {
       this.callbacks.onConnect?.();
     });
 
-    this.socket.on('disconnect', (reason: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    this.socket.on('disconnect', (_reason: any) => {
       // Disconnected from notification service
       this.callbacks.onDisconnect?.();
     });

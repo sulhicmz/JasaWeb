@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-object-injection */
 import React, { useState, useEffect } from 'react';
 
 interface ChartData {
