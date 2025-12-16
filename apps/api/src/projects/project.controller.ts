@@ -10,7 +10,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
-import type { CreateProjectDto, UpdateProjectDto } from './project.service';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';

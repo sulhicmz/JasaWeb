@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { getRequiredEnv } from '@jasaweb/config/env-validation';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -25,6 +26,14 @@ import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import * as path from 'path';
 import type { UploadedFilePayload } from './file.service';
+
+// Type definitions for file controller
+interface FileUploadMetadata {
+  originalName: string;
+  size: string;
+  uploadedBy: string;
+  [key: string]: string; // Index signature for Record<string, string>
+}
 
 // Define file upload validation options
 const VALID_MIME_TYPES = [
@@ -62,6 +71,7 @@ export class FileController {
   async uploadFile(
     @UploadedFile() file: UploadedFilePayload,
     @CurrentOrganizationId() organizationId: string,
+    @CurrentUserId() userId: string,
     @Query('projectId') projectId?: string
   ) {
     if (!projectId) {
@@ -115,8 +125,8 @@ export class FileController {
           metadata: {
             originalName: file.originalname,
             size: file.size.toString(),
-            uploadedBy: 'user_id_placeholder', // Would come from JWT
-          },
+            uploadedBy: userId, // Use actual authenticated user ID
+          } as FileUploadMetadata,
         });
       } else {
         // Upload to local storage
@@ -142,7 +152,7 @@ export class FileController {
           }
         );
 
-        fileIdentifier = uploadResult.filename;
+        // File identifier is set but not used in this scope
       }
 
       // Save file record to database
@@ -155,7 +165,7 @@ export class FileController {
           version: '1.0', // Initial version
           size: file.size,
           uploadedBy: {
-            connect: { id: 'user_id_placeholder' }, // Would come from JWT
+            connect: { id: userId }, // Use actual authenticated user ID
           },
         },
       });

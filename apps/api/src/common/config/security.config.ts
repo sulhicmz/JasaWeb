@@ -5,7 +5,7 @@ import {
   getEnvBoolean,
   getOptionalEnv,
 } from '@jasaweb/config/env-validation';
-import { DEFAULT_CORS_ORIGINS, DEFAULT_PORTS } from './constants';
+import { DEFAULT_CORS_ORIGINS } from './constants';
 
 export default registerAs('security', () => {
   // Validate required secrets first

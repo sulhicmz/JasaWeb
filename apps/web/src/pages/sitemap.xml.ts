@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
-
-const SITE_URL = 'https://jasaweb.id';
+import { apiConfig } from '../config';
 
 export const GET: APIRoute = () => {
   const pages = [
@@ -22,7 +21,7 @@ export const GET: APIRoute = () => {
     .map(
       (page) => `
   <url>
-    <loc>${SITE_URL}${page}</loc>
+    <loc>${apiConfig.siteUrl}${page}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>${page === '' ? 'daily' : 'weekly'}</changefreq>
     <priority>${page === '' ? '1.0' : '0.8'}</priority>

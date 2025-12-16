@@ -1,22 +1,12 @@
-/// <reference types="@types/jest" />
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from './refresh-token.service';
+import { PasswordService } from './password.service';
+import { PrismaService } from '../common/database/prisma.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-
-// Mock bcrypt
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
-  compare: jest.fn(),
-}));
-
-// Mock UUID
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mock-uuid-1234'),
-}));
+import { vi } from 'vitest';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -36,17 +26,37 @@ describe('AuthService', () => {
   };
 
   const mockUsersService = {
-    findByEmail: jest.fn(),
-    create: jest.fn(),
+    findByEmail: vi.fn(),
+    create: vi.fn(),
+    findOne: vi.fn(),
   };
 
   const mockJwtService = {
-    sign: jest.fn(),
-    verify: jest.fn(),
+    sign: vi.fn(),
+    verify: vi.fn(),
   };
 
   const mockRefreshTokenService = {
-    createRefreshToken: jest.fn(),
+    createRefreshToken: vi.fn(),
+  };
+
+  const mockPasswordService = {
+    hashPassword: vi.fn(),
+    verifyPassword: vi.fn(),
+  };
+
+  const mockPrismaService = {
+    user: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    $connect: vi.fn(),
+    $disconnect: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -65,6 +75,14 @@ describe('AuthService', () => {
           provide: RefreshTokenService,
           useValue: mockRefreshTokenService,
         },
+        {
+          provide: PasswordService,
+          useValue: mockPasswordService,
+        },
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
       ],
     }).compile();
 
@@ -75,7 +93,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -97,9 +115,6 @@ describe('AuthService', () => {
         refreshToken: 'test-refresh-token',
         expiresAt: new Date(),
       });
-
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('test-hash-pass');
 
       const result = await service.register(createUserDto);
 
@@ -133,9 +148,6 @@ describe('AuthService', () => {
         expiresAt: new Date(),
       });
 
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(true);
-
       const result = await service.login(loginUserDto);
 
       expect(result).toHaveProperty('access_token');
@@ -154,9 +166,6 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if password is invalid', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(false);
-
       await expect(service.login(loginUserDto)).rejects.toThrow(
         UnauthorizedException
       );
@@ -166,9 +175,6 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should return user without password if credentials are valid', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(true);
 
       const result = await service.validateUser(
         'test@example.com',
@@ -184,7 +190,20 @@ describe('AuthService', () => {
 
       const result = await service.validateUser(
         'test@example.com',
-        'password123'
+        'test-pass'
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null if password is invalid', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      // Mock password service to return false for invalid password
+      mockPasswordService.verifyPassword.mockResolvedValue(false);
+
+      const result = await service.validateUser(
+        'test@example.com',
+        'wrong-test-pass'
       );
 
       expect(result).toBeNull();

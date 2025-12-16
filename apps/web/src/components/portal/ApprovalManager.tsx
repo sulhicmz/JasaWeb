@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiConfig } from '../../config';
 
 interface Approval {
   id: string;
@@ -68,17 +69,20 @@ const ApprovalManager: React.FC<ApprovalManagerProps> = ({
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/approvals', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          projectId,
-        }),
-      });
+      const response = await fetch(
+        `${apiConfig.baseUrl}${apiConfig.endpoints.approvals}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            projectId,
+          }),
+        }
+      );
 
       if (response.ok) {
         closeModal();

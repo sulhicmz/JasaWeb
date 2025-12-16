@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -35,18 +34,22 @@ model User {
 }
 
 model Organization {
-  id           String       @id @default(cuid())
-  name         String
-  billingEmail String
-  plan         String?
-  settings     Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  memberships  Membership[]
-  projects     Project[]
-  tickets      Ticket[]
-  invoices     Invoice[]
-  AuditLog     AuditLog[]
+  id                    String                     @id @default(cuid())
+  name                  String
+  billingEmail          String
+  plan                  String?
+  settings              Json?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  memberships           Membership[]
+  projects              Project[]
+  tickets               Ticket[]
+  invoices              Invoice[]
+  AuditLog              AuditLog[]
+  kbCategories          KnowledgeBaseCategory[]
+  kbArticles            KbArticle[]
+  kbTags                KbTag[]
+  kbSearchLogs          KbSearchLog[]
 
   @@index([createdAt])
   @@index([plan])
@@ -249,51 +252,67 @@ model AuditLog {
 }
 
 model KnowledgeBaseCategory {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  icon        String?
-  color       String?
-  order       Int      @default(0)
-  parentId    String?
-  parent      KnowledgeBaseCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    KnowledgeBaseCategory[] @relation("CategoryHierarchy")
-  articles    KbArticle[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  icon           String?
+  color          String?
+  order          Int      @default(0)
+  parentId       String?
+  parent         KnowledgeBaseCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children       KnowledgeBaseCategory[] @relation("CategoryHierarchy")
+  articles       KbArticle[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
 }
 
 model KbArticle {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  content     String   // Rich text content
-  excerpt     String?  // Brief description for search results
-  status      String   // draft, published, archived
-  featured    Boolean  @default(false)
-  viewCount   Int      @default(0)
-  categoryId  String
-  category    KnowledgeBaseCategory @relation(fields: [categoryId], references: [id])
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  tags        KbTag[]
-  feedback    KbFeedback[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  publishedAt DateTime?
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String
+  slug           String
+  content        String   // Rich text content
+  excerpt        String?  // Brief description for search results
+  status         String   // draft, published, archived
+  featured       Boolean  @default(false)
+  viewCount      Int      @default(0)
+  searchVector   String?  // PostgreSQL tsvector for full-text search
+  categoryId     String
+  category       KnowledgeBaseCategory @relation(fields: [categoryId], references: [id])
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+  tags           KbTag[]
+  feedback       KbFeedback[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  publishedAt    DateTime?
 
+  @@unique([organizationId, slug])
+  @@index([organizationId])
   @@index([status])
   @@index([categoryId])
   @@index([publishedAt])
   @@index([featured])
+  @@index([searchVector], map: "idx_kb_articles_search_vector", type: Gist)
 }
 
 model KbTag {
-  id       String     @id @default(cuid())
-  name     String     @unique
-  color    String?
-  articles KbArticle[]
-  createdAt DateTime   @default(now())
+  id             String     @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  color          String?
+  articles       KbArticle[]
+  createdAt      DateTime   @default(now())
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
 }
 
 model KbFeedback {
@@ -312,16 +331,19 @@ model KbFeedback {
 }
 
 model KbSearchLog {
-  id        String   @id @default(cuid())
-  query     String
-  results   Int      @default(0)
-  clicked   String?  // Article ID that was clicked
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  query          String
+  results        Int      @default(0)
+  clicked        String?  // Article ID that was clicked
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id])
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
 
+  @@index([organizationId])
   @@index([query])
   @@index([createdAt])
 }

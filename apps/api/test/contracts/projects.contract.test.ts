@@ -82,15 +82,16 @@ describe('ProjectController API Contract Tests', () => {
         {
           provide: Reflector,
           useValue: {
-            getAllAndOverride: vi.fn(),
+            getAllAndOverride: vi.fn().mockReturnValue([]),
+            get: vi.fn(),
           },
         },
       ],
     })
       .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
+      .useValue({ canActivate: vi.fn(() => true) })
       .overrideGuard(ThrottlerGuard)
-      .useValue({ canActivate: () => true })
+      .useValue({ canActivate: vi.fn(() => true) })
       .compile();
 
     controller = module.get<ProjectController>(ProjectController);
@@ -98,13 +99,6 @@ describe('ProjectController API Contract Tests', () => {
     multiTenantPrisma = module.get<MultiTenantPrismaService>(
       MultiTenantPrismaService
     );
-
-    // Debug: check if service is properly injected
-    if (!controller['projectService']) {
-      console.error('ProjectService not properly injected into controller');
-    } else {
-      console.log('ProjectService injected successfully');
-    }
 
     vi.clearAllMocks();
   });
@@ -118,7 +112,7 @@ describe('ProjectController API Contract Tests', () => {
 
       mockProjectsService.create.mockResolvedValue(mockProject);
 
-      const result = await controller.create(createProjectDto, 'org1');
+      const result = await controller.create(createProjectDto);
 
       // API Contract validation
       expect(result).toBeDefined();
@@ -164,7 +158,7 @@ describe('ProjectController API Contract Tests', () => {
 
       mockProjectsService.create.mockResolvedValue(projectWithDefaultStatus);
 
-      const result = await controller.create(createProjectDto, 'org1');
+      const result = await controller.create(createProjectDto);
 
       expect(result.status).toBe('draft');
     });

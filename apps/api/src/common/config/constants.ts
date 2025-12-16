@@ -1,16 +1,19 @@
 /**
  * Application Configuration Constants
- * Centralized configuration values to eliminate hardcoded references
+ * DEPRECATED: Use centralized config at src/config/index.ts instead
+ * This file maintained for backward compatibility
  */
+
+import { config } from '../../config';
 
 /**
  * Default Port Configuration
  */
 export const DEFAULT_PORTS = {
-  API: 3000,
+  API: config.api.port,
   WEB: 4321,
-  DATABASE: 5432,
-  REDIS: 6379,
+  DATABASE: config.database.port,
+  REDIS: config.cache.redis.port || 6379,
   MINIO: 9000,
 } as const;
 
@@ -60,26 +63,18 @@ export const APP_URLS = {
  * File Upload Configuration
  */
 export const FILE_UPLOAD_CONFIG = {
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_MIME_TYPES: [
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'application/pdf',
-    'text/plain',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ],
-  UPLOAD_PATH: './uploads',
+  MAX_FILE_SIZE: config.storage.maxFileSize,
+  ALLOWED_MIME_TYPES: config.storage.allowedMimeTypes.slice(0, 6), // Backward compatibility
+  UPLOAD_PATH: config.storage.local.uploadDirectory,
 } as const;
 
 /**
  * Cache Configuration
  */
 export const CACHE_CONFIG = {
-  DEFAULT_TTL: 300, // 5 minutes
-  DASHBOARD_STATS_TTL: 60, // 1 minute
-  PROJECT_CACHE_TTL: 180, // 3 minutes
+  DEFAULT_TTL: config.cache.ttl.default,
+  DASHBOARD_STATS_TTL: config.cache.ttl.dashboardStats,
+  PROJECT_CACHE_TTL: config.cache.ttl.projects,
 } as const;
 
 /**
@@ -98,10 +93,10 @@ export const CACHE_KEYS = {
  * Security Configuration
  */
 export const SECURITY_CONFIG = {
-  JWT_SECRET_MIN_LENGTH: 32,
-  BCRYPT_ROUNDS: 12,
-  MAX_LOGIN_ATTEMPTS: 5,
-  LOCKOUT_DURATION_MS: 15 * 60 * 1000, // 15 minutes
+  JWT_SECRET_MIN_LENGTH: config.security.jwt.secretMinLength,
+  BCRYPT_ROUNDS: config.security.password.bcryptRounds,
+  MAX_LOGIN_ATTEMPTS: config.security.auth.maxLoginAttempts,
+  LOCKOUT_DURATION_MS: config.security.auth.lockoutDurationMs,
 } as const;
 
 /**

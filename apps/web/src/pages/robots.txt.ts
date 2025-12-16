@@ -1,13 +1,12 @@
 import type { APIRoute } from 'astro';
-
-const SITE_URL = 'https://jasaweb.id';
+import { apiConfig } from '../config';
 
 export const GET: APIRoute = () => {
   const robots = `User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: ${SITE_URL}/sitemap.xml
+Sitemap: ${apiConfig.siteUrl}/sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1

@@ -1,213 +1,348 @@
-# Security Guide for JasaWeb
+# Security Policy
 
-This document consolidates security best practices, OWASP compliance, and implementation guidelines for the JasaWeb project.
+## 🔒 Supported Versions
 
-## 🔐 Security Overview
+| Version | Security Updates | Status      |
+| ------- | ---------------- | ----------- |
+| 1.x.x   | ✅ Yes           | Current     |
+| 0.9.x   | ⚠️ Limited       | Maintenance |
+| < 0.9   | ❌ No            | End of Life |
 
-JasaWeb implements a multi-layered security approach focusing on:
+## 🚨 Reporting a Vulnerability
 
-- Authentication & Authorization
-- Data Protection & Privacy
-- Infrastructure Security
-- Code Security & Quality
+### How to Report
 
-## 📋 OWASP Top 10 (2021) Compliance
+If you discover a security vulnerability, please report it privately before disclosing it publicly.
 
-### A01: Broken Access Control
+#### **Primary Method: GitHub Security Advisory**
 
-**Mitigations Implemented**:
+1. Go to [Security Advisories](https://github.com/sulhicmz/JasaWeb/security/advisories)
+2. Click "Report a vulnerability"
+3. Fill out the form with detailed information
+4. We'll respond within 48 hours
 
-- ✅ Role-Based Access Control (RBAC) with `RolesGuard`
-- ✅ Multi-tenant isolation with `MultiTenantGuard`
-- ✅ JWT-based authentication with secure token handling
-- ✅ Session management with secure cookies
-- ✅ Audit logging for all access attempts
-- ✅ Principle of least privilege enforced
+#### **Alternative Methods**
 
-**Implementation Files**:
+- **Email**: security@jasaweb.com
+- **Encrypted Email**: Use our PGP key (see below)
+- **Discord**: Send a direct message to `@security-team`
 
-- `apps/api/src/common/guards/roles.guard.ts`
-- `apps/api/src/common/guards/multi-tenant.guard.ts`
-- `apps/api/src/auth/auth.module.ts`
+### What to Include
 
-### A02: Cryptographic Failures
+Please provide as much information as possible:
 
-**Mitigations Implemented**:
+- **Vulnerability Type**: (e.g., XSS, SQL Injection, Authentication Bypass)
+- **Affected Versions**: Which versions are affected
+- **Impact**: What's the potential impact
+- **Reproduction Steps**: Step-by-step instructions to reproduce
+- **Proof of Concept**: Code snippets or screenshots
+- **Mitigation Suggestions**: If you have suggestions for fixing
 
-- ✅ Argon2 password hashing with sufficient rounds
-- ✅ Strong JWT secrets and short expiration times
-- ✅ Encryption at rest and in transit
-- ✅ Secure key management practices
+### PGP Key
 
-### A03: Injection
+For encrypted communications, our PGP key is available upon request. Please email security@jasaweb.com to obtain the current public key.
 
-**Mitigations Implemented**:
+**Note**: PGP encryption is recommended for sensitive vulnerability reports.
 
-- ✅ Prisma ORM with parameterized queries
-- ✅ Input validation with class-validator
-- ✅ SQL injection prevention
-- ✅ XSS protection with content security policy
+## 🛡️ Security Measures
 
-## 🔧 Security Best Practices
+### Built-in Security Features
 
-### Authentication & Authorization
+#### Authentication & Authorization
 
-```typescript
-// ✅ DO: Use bcrypt with sufficient rounds
-import * as bcrypt from 'bcrypt';
+- **JWT-based authentication** with secure token handling
+- **Role-based access control (RBAC)** for granular permissions
+- **Multi-factor authentication (MFA)** support
+- **Session management** with secure cookie handling
+- **Password policies** with strength requirements
+- **Account lockout** after failed attempts
 
-const BCRYPT_ROUNDS = 10;
-const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
+#### Data Protection
 
-// ✅ DO: Use strong secrets and short expiration times
-JWT_SECRET=<strong-256-bit-random-string>
-JWT_EXPIRES_IN=1d
-JWT_REFRESH_EXPIRES_IN=7d
-```
+- **Encryption at rest** for sensitive data
+- **Encryption in transit** with TLS 1.3
+- **Input validation** and sanitization
+- **SQL injection prevention** with parameterized queries
+- **XSS protection** with content security policy
+- **CSRF protection** with secure tokens
 
-### Input Validation
+#### Infrastructure Security
 
-```typescript
-// ✅ DO: Validate all inputs
-import { IsEmail, IsString, MinLength } from 'class-validator';
+- **Container security** with minimal base images
+- **Network segmentation** for service isolation
+- **Firewall rules** for access control
+- **DDoS protection** with rate limiting
+- **Regular security updates** and patching
+- **Backup encryption** and secure storage
 
-export class CreateUserDto {
-  @IsEmail()
-  email: string;
+### Monitoring & Detection
 
-  @IsString()
-  @MinLength(8)
-  password: string;
-}
-```
+#### Automated Scanning
 
-### Environment Security
+- **Daily vulnerability scans** with Dependabot
+- **Weekly security audits** with advanced tools
+- **CodeQL analysis** for static code analysis
+- **Secret scanning** for credential detection
+- **Container image scanning** for vulnerabilities
+- **Dependency monitoring** for security updates
 
-```bash
-# ✅ DO: Use strong, unique secrets
-DATABASE_URL=postgresql://user:strong_password@localhost:5432/db
-JWT_SECRET=your-256-bit-random-secret-string
-AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+#### Real-time Monitoring
 
-# ❌ DON'T: Use weak or default secrets
-DATABASE_URL=postgresql://postgres:password@localhost:5432/db
-JWT_SECRET=secret123
-```
+- **Intrusion detection** with alerting
+- **Anomaly detection** for unusual behavior
+- **Log monitoring** with security events
+- **Performance monitoring** for attack detection
+- **Access logging** with audit trails
+- **Error tracking** for security issues
 
-## 🛡️ Security Implementation
+## 📋 Security Checklist
 
-### Multi-Tenant Data Isolation
+### Development Security
 
-All database queries include tenant isolation:
+#### Code Review
 
-```typescript
-// ✅ DO: Always include organization_id in queries
-const user = await this.prisma.user.findFirst({
-  where: {
-    id: userId,
-    organizationId: organizationId, // Critical for tenant isolation
-  },
-});
-```
+- [ ] Security-focused code review for all changes
+- [ ] Static analysis security testing (SAST)
+- [ ] Dependency vulnerability scanning
+- [ ] Secret detection in code
+- [ ] Authentication and authorization testing
+- [ ] Input validation verification
 
-### Rate Limiting
+#### Testing
 
-```typescript
-// ✅ DO: Implement rate limiting
-@Throttle(10, 60) // 10 requests per minute
-@Post('sensitive-endpoint')
-sensitiveAction() {
-  // Implementation
-}
-```
+- [ ] Security unit tests
+- [ ] Integration security tests
+- [ ] Penetration testing
+- [ ] Performance testing under attack
+- [ ] Error handling verification
+- [ ] Logging and monitoring tests
 
-### Security Headers
+### Deployment Security
 
-```typescript
-// ✅ DO: Use security headers
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-      },
-    },
-  })
-);
-```
+#### Infrastructure
 
-## 🔍 Security Monitoring
+- [ ] Secure server configuration
+- [ ] Firewall rules implemented
+- [ ] SSL/TLS certificates valid
+- [ ] Database security configured
+- [ ] Backup systems tested
+- [ ] Monitoring systems active
 
-### Audit Logging
+#### Application
 
-```typescript
-// ✅ DO: Log security-relevant events
-@Injectable()
-export class AuditService {
-  logSecurityEvent(event: string, userId: string, details: any) {
-    this.logger.log(`SECURITY: ${event} by user ${userId}`, details);
-  }
-}
-```
+- [ ] Environment variables secured
+- [ ] Debug mode disabled in production
+- [ ] Error messages sanitized
+- [ ] Security headers configured
+- [ ] Rate limiting enabled
+- [ ] Logging configured
 
-### Security Scanning
+### Operational Security
 
-The project includes automated security scanning:
+#### Access Control
 
-1. **CodeQL Analysis**: Static code analysis for security vulnerabilities
-2. **Dependency Scanning**: Automated vulnerability scanning of dependencies
-3. **Secret Detection**: Automated detection of committed secrets
-4. **Code Quality**: Security-focused code quality checks
+- [ ] Principle of least privilege enforced
+- [ ] Multi-factor authentication enabled
+- [ ] Access logs reviewed regularly
+- [ ] Password policies enforced
+- [ ] Session timeouts configured
+- [ ] Account lockout policies active
 
-## 🚨 Security Incident Response
+#### Incident Response
 
-### Immediate Actions
+- [ ] Incident response plan documented
+- [ ] Team trained on procedures
+- [ ] Communication channels established
+- [ ] Backup systems tested
+- [ ] Recovery procedures verified
+- [ ] Post-incident review process
 
-1. Identify and contain the breach
-2. Assess the impact and scope
-3. Notify stakeholders
-4. Implement fixes
-5. Document lessons learned
+## 🚨 Incident Response
 
-### Reporting Security Issues
+### Severity Levels
 
-- Email: security@jasaweb.com
-- Encrypted messages preferred
-- Include detailed reproduction steps
+#### **Critical (P0)**
 
-## 📚 Security Resources
+- Production data breach
+- System compromise
+- Complete service outage
+- Financial loss or legal liability
 
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [NestJS Security Best Practices](https://docs.nestjs.com/security)
-- [Prisma Security Guide](https://www.prisma.io/docs/guides/performance-and-optimization/security)
+**Response Time**: 1 hour
+**Resolution Time**: 24 hours
 
-## 🔐 Security Checklist
+#### **High (P1)**
 
-### Development
+- Security vulnerability in production
+- Partial service degradation
+- Data exposure risk
+- Compliance violation
 
-- [ ] All inputs are validated
-- [ ] Passwords are hashed with Argon2
-- [ ] JWT tokens have short expiration
-- [ ] Multi-tenant isolation is enforced
-- [ ] Rate limiting is implemented
-- [ ] Security headers are configured
+**Response Time**: 4 hours
+**Resolution Time**: 72 hours
 
-### Deployment
+#### **Medium (P2)**
 
-- [ ] Environment variables are secure
-- [ ] Database connections use SSL
-- [ ] Secrets are not committed to repo
-- [ ] Security scanning passes
-- [ ] Dependencies are up-to-date
-- [ ] Backup encryption is enabled
+- Security vulnerability in development
+- Non-critical service issues
+- Minor data exposure
+- Policy violations
 
-### Operations
+**Response Time**: 24 hours
+**Resolution Time**: 1 week
 
-- [ ] Access logs are monitored
-- [ ] Security updates are applied promptly
-- [ ] Incident response plan is tested
-- [ ] Security training is current
-- [ ] Compliance requirements are met
+#### **Low (P3)**
+
+- Potential security concerns
+- Documentation issues
+- Best practice violations
+- Minor policy gaps
+
+**Response Time**: 72 hours
+**Resolution Time**: 2 weeks
+
+### Response Process
+
+#### 1. Detection & Assessment (0-2 hours)
+
+- Identify and confirm the incident
+- Assess impact and severity
+- Initialize incident response team
+- Document initial findings
+
+#### 2. Containment (2-6 hours)
+
+- Isolate affected systems
+- Prevent further damage
+- Preserve evidence
+- Communicate with stakeholders
+
+#### 3. Investigation (6-24 hours)
+
+- Analyze root cause
+- Determine scope of impact
+- Identify affected data/users
+- Document timeline
+
+#### 4. Resolution (24-72 hours)
+
+- Implement fixes
+- Validate solutions
+- Restore services
+- Monitor for recurrence
+
+#### 5. Post-Incident (1-2 weeks)
+
+- Conduct post-mortem
+- Update security measures
+- Improve processes
+- Share lessons learned
+
+### Communication
+
+#### Internal Communication
+
+- **Immediate**: Incident response team
+- **Within 2 hours**: Management team
+- **Within 4 hours**: All staff
+- **Within 24 hours**: Full company update
+
+#### External Communication
+
+- **Within 24 hours**: Affected customers
+- **Within 48 hours**: Public statement (if required)
+- **Within 72 hours**: Regulatory notification (if required)
+- **As needed**: Media communications
+
+## 🔐 Best Practices
+
+### For Developers
+
+#### Secure Coding
+
+- Use parameterized queries for database access
+- Validate and sanitize all user input
+- Implement proper error handling
+- Use secure authentication methods
+- Follow principle of least privilege
+- Keep dependencies updated
+
+#### Code Review
+
+- Review all code for security issues
+- Check for hardcoded secrets
+- Verify authentication and authorization
+- Test input validation
+- Review error messages for information disclosure
+- Ensure proper logging
+
+### For System Administrators
+
+#### System Hardening
+
+- Minimize installed software
+- Configure firewalls properly
+- Use strong authentication
+- Regularly update systems
+- Monitor system logs
+- Implement backup strategies
+
+#### Access Management
+
+- Use unique credentials for each user
+- Implement multi-factor authentication
+- Regularly review access rights
+- Disable unused accounts
+- Use privileged access management
+- Monitor access logs
+
+### For Users
+
+#### Account Security
+
+- Use strong, unique passwords
+- Enable multi-factor authentication
+- Report suspicious activity
+- Keep software updated
+- Be cautious with emails and links
+- Use secure networks
+
+## 📞 Contact Information
+
+### Security Team
+
+- **Email**: security@jasaweb.com
+- **PGP**: Available upon request
+- **Response Time**: Within 48 hours
+
+### General Inquiries
+
+- **Email**: hello@jasaweb.com
+- **Website**: https://jasaweb.com
+- **Discord**: https://discord.gg/jasaweb
+
+### Legal & Compliance
+
+- **Email**: legal@jasaweb.com
+- **Address**: [Company Address]
+- **Privacy Policy**: https://jasaweb.com/privacy
+
+## 🔄 Updates & Maintenance
+
+### Security Updates
+
+- **Patch Tuesday**: Monthly security updates
+- **Emergency Patches**: As needed for critical issues
+- **Security Advisories**: Published for all vulnerabilities
+- **Changelog**: Updated with security fixes
+
+### Policy Reviews
+
+- **Quarterly**: Security policy review
+- **Annually**: Comprehensive security assessment
+- **As needed**: Incident-driven policy updates
+- **Continuous**: Monitoring and improvement
+
+---
+
+Thank you for helping keep JasaWeb secure! 🛡️

@@ -1,5 +1,6 @@
 /* eslint-disable security/detect-object-injection */
 import React, { useState, useEffect } from 'react';
+import { config } from '../../config';
 
 interface ChartData {
   labels: string[];
@@ -15,7 +16,7 @@ interface DashboardChartsProps {
   organizationId: string;
 }
 
-const DashboardCharts: React.FC<DashboardChartsProps> = ({
+const DashboardChartsComponent: React.FC<DashboardChartsProps> = ({
   organizationId,
 }) => {
   const [projectStatusData, setProjectStatusData] = useState<ChartData | null>(
@@ -36,12 +37,16 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       setError(null);
 
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/dashboard/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${config.api.baseUrl}${config.api.dashboardEndpoint}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(config.api.requestTimeout),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats');
@@ -60,8 +65,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
               stats.projects.completed,
               stats.projects.onHold,
             ],
-            backgroundColor: ['#3B82F6', '#10B981', '#F59E0B'],
-            borderColor: ['#2563EB', '#059669', '#D97706'],
+            backgroundColor: config.ui.charts.projects.colors,
+            borderColor: config.ui.charts.projects.borderColors,
           },
         ],
       };
@@ -77,8 +82,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
               stats.tickets.highPriority,
               stats.tickets.critical,
             ],
-            backgroundColor: ['#6B7280', '#F59E0B', '#EF4444', '#991B1B'],
-            borderColor: ['#4B5563', '#D97706', '#DC2626', '#7F1D1D'],
+            backgroundColor: config.ui.charts.tickets.colors,
+            borderColor: config.ui.charts.tickets.borderColors,
           },
         ],
       };
@@ -324,4 +329,5 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   );
 };
 
-export default DashboardCharts;
+export { DashboardChartsComponent as DashboardCharts };
+export default DashboardChartsComponent;

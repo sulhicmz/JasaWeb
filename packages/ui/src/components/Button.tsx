@@ -37,7 +37,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
+        className={`${baseClasses} ${variantClasses[variant] || ''} ${sizeClasses[size] || ''} ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         disabled={disabled}

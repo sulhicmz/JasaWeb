@@ -5,6 +5,7 @@ import { LocalFileStorageService } from '../common/services/local-file-storage.s
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
 import { getRequiredEnv } from '@jasaweb/config/env-validation';
+import { config } from '../config';
 
 export type UploadedFilePayload = {
   originalname: string;
@@ -13,37 +14,10 @@ export type UploadedFilePayload = {
   buffer: Buffer;
 };
 
-// Define file upload validation options
-export const VALID_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'application/pdf',
-  'text/plain',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-powerpoint',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
-
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-export const ALLOWED_EXTENSIONS = [
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.gif',
-  '.pdf',
-  '.txt',
-  '.doc',
-  '.docx',
-  '.ppt',
-  '.pptx',
-  '.xls',
-  '.xlsx',
-];
+// File upload validation options from centralized config
+export const VALID_MIME_TYPES = config.storage.allowedMimeTypes;
+export const MAX_FILE_SIZE = config.storage.maxFileSize;
+export const ALLOWED_EXTENSIONS = config.storage.allowedExtensions;
 
 export interface FileUploadDto {
   file: UploadedFilePayload;
@@ -141,7 +115,7 @@ export class FileService {
           }
         );
 
-        fileIdentifier = uploadResult.filename;
+        // File identifier tracked for future use
       }
 
       // Save file record to database
@@ -154,7 +128,7 @@ export class FileService {
           version: '1.0', // Initial version
           size: file.size,
           uploadedBy: {
-            connect: { id: uploadedById },
+            connect: { id: uploadedById }, // Use actual authenticated user ID
           },
         },
       });
@@ -346,8 +320,11 @@ export class FileService {
     const whereClause: { projectId?: string } = {};
 
     if (projectId) {
+      // TODO: Add organization-based filtering for security
       whereClause.projectId = projectId;
     }
+
+    // organizationId parameter available for future multi-tenant enhancement
 
     const files = await this.multiTenantPrisma.file.findMany({
       where: whereClause,

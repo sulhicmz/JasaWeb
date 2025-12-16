@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL;
+import { config } from '../config';
+
+const API_BASE_URL = config.api.baseUrl;
 
 export interface KbCategory {
   id: string;
@@ -109,11 +111,7 @@ class KnowledgeBaseService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    if (!API_BASE_URL) {
-      throw new Error('API_BASE_URL environment variable is required');
-    }
-
-    const url = `${API_BASE_URL}/knowledge-base${endpoint}`;
+    const url = `${config.api.baseUrl}${config.api.knowledgeBaseEndpoint}${endpoint}`;
 
     const response = await fetch(url, {
       headers: {
@@ -134,8 +132,9 @@ class KnowledgeBaseService {
   }
 
   // Categories
-  async getCategories(): Promise<KbCategory[]> {
-    return this.request<KbCategory[]>('/categories');
+  async getCategories(organizationId?: string): Promise<KbCategory[]> {
+    const query = organizationId ? `?organizationId=${organizationId}` : '';
+    return this.request<KbCategory[]>(`/categories${query}`);
   }
 
   async getCategory(id: string): Promise<KbCategory> {
@@ -154,6 +153,7 @@ class KnowledgeBaseService {
     featured?: boolean;
     limit?: number;
     page?: number;
+    organizationId?: string;
   }): Promise<KbArticle[]> {
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.append('status', params.status);
@@ -163,6 +163,8 @@ class KnowledgeBaseService {
       searchParams.append('featured', params.featured.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.organizationId)
+      searchParams.append('organizationId', params.organizationId);
 
     const query = searchParams.toString();
     return this.request<KbArticle[]>(`/articles${query ? `?${query}` : ''}`);
@@ -205,6 +207,35 @@ class KnowledgeBaseService {
 
   async getAnalytics(): Promise<KbAnalytics> {
     return this.request<KbAnalytics>('/analytics');
+  }
+
+  async getSearchSuggestions(query: string): Promise<{
+    suggestions: Array<{
+      type: string;
+      title: string;
+      url: string;
+      category: string;
+    }>;
+    tags: Array<{
+      name: string;
+      color?: string;
+    }>;
+    articles: KbArticle[];
+  }> {
+    return this.request<any>(
+      `/search/suggestions?q=${encodeURIComponent(query)}`
+    );
+  }
+
+  async getPopularSearches(organizationId?: string): Promise<{
+    popularSearches: Array<{
+      query: string;
+      count: number;
+    }>;
+    trendingArticles: KbArticle[];
+  }> {
+    const query = organizationId ? `?organizationId=${organizationId}` : '';
+    return this.request<any>(`/search/popular${query}`);
   }
 }
 

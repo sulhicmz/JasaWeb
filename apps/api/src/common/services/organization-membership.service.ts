@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma.service';
 export interface MembershipContext {
   userId: string;
   organizationId: string;
+  membershipId: string;
   role: string;
   user: {
     id: string;
@@ -71,6 +72,7 @@ export class OrganizationMembershipService {
       const context: MembershipContext = {
         userId: membership.userId,
         organizationId: membership.organizationId,
+        membershipId: membership.id,
         role: membership.role,
         user: membership.user,
         organization: membership.organization,
@@ -110,9 +112,9 @@ export class OrganizationMembershipService {
     requiredRole: string
   ): Promise<boolean> {
     try {
-      const membership = await this.verifyMembership(userId, organizationId);
-      return this.isRoleOrHigher(membership.role, requiredRole);
-    } catch (error) {
+      const _membership = await this.verifyMembership(userId, organizationId);
+      return this.isRoleOrHigher(_membership.role, requiredRole);
+    } catch (_error) {
       return false;
     }
   }

@@ -54,43 +54,43 @@ describe('AuthService - Multi-tenant Authentication', () => {
 
   beforeEach(async () => {
     const mockUsersService = {
-      findByEmail: jest.fn(),
-      create: jest.fn(),
-      updatePasswordHash: jest.fn(),
+      findByEmail: vi.fn(),
+      create: vi.fn(),
+      updatePasswordHash: vi.fn(),
     };
 
     const mockJwtService = {
-      signAsync: jest.fn(),
-      verify: jest.fn(),
+      signAsync: vi.fn(),
+      verify: vi.fn(),
     };
 
     const mockRefreshTokenService = {
-      createRefreshToken: jest.fn(),
-      rotateRefreshToken: jest.fn(),
-      revokeRefreshToken: jest.fn(),
+      createRefreshToken: vi.fn(),
+      rotateRefreshToken: vi.fn(),
+      revokeRefreshToken: vi.fn(),
     };
 
     const mockPasswordService = {
-      hashPassword: jest.fn(),
-      verifyPassword: jest.fn(),
+      hashPassword: vi.fn(),
+      verifyPassword: vi.fn(),
     };
 
     const mockPrismaService = {
       user: {
-        findUnique: jest.fn(),
-        create: jest.fn(),
+        findUnique: vi.fn(),
+        create: vi.fn(),
       },
       organization: {
-        create: jest.fn(),
+        create: vi.fn(),
       },
       membership: {
-        findFirst: jest.fn(),
-        create: jest.fn(),
+        findFirst: vi.fn(),
+        create: vi.fn(),
       },
       refreshToken: {
-        create: jest.fn(),
-        findUnique: jest.fn(),
-        update: jest.fn(),
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        update: vi.fn(),
       },
     };
 
@@ -136,13 +136,13 @@ describe('AuthService - Multi-tenant Authentication', () => {
         organizationId: 'org-1',
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(mockUser);
-      passwordService.verifyPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(mockUser);
+      passwordService.verifyPassword = vi.fn().mockResolvedValue({
         isValid: true,
         needsRehash: false,
       });
-      prisma.membership.findFirst = jest.fn().mockResolvedValue(mockMembership);
-      refreshTokenService.createRefreshToken = jest.fn().mockResolvedValue({
+      prisma.membership.findFirst = vi.fn().mockResolvedValue(mockMembership);
+      refreshTokenService.createRefreshToken = vi.fn().mockResolvedValue({
         token: 'jwt-token',
         refreshToken: 'refresh-token',
         expiresAt: new Date(),
@@ -182,7 +182,7 @@ describe('AuthService - Multi-tenant Authentication', () => {
         organizationId: 'org-1',
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(null);
+      usersService.findByEmail = vi.fn().mockResolvedValue(null);
 
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException
@@ -196,8 +196,8 @@ describe('AuthService - Multi-tenant Authentication', () => {
         organizationId: 'org-1',
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(mockUser);
-      passwordService.verifyPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(mockUser);
+      passwordService.verifyPassword = vi.fn().mockResolvedValue({
         isValid: false,
       });
 
@@ -213,12 +213,12 @@ describe('AuthService - Multi-tenant Authentication', () => {
         organizationId: 'org-2', // Different organization
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(mockUser);
-      passwordService.verifyPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(mockUser);
+      passwordService.verifyPassword = vi.fn().mockResolvedValue({
         isValid: true,
         needsRehash: false,
       });
-      prisma.membership.findFirst = jest.fn().mockResolvedValue(null);
+      prisma.membership.findFirst = vi.fn().mockResolvedValue(null);
 
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException
@@ -232,16 +232,16 @@ describe('AuthService - Multi-tenant Authentication', () => {
         organizationId: 'org-1',
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(mockUser);
-      passwordService.verifyPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(mockUser);
+      passwordService.verifyPassword = vi.fn().mockResolvedValue({
         isValid: true,
         needsRehash: false,
       });
-      prisma.membership.findFirst = jest.fn().mockResolvedValue(mockMembership);
+      prisma.membership.findFirst = vi.fn().mockResolvedValue(mockMembership);
 
       // Mock JWT service to capture the payload
       let capturedPayload: any = null;
-      const mockSignAsync = jest.fn().mockImplementation((payload) => {
+      const mockSignAsync = vi.fn().mockImplementation((payload) => {
         capturedPayload = payload;
         return 'jwt-token-with-org';
       });
@@ -286,19 +286,19 @@ describe('AuthService - Multi-tenant Authentication', () => {
         name: 'New User',
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(null);
-      passwordService.hashPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(null);
+      passwordService.hashPassword = vi.fn().mockResolvedValue({
         hash: 'hashedPassword',
       });
-      usersService.create = jest.fn().mockResolvedValue(newUser);
-      prisma.membership.findFirst = jest.fn().mockResolvedValue(null); // No existing membership
-      prisma.organization.create = jest.fn().mockResolvedValue({
+      usersService.create = vi.fn().mockResolvedValue(newUser);
+      prisma.membership.findFirst = vi.fn().mockResolvedValue(null); // No existing membership
+      prisma.organization.create = vi.fn().mockResolvedValue({
         ...mockOrganization,
         name: "New User's Organization",
         billingEmail: 'newuser@example.com',
       });
-      prisma.membership.create = jest.fn().mockResolvedValue(mockMembership);
-      refreshTokenService.createRefreshToken = jest.fn().mockResolvedValue({
+      prisma.membership.create = vi.fn().mockResolvedValue(mockMembership);
+      refreshTokenService.createRefreshToken = vi.fn().mockResolvedValue({
         token: 'jwt-token',
         refreshToken: 'refresh-token',
         expiresAt: new Date(),
@@ -332,13 +332,13 @@ describe('AuthService - Multi-tenant Authentication', () => {
         password: 'password123',
       };
 
-      usersService.findByEmail = jest.fn().mockResolvedValue(null);
-      passwordService.hashPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(null);
+      passwordService.hashPassword = vi.fn().mockResolvedValue({
         hash: 'hashedPassword',
       });
-      usersService.create = jest.fn().mockResolvedValue(mockUser);
-      prisma.membership.findFirst = jest.fn().mockResolvedValue(mockMembership); // Existing membership
-      refreshTokenService.createRefreshToken = jest.fn().mockResolvedValue({
+      usersService.create = vi.fn().mockResolvedValue(mockUser);
+      prisma.membership.findFirst = vi.fn().mockResolvedValue(mockMembership); // Existing membership
+      refreshTokenService.createRefreshToken = vi.fn().mockResolvedValue({
         token: 'jwt-token',
         refreshToken: 'refresh-token',
         expiresAt: new Date(),
@@ -357,14 +357,14 @@ describe('AuthService - Multi-tenant Authentication', () => {
 
   describe('JWT token validation', () => {
     it('should validate user with correct password and update hash if needed', async () => {
-      usersService.findByEmail = jest.fn().mockResolvedValue(mockUser);
-      passwordService.verifyPassword = jest.fn().mockResolvedValue({
+      usersService.findByEmail = vi.fn().mockResolvedValue(mockUser);
+      passwordService.verifyPassword = vi.fn().mockResolvedValue({
         isValid: true,
         needsRehash: true,
         newHash: 'newHashedPassword',
         newVersion: 'argon2',
       });
-      usersService.updatePasswordHash = jest.fn().mockResolvedValue(mockUser);
+      usersService.updatePasswordHash = vi.fn().mockResolvedValue(mockUser);
 
       const result = await service.validateUser(
         'test@example.com',

@@ -9,37 +9,85 @@ const ALLOWED_BASE_DIRECTORIES = [
   '/tmp',
 ];
 
+// Enhanced path security validation to prevent all traversal attacks
+function validatePathSecurity(filePath: string, allowedBase: string): string {
+  // Basic input validation - reject obvious dangerous patterns
+  if (
+    !filePath ||
+    typeof filePath !== 'string' ||
+    filePath.includes('..') ||
+    filePath.includes('~') ||
+    filePath.startsWith('/') ||
+    filePath.startsWith('\\')
+  ) {
+    throw new Error('Invalid or dangerous file path detected');
+  }
+
+  const resolvedPath = path.resolve(filePath);
+  const resolvedBase = path.resolve(allowedBase);
+
+  // Strict parent directory prevention
+  if (!resolvedPath.startsWith(resolvedBase)) {
+    throw new Error(
+      'Path traversal detected - access outside allowed directory'
+    );
+  }
+
+  // Additional character sanitization
+  const sanitizedPath = filePath
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/_{2,}/g, '_')
+    .trim();
+
+  return sanitizedPath;
+}
+
 // Sanitize file paths to prevent directory traversal
 function sanitizePath(filePath: string): string {
-  return path.normalize(filePath).replace(/\.\./g, '').replace(/\/+/g, '/');
+  return path
+    .normalize(filePath)
+    .replace(/\.\./g, '')
+    .replace(/[/\\]+/g, '/');
 }
 
 // Validate directory path against allowed directories
 function isValidDirectoryPath(dirPath: string): boolean {
-  const sanitized = sanitizePath(dirPath);
-  const resolvedPath = path.resolve(sanitized);
+  try {
+    if (!dirPath || typeof dirPath !== 'string') {
+      return false;
+    }
 
-  return (
-    sanitized === dirPath &&
-    !sanitized.includes('..') &&
-    ALLOWED_BASE_DIRECTORIES.some((allowedDir) =>
-      resolvedPath.startsWith(path.resolve(allowedDir))
-    )
-  );
+    const sanitized = sanitizePath(dirPath);
+    const resolvedPath = path.resolve(sanitized);
+
+    // Check against all allowed base directories
+    return ALLOWED_BASE_DIRECTORIES.some((allowedDir) => {
+      const resolvedBase = path.resolve(allowedDir);
+      return resolvedPath.startsWith(resolvedBase);
+    });
+  } catch (error) {
+    return false;
+  }
 }
 
 // Validate file path is within allowed directories
 function isValidFilePath(filePath: string): boolean {
-  const sanitized = sanitizePath(filePath);
-  const resolvedPath = path.resolve(sanitized);
+  try {
+    if (!filePath || typeof filePath !== 'string') {
+      return false;
+    }
 
-  return (
-    sanitized === filePath &&
-    !sanitized.includes('..') &&
-    ALLOWED_BASE_DIRECTORIES.some((allowedDir) =>
-      resolvedPath.startsWith(path.resolve(allowedDir))
-    )
-  );
+    const sanitized = sanitizePath(filePath);
+    const resolvedPath = path.resolve(sanitized);
+
+    // Check against all allowed base directories
+    return ALLOWED_BASE_DIRECTORIES.some((allowedDir) => {
+      const resolvedBase = path.resolve(allowedDir);
+      return resolvedPath.startsWith(resolvedBase);
+    });
+  } catch (error) {
+    return false;
+  }
 }
 
 export interface LocalFileUploadOptions {

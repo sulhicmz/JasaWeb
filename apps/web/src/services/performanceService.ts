@@ -27,8 +27,9 @@ export class PerformanceService {
       // First Input Delay (FID)
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          this.metrics.fid = entry.processingStart - entry.startTime;
+        entries.forEach((entry) => {
+          const fidEntry = entry as any;
+          this.metrics.fid = fidEntry.processingStart - fidEntry.startTime;
           console.log('FID:', this.metrics.fid);
         });
       });
@@ -38,9 +39,10 @@ export class PerformanceService {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+        entries.forEach((entry: PerformanceEntry) => {
+          const clsEntry = entry as any;
+          if (!clsEntry.hadRecentInput) {
+            clsValue += clsEntry.value;
             this.metrics.cls = clsValue;
           }
         });

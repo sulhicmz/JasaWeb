@@ -3,7 +3,6 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  Inject,
 } from '@nestjs/common';
 import { RequestWithAuth } from '../types/request';
 import { PrismaService } from '../database/prisma.service';

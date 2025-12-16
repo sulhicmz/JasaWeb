@@ -1,67 +1,78 @@
 ---
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import DashboardHeader from '../../components/portal/DashboardHeader.astro';
+import { DashboardCharts } from '../../components/portal/DashboardCharts.tsx';
+import StatusWidgets from '../../components/portal/StatusWidgets.tsx';
+import QuickActions from '../../components/portal/QuickActions.astro';
+import ActivityFeed from '../../components/portal/ActivityFeed.astro';
+import ProjectOverview from '../../components/portal/ProjectOverview.astro';
+import { NotificationCenter } from '../../components/portal/NotificationCenter.tsx';
 ---
 
 <DashboardLayout title="Dashboard - Client Portal">
   <DashboardHeader client:load currentPage="dashboard" />
+  
   <div class="min-h-screen bg-slate-950">
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
-      <!-- Dashboard Placeholder -->
+      <!-- Dashboard Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">Dashboard</h1>
+        <p class="text-gray-400">Welcome back! Here's an overview of your projects and activities.</p>
+      </div>
+
+      <!-- Real-time Status Widgets -->
       <section class="mb-8">
-        <div class="glass-panel p-8 rounded-xl text-center">
-          <h2 class="text-2xl font-bold text-white mb-4">Dashboard</h2>
-          <p class="text-gray-400 mb-6">Your dashboard is being updated with the latest components.</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-slate-800 p-6 rounded-lg">
-              <h3 class="text-lg font-semibold text-white mb-2">Projects</h3>
-              <p class="text-3xl font-bold text-blue-400">12</p>
-              <p class="text-sm text-gray-400">Active projects</p>
-            </div>
-            <div class="bg-slate-800 p-6 rounded-lg">
-              <h3 class="text-lg font-semibold text-white mb-2">Tasks</h3>
-              <p class="text-3xl font-bold text-green-400">48</p>
-              <p class="text-sm text-gray-400">Completed tasks</p>
-            </div>
-            <div class="bg-slate-800 p-6 rounded-lg">
-              <h3 class="text-lg font-semibold text-white mb-2">Tickets</h3>
-              <p class="text-3xl font-bold text-yellow-400">7</p>
-              <p class="text-sm text-gray-400">Open tickets</p>
-            </div>
-            <div class="bg-slate-800 p-6 rounded-lg">
-              <h3 class="text-lg font-semibold text-white mb-2">Invoices</h3>
-              <p class="text-3xl font-bold text-purple-400">3</p>
-              <p class="text-sm text-gray-400">Pending invoices</p>
-            </div>
-          </div>
+        <div class="glass-panel p-6 rounded-xl">
+          <StatusWidgets client:load />
         </div>
       </section>
 
       <!-- Quick Actions -->
       <section class="mb-8">
         <div class="glass-panel p-6 rounded-xl">
-          <h2 class="text-xl font-bold text-white mb-4">Quick Actions</h2>
-          <div class="grid grid-cols-2 gap-4">
-            <a href="/portal/projects/new" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
-              <i class="fas fa-plus text-2xl text-blue-400 mb-2"></i>
-              <p class="text-white font-medium">New Project</p>
-            </a>
-            <a href="/portal/tickets/new" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
-              <i class="fas fa-ticket-alt text-2xl text-green-400 mb-2"></i>
-              <p class="text-white font-medium">Create Ticket</p>
-            </a>
-            <a href="/portal/files/upload" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
-              <i class="fas fa-upload text-2xl text-yellow-400 mb-2"></i>
-              <p class="text-white font-medium">Upload File</p>
-            </a>
-            <a href="/portal/invoices" class="p-4 bg-slate-800 hover:bg-slate-700 rounded-lg text-center transition-colors duration-200">
-              <i class="fas fa-file-invoice text-2xl text-purple-400 mb-2"></i>
-              <p class="text-white font-medium">View Invoices</p>
-            </a>
-          </div>
+          <QuickActions client:load />
         </div>
       </section>
+
+      <!-- Main Grid Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Charts & Overview -->
+        <div class="lg:col-span-2 space-y-8">
+          <!-- Dashboard Charts -->
+          <section>
+            <div class="glass-panel p-6 rounded-xl">
+              <h2 class="text-xl font-bold text-white mb-6">Analytics Overview</h2>
+              <DashboardCharts client:load organizationId="org-1" />
+            </div>
+          </section>
+
+          <!-- Project Overview -->
+          <section>
+            <div class="glass-panel p-6 rounded-xl">
+              <ProjectOverview client:load />
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column - Activity & Notifications -->
+        <div class="space-y-8">
+          <!-- Activity Feed -->
+          <section>
+            <div class="glass-panel p-6 rounded-xl">
+              <ActivityFeed client:load />
+            </div>
+          </section>
+
+          <!-- Notification Center -->
+          <section>
+            <div class="glass-panel p-6 rounded-xl">
+              <h2 class="text-xl font-bold text-white mb-6">Notifications</h2>
+              <NotificationCenter client:load organizationId="org-1" />
+            </div>
+          </section>
+        </div>
+      </div>
     </main>
   </div>
 </DashboardLayout>

@@ -180,4 +180,25 @@ export class KbSearchDto {
   @Min(1)
   @Max(50)
   limit?: number = 10;
+
+  @IsOptional()
+  @IsEnum(['relevance', 'title', 'newest', 'oldest', 'views'])
+  sortBy?: string = 'relevance';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  excludeTags?: string[];
+
+  @IsOptional()
+  @IsString()
+  dateRange?: 'week' | 'month' | 'quarter' | 'year' | 'all';
+
+  @IsOptional()
+  @IsBoolean()
+  includeUnpublished?: boolean = false;
+
+  @IsOptional()
+  @IsString()
+  authorId?: string;
 }

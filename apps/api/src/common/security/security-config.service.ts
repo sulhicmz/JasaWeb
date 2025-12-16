@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 
 export interface SecurityConfig {
   jwt: {
@@ -225,10 +226,9 @@ export class SecurityConfigService {
     return this.config.isProduction;
   }
 
-  validateSecurityHeaders(req: any): boolean {
+  validateSecurityHeaders(req: Request): boolean {
     // Additional runtime security validation
-    return (
-      req.headers['x-forwarded-proto'] === 'https' || this.config.isDevelopment
-    );
+    const forwardedProto = req.headers['x-forwarded-proto'];
+    return forwardedProto === 'https' || this.config.isDevelopment;
   }
 }

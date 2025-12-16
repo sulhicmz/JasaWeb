@@ -1,5 +1,4 @@
-/// <reference types="@types/jest" />
-
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
@@ -10,12 +9,12 @@ describe('AnalyticsController', () => {
 
   beforeEach(async () => {
     const mockService = {
-      getProjectAnalytics: jest.fn(),
-      getTeamPerformanceAnalytics: jest.fn(),
-      getFinancialAnalytics: jest.fn(),
-      getClientInsightsAnalytics: jest.fn(),
-      getActivityTrends: jest.fn(),
-      getOverviewAnalytics: jest.fn(),
+      getProjectAnalytics: vi.fn(),
+      getTeamPerformanceAnalytics: vi.fn(),
+      getFinancialAnalytics: vi.fn(),
+      getClientInsightsAnalytics: vi.fn(),
+      getActivityTrends: vi.fn(),
+      getOverviewAnalytics: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -59,9 +58,7 @@ describe('AnalyticsController', () => {
         },
       };
 
-      jest
-        .spyOn(service, 'getProjectAnalytics')
-        .mockResolvedValue(mockAnalytics);
+      vi.spyOn(service, 'getProjectAnalytics').mockResolvedValue(mockAnalytics);
 
       const result = await controller.getProjectAnalytics('org-123');
 
@@ -115,9 +112,7 @@ describe('AnalyticsController', () => {
         },
       };
 
-      jest
-        .spyOn(service, 'getOverviewAnalytics')
-        .mockResolvedValue(mockOverview);
+      vi.spyOn(service, 'getOverviewAnalytics').mockResolvedValue(mockOverview);
 
       const result = await controller.getOverviewAnalytics('org-123');
 

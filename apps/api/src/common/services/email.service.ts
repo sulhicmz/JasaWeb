@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
+import { config } from '../../config';
 
 export interface EmailOptions {
   to: string | string[];
@@ -44,8 +45,8 @@ export class EmailService {
   async sendWelcomeEmail(email: string, name?: string): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: 'Welcome to JasaWeb Client Portal',
-      template: './welcome', // Use template
+      subject: config.email.templates.welcome.subject,
+      template: config.email.templates.welcome.template,
       context: {
         name: name || 'there', // Use provided name or default
       },
@@ -62,8 +63,8 @@ export class EmailService {
   ): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: `Approval Request for ${projectName}`,
-      template: './approval-request',
+      subject: config.email.templates.approvalRequest.subject(projectName),
+      template: config.email.templates.approvalRequest.template,
       context: {
         projectName,
         approvalDetails,
@@ -82,8 +83,11 @@ export class EmailService {
   ): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: `Approval ${status.toUpperCase()} for ${projectName}`,
-      template: './approval-completed',
+      subject: config.email.templates.approvalCompleted.subject(
+        projectName,
+        status
+      ),
+      template: config.email.templates.approvalCompleted.template,
       context: {
         projectName,
         status,
@@ -103,8 +107,8 @@ export class EmailService {
   ): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: `New Ticket Created: ${ticketTitle}`,
-      template: './ticket-created',
+      subject: config.email.templates.ticketCreated.subject(ticketTitle),
+      template: config.email.templates.ticketCreated.template,
       context: {
         ticketTitle,
         projectName,
@@ -124,8 +128,11 @@ export class EmailService {
   ): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: `Ticket #${ticketId} Status Updated: ${newStatus}`,
-      template: './ticket-status-changed',
+      subject: config.email.templates.ticketStatusChanged.subject(
+        ticketId,
+        newStatus
+      ),
+      template: config.email.templates.ticketStatusChanged.template,
       context: {
         ticketId,
         ticketTitle,
@@ -145,8 +152,8 @@ export class EmailService {
   ): Promise<void> {
     await this.sendEmail({
       to: email,
-      subject: `New Invoice: ${invoiceNumber}`,
-      template: './invoice',
+      subject: config.email.templates.invoice.subject(invoiceNumber),
+      template: config.email.templates.invoice.template,
       context: {
         invoiceNumber,
         amount,

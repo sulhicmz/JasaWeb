@@ -1,16 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   knowledgeBaseService,
   type KbArticle,
   type KbCategory,
+  type KbSearchResult,
 } from '../../services/knowledgeBaseService';
 
-interface KnowledgeBaseHomeProps {}
+interface KnowledgeBaseHomeProps {
+  userRole?: 'owner' | 'admin' | 'reviewer' | 'finance' | 'member' | 'guest';
+  organizationId?: string;
+}
 
-const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
+const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = ({
+  userRole = 'guest',
+  organizationId,
+}) => {
   const [categories, setCategories] = useState<KbCategory[]>([]);
   const [featuredArticles, setFeaturedArticles] = useState<KbArticle[]>([]);
   const [recentArticles, setRecentArticles] = useState<KbArticle[]>([]);
+  const [popularSearches, setPopularSearches] = useState<
+    Array<{ query: string; count: number }>
+  >([]);
+  const [trendingArticles, setTrendingArticles] = useState<KbArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -18,27 +29,44 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
     void loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [categoriesData, featuredData, recentData] = await Promise.all([
-        knowledgeBaseService.getCategories(),
-        knowledgeBaseService.getArticles({
-          featured: true,
-          status: 'published',
-        }),
-        knowledgeBaseService.getArticles({ status: 'published', limit: 6 }),
-      ]);
+
+      // Get articles based on user role - include unpublished content for admins/owners
+      const includeUnpublished = ['owner', 'admin'].includes(userRole);
+
+      const [categoriesData, featuredData, recentData, popularData] =
+        await Promise.all([
+          knowledgeBaseService.getCategories(organizationId),
+          knowledgeBaseService.getArticles({
+            featured: true,
+            status: includeUnpublished ? undefined : 'published',
+            organizationId,
+          }),
+          knowledgeBaseService.getArticles({
+            status: includeUnpublished ? undefined : 'published',
+            limit: 6,
+            organizationId,
+          }),
+          organizationId
+            ? knowledgeBaseService
+                .getPopularSearches(organizationId)
+                .catch(() => ({ popularSearches: [], trendingArticles: [] }))
+            : Promise.resolve({ popularSearches: [], trendingArticles: [] }),
+        ]);
 
       setCategories(categoriesData);
       setFeaturedArticles(featuredData);
       setRecentArticles(recentData);
+      setPopularSearches(popularData.popularSearches);
+      setTrendingArticles(popularData.trendingArticles);
     } catch (error) {
       console.error('Error loading knowledge base data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userRole, organizationId]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +79,28 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="max-w-3xl">
-            <h1 className="text-4xl font-bold mb-4">JasaWeb Knowledge Base</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-bold mb-4">
+                JasaWeb Knowledge Base
+              </h1>
+              {/* Admin/Owner actions */}
+              {['owner', 'admin'].includes(userRole) && (
+                <div className="flex gap-2 mb-4">
+                  <a
+                    href="/knowledge-base/admin/articles/new"
+                    className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-blue-50 text-sm font-medium"
+                  >
+                    + New Article
+                  </a>
+                  <a
+                    href="/knowledge-base/admin/analytics"
+                    className="px-4 py-2 bg-blue-800 text-white rounded-md hover:bg-blue-900 text-sm font-medium"
+                  >
+                    Analytics
+                  </a>
+                </div>
+              )}
+            </div>
             <p className="text-lg text-blue-100">
               Cari jawaban cepat untuk pertanyaan Anda atau jelajahi artikel
               berdasarkan kategori.
@@ -75,8 +124,82 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
               </button>
             </div>
           </form>
+
+          {/* Popular Searches */}
+          {popularSearches.length > 0 && (
+            <div className="mt-6">
+              <p className="text-sm text-blue-100 mb-3">Popular searches:</p>
+              <div className="flex flex-wrap gap-2">
+                {popularSearches.slice(0, 5).map((search, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setSearchQuery(search.query);
+                      window.location.href = `/knowledge-base/search?q=${encodeURIComponent(search.query)}`;
+                    }}
+                    className="px-3 py-1 bg-blue-800 bg-opacity-50 text-blue-100 rounded-full text-sm hover:bg-opacity-70 transition-all"
+                  >
+                    {search.query}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Trending Articles Section */}
+      {trendingArticles.length > 0 && (
+        <div className="bg-white border-b">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                🔥 Trending Articles
+              </h2>
+              <a
+                href="/knowledge-base/search"
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View all →
+              </a>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {trendingArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 text-sm text-blue-600 mb-2">
+                      <span>{article.category.name}</span>
+                      {article.featured && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      <a
+                        href={`/knowledge-base/article/${article.slug}`}
+                        className="hover:text-blue-600 transition-colors"
+                      >
+                        {article.title}
+                      </a>
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{article.author.name}</span>
+                      <span>{article.viewCount || 0} views</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
         {loading ? (
@@ -88,12 +211,22 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Kategori</h2>
-                <a
-                  href="/knowledge-base"
-                  className="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  Lihat semua
-                </a>
+                <div className="flex items-center gap-4">
+                  <a
+                    href="/knowledge-base"
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    Lihat semua
+                  </a>
+                  {['owner', 'admin'].includes(userRole) && (
+                    <a
+                      href="/knowledge-base/admin/categories/new"
+                      className="text-green-600 hover:text-green-700 text-sm font-medium"
+                    >
+                      + Add Category
+                    </a>
+                  )}
+                </div>
               </div>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {categories.map((category) => (

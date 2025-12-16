@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Shared configuration for JasaWeb",
   "main": "eslint.config.js",
+  "exports": {
+    "./env-validation": "./env-validation.ts"
+  },
+  "types": "env-validation.ts",
   "scripts": {
     "lint": "echo 'TODO: Add lint script'"
   },

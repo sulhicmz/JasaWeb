@@ -16,6 +16,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
+      '@jasaweb/config': resolve(__dirname, '../packages/config'),
+      '@jasaweb/ui': resolve(__dirname, '../packages/ui'),
+      '@jasaweb/testing': resolve(__dirname, '../packages/testing'),
     },
   },
 });
