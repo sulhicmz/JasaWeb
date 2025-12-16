@@ -1,5 +1,3 @@
-/// <reference types="@types/jest" />
-
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   ProjectService,
@@ -8,6 +6,7 @@ import {
 } from './project.service';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { NotFoundException } from '@nestjs/common';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('ProjectService', () => {
   let service: ProjectService;
@@ -36,20 +35,20 @@ describe('ProjectService', () => {
 
   const mockMultiTenantPrismaService = {
     project: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
     milestone: {
-      count: jest.fn(),
+      count: vi.fn(),
     },
     approval: {
-      count: jest.fn(),
+      count: vi.fn(),
     },
     task: {
-      count: jest.fn(),
+      count: vi.fn(),
     },
   };
 
@@ -71,7 +70,7 @@ describe('ProjectService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -89,7 +88,7 @@ describe('ProjectService', () => {
         mockProject
       );
 
-      const result = await service.create(createProjectDto);
+      const result = await service.create(createProjectDto, 'org1');
 
       expect(mockMultiTenantPrismaService.project.create).toHaveBeenCalledWith({
         data: {
@@ -110,7 +109,7 @@ describe('ProjectService', () => {
         mockProject
       );
 
-      await service.create(createProjectWithoutStatus);
+      await service.create(createProjectWithoutStatus, 'org1');
 
       expect(mockMultiTenantPrismaService.project.create).toHaveBeenCalledWith({
         data: {
@@ -159,6 +158,19 @@ describe('ProjectService', () => {
         }),
       });
     });
+
+    it('should filter by organizationId if provided', async () => {
+      const projects = [mockProject];
+      mockMultiTenantPrismaService.project.findMany.mockResolvedValue(projects);
+
+      await service.findAll('summary', 'org1');
+
+      expect(mockMultiTenantPrismaService.project.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { organizationId: 'org1' },
+        })
+      );
+    });
   });
 
   describe('findOne', () => {
@@ -187,6 +199,16 @@ describe('ProjectService', () => {
 
       await expect(service.findOne('999')).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw NotFoundException if organizationId does not match', async () => {
+      mockMultiTenantPrismaService.project.findUnique.mockResolvedValue(
+        mockProjectWithRelations
+      );
+
+      await expect(service.findOne('1', 'other-org')).rejects.toThrow(
+        NotFoundException
+      );
+    });
   });
 
   describe('update', () => {
@@ -196,6 +218,7 @@ describe('ProjectService', () => {
 
     it('should update a project', async () => {
       const updatedProject = { ...mockProject, name: 'Updated Project' };
+      // findUnique is called first in update
       mockMultiTenantPrismaService.project.findUnique.mockResolvedValue(
         mockProject
       );
@@ -223,6 +246,7 @@ describe('ProjectService', () => {
 
   describe('remove', () => {
     it('should delete a project', async () => {
+      // findUnique is called first in remove
       mockMultiTenantPrismaService.project.findUnique.mockResolvedValue(
         mockProject
       );
@@ -283,6 +307,7 @@ describe('ProjectService', () => {
     it('should return project statistics', async () => {
       const projectWithCount = {
         id: '1',
+        organizationId: 'org1',
         _count: {
           milestones: 5,
           files: 10,
@@ -321,6 +346,7 @@ describe('ProjectService', () => {
     it('should handle zero milestones for progress calculation', async () => {
       const projectWithZeroMilestones = {
         id: '1',
+        organizationId: 'org1',
         _count: {
           milestones: 0,
           files: 5,
