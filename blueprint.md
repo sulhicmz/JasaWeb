@@ -2,7 +2,7 @@
 
 ## Architecture
 - Monorepo: `apps/web` (Astro), `apps/api` (NestJS), `packages/ui`, `packages/config`.
-- Frontend: Astro + React.
+- Frontend: Astro + React. View Transitions (`ClientRouter`) enabled.
 - Backend: NestJS.
 
 ## Consistency

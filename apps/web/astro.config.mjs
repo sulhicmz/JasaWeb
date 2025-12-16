@@ -21,14 +21,6 @@ export default defineConfig({
     resolve: {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.astro'],
     },
-    esbuild: {
-      loader: 'tsx',
-      include: /\.tsx?$/,
-      exclude: /node_modules/,
-      // Optimize bundle size
-      minify: true,
-      target: 'es2020',
-    },
     // Optimize build performance
     build: {
       rollupOptions: {

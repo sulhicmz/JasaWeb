@@ -1,13 +1,18 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 
+export type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'personal';
+
+export interface NotificationData {
+  [key: string]: unknown;
+}
+
 export interface Notification {
   id: string;
   type: string;
   title: string;
   message: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
+  data: NotificationData;
   isRead: boolean;
   createdAt: Date;
 }
@@ -20,9 +25,17 @@ export interface NotificationUpdate {
 
 export interface DashboardUpdate {
   type: 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
+  data: NotificationData;
   timestamp: Date;
+}
+
+export interface LocalNotification {
+  id: number;
+  message: string;
+  type: NotificationType;
+  data?: NotificationData | DashboardUpdate;
+  timestamp: Date;
+  read: boolean;
 }
 
 export interface NotificationServiceCallbacks {
@@ -31,28 +44,26 @@ export interface NotificationServiceCallbacks {
   onUnreadCount?: (count: number) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
   onDashboardUpdate?: (update: DashboardUpdate) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onStatsUpdated?: (data: any) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onRealtimeNotification?: (notification: any) => void;
+  onStatsUpdated?: (data: NotificationData) => void;
+  onRealtimeNotification?: (notification: LocalNotification) => void;
 }
 
-class NotificationService {
-  private socket: Socket | null = null;
-  private dashboardSocket: Socket | null = null;
-  private callbacks: NotificationServiceCallbacks = {};
+export class NotificationService {
+  public socket: Socket | null = null;
+  public dashboardSocket: Socket | null = null;
+  public callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private notificationQueue: any[] = [];
+  public notificationQueue: LocalNotification[] = [];
   private isVisible = true;
 
   constructor() {
     // Only connect on client-side
     if (typeof window !== 'undefined') {
+      this.isVisible = !document.hidden;
       this.setupVisibilityChange();
       this.connect();
       this.connectDashboard();
@@ -133,13 +144,12 @@ class NotificationService {
       this.callbacks.onConnect?.();
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.socket.on('disconnect', (_reason: any) => {
+    this.socket.on('disconnect', (_reason: unknown) => {
       // Disconnected from notification service
       this.callbacks.onDisconnect?.();
     });
 
-    this.socket.on('connect_error', (error: any) => {
+    this.socket.on('connect_error', (error: unknown) => {
       // Notification connection error
       this.reconnectAttempts++;
 
@@ -169,7 +179,7 @@ class NotificationService {
       this.callbacks.onUnreadCount?.(data.count);
     });
 
-    this.socket.on('error', (error: any) => {
+    this.socket.on('error', (error: unknown) => {
       // Socket error
       this.callbacks.onError?.(error);
     });
@@ -189,17 +199,17 @@ class NotificationService {
       }
     });
 
-    this.dashboardSocket.on('disconnect', (reason: any) => {
+    this.dashboardSocket.on('disconnect', (reason: unknown) => {
       console.log('Disconnected from dashboard WebSocket:', reason);
       this.callbacks.onDisconnect?.();
     });
 
-    this.dashboardSocket.on('connect_error', (error: any) => {
+    this.dashboardSocket.on('connect_error', (error: unknown) => {
       console.error('Dashboard WebSocket connection error:', error);
       this.callbacks.onError?.(error);
     });
 
-    this.dashboardSocket.on('initial-data', (data: any) => {
+    this.dashboardSocket.on('initial-data', (data: NotificationData) => {
       console.log('Received initial dashboard data:', data);
       // Dispatch custom event for dashboard components
       window.dispatchEvent(
@@ -207,7 +217,7 @@ class NotificationService {
       );
     });
 
-    this.dashboardSocket.on('stats-updated', (data: any) => {
+    this.dashboardSocket.on('stats-updated', (data: NotificationData) => {
       console.log('Stats updated:', data);
       this.callbacks.onStatsUpdated?.(data);
 
@@ -235,7 +245,7 @@ class NotificationService {
       );
     });
 
-    this.dashboardSocket.on('personal-update', (data: any) => {
+    this.dashboardSocket.on('personal-update', (data: DashboardUpdate) => {
       console.log('Personal update:', data);
 
       // Show personal notification
@@ -246,7 +256,7 @@ class NotificationService {
       );
     });
 
-    this.dashboardSocket.on('error', (error: any) => {
+    this.dashboardSocket.on('error', (error: unknown) => {
       console.error('Dashboard WebSocket error:', error);
       this.callbacks.onError?.(error);
       this.showRealtimeNotification('Connection error', 'error');
@@ -280,38 +290,38 @@ class NotificationService {
   }
 
   // Public methods
-  on(callbacks: NotificationServiceCallbacks) {
+  public on(callbacks: NotificationServiceCallbacks) {
     this.callbacks = { ...this.callbacks, ...callbacks };
   }
 
-  off(callbacks: Partial<NotificationServiceCallbacks>) {
+  public off(callbacks: Partial<NotificationServiceCallbacks>) {
     Object.keys(callbacks).forEach((key) => {
       delete this.callbacks[key as keyof NotificationServiceCallbacks];
     });
   }
 
-  markAsRead(notificationId: string) {
+  public markAsRead(notificationId: string) {
     if (typeof window === 'undefined' || !this.socket) return;
     this.socket.emit('mark-read', { notificationId });
   }
 
-  markAllAsRead() {
+  public markAllAsRead() {
     if (typeof window === 'undefined' || !this.socket) return;
     this.socket.emit('mark-all-read');
   }
 
-  getUnreadCount() {
+  public getUnreadCount() {
     if (typeof window === 'undefined' || !this.socket) return;
     this.socket.emit('get-unread-count');
   }
 
   // Real-time notification methods
-  private showRealtimeNotification(
+  public showRealtimeNotification(
     message: string,
-    type: 'info' | 'success' | 'warning' | 'error' | 'personal' = 'info',
-    data?: any
+    type: NotificationType = 'info',
+    data?: NotificationData | DashboardUpdate
   ) {
-    const notification = {
+    const notification: LocalNotification = {
       id: Date.now() + Math.random(),
       message,
       type,
@@ -336,7 +346,7 @@ class NotificationService {
     );
   }
 
-  private displayNotification(notification: any) {
+  private displayNotification(notification: LocalNotification) {
     // Create notification element
     const notificationEl = document.createElement('div');
     notificationEl.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
@@ -351,7 +361,7 @@ class NotificationService {
     };
 
     notificationEl.classList.add(
-      colors[notification.type as keyof typeof colors] || colors.info
+      colors[notification.type] || colors.info
     );
 
     notificationEl.innerHTML = `
@@ -387,7 +397,7 @@ class NotificationService {
   }
 
   private getNotificationIcon(type: string) {
-    const icons = {
+    const icons: Record<string, string> = {
       success: '<i class="fas fa-check-circle"></i>',
       error: '<i class="fas fa-exclamation-circle"></i>',
       warning: '<i class="fas fa-exclamation-triangle"></i>',
@@ -395,35 +405,45 @@ class NotificationService {
       personal: '<i class="fas fa-user-circle"></i>',
     };
 
-    return icons[type as keyof typeof icons] || icons.info;
+    return icons[type] || icons.info;
   }
 
-  private getNotificationDetails(data: any) {
+  private getNotificationDetails(data: NotificationData | DashboardUpdate) {
     if (!data) return '';
 
-    switch (data.type) {
-      case 'project':
-        return `Project: ${data.data?.name || 'Unknown'}`;
-      case 'ticket':
-        return `Ticket: ${data.data?.title || 'Unknown'}`;
-      case 'milestone':
-        return `Milestone: ${data.data?.title || 'Unknown'}`;
-      case 'invoice':
-        return `Invoice: ${data.data?.id || 'Unknown'}`;
-      default:
-        return '';
+    // Check if data matches DashboardUpdate structure with 'type' field
+    if ('type' in data && typeof data.type === 'string') {
+        const update = data as DashboardUpdate;
+        const payload = update.data as Record<string, unknown>; // Assuming data.data is the payload
+
+        switch (update.type) {
+        case 'project':
+            return `Project: ${payload?.name || 'Unknown'}`;
+        case 'ticket':
+            return `Ticket: ${payload?.title || 'Unknown'}`;
+        case 'milestone':
+            return `Milestone: ${payload?.title || 'Unknown'}`;
+        case 'invoice':
+            return `Invoice: ${payload?.id || 'Unknown'}`;
+        default:
+            return '';
+        }
     }
+
+    return '';
   }
 
-  private processNotificationQueue() {
+  public processNotificationQueue() {
     while (this.notificationQueue.length > 0) {
       const notification = this.notificationQueue.shift();
-      this.displayNotification(notification);
+      if (notification) {
+          this.displayNotification(notification);
+      }
     }
   }
 
   // Dashboard-specific methods
-  refreshDashboardStats() {
+  public refreshDashboardStats() {
     if (this.dashboardSocket && this.dashboardSocket.connected) {
       const organizationId = localStorage.getItem('organization_id');
       if (organizationId) {
@@ -432,19 +452,19 @@ class NotificationService {
     }
   }
 
-  subscribeToDashboard(organizationId: string) {
+  public subscribeToDashboard(organizationId: string) {
     if (this.dashboardSocket && this.dashboardSocket.connected) {
       this.dashboardSocket.emit('subscribe-dashboard', { organizationId });
     }
   }
 
-  unsubscribeFromDashboard(organizationId: string) {
+  public unsubscribeFromDashboard(organizationId: string) {
     if (this.dashboardSocket && this.dashboardSocket.connected) {
       this.dashboardSocket.emit('unsubscribe-dashboard', { organizationId });
     }
   }
 
-  disconnect() {
+  public disconnect() {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
@@ -455,20 +475,20 @@ class NotificationService {
     }
   }
 
-  reconnect() {
+  public reconnect() {
     this.disconnect();
     this.connect();
     this.connectDashboard();
   }
 
-  isConnected(): boolean {
+  public isConnected(): boolean {
     return (
       (this.socket?.connected || false) &&
       (this.dashboardSocket?.connected || false)
     );
   }
 
-  getDashboardConnectionStatus() {
+  public getDashboardConnectionStatus() {
     return {
       connected: this.dashboardSocket?.connected || false,
       socketId: this.dashboardSocket?.id,

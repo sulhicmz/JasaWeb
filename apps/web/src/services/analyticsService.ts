@@ -95,7 +95,7 @@ export interface OverviewAnalytics {
   clientInsights: ClientInsightsAnalytics;
 }
 
-class AnalyticsService {
+export class AnalyticsService {
   private baseUrl = '/api/analytics';
 
   private async fetchWithAuth(endpoint: string, params?: AnalyticsFilters) {
@@ -163,7 +163,7 @@ class AnalyticsService {
   // Export functionality
   async exportData(
     type: 'pdf' | 'excel' | 'csv',
-    data: any,
+    data: unknown,
     filename?: string
   ) {
     const token = localStorage.getItem('authToken');
