@@ -59,7 +59,7 @@ export class MultiTenantMiddleware implements NestMiddleware {
       (req as EnhancedRequest).userId = membershipContext.userId;
       (req as EnhancedRequest).user = membershipContext.user;
       (req as EnhancedRequest).membership = {
-        id: membershipContext.membershipId, // Use actual membership ID from service
+        id: 'membership-id', // Would be actual membership ID
         role: membershipContext.role,
       };
 

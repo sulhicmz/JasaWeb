@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+/// <reference types="@types/jest" />
+
 import { DashboardGateway } from '../src/dashboard/dashboard.gateway';
 import { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
@@ -14,32 +15,32 @@ describe('DashboardGateway', () => {
 
   beforeEach(() => {
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
     };
 
     mockJwtService = {
-      verify: vi.fn(),
-      verifyAsync: vi.fn(),
+      verify: jest.fn(),
+      verifyAsync: jest.fn(),
     } as any;
 
     mockPrismaService = {
       user: {
-        findUnique: vi.fn(),
-        findMany: vi.fn(),
+        findUnique: jest.fn(),
+        findMany: jest.fn(),
       } as any,
       project: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
       ticket: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
       invoice: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
       milestone: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
     } as any;
 
@@ -51,15 +52,15 @@ describe('DashboardGateway', () => {
         },
         headers: {},
       },
-      join: vi.fn(),
-      leave: vi.fn(),
-      emit: vi.fn(),
-      disconnect: vi.fn(),
+      join: jest.fn(),
+      leave: jest.fn(),
+      emit: jest.fn(),
+      disconnect: jest.fn(),
     };
 
     mockServer = {
-      to: vi.fn().mockReturnThis(),
-      emit: vi.fn(),
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
     };
 
     gateway = new DashboardGateway(

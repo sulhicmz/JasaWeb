@@ -1,41 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { apiConfig, businessConfig } from '../../config';
 
 interface Project {
   id: string;
-  status: 'planning' | 'in_progress' | 'completed' | 'cancelled';
+  status: string;
   name?: string;
-  createdAt: string;
-  updatedAt: string;
-  organizationId: string;
-  startAt?: Date;
-  dueAt?: Date;
+  [key: string]: any;
 }
 
 interface Ticket {
   id: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: string;
+  priority: string;
   title?: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-  organizationId: string;
-  projectId?: string;
+  [key: string]: any;
 }
 
 interface Invoice {
   id: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  amount?: number;
-  currency?: string;
-  dueDate?: string;
-  createdAt: string;
-  updatedAt: string;
-  organizationId: string;
-  projectId?: string;
-  issuedAt?: Date;
+  status: string;
+  amount: number;
+  [key: string]: any;
 }
 
 interface StatusData {
@@ -60,15 +45,12 @@ const StatusWidgets: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
 
-      const response = await fetch(
-        `${apiConfig.baseUrl}${apiConfig.endpoints.dashboard}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await fetch('http://localhost:3001/dashboard/stats', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats');
@@ -82,30 +64,24 @@ const StatusWidgets: React.FC = () => {
           .fill(null)
           .map((_, i) => ({
             id: `project-${i}`,
-            status: i < stats.projects.active ? 'in_progress' : 'completed',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            organizationId: '',
+            status: i < stats.projects.active ? 'active' : 'completed',
           })),
         tickets: Array(stats.tickets.open + stats.tickets.inProgress)
           .fill(null)
           .map((_, i) => ({
             id: `ticket-${i}`,
-            status: i < stats.tickets.open ? 'open' : 'in_progress',
+            status: i < stats.tickets.open ? 'open' : 'in-progress',
             priority: i < stats.tickets.highPriority ? 'high' : 'medium',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            organizationId: '',
           })),
         invoices: Array(stats.invoices.pending)
           .fill(null)
           .map((_, i) => ({
             id: `invoice-${i}`,
-            status: 'sent',
-            amount: Math.floor(Math.random() * 10000) + 1000,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            organizationId: '',
+            status: 'pending',
+            amount:
+              Math.floor(
+                stats.invoices.pendingAmount / stats.invoices.pending
+              ) || 0,
           })),
       });
     } catch (error) {
@@ -124,8 +100,8 @@ const StatusWidgets: React.FC = () => {
     const active = statusData.projects.filter(
       (p: Project) =>
         p.status &&
-        (p.status.toLowerCase() === businessConfig.projectStatuses.active ||
-          p.status.toLowerCase() === businessConfig.projectStatuses.inProgress)
+        (p.status.toLowerCase() === 'active' ||
+          p.status.toLowerCase() === 'in-progress')
     ).length;
     return { total, active };
   };

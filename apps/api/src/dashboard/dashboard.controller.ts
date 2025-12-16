@@ -8,8 +8,7 @@ import {
   Inject,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { cacheConfig, businessConfig } from '../config';
-import { CACHE_KEYS } from '../common/config/constants';
+import { CACHE_KEYS, CACHE_CONFIG } from '../common/config/constants';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -18,24 +17,12 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
-import {
-  Project,
-  Milestone,
-  Ticket,
-  Invoice,
-  Task,
-  File,
-  Approval,
-} from '@prisma/client';
+import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
 
 // Type for Project with relations
 type ProjectWithRelations = Project & {
   milestones?: Milestone[];
   tickets?: Ticket[];
-  tasks?: Task[];
-  files?: File[];
-  approvals?: Approval[];
-  invoices?: Invoice[];
 };
 
 // Type definitions for project with relations
@@ -125,12 +112,8 @@ export class DashboardController {
       milestones: milestonesStats,
     };
 
-    // Cache using configured TTL
-    await this.cacheManager.set(
-      cacheKey,
-      stats,
-      cacheConfig.ttl.dashboardStats * 1000
-    );
+    // Cache for 5 minutes (300 seconds)
+    await this.cacheManager.set(cacheKey, stats, 300000);
 
     return stats;
   }
@@ -844,16 +827,7 @@ export class DashboardController {
       },
     });
 
-    const projectsWithRelations = projects as Array<
-      Project & {
-        milestones: Milestone[];
-        tasks: Task[];
-        files: File[];
-        approvals: Approval[];
-        tickets: Ticket[];
-        invoices: Invoice[];
-      }
-    >;
+    const projectsWithRelations = projects as any[];
     return {
       totalProjects: projects.length,
       averageMilestonesPerProject:
@@ -1291,8 +1265,8 @@ export class DashboardController {
   }
 
   private calculateSLAComplianceRate(tickets: Ticket[]) {
-    // Use configured SLA thresholds
-    const slaHours = businessConfig.sla.responseTimes;
+    // Simplified SLA calculation (24 hours for high/critical, 48 hours for medium, 72 hours for low)
+    const slaHours = { critical: 24, high: 24, medium: 48, low: 72 };
 
     const resolvedTickets = tickets.filter((t) => t.status === 'closed');
     if (resolvedTickets.length === 0) return 0;
@@ -1755,9 +1729,7 @@ export class DashboardController {
       );
     }, 0);
 
-    const availableCapacity =
-      activeProjects.length *
-      businessConfig.teamCapacity.hoursPerProjectPerWeek;
+    const availableCapacity = activeProjects.length * 40; // 40 hours per project per week
     const currentUtilization = Math.min(
       (totalWorkload / availableCapacity) * 100,
       100
@@ -1785,10 +1757,7 @@ export class DashboardController {
       availableCapacity: Math.round(availableCapacity - totalWorkload),
       capacityBuffer: Math.round(capacityBuffer),
       canTakeNewProjects,
-      recommendedTeamSize: Math.ceil(
-        projectedWorkload /
-          businessConfig.teamCapacity.hoursPerTeamMemberPerWeek
-      ),
+      recommendedTeamSize: Math.ceil(projectedWorkload / 35), // 35 hours per team member per week
       burnoutRisk: this.calculateBurnoutRisk(
         currentUtilization,
         projectedUtilization
@@ -1806,8 +1775,7 @@ export class DashboardController {
     milestoneProgress: number,
     avgDuration: number
   ): number {
-    if (!project.dueAt)
-      return businessConfig.risk.mediumRisk.budgetOverrunThreshold * 1.5; // Configurable risk if no due date
+    if (!project.dueAt) return 0.3; // Medium risk if no due date
 
     const now = new Date();
     const timeElapsed = project.startAt
@@ -1826,14 +1794,8 @@ export class DashboardController {
     openTickets: number,
     criticalTickets: number
   ): number {
-    const ticketRisk = Math.min(
-      (openTickets / businessConfig.risk.highRisk.overdueMilestones) * 4,
-      1
-    ); // Configurable risk threshold
-    const criticalRisk = Math.min(
-      criticalTickets / businessConfig.risk.highRisk.criticalTickets,
-      1
-    );
+    const ticketRisk = Math.min(openTickets / 20, 1); // Risk increases with more open tickets
+    const criticalRisk = Math.min(criticalTickets / 5, 1); // Critical tickets have higher impact
 
     return ticketRisk * 0.6 + criticalRisk * 0.4;
   }

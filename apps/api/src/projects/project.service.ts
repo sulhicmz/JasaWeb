@@ -1,7 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
 
 const projectRelationsInclude = {
   milestones: true,
@@ -44,7 +42,19 @@ const buildProjectQuery = (view: ProjectViewMode): ProjectQueryArgs =>
     ? { include: projectRelationsInclude }
     : { select: projectSummarySelect };
 
-// Interfaces removed - now using proper DTO classes from dto directory
+export interface CreateProjectDto {
+  name: string;
+  status?: string;
+  startAt?: Date;
+  dueAt?: Date;
+}
+
+export interface UpdateProjectDto {
+  name?: string;
+  status?: string;
+  startAt?: Date;
+  dueAt?: Date;
+}
 
 @Injectable()
 export class ProjectService {

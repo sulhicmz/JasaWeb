@@ -17,8 +17,24 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { EmailService } from '../common/services/email.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { CreateTicketDto } from './dto/create-ticket.dto';
-import { UpdateTicketDto } from './dto/update-ticket.dto';
+
+// Define DTO for ticket creation/update
+interface CreateTicketDto {
+  title: string;
+  description: string;
+  type: string; // bug, feature, improvement, question, task
+  priority: string; // low, medium, high, critical
+  projectId?: string;
+}
+
+interface UpdateTicketDto {
+  title?: string;
+  description?: string;
+  type?: string;
+  priority?: string;
+  status?: string; // open, in-progress, in-review, resolved, closed
+  assigneeId?: string;
+}
 
 @Controller('tickets')
 @UseGuards(RolesGuard) // Use the roles guard
@@ -370,7 +386,10 @@ export class TicketController {
       low: 168, // 1 week
     };
 
-    const hoursToAdd = slaTimeframes[priority] || 168; // Default to 1 week for invalid priority
+    // Validate priority to prevent injection
+    const validPriorities = ['critical', 'high', 'medium', 'low'];
+    const safePriority = validPriorities.includes(priority) ? priority : 'low';
+    const hoursToAdd = slaTimeframes[safePriority] || 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

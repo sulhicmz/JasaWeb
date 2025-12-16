@@ -20,34 +20,34 @@ describe('DashboardController Integration Tests', () => {
 
   const mockPrismaService = {
     project: {
-      findMany: vi.fn(),
-      count: vi.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
     },
     ticket: {
-      findMany: vi.fn(),
-      count: vi.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
     },
     invoice: {
-      findMany: vi.fn(),
-      count: vi.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
     },
     milestone: {
-      findMany: vi.fn(),
-      count: vi.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
     },
     auditLog: {
-      findMany: vi.fn(),
+      findMany: jest.fn(),
     },
   };
 
   const mockCacheManager = {
-    get: vi.fn(),
-    set: vi.fn(),
-    del: vi.fn(),
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
   };
 
   const mockDashboardGateway = {
-    broadcastDashboardUpdate: vi.fn(),
+    broadcastDashboardUpdate: jest.fn(),
   };
 
   const mockGuard = {
@@ -70,7 +70,7 @@ describe('DashboardController Integration Tests', () => {
           provide: PrismaService,
           useValue: {
             membership: {
-              findFirst: vi.fn(),
+              findFirst: jest.fn(),
             },
           },
         },
@@ -85,7 +85,7 @@ describe('DashboardController Integration Tests', () => {
         {
           provide: Reflector,
           useValue: {
-            getAllAndOverride: vi.fn(),
+            getAllAndOverride: jest.fn(),
           },
         },
       ],

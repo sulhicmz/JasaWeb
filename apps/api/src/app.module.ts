@@ -26,7 +26,6 @@ import { MultiTenantGuard } from './common/guards/multi-tenant.guard';
 import { MultiTenantMiddleware } from './common/middleware/multi-tenant.middleware';
 import { RolesGuard } from './common/guards/roles.guard';
 import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
-import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
@@ -98,11 +97,7 @@ const parseEnvNumber = (
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(
-        RequestLoggingMiddleware,
-        MultiTenantMiddleware,
-        SecurityMiddleware
-      )
+      .apply(RequestLoggingMiddleware, MultiTenantMiddleware)
       .forRoutes('*'); // Apply to all routes
   }
 }

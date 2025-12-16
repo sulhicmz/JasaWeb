@@ -17,7 +17,6 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { PrismaService } from '../common/database/prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 
@@ -30,30 +29,8 @@ interface AuthenticatedSocket extends Socket {
 interface DashboardUpdatePayload {
   type: 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice';
   data: Record<string, unknown>;
-}
-
-interface UserWithMemberships {
-  id: string;
-  email: string;
-  memberships: Membership[];
-}
-
-interface JwtPayload {
-  sub: string;
-  email: string;
+  timestamp: Date;
   organizationId: string;
-  role: string;
-}
-
-interface Membership {
-  id: string;
-  organizationId: string;
-  role: string;
-}
-
-interface ExtendedDashboardUpdatePayload extends DashboardUpdatePayload {
-  timestamp?: Date;
-  organizationId?: string;
 }
 
 @WebSocketGateway({
@@ -74,11 +51,10 @@ export class DashboardGateway
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private jwtService: JwtService,
-    private readonly multiTenantPrisma: MultiTenantPrismaService,
-    private readonly prisma: PrismaService
+    private readonly multiTenantPrisma: MultiTenantPrismaService
   ) {}
 
-  afterInit() {
+  afterInit(server: Server) {
     this.logger.log('Dashboard WebSocket Gateway initialized');
   }
 
@@ -99,20 +75,14 @@ export class DashboardGateway
       client.userRole = payload.role;
 
       // Verify user exists and has access to the organization
-      const user = await this.prisma.user.findUnique({
+      const users = await this.multiTenantPrisma.user.findMany({
         where: {
           id: payload.sub,
         },
-        include: {
-          memberships: {
-            where: {
-              organizationId: payload.organizationId,
-            },
-          },
-        },
       });
+      const user = users[0];
 
-      if (!user || !user.memberships || user.memberships.length === 0) {
+      if (!user || (user as any).memberships?.length === 0) {
         throw new WsException(
           'Unauthorized: Invalid user or organization access'
         );
@@ -214,17 +184,13 @@ export class DashboardGateway
   }
 
   // Public method to broadcast updates from other services
-  async broadcastDashboardUpdate(payload: ExtendedDashboardUpdatePayload) {
-    if (!payload.organizationId) {
-      throw new Error('Organization ID is required for broadcast updates');
-    }
-
+  async broadcastDashboardUpdate(payload: DashboardUpdatePayload) {
     const roomName = `org-${payload.organizationId}`;
 
     this.server.to(roomName).emit('dashboard-update', {
       type: payload.type,
       data: payload.data,
-      timestamp: payload.timestamp || new Date(),
+      timestamp: payload.timestamp,
     });
 
     // Also send to specific user rooms if it's user-specific
@@ -232,7 +198,7 @@ export class DashboardGateway
       this.server.to(`user-${payload.data.userId}`).emit('personal-update', {
         type: payload.type,
         data: payload.data,
-        timestamp: payload.timestamp || new Date(),
+        timestamp: payload.timestamp,
       });
     }
 

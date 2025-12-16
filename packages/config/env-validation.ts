@@ -366,7 +366,7 @@ export function validateEnvironmentVariables(): void {
   const envKeys = Object.keys(ENV_SCHEMA) as Array<keyof typeof ENV_SCHEMA>;
   for (const key of envKeys) {
     const schema = ENV_SCHEMA[key];
-    const value = process.env[String(key)];
+    const value = process.env[key];
 
     if (schema?.required && (value === undefined || value === '')) {
       errors.push(`Required environment variable ${key} is missing or empty`);

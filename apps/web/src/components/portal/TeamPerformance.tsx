@@ -193,6 +193,7 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({
                 scales: {
                   y: {
                     beginAtZero: true,
+                    max: 100,
                   },
                 },
               }}
@@ -214,6 +215,7 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({
                 scales: {
                   y: {
                     beginAtZero: true,
+                    max: 100,
                   },
                 },
               }}
@@ -235,6 +237,7 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({
                 scales: {
                   y: {
                     beginAtZero: true,
+                    max: 100,
                   },
                 },
               }}

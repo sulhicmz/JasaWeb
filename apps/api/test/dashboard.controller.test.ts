@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+/// <reference types="@types/jest" />
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { DashboardController } from '../src/dashboard/dashboard.controller';
 import { MultiTenantPrismaService } from '../src/common/database/multi-tenant-prisma.service';
@@ -19,34 +20,33 @@ describe('DashboardController', () => {
   beforeEach(async () => {
     mockPrismaService = {
       project: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
       ticket: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
       invoice: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
       milestone: {
-        findMany: vi.fn(),
+        findMany: jest.fn(),
       } as any,
     } as any;
 
     mockBasePrismaService = {
-      auditLog: {
-        findMany: vi.fn(),
+      membership: {
+        findFirst: jest.fn(),
       } as any,
-    };
-
-    mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
-      reset: vi.fn(),
     } as any;
 
+    mockCacheManager = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+    };
+
     mockDashboardGateway = {
-      broadcastDashboardUpdate: vi.fn(),
+      broadcastDashboardUpdate: jest.fn(),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,7 +71,7 @@ describe('DashboardController', () => {
         {
           provide: Reflector,
           useValue: {
-            getAllAndOverride: vi.fn(),
+            getAllAndOverride: jest.fn(),
           },
         },
       ],
@@ -84,7 +84,7 @@ describe('DashboardController', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getDashboardStats', () => {
@@ -108,7 +108,7 @@ describe('DashboardController', () => {
         milestones: { total: 8, completed: 5, overdue: 1, dueThisWeek: 2 },
       };
 
-      (mockCacheManager.get as any).mockResolvedValue(cachedStats);
+      (mockCacheManager.get as jest.Mock).mockResolvedValue(cachedStats);
 
       const result = await controller.getDashboardStats('org-123');
 

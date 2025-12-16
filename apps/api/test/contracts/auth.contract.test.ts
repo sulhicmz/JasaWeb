@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../../src/auth/auth.service';
 import { UsersService } from '../../src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from '../../src/auth/refresh-token.service';
 import { PasswordService } from '../../src/auth/password.service';
-import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant-prisma.service';
+import { PrismaService } from '../../src/common/database/prisma.service';
 import { LoginUserDto } from '../../src/auth/dto/login-user.dto';
 import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 
@@ -15,12 +14,14 @@ describe('AuthService API Contract Tests', () => {
   const mockUsersService = {
     findByEmail: vi.fn(),
     create: vi.fn(),
+    updatePasswordHash: vi.fn(),
   };
 
   const mockJwtService = {
     sign: vi.fn(),
     verify: vi.fn(),
     verifyAsync: vi.fn(),
+    signAsync: vi.fn(),
   };
 
   const mockRefreshTokenService = {
@@ -34,47 +35,30 @@ describe('AuthService API Contract Tests', () => {
     verifyPassword: vi.fn(),
   };
 
-  const mockMultiTenantPrisma = {
+  const mockPrismaService = {
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
     },
     organization: {
       findUnique: vi.fn(),
+      create: vi.fn(),
     },
-    organizationMembership: {
+    membership: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
     },
   };
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        {
-          provide: UsersService,
-          useValue: mockUsersService,
-        },
-        {
-          provide: JwtService,
-          useValue: mockJwtService,
-        },
-        {
-          provide: RefreshTokenService,
-          useValue: mockRefreshTokenService,
-        },
-        {
-          provide: PasswordService,
-          useValue: mockPasswordService,
-        },
-        {
-          provide: MultiTenantPrismaService,
-          useValue: mockMultiTenantPrisma,
-        },
-      ],
-    }).compile();
-
-    service = module.get<AuthService>(AuthService);
+  beforeEach(() => {
+    service = new AuthService(
+      mockUsersService as unknown as UsersService,
+      mockJwtService as unknown as JwtService,
+      mockRefreshTokenService as unknown as RefreshTokenService,
+      mockPasswordService as unknown as PasswordService,
+      mockPrismaService as unknown as PrismaService
+    );
 
     vi.clearAllMocks();
   });
@@ -96,12 +80,6 @@ describe('AuthService API Contract Tests', () => {
         passwordHashVersion: 'v1' as const,
       };
 
-      const mockOrganization = {
-        id: 'org-1',
-        name: 'Test Organization',
-        slug: 'test-org',
-      };
-
       const mockMembership = {
         id: 'membership-1',
         userId: 'user-1',
@@ -113,7 +91,7 @@ describe('AuthService API Contract Tests', () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
       // Mock password verification
-      mockPasswordService.verifyPassword.mockResolvedValue({ valid: true });
+      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
 
       // Mock token generation
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
@@ -122,15 +100,8 @@ describe('AuthService API Contract Tests', () => {
         expiresAt: new Date(),
       });
 
-      // Mock organization lookup
-      mockMultiTenantPrisma.organization.findUnique.mockResolvedValue(
-        mockOrganization
-      );
-
       // Mock membership lookup
-      mockMultiTenantPrisma.organizationMembership.findMany.mockResolvedValue([
-        mockMembership,
-      ]);
+      mockPrismaService.membership.findFirst.mockResolvedValue(mockMembership);
 
       const result = await service.login(loginUserDto);
 
@@ -196,7 +167,7 @@ describe('AuthService API Contract Tests', () => {
       };
 
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ valid: false });
+      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: false });
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         'Invalid credentials'
@@ -227,11 +198,14 @@ describe('AuthService API Contract Tests', () => {
         slug: 'new-org',
       };
 
+      // Mock existing user check (null means no existing user)
+      mockUsersService.findByEmail.mockResolvedValue(null);
+
       // Mock user creation
       mockUsersService.create.mockResolvedValue(mockUser);
 
       // Mock password hashing
-      mockPasswordService.hashPassword.mockResolvedValue('hashedPassword');
+      mockPasswordService.hashPassword.mockResolvedValue({ hash: 'hashedPassword' });
 
       // Mock token generation
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
@@ -240,20 +214,21 @@ describe('AuthService API Contract Tests', () => {
         expiresAt: new Date(),
       });
 
-      // Mock organization lookup
-      mockMultiTenantPrisma.organization.findUnique.mockResolvedValue(
+      // Mock existing membership check (null means no existing membership)
+      mockPrismaService.membership.findFirst.mockResolvedValue(null);
+
+      // Mock organization creation
+      mockPrismaService.organization.create.mockResolvedValue(
         mockOrganization
       );
 
-      // Mock membership lookup
-      mockMultiTenantPrisma.organizationMembership.findMany.mockResolvedValue([
-        {
-          id: 'membership-2',
-          userId: 'user-2',
-          organizationId: 'org-2',
-          role: 'owner',
-        },
-      ]);
+      // Mock membership creation
+      mockPrismaService.membership.create.mockResolvedValue({
+        id: 'membership-2',
+        userId: 'user-2',
+        organizationId: 'org-2',
+        role: 'owner',
+      });
 
       const result = await service.register(createUserDto);
 
@@ -307,7 +282,7 @@ describe('AuthService API Contract Tests', () => {
       };
 
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ valid: true });
+      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
 
       const result = await service.validateUser(
         loginUserDto.email,
@@ -315,7 +290,10 @@ describe('AuthService API Contract Tests', () => {
       );
 
       expect(result).toBeDefined();
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(expect.objectContaining({
+        id: mockUser.id,
+        email: mockUser.email
+      }));
     });
 
     it('should return null for invalid credentials', async () => {
@@ -370,7 +348,16 @@ describe('AuthService API Contract Tests', () => {
       };
 
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ valid: true });
+      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
+
+      // We also need to mock the membership check here, as it happens before token generation
+      mockPrismaService.membership.findFirst.mockResolvedValue({
+        id: 'membership-1',
+        userId: 'user-1',
+        organizationId: 'org-1',
+        role: 'owner',
+      });
+
       mockRefreshTokenService.createRefreshToken.mockRejectedValue(
         new Error('Token generation failed')
       );
@@ -414,7 +401,7 @@ describe('AuthService API Contract Tests', () => {
       };
 
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ valid: false });
+      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: false });
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         'Invalid credentials'

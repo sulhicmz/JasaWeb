@@ -46,12 +46,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   const handleExport = async (type: 'pdf' | 'excel' | 'csv') => {
     try {
-      if (analytics) {
-        await analyticsService.exportData(
-          type,
-          analytics as unknown as Record<string, unknown>
-        );
-      }
+      await analyticsService.exportData(type, analytics);
     } catch (err) {
       if (import.meta.env.DEV) {
         console.debug('Export failed:', err);

@@ -95,17 +95,12 @@ export interface OverviewAnalytics {
   clientInsights: ClientInsightsAnalytics;
 }
 
-import { config } from '../config';
-
 class AnalyticsService {
-  private baseUrl = config.api.analyticsEndpoint;
+  private baseUrl = '/api/analytics';
 
   private async fetchWithAuth(endpoint: string, params?: AnalyticsFilters) {
     const token = localStorage.getItem('authToken');
-    const url = new URL(
-      `${config.api.baseUrl}${this.baseUrl}${endpoint}`,
-      window.location.origin
-    );
+    const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -120,7 +115,6 @@ class AnalyticsService {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      signal: AbortSignal.timeout(config.api.requestTimeout),
     });
 
     if (!response.ok) {
@@ -169,7 +163,7 @@ class AnalyticsService {
   // Export functionality
   async exportData(
     type: 'pdf' | 'excel' | 'csv',
-    data: Record<string, unknown> | Array<Record<string, unknown>>,
+    data: any,
     filename?: string
   ) {
     const token = localStorage.getItem('authToken');

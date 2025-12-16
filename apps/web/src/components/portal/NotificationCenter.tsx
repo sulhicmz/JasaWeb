@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { notificationService } from '../../services/notificationService';
-import type { Notification } from '../../services/notificationService';
+import type {
+  Notification,
+  NotificationUpdate,
+} from '../../services/notificationService';
 
 interface NotificationCenterProps {
   className?: string;
-  organizationId?: string;
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   className = '',
-  organizationId,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -60,7 +61,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
       // Update local state
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
 
@@ -88,7 +89,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       });
 
       // Update local state
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
 
       // Also send via WebSocket for real-time update
@@ -117,7 +118,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       // Update local state
       const notification = notifications.find((n) => n.id === notificationId);
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-      if (notification && !notification.read) {
+      if (notification && !notification.isRead) {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
     } catch (error) {
@@ -177,40 +178,40 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   // Setup notification service callbacks
   useEffect(() => {
-    const handleNotification = (notification: Notification) => {
-      setNotifications((prev) => [notification, ...prev]);
-      if (!notification.read) {
-        setUnreadCount((prev) => prev + 1);
-      }
-    };
-
-    const handleNotificationsUpdated = (notifications: Notification[]) => {
-      setNotifications(notifications);
-      setUnreadCount(notifications.filter((n) => !n.read).length);
-    };
-
-    const handleNotificationRead = () => {
-      setNotifications((prev) => {
-        const updated = prev.map((n) => ({ ...n, read: true }));
-        setUnreadCount(0);
-        return updated;
-      });
-    };
-
-    notificationService.on('notification', handleNotification);
-    notificationService.on('notifications_updated', handleNotificationsUpdated);
-    notificationService.on('all_notifications_read', handleNotificationRead);
+    notificationService.on({
+      onNotification: (notification: Notification) => {
+        setNotifications((prev) => [notification, ...prev]);
+        if (!notification.isRead) {
+          setUnreadCount((prev) => prev + 1);
+        }
+      },
+      onNotificationUpdate: (update: NotificationUpdate) => {
+        if (update.allRead) {
+          setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+          setUnreadCount(0);
+        } else if (update.notificationId && update.isRead) {
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === update.notificationId ? { ...n, isRead: true } : n
+            )
+          );
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+      },
+      onUnreadCount: (count: number) => {
+        setUnreadCount(count);
+      },
+    });
 
     // Fetch initial notifications
     fetchNotifications();
 
     return () => {
-      notificationService.off('notification', handleNotification);
-      notificationService.off(
-        'notifications_updated',
-        handleNotificationsUpdated
-      );
-      notificationService.off('all_notifications_read', handleNotificationRead);
+      notificationService.off({
+        onNotification: () => {},
+        onNotificationUpdate: () => {},
+        onUnreadCount: () => {},
+      });
     };
   }, []);
 
@@ -292,7 +293,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
+                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${!notification.isRead ? 'bg-blue-50' : ''}`}
                 >
                   <div className="flex items-start space-x-3">
                     <span className="text-xl">
@@ -300,7 +301,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     </span>
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm ${!notification.read ? 'font-semibold' : ''} text-gray-900`}
+                        className={`text-sm ${!notification.isRead ? 'font-semibold' : ''} text-gray-900`}
                       >
                         {notification.title}
                       </p>
@@ -308,11 +309,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         {notification.message}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {formatTimeAgo(notification.timestamp)}
+                        {formatTimeAgo(notification.createdAt)}
                       </p>
                     </div>
                     <div className="flex items-center space-x-1">
-                      {!notification.read && (
+                      {!notification.isRead && (
                         <button
                           onClick={() => markAsRead(notification.id)}
                           className="text-blue-600 hover:text-blue-800"

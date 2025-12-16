@@ -10,10 +10,8 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { MultiTenantGuard } from '../common/guards/multi-tenant.guard';
 import { KnowledgeBaseService } from './knowledge-base.service';
 import { User } from '@prisma/client';
 import {
@@ -34,82 +32,62 @@ export class KnowledgeBaseController {
 
   // Categories
   @Post('categories')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new knowledge base category' })
-  async createCategory(
-    @Body() createCategoryDto: CreateKbCategoryDto,
-    @CurrentOrganizationId() organizationId: string
-  ) {
-    return this.knowledgeBaseService.createCategory(
-      createCategoryDto,
-      organizationId
-    );
+  async createCategory(@Body() createCategoryDto: CreateKbCategoryDto) {
+    return this.knowledgeBaseService.createCategory(createCategoryDto);
   }
 
   @Get('categories')
   @ApiOperation({ summary: 'Get all knowledge base categories' })
-  async getCategories(@CurrentOrganizationId() organizationId?: string) {
-    return this.knowledgeBaseService.getCategories(organizationId);
+  async getCategories() {
+    return this.knowledgeBaseService.getCategories();
   }
 
   @Get('categories/:id')
   @ApiOperation({ summary: 'Get a specific knowledge base category' })
-  async getCategory(
-    @Param('id') id: string,
-    @CurrentOrganizationId() organizationId?: string
-  ) {
-    return this.knowledgeBaseService.getCategory(id, organizationId);
+  async getCategory(@Param('id') id: string) {
+    return this.knowledgeBaseService.getCategory(id);
   }
 
   @Patch('categories/:id')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a knowledge base category' })
   async updateCategory(
     @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateKbCategoryDto,
-    @CurrentOrganizationId() organizationId: string
+    @Body() updateCategoryDto: UpdateKbCategoryDto
   ) {
-    return this.knowledgeBaseService.updateCategory(
-      id,
-      updateCategoryDto,
-      organizationId
-    );
+    return this.knowledgeBaseService.updateCategory(id, updateCategoryDto);
   }
 
   @Delete('categories/:id')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a knowledge base category' })
-  async deleteCategory(
-    @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string
-  ) {
-    return this.knowledgeBaseService.deleteCategory(id, organizationId);
+  async deleteCategory(@Param('id') id: string) {
+    return this.knowledgeBaseService.deleteCategory(id);
   }
 
   // Tags
   @Post('tags')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new knowledge base tag' })
-  async createTag(
-    @Body() createTagDto: CreateKbTagDto,
-    @CurrentOrganizationId() organizationId: string
-  ) {
-    return this.knowledgeBaseService.createTag(createTagDto, organizationId);
+  async createTag(@Body() createTagDto: CreateKbTagDto) {
+    return this.knowledgeBaseService.createTag(createTagDto);
   }
 
   @Get('tags')
   @ApiOperation({ summary: 'Get all knowledge base tags' })
-  async getTags(@Request() req: Request & { user?: User }) {
-    return this.knowledgeBaseService.getTags(req.user);
+  async getTags() {
+    return this.knowledgeBaseService.getTags();
   }
 
   // Articles
   @Post('articles')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new knowledge base article' })
   async createArticle(
@@ -124,62 +102,46 @@ export class KnowledgeBaseController {
   async getArticles(
     @Query('status') status?: KbArticleStatus,
     @Query('categoryId') categoryId?: string,
-    @Query('featured') featured?: string,
-    @Request() req?: Request & { user?: User }
+    @Query('featured') featured?: string
   ) {
     const featuredBool =
       featured === 'true' ? true : featured === 'false' ? false : undefined;
     return this.knowledgeBaseService.getArticles(
       status,
       categoryId,
-      featuredBool,
-      req?.user
+      featuredBool
     );
   }
 
   @Get('articles/:id')
   @ApiOperation({ summary: 'Get a specific knowledge base article' })
-  async getArticle(
-    @Param('id') id: string,
-    @Request() req: Request & { user?: User }
-  ) {
-    return this.knowledgeBaseService.getArticle(id, req.user);
+  async getArticle(@Param('id') id: string) {
+    return this.knowledgeBaseService.getArticle(id);
   }
 
   @Get('articles/slug/:slug')
   @ApiOperation({ summary: 'Get a knowledge base article by slug' })
-  async getArticleBySlug(
-    @Param('slug') slug: string,
-    @CurrentOrganizationId() organizationId?: string
-  ) {
-    return this.knowledgeBaseService.getArticleBySlug(slug, organizationId);
+  async getArticleBySlug(@Param('slug') slug: string) {
+    return this.knowledgeBaseService.getArticleBySlug(slug);
   }
 
   @Patch('articles/:id')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a knowledge base article' })
   async updateArticle(
     @Param('id') id: string,
-    @Body() updateArticleDto: UpdateKbArticleDto,
-    @CurrentOrganizationId() organizationId: string
+    @Body() updateArticleDto: UpdateKbArticleDto
   ) {
-    return this.knowledgeBaseService.updateArticle(
-      id,
-      updateArticleDto,
-      organizationId
-    );
+    return this.knowledgeBaseService.updateArticle(id, updateArticleDto);
   }
 
   @Delete('articles/:id')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a knowledge base article' })
-  async deleteArticle(
-    @Param('id') id: string,
-    @CurrentOrganizationId() organizationId: string
-  ) {
-    return this.knowledgeBaseService.deleteArticle(id, organizationId);
+  async deleteArticle(@Param('id') id: string) {
+    return this.knowledgeBaseService.deleteArticle(id);
   }
 
   // Search
@@ -187,27 +149,9 @@ export class KnowledgeBaseController {
   @ApiOperation({ summary: 'Search knowledge base articles' })
   async search(
     @Body() searchDto: KbSearchDto,
-    @CurrentOrganizationId() organizationId?: string
+    @Request() req: Request & { user: User }
   ) {
-    return this.knowledgeBaseService.search(searchDto, organizationId);
-  }
-
-  @Get('search/suggestions')
-  @ApiOperation({ summary: 'Get search suggestions and popular searches' })
-  async getSearchSuggestions(
-    @Query('q') query: string,
-    @CurrentOrganizationId() organizationId?: string
-  ) {
-    return this.knowledgeBaseService.getSearchSuggestions(
-      query,
-      organizationId
-    );
-  }
-
-  @Get('search/popular')
-  @ApiOperation({ summary: 'Get popular search terms' })
-  async getPopularSearches(@CurrentOrganizationId() organizationId?: string) {
-    return this.knowledgeBaseService.getPopularSearches(organizationId);
+    return this.knowledgeBaseService.search(searchDto, req.user);
   }
 
   // Feedback
@@ -227,10 +171,10 @@ export class KnowledgeBaseController {
 
   // Analytics
   @Get('analytics')
-  @UseGuards(AuthGuard, MultiTenantGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get knowledge base analytics' })
-  async getAnalytics(@CurrentOrganizationId() organizationId: string) {
-    return this.knowledgeBaseService.getAnalytics(organizationId);
+  async getAnalytics() {
+    return this.knowledgeBaseService.getAnalytics();
   }
 }

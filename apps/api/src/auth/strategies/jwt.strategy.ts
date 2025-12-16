@@ -72,7 +72,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // Return user without password and with membership context
     const membership = user.memberships[0]!; // Use the first membership (checked above)
-    const { password, ...userWithoutPassword } = user;
+    const { password, memberships: _, ...userWithoutPassword } = user;
 
     return {
       ...userWithoutPassword,

@@ -1,0 +1,169 @@
+---
+// src/components/portal/StatusWidgets.astro
+---
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Projects Widget -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-medium text-gray-500">Total Projects</h3>
+      <svg class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    </div>
+    <div class="flex items-baseline">
+      <p id="projects-count" class="text-2xl font-semibold text-gray-900">-</p>
+      <p class="ml-2 text-sm text-gray-500">projects</p>
+    </div>
+    <div class="mt-2">
+      <p id="projects-active" class="text-xs text-green-600">- active</p>
+    </div>
+  </div>
+
+  <!-- Tickets Widget -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-medium text-gray-500">Open Tickets</h3>
+      <svg class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+      </svg>
+    </div>
+    <div class="flex items-baseline">
+      <p id="tickets-count" class="text-2xl font-semibold text-gray-900">-</p>
+      <p class="ml-2 text-sm text-gray-500">tickets</p>
+    </div>
+    <div class="mt-2">
+      <p id="tickets-priority" class="text-xs text-red-600">- high priority</p>
+    </div>
+  </div>
+
+  <!-- Invoices Widget -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-medium text-gray-500">Pending Invoices</h3>
+      <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    </div>
+    <div class="flex items-baseline">
+      <p id="invoices-count" class="text-2xl font-semibold text-gray-900">-</p>
+      <p class="ml-2 text-sm text-gray-500">invoices</p>
+    </div>
+    <div class="mt-2">
+      <p id="invoices-amount" class="text-xs text-gray-600">Rp -</p>
+    </div>
+  </div>
+</div>
+
+<script client:load>
+  // API configuration
+  const API_BASE_URL = 'http://localhost:3001';
+
+  // Load status widgets data
+  async function loadStatusData() {
+    try {
+      const token = localStorage.getItem('authToken');
+
+      // Load all data in parallel
+      const [projectsResponse, ticketsResponse, invoicesResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_BASE_URL}/tickets`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${API_BASE_URL}/invoices`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      // Process projects data
+      if (projectsResponse.ok) {
+        const projects = await projectsResponse.json();
+        updateProjectsWidget(projects);
+      } else {
+        updateProjectsWidget([]);
+      }
+
+      // Process tickets data
+      if (ticketsResponse.ok) {
+        const tickets = await ticketsResponse.json();
+        updateTicketsWidget(tickets);
+      } else {
+        updateTicketsWidget([]);
+      }
+
+      // Process invoices data
+      if (invoicesResponse.ok) {
+        const invoices = await invoicesResponse.json();
+        updateInvoicesWidget(invoices);
+      } else {
+        updateInvoicesWidget([]);
+      }
+
+    } catch (error) {
+      console.error('Error loading status data:', error);
+      // Set default values on error
+      updateProjectsWidget([]);
+      updateTicketsWidget([]);
+      updateInvoicesWidget([]);
+    }
+  }
+
+  // Update projects widget
+  function updateProjectsWidget(projects) {
+    const totalCount = document.getElementById('projects-count');
+    const activeCount = document.getElementById('projects-active');
+
+    totalCount.textContent = projects.length;
+
+    const activeProjects = projects.filter(p =>
+      p.status && (p.status.toLowerCase() === 'active' || p.status.toLowerCase() === 'in-progress')
+    ).length;
+
+    activeCount.textContent = `${activeProjects} active`;
+  }
+
+  // Update tickets widget
+  function updateTicketsWidget(tickets) {
+    const totalCount = document.getElementById('tickets-count');
+    const priorityCount = document.getElementById('tickets-priority');
+
+    const openTickets = tickets.filter(t =>
+      t.status && (t.status.toLowerCase() === 'open' || t.status.toLowerCase() === 'in-progress')
+    );
+
+    totalCount.textContent = openTickets.length;
+
+    const highPriorityTickets = openTickets.filter(t =>
+      t.priority && (t.priority.toLowerCase() === 'high' || t.priority.toLowerCase() === 'critical')
+    ).length;
+
+    priorityCount.textContent = `${highPriorityTickets} high priority`;
+  }
+
+  // Update invoices widget
+  function updateInvoicesWidget(invoices) {
+    const totalCount = document.getElementById('invoices-count');
+    const totalAmount = document.getElementById('invoices-amount');
+
+    const pendingInvoices = invoices.filter(i =>
+      i.status && (i.status.toLowerCase() === 'draft' || i.status.toLowerCase() === 'issued')
+    );
+
+    totalCount.textContent = pendingInvoices.length;
+
+    const totalPendingAmount = pendingInvoices.reduce((sum, invoice) => {
+      return sum + (invoice.amount || 0);
+    }, 0);
+
+    // Format as Indonesian Rupiah
+    totalAmount.textContent = `Rp ${totalPendingAmount.toLocaleString('id-ID')}`;
+  }
+
+  // Load status data on page load
+  document.addEventListener('DOMContentLoaded', loadStatusData);
+
+  // Make the function available globally for updates
+  window.loadStatusData = loadStatusData;
+</script>

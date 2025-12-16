@@ -3,8 +3,6 @@ import {
   Post,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
-  Logger,
   Get,
   Param,
   Res,
@@ -14,55 +12,18 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
-import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
-import { getRequiredEnv } from '@jasaweb/config/env-validation';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { FileStorageService } from '../common/services/file-storage.service';
-import { LocalFileStorageService } from '../common/services/local-file-storage.service';
-import { ConfigService } from '@nestjs/config';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import * as path from 'path';
-import type { UploadedFilePayload } from './file.service';
-
-// Type definitions for file controller
-interface FileUploadMetadata {
-  originalName: string;
-  size: string;
-  uploadedBy: string;
-  [key: string]: string; // Index signature for Record<string, string>
-}
-
-// Define file upload validation options
-const VALID_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'application/pdf',
-  'text/plain',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-powerpoint',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-];
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+import { FileService, UploadedFilePayload } from './file.service';
 
 @Controller('files')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(RolesGuard)
 export class FileController {
-  private readonly logger = new Logger(FileController.name);
-
   constructor(
-    private readonly multiTenantPrisma: MultiTenantPrismaService,
-    private readonly fileStorageService: FileStorageService,
-    private readonly localFileStorageService: LocalFileStorageService,
-    private readonly configService: ConfigService
+    private readonly fileService: FileService
   ) {}
 
   @Post()
@@ -74,118 +35,11 @@ export class FileController {
     @CurrentUserId() userId: string,
     @Query('projectId') projectId?: string
   ) {
-    if (!projectId) {
-      throw new BadRequestException('Project ID is required for file uploads');
-    }
-
-    // Validate file
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      throw new BadRequestException(
-        `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`
-      );
-    }
-
-    // Validate file type
-    if (!VALID_MIME_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(
-        `File type ${file.mimetype} is not allowed`
-      );
-    }
-
-    // Validate project ID if provided
-    if (projectId) {
-      const project = await this.multiTenantPrisma.project.findUnique({
-        where: { id: projectId },
-      });
-
-      if (!project) {
-        throw new BadRequestException(
-          'Project not found or does not belong to your organization'
-        );
-      }
-    }
-
-    try {
-      // Determine if we're using S3 or local storage based on config
-      const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-
-      let fileIdentifier: string;
-
-      if (useS3) {
-        // Upload to S3
-        fileIdentifier = await this.fileStorageService.uploadFile(file.buffer, {
-          bucket: getRequiredEnv('S3_BUCKET'),
-          key: `organizations/${organizationId}/projects/${projectId || 'general'}/${Date.now()}_${file.originalname}`,
-          contentType: file.mimetype,
-          metadata: {
-            originalName: file.originalname,
-            size: file.size.toString(),
-            uploadedBy: userId, // Use actual authenticated user ID
-          } as FileUploadMetadata,
-        });
-      } else {
-        // Upload to local storage
-        const uploadResult = await this.localFileStorageService.uploadFile(
-          file.buffer,
-          {
-            directory: `./uploads/${organizationId}`,
-            filename: `${Date.now()}_${file.originalname}`,
-            allowedExtensions: [
-              '.jpg',
-              '.jpeg',
-              '.png',
-              '.gif',
-              '.pdf',
-              '.txt',
-              '.doc',
-              '.docx',
-              '.ppt',
-              '.pptx',
-              '.xls',
-              '.xlsx',
-            ],
-          }
-        );
-
-        // File identifier is set but not used in this scope
-      }
-
-      // Save file record to database
-      const createdFile = await this.multiTenantPrisma.file.create({
-        data: {
-          project: {
-            connect: { id: projectId },
-          },
-          filename: file.originalname,
-          version: '1.0', // Initial version
-          size: file.size,
-          uploadedBy: {
-            connect: { id: userId }, // Use actual authenticated user ID
-          },
-        },
-      });
-
-      this.logger.log(
-        `File uploaded: ${file.originalname} for organization ${organizationId}`
-      );
-
-      return {
-        id: createdFile.id,
-        filename: createdFile.filename,
-        size: createdFile.size,
-        uploadedAt: createdFile.createdAt,
-        url: `/files/download/${createdFile.id}`, // Temporary - would generate actual signed URL in real app
-      };
-    } catch (error: unknown) {
-      const errorMessage = this.getErrorMessage(error);
-      this.logger.error(`Error uploading file: ${errorMessage}`);
-      throw new BadRequestException('Error uploading file');
-    }
+    return this.fileService.uploadFile({
+      file,
+      projectId: projectId!, // Service validates this
+      uploadedById: userId || ''
+    }, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -196,50 +50,7 @@ export class FileController {
     @CurrentOrganizationId() organizationId: string,
     @Res() res: Response
   ) {
-    try {
-      // Find the file in the database (with multi-tenant isolation)
-      const fileRecord = await this.multiTenantPrisma.file.findUnique({
-        where: { id },
-      });
-
-      if (!fileRecord) {
-        throw new BadRequestException('File not found');
-      }
-
-      // Determine if we're using S3 or local based on config
-      const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-
-      if (useS3) {
-        // Generate a signed URL for S3 download
-        const signedUrl = await this.fileStorageService.generateDownloadUrl({
-          bucket: getRequiredEnv('S3_BUCKET'),
-          key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
-          expiresIn: 3600, // 1 hour
-        });
-
-        // Redirect to the signed URL
-        res.redirect(signedUrl);
-      } else {
-        // Get file from local storage
-        const filePath = `./uploads/${organizationId}/${fileRecord.filename}`;
-        const fileBuffer = await this.localFileStorageService.getFile(filePath);
-
-        // Set response headers based on file type
-        res.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="${fileRecord.filename}"`
-        );
-        res.setHeader('Content-Length', fileRecord.size || 0);
-
-        // Send the file
-        res.send(fileBuffer);
-      }
-    } catch (error: unknown) {
-      const errorMessage = this.getErrorMessage(error);
-      this.logger.error(`Error downloading file: ${errorMessage}`);
-      throw new BadRequestException('Error downloading file');
-    }
+    return this.fileService.downloadFile(id, organizationId, res);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -249,81 +60,6 @@ export class FileController {
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
   ) {
-    try {
-      // First get the file record to know its details
-      const fileRecord = await this.multiTenantPrisma.file.findUnique({
-        where: { id },
-      });
-
-      if (!fileRecord) {
-        throw new BadRequestException('File not found');
-      }
-
-      // Determine if we're using S3 or local based on config
-      const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
-
-      if (useS3) {
-        // Delete from S3
-        await this.fileStorageService.deleteFile(
-          getRequiredEnv('S3_BUCKET'),
-          `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`
-        );
-      } else {
-        // Delete from local storage
-        const filePath = `./uploads/${organizationId}/${fileRecord.filename}`;
-        await this.localFileStorageService.deleteFile(filePath);
-      }
-
-      // Delete file record from database
-      await this.multiTenantPrisma.file.delete({
-        where: { id },
-      });
-
-      this.logger.log(
-        `File deleted: ${fileRecord.filename} for organization ${organizationId}`
-      );
-
-      return { message: 'File deleted successfully' };
-    } catch (error: unknown) {
-      const errorMessage = this.getErrorMessage(error);
-      this.logger.error(`Error deleting file: ${errorMessage}`);
-      throw new BadRequestException('Error deleting file');
-    }
-  }
-
-  /**
-   * Helper method to get MIME type from filename
-   */
-  private getMimeType(filename: string): string {
-    const ext = path.extname(filename).toLowerCase();
-
-    // Validate extension to prevent injection
-    if (!/^\.[a-z0-9]+$/i.test(ext)) {
-      return 'application/octet-stream';
-    }
-
-    const mimeTypes: { [key: string]: string } = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-      '.pdf': 'application/pdf',
-      '.txt': 'text/plain',
-      '.doc': 'application/msword',
-      '.docx':
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      '.ppt': 'application/vnd.ms-powerpoint',
-      '.pptx':
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      '.xls': 'application/vnd.ms-excel',
-      '.xlsx':
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    };
-
-    return mimeTypes[ext] || 'application/octet-stream';
-  }
-
-  private getErrorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : 'Unknown error';
+    return this.fileService.deleteFile(id, organizationId);
   }
 }

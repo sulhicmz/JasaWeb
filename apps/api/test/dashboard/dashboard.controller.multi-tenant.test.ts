@@ -4,7 +4,6 @@ import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from '../../src/dashboard/dashboard.gateway';
 import { Role } from '../../src/common/decorators/roles.decorator';
-import { vi } from 'vitest';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
@@ -13,31 +12,31 @@ describe('DashboardController', () => {
 
   const mockMultiTenantPrisma = {
     project: {
-      count: vi.fn(),
-      findMany: vi.fn(),
+      count: jest.fn(),
+      findMany: jest.fn(),
     },
     ticket: {
-      count: vi.fn(),
-      findMany: vi.fn(),
+      count: jest.fn(),
+      findMany: jest.fn(),
     },
     invoice: {
-      count: vi.fn(),
-      findMany: vi.fn(),
-      aggregate: vi.fn(),
+      count: jest.fn(),
+      findMany: jest.fn(),
+      aggregate: jest.fn(),
     },
     milestone: {
-      count: vi.fn(),
-      findMany: vi.fn(),
+      count: jest.fn(),
+      findMany: jest.fn(),
     },
   };
 
   const mockCacheManager = {
-    get: vi.fn(),
-    set: vi.fn(),
+    get: jest.fn(),
+    set: jest.fn(),
   };
 
   const mockDashboardGateway = {
-    broadcastStatsUpdate: vi.fn(),
+    broadcastStatsUpdate: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -68,7 +67,7 @@ describe('DashboardController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
-  }, 10000);
+  });
 
   describe('getDashboardStats', () => {
     const organizationId = 'test-org-id';

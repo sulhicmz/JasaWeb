@@ -67,14 +67,13 @@ jasaweb/
 
 This project has undergone significant cleanup and optimization:
 
-#### Repository Hygiene & Cleanup (December 2024)
+#### Repository Cleanup (Latest)
 
-- **Removed**: Temporary debugging files and unused test services
-- **Organized**: Documentation structure with clear separation of concerns
-- **Standardized**: File naming conventions across monorepo
-- **Consolidated**: Security configuration and setup instructions
-- **Optimized**: Package structure and dependencies management
-- **Enhanced**: Development tooling with comprehensive scripts
+- **Removed**: OpenCode development workflows and temporary files
+- **Consolidated**: Security documentation from 13 files into comprehensive guide
+- **Migrated**: Testing framework from Jest to Vitest across all packages
+- **Organized**: Configuration files into `packages/config/` for better maintainability
+- **Removed**: Redundant Babel configuration in favor of native TypeScript
 
 #### Tailwind CSS v4 Migration
 
@@ -532,13 +531,17 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 - [📝 Implementation TODO](./todo.md) - Current development progress and tasks
 - [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
 - [🤖 Agent Guidelines](./AGENTS.md) - Development conventions
+- [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [🛡️ Security Policy](./SECURITY.md) - Security guidelines
 - [📄 Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
 - [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
 - [📊 API Endpoints](./docs/api-endpoints.md) - API documentation
-- [📋 Testing Guide](./TESTING.md) - Testing documentation
-- [🔧 TypeScript Validation](./docs/typescript-validation.md) - TypeScript validation strategy
-- [🔧 Conflict Resolution](./docs/CONFLICT_RESOLUTION.md) - Git workflow guidance
+- [🔒 Security Best Practices](./docs/SECURITY_BEST_PRACTICES.md) - Security guidelines
+- [📋 Security Checklist](./docs/SECURITY_CHECKLIST.md) - Security validation
+- [🔍 OWASP Compliance](./docs/OWASP_COMPLIANCE.md) - Security compliance
+- [📈 Testing Summary](./docs/TESTING_SUMMARY.md) - Testing documentation
+- [📊 Performance Summary](./PERFORMANCE_SUMMARY.md) - Performance metrics
+- [🧹 Repository Cleanup](./docs/CLEANUP_SUMMARY.md) - Cleanup and maintenance summary
 
 ## 🐛 Troubleshooting
 
@@ -592,13 +595,12 @@ pnpm lint
 
 This repository follows strict hygiene standards with regular cleanup and organization:
 
-- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, version-controlled documentation
-- **Script Organization**: Essential scripts in `/scripts/` with dev-tools subdirectory for development utilities
-- **Workflow Management**: Automated CI/CD pipelines with comprehensive testing and security scanning
-- **File Naming**: Consistent kebab-case for files, PascalCase for components, standardized test naming
-- **Regular Cleanup**: Temporary files removed, obsolete documentation archived, dependencies optimized
+- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, obsolete docs archived and removed
+- **Script Organization**: Essential scripts in `/scripts/` with dev-tools subdirectory
+- **Workflow Management**: Active workflows in `.github/workflows/` with OpenCode agents
+- **File Naming**: Consistent kebab-case for files, PascalCase for components
+- **Regular Cleanup**: Compiled files, temporary artifacts, and obsolete documentation removed
 - **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
-- **Quality Assurance**: Automated linting, type checking, and testing for all changes
 
 ## 📄 License
 

@@ -1,3 +1,5 @@
+/// <reference types="@types/jest" />
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   ProjectService,
@@ -6,7 +8,6 @@ import {
 } from './project.service';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { NotFoundException } from '@nestjs/common';
-import { vi } from 'vitest';
 
 describe('ProjectService', () => {
   let service: ProjectService;
@@ -35,22 +36,20 @@ describe('ProjectService', () => {
 
   const mockMultiTenantPrismaService = {
     project: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     },
     milestone: {
-      findMany: vi.fn(),
-      count: vi.fn(),
+      count: jest.fn(),
     },
     approval: {
-      count: vi.fn(),
+      count: jest.fn(),
     },
     task: {
-      count: vi.fn(),
+      count: jest.fn(),
     },
   };
 
@@ -72,7 +71,7 @@ describe('ProjectService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

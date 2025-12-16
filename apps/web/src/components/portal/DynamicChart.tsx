@@ -1,60 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 
-interface ChartData {
-  labels: string[];
-  datasets: Array<{
-    label: string;
-    data: number[];
-    backgroundColor?: string | string[];
-    borderColor?: string | string[];
-    borderWidth?: number;
-  }>;
-}
-
-interface ChartOptions {
-  responsive?: boolean;
-  maintainAspectRatio?: boolean;
-  plugins?: {
-    legend?: {
-      position?: 'top' | 'bottom' | 'left' | 'right';
-    };
-    title?: {
-      display: boolean;
-      text: string;
-    };
-  };
-  scales?: {
-    x?: {
-      beginAtZero?: boolean;
-    };
-    y?: {
-      beginAtZero?: boolean;
-    };
-  };
-}
-
-interface DynamicChartProps {
-  type: 'bar' | 'pie' | 'line';
-  data: ChartData;
-  options: ChartOptions;
-  className?: string;
-}
-
 interface ChartComponentProps {
-  data: ChartData;
-  options: ChartOptions;
+  type: 'bar' | 'pie' | 'line';
+  data: any;
+  options: any;
   className?: string;
 }
 
-const DynamicChart: React.FC<DynamicChartProps> = ({
+const DynamicChart: React.FC<ChartComponentProps> = ({
   type,
   data,
   options,
   className,
 }) => {
-  const [ChartComponent, setChartComponent] =
-    useState<React.FC<ChartComponentProps> | null>(null);
+  const [ChartComponent, setChartComponent] = useState<any>(null);
 
   useEffect(() => {
     const loadChart = async () => {
@@ -65,24 +25,16 @@ const DynamicChart: React.FC<DynamicChartProps> = ({
 
       switch (type) {
         case 'bar':
-          setChartComponent(() => (props: ChartComponentProps) => (
-            <Bar {...(props as ChartComponentProps)} />
-          ));
+          setChartComponent(() => (props: any) => <Bar {...props} />);
           break;
         case 'pie':
-          setChartComponent(() => (props: ChartComponentProps) => (
-            <Pie {...(props as ChartComponentProps)} />
-          ));
+          setChartComponent(() => (props: any) => <Pie {...props} />);
           break;
         case 'line':
-          setChartComponent(() => (props: ChartComponentProps) => (
-            <Line {...(props as ChartComponentProps)} />
-          ));
+          setChartComponent(() => (props: any) => <Line {...props} />);
           break;
         default:
-          setChartComponent(() => (props: ChartComponentProps) => (
-            <Bar {...(props as ChartComponentProps)} />
-          ));
+          setChartComponent(() => (props: any) => <Bar {...props} />);
       }
     };
 

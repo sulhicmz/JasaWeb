@@ -273,6 +273,4 @@ rm pnpm-lock.yaml
 - [API Documentation](../apps/api/README.md)
 - [Web Documentation](../apps/web/README.md)
 - [Database Schema](../apps/api/prisma/schema.prisma)
-- [API Documentation](../apps/api/README.md)
-- [Web Documentation](../apps/web/README.md)
-- [Database Schema](../apps/api/prisma/schema.prisma)
+- [Troubleshooting Guide](../docs/troubleshooting.md)
