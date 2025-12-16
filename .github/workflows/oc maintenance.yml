@@ -45,6 +45,7 @@ jobs:
         id: run_oc
         timeout-minutes: 60
         run: |
+          opencode run "$(cat <<'PROMPT'
           **Objective**:
           Review `task.md`, `blueprint.md`, and `AGENTS.md`. Choose **ONE** high-impact, clearly scoped task:
           - stability 
