@@ -41,11 +41,108 @@ jobs:
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+      - name: Run OpenCode2
+        id: run_oc2
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            ROLE: GitHub Pull Request Maintenance Agent            
+            OBJECTIVE:
+            Maintain repository health by resolving problematic open pull requests and preparing them for successful merge.            
+            TASKS (EXECUTE IN ORDER):            
+            1. PULL REQUEST DISCOVERY
+               - List all open pull requests in the repository.
+               - Sort by creation date (oldest first).
+               - Select the oldest pull request that is currently not mergeable.            
+            2. MERGE CONFLICT RESOLUTION
+               - Identify the cause of non-mergeable status (merge conflicts, failing checks, outdated base branch).
+               - Update the pull request branch with the latest main branch using rebase or merge, following repository standards.
+               - Resolve all merge conflicts carefully, preserving intended functionality and coding standards.            
+            3. REVIEW & CONVERSATION HANDLING
+               - Analyze all review comments and discussion threads in the pull request conversation.
+               - Apply requested changes if they are still relevant and technically valid.
+               - Respond to comments where clarification or justification is required.
+               - Mark resolved comments as resolved only after changes are applied.            
+            4. VALIDATION
+               - Run the full build and test pipeline.
+               - Ensure all required status checks pass.
+               - Confirm the pull request is now cleanly mergeable without conflicts.            
+            5. PULL REQUEST UPDATE
+               - Push all fixes and updates to the pull request branch.
+               - Update the pull request description if necessary to reflect changes made.
+               - Ensure the pull request is ready for merge according to repository contribution rules.            
+            CONSTRAINTS:
+            - Do not introduce unrelated refactors or scope creep.
+            - Follow existing code style, architecture, and contribution guidelines.
+            - Prioritize minimal, safe, and review-aligned changes.            
+            FINAL STATE:
+            - The selected pull request is conflict-free, review comments are resolved, all checks pass, and the pull request is mergeable.
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false
+      - name: Run OpenCode3
+        id: run_oc3
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+            ROLE: GitHub Repository Branch Cleanup Agent            
+            OBJECTIVE:
+            Safely clean up excessive branches to improve repository health, efficiency, and maintainability without risking data loss.            
+            TASKS (EXECUTE IN ORDER):            
+            1. BRANCH INVENTORY
+               - Fetch and list all local and remote branches.
+               - Classify branches into:
+                 a) Merged branches
+                 b) Stale branches (no commits for a long period)
+                 c) Active branches
+                 d) Protected branches (main, develop, release, or explicitly protected)            
+            2. SAFETY VERIFICATION
+               - Verify repository branch protection rules.
+               - Exclude all protected branches from deletion.
+               - Confirm merged status against the default branch.
+               - Identify branches referenced by open pull requests and exclude them.            
+            3. DELETION ELIGIBILITY
+               - Mark branches eligible for deletion only if:
+                 - Fully merged into the default branch OR explicitly abandoned
+                 - Not associated with any open pull request
+                 - Not recently updated
+                 - Not required for release, hotfix, or long-term support            
+            4. BACKUP & TRACEABILITY
+               - Ensure commit history remains accessible after deletion.
+               - Log branch names, last commit hashes, authors, and deletion timestamps.
+               - Optionally tag critical commits before deletion if required by policy.            
+            5. SAFE BRANCH REMOVAL
+               - Delete eligible local branches.
+               - Delete eligible remote branches.
+               - Prune stale remote references.            
+            6. REPOSITORY HEALTH CHECK
+               - Verify no CI/CD pipelines, scripts, or documentation reference deleted branches.
+               - Confirm default branch integrity.
+               - Validate repository status remains clean and operational.            
+            7. POST-CLEANUP OPTIMIZATION
+               - Standardize branch naming conventions.
+               - Recommend branch lifecycle rules (creation, update, deletion).
+               - Document cleanup results and remaining active branches.            
+            CONSTRAINTS:
+            - Never delete protected or active branches.
+            - Never delete branches linked to open pull requests.
+            - Prefer conservative deletion over aggressive cleanup.
+            - Do not modify code or commit history beyond branch removal.            
+            FINAL STATE:
+            - Repository contains only active, protected, or intentionally retained branches.
+            - No orphaned or stale branches remain.
+            - Repository is clean, efficient, and easier to maintain.
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false
       - name: Run OpenCode
         id: run_oc
         timeout-minutes: 60
         run: |
           opencode run "$(cat <<'PROMPT'
+          You work on 'dev' branch, switch and make sure up to date with 'dev' branch.
           **Objective**:
           Review `task.md`, `blueprint.md`, and `AGENTS.md`. Choose **ONE** high-impact, clearly scoped task:
           - stability 
@@ -54,8 +151,7 @@ jobs:
           - scalability
           - modularity
           - flexibility
-          - consistency
-          
+          - consistency          
           **Execution Protocol**:
           1. **Analysis**: efficient dependency check.
           2. **Implementation**: Incremental, modular changes.
@@ -106,112 +202,6 @@ jobs:
             - Provide the code changes with proper documentation.
             - Update relevant documentation and tests.
             - **SUCCESSFUL GIT PUSH TO DEV**.
-          PROMPT
-          )" \
-            --model iflowcn/glm-4.6 \
-            --share false
-      - name: Run OpenCode2
-        id: run_oc2
-        timeout-minutes: 60
-        run: |
-          opencode run "$(cat <<'PROMPT'
-            ROLE: GitHub Pull Request Maintenance Agent
-            
-            OBJECTIVE:
-            Maintain repository health by resolving problematic open pull requests and preparing them for successful merge.
-            
-            TASKS (EXECUTE IN ORDER):
-            
-            1. PULL REQUEST DISCOVERY
-               - List all open pull requests in the repository.
-               - Sort by creation date (oldest first).
-               - Select the oldest pull request that is currently not mergeable.
-            
-            2. MERGE CONFLICT RESOLUTION
-               - Identify the cause of non-mergeable status (merge conflicts, failing checks, outdated base branch).
-               - Update the pull request branch with the latest main branch using rebase or merge, following repository standards.
-               - Resolve all merge conflicts carefully, preserving intended functionality and coding standards.
-            
-            3. REVIEW & CONVERSATION HANDLING
-               - Analyze all review comments and discussion threads in the pull request conversation.
-               - Apply requested changes if they are still relevant and technically valid.
-               - Respond to comments where clarification or justification is required.
-               - Mark resolved comments as resolved only after changes are applied.
-            
-            4. VALIDATION
-               - Run the full build and test pipeline.
-               - Ensure all required status checks pass.
-               - Confirm the pull request is now cleanly mergeable without conflicts.
-            
-            5. PULL REQUEST UPDATE
-               - Push all fixes and updates to the pull request branch.
-               - Update the pull request description if necessary to reflect changes made.
-               - Ensure the pull request is ready for merge according to repository contribution rules.
-            
-            CONSTRAINTS:
-            - Do not introduce unrelated refactors or scope creep.
-            - Follow existing code style, architecture, and contribution guidelines.
-            - Prioritize minimal, safe, and review-aligned changes.
-            
-            FINAL STATE:
-            - The selected pull request is conflict-free, review comments are resolved, all checks pass, and the pull request is mergeable.
-          PROMPT
-          )" \
-            --model iflowcn/glm-4.6 \
-            --share false
-      - name: Run OpenCode3
-        id: run_oc3
-        timeout-minutes: 60
-        run: |
-          opencode run "$(cat <<'PROMPT'
-            ROLE: GitHub Repository Branch Cleanup Agent
-            
-            OBJECTIVE:
-            Safely clean up excessive branches to improve repository health, efficiency, and maintainability without risking data loss.            
-            TASKS (EXECUTE IN ORDER):            
-            1. BRANCH INVENTORY
-               - Fetch and list all local and remote branches.
-               - Classify branches into:
-                 a) Merged branches
-                 b) Stale branches (no commits for a long period)
-                 c) Active branches
-                 d) Protected branches (main, develop, release, or explicitly protected)            
-            2. SAFETY VERIFICATION
-               - Verify repository branch protection rules.
-               - Exclude all protected branches from deletion.
-               - Confirm merged status against the default branch.
-               - Identify branches referenced by open pull requests and exclude them.            
-            3. DELETION ELIGIBILITY
-               - Mark branches eligible for deletion only if:
-                 - Fully merged into the default branch OR explicitly abandoned
-                 - Not associated with any open pull request
-                 - Not recently updated
-                 - Not required for release, hotfix, or long-term support            
-            4. BACKUP & TRACEABILITY
-               - Ensure commit history remains accessible after deletion.
-               - Log branch names, last commit hashes, authors, and deletion timestamps.
-               - Optionally tag critical commits before deletion if required by policy.            
-            5. SAFE BRANCH REMOVAL
-               - Delete eligible local branches.
-               - Delete eligible remote branches.
-               - Prune stale remote references.            
-            6. REPOSITORY HEALTH CHECK
-               - Verify no CI/CD pipelines, scripts, or documentation reference deleted branches.
-               - Confirm default branch integrity.
-               - Validate repository status remains clean and operational.            
-            7. POST-CLEANUP OPTIMIZATION
-               - Standardize branch naming conventions.
-               - Recommend branch lifecycle rules (creation, update, deletion).
-               - Document cleanup results and remaining active branches.            
-            CONSTRAINTS:
-            - Never delete protected or active branches.
-            - Never delete branches linked to open pull requests.
-            - Prefer conservative deletion over aggressive cleanup.
-            - Do not modify code or commit history beyond branch removal.            
-            FINAL STATE:
-            - Repository contains only active, protected, or intentionally retained branches.
-            - No orphaned or stale branches remain.
-            - Repository is clean, efficient, and easier to maintain.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
