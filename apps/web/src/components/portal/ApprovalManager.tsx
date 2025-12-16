@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface Approval {
   id: string;
@@ -67,24 +68,16 @@ const ApprovalManager: React.FC<ApprovalManagerProps> = ({
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/approvals', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          projectId,
-        }),
+      const response = await apiClient.post('/approvals', {
+        ...formData,
+        projectId,
       });
 
-      if (response.ok) {
+      if (!response.error) {
         closeModal();
         onApprovalUpdate();
       } else {
-        throw new Error('Failed to create approval request');
+        throw new Error(response.error || 'Failed to create approval request');
       }
     } catch (error) {
       console.error('Error creating approval request:', error);
@@ -98,24 +91,16 @@ const ApprovalManager: React.FC<ApprovalManagerProps> = ({
     if (!reviewingApproval) return;
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `http://localhost:3001/approvals/${reviewingApproval.id}`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(reviewData),
-        }
+      const response = await apiClient.patch(
+        `/approvals/${reviewingApproval.id}`,
+        reviewData
       );
 
-      if (response.ok) {
+      if (!response.error) {
         closeModal();
         onApprovalUpdate();
       } else {
-        throw new Error('Failed to update approval');
+        throw new Error(response.error || 'Failed to review approval request');
       }
     } catch (error) {
       console.error('Error updating approval:', error);

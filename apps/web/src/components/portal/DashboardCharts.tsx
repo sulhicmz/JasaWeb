@@ -1,5 +1,6 @@
 /* eslint-disable security/detect-object-injection */
 import React, { useState, useEffect } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface ChartData {
   labels: string[];
@@ -35,19 +36,13 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/dashboard/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await apiClient.get('/dashboard/stats');
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
+      if (response.error || !response.data) {
+        throw new Error(response.error || 'Failed to fetch dashboard stats');
       }
 
-      const stats = await response.json();
+      const stats = response.data as any;
 
       // Transform data for charts
       const projectChartData: ChartData = {

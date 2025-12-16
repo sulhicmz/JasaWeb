@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface Task {
   id: string;
@@ -64,12 +65,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('authToken');
-      const url = editingTask
-        ? `http://localhost:3001/tasks/${editingTask.id}`
-        : 'http://localhost:3001/tasks';
-
-      const method = editingTask ? 'PATCH' : 'POST';
       const body = {
         title: formData.title,
         description: formData.description,
@@ -78,20 +73,15 @@ const TaskManager: React.FC<TaskManagerProps> = ({
         ...(editingTask ? {} : { projectId }),
       };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      const response = editingTask
+        ? await apiClient.patch(`/tasks/${editingTask.id}`, body)
+        : await apiClient.post('/tasks', body);
 
-      if (response.ok) {
+      if (!response.error) {
         closeModal();
         onTaskUpdate();
       } else {
-        throw new Error('Failed to save task');
+        throw new Error(response.error || 'Failed to save task');
       }
     } catch (error) {
       console.error('Error saving task:', error);
@@ -105,18 +95,12 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     }
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3001/tasks/${taskId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.delete(`/tasks/${taskId}`);
 
-      if (response.ok) {
+      if (!response.error) {
         onTaskUpdate();
       } else {
-        throw new Error('Failed to delete task');
+        throw new Error(response.error || 'Failed to delete task');
       }
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -126,20 +110,14 @@ const TaskManager: React.FC<TaskManagerProps> = ({
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3001/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
+      const response = await apiClient.patch(`/tasks/${taskId}`, {
+        status: newStatus,
       });
 
-      if (response.ok) {
+      if (!response.error) {
         onTaskUpdate();
       } else {
-        throw new Error('Failed to update task status');
+        throw new Error(response.error || 'Failed to update task status');
       }
     } catch (error) {
       console.error('Error updating task status:', error);

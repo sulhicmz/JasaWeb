@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../../services/apiClient';
 
 const QuickActions: React.FC = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -29,22 +30,14 @@ const QuickActions: React.FC = () => {
     const description = formData.get('description') as string;
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/projects', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          status: 'planning',
-        }),
+      const response = await apiClient.post('/projects', {
+        name,
+        description,
+        status: 'planning',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create project');
+      if (response.error) {
+        throw new Error(response.error || 'Failed to create project');
       }
 
       closeModal(setShowProjectModal);
@@ -70,23 +63,15 @@ const QuickActions: React.FC = () => {
     const priority = formData.get('priority') as string;
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3001/tickets', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          priority,
-          type: 'task',
-        }),
+      const response = await apiClient.post('/tickets', {
+        title,
+        description,
+        priority,
+        type: 'task',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create ticket');
+      if (response.error) {
+        throw new Error(response.error || 'Failed to create ticket');
       }
 
       closeModal(setShowTicketModal);

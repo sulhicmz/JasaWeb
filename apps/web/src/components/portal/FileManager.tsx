@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface FileItem {
   id: string;
@@ -84,8 +85,6 @@ const FileManager: React.FC<FileManagerProps> = ({
     setUploading(true);
 
     try {
-      const token = localStorage.getItem('authToken');
-
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         const formData = new FormData();
@@ -95,16 +94,13 @@ const FileManager: React.FC<FileManagerProps> = ({
           formData.append('folder', folder);
         }
 
-        const response = await fetch('http://localhost:3001/files/upload', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
+        const response = await apiClient.upload(
+          `/files/upload?projectId=${projectId}${folder ? `&folder=${folder}` : ''}`,
+          file
+        );
 
-        if (!response.ok) {
-          throw new Error(`Failed to upload ${file.name}`);
+        if (response.error) {
+          throw new Error(response.error || `Failed to upload ${file.name}`);
         }
       }
 
@@ -122,7 +118,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `http://localhost:3001/files/${fileId}/download`,
+        `${apiClient.getConfig().baseUrl}/files/${fileId}/download`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -155,18 +151,12 @@ const FileManager: React.FC<FileManagerProps> = ({
     }
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`http://localhost:3001/files/${fileId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.delete(`/files/${fileId}`);
 
-      if (response.ok) {
+      if (!response.error) {
         onFileUpdate();
       } else {
-        throw new Error('Failed to delete file');
+        throw new Error(response.error || 'Failed to delete file');
       }
     } catch (error) {
       console.error('Error deleting file:', error);
