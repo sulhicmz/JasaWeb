@@ -2,7 +2,8 @@ name: oc bug finder
 
 on:
   workflow_dispatch:
-
+  pull_request:
+    types: [synchronize]
 permissions:
   contents: write
   pull-requests: write
@@ -18,7 +19,6 @@ jobs:
     name: oc pr handler
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 40
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     permissions:
       id-token: write
