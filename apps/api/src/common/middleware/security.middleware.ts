@@ -78,15 +78,20 @@ export class SecurityMiddleware implements NestMiddleware {
     if (req.query) {
       const queryKeys = Object.keys(req.query);
       queryKeys.forEach((key) => {
-        // Validate key to prevent injection
+        // Security: Validate key to prevent injection with regex pattern
         const validKeyPattern = /^[a-zA-Z0-9_-]+$/;
         if (!validKeyPattern.test(key)) {
+          // eslint-disable-next-line security/detect-object-injection
           delete (req.query as Record<string, unknown>)[key];
           return;
         }
+        // Security: Object injection prevented by key validation above
+        // eslint-disable-next-line security/detect-object-injection
         const queryValue = req.query[key];
         if (typeof queryValue === 'string') {
           // Remove potentially dangerous characters
+          // Security: Object assignment is safe due to key validation
+          // eslint-disable-next-line security/detect-object-injection
           (req.query as Record<string, unknown>)[key] = queryValue
             .replace(/[<>]/g, '')
             .trim();

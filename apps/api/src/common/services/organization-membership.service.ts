@@ -112,7 +112,8 @@ export class OrganizationMembershipService {
     try {
       const membership = await this.verifyMembership(userId, organizationId);
       return this.isRoleOrHigher(membership.role, requiredRole);
-    } catch (error) {
+      // Return false if membership verification fails
+    } catch {
       return false;
     }
   }

@@ -8,7 +8,7 @@ import {
   Inject,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { CACHE_KEYS, CACHE_CONFIG } from '../common/config/constants';
+import { CACHE_KEYS } from '../common/config/constants';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -827,22 +827,23 @@ export class DashboardController {
       },
     });
 
-    const projectsWithRelations = projects as any[];
+    const projectsWithCounts = projects as unknown as Array<{
+      _count: { milestones: number; tickets: number };
+    }>;
+
     return {
       totalProjects: projects.length,
       averageMilestonesPerProject:
-        projectsWithRelations.reduce(
-          (sum, p) => sum + (p.milestones?.length || 0),
+        projectsWithCounts.reduce(
+          (sum, p) => sum + (p._count?.milestones || 0),
           0
         ) / projects.length,
       averageTicketsPerProject:
-        projectsWithRelations.reduce(
-          (sum, p) => sum + (p.tickets?.length || 0),
+        projectsWithCounts.reduce(
+          (sum, p) => sum + (p._count?.tickets || 0),
           0
         ) / projects.length,
-      onTimeCompletionRate: this.calculateOnTimeCompletionRate(
-        projectsWithRelations
-      ),
+      onTimeCompletionRate: this.calculateOnTimeCompletionRate(projects),
       budgetAdherence: this.calculateBudgetAdherence(),
     };
   }

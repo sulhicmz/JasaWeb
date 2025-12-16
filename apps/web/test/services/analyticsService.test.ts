@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { analyticsService } from '../../src/services/analyticsService';
 
 // Mock browser APIs
@@ -27,7 +27,7 @@ document.body.removeChild = vi.fn();
 const localStorageMock = {
   getItem: vi.fn(),
   setItem: vi.fn(),
-  clear: vi.fn()
+  clear: vi.fn(),
 };
 global.localStorage = localStorageMock as any;
 
@@ -52,7 +52,7 @@ describe('analyticsService', () => {
         headers: {
           Authorization: 'Bearer mock-token',
           'Content-Type': 'application/json',
-        }
+        },
       })
     );
   });
@@ -60,7 +60,7 @@ describe('analyticsService', () => {
   it('should append query parameters correctly', async () => {
     await analyticsService.getProjectAnalytics({
       projectId: '123',
-      granularity: 'month'
+      granularity: 'month',
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -80,7 +80,7 @@ describe('analyticsService', () => {
       expect.stringContaining('/api/analytics/export/excel'),
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ data: { test: 'data' } })
+        body: JSON.stringify({ data: { test: 'data' } }),
       })
     );
     expect(mockLink.download).toContain('.xlsx');
@@ -90,9 +90,11 @@ describe('analyticsService', () => {
   it('should handle API errors gracefully', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
-      statusText: 'Not Found'
+      statusText: 'Not Found',
     });
 
-    await expect(analyticsService.getProjectAnalytics()).rejects.toThrow('Analytics API error: Not Found');
+    await expect(analyticsService.getProjectAnalytics()).rejects.toThrow(
+      'Analytics API error: Not Found'
+    );
   });
 });

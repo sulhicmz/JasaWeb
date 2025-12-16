@@ -168,7 +168,6 @@ export class FileService {
             uploadedBy: uploadedById,
           },
         });
-
       } else {
         // Upload to local storage
         const uploadResult = await this.localFileStorageService.uploadFile(
@@ -381,7 +380,7 @@ export class FileService {
     return this.findAll(projectId);
   }
 
-  async getFileStats(projectId?: string, _organizationId?: string) {
+  async getFileStats(projectId?: string) {
     const whereClause: { projectId?: string } = {};
 
     if (projectId) {
@@ -397,7 +396,10 @@ export class FileService {
     });
 
     const total = files.length;
-    const totalSize = files.reduce((sum: number, file: { size: number | null }) => sum + (file.size || 0), 0);
+    const totalSize = files.reduce(
+      (sum: number, file: { size: number | null }) => sum + (file.size || 0),
+      0
+    );
 
     // Group by file type using Map to prevent object injection
     const byTypeMap = new Map<string, number>();
@@ -439,11 +441,20 @@ export class FileService {
       ['.pdf', 'application/pdf'],
       ['.txt', 'text/plain'],
       ['.doc', 'application/msword'],
-      ['.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      [
+        '.docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ],
       ['.ppt', 'application/vnd.ms-powerpoint'],
-      ['.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+      [
+        '.pptx',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
       ['.xls', 'application/vnd.ms-excel'],
-      ['.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+      [
+        '.xlsx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ],
     ]);
 
     return mimeTypes.get(ext) || 'application/octet-stream';

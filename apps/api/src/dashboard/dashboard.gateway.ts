@@ -54,7 +54,7 @@ export class DashboardGateway
     private readonly multiTenantPrisma: MultiTenantPrismaService
   ) {}
 
-  afterInit(server: Server) {
+  afterInit(_server: Server) {
     this.logger.log('Dashboard WebSocket Gateway initialized');
   }
 
@@ -82,7 +82,10 @@ export class DashboardGateway
       });
       const user = users[0];
 
-      if (!user || (user as any).memberships?.length === 0) {
+      if (
+        !user ||
+        (user as { memberships?: unknown[] }).memberships?.length === 0
+      ) {
         throw new WsException(
           'Unauthorized: Invalid user or organization access'
         );

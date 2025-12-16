@@ -1,5 +1,25 @@
 // Vitest setup file for test environment
-import { vi } from 'vitest';
+import {
+  vi,
+  beforeEach,
+  afterEach,
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+} from 'vitest';
+
+// Provide Jest-like globals for compatibility
+global.describe = describe;
+global.it = it;
+global.test = it;
+global.expect = expect;
+global.beforeEach = beforeEach;
+global.afterEach = afterEach;
+global.beforeAll = beforeAll;
+global.afterAll = afterAll;
+global.vi = vi;
 
 // Mock Prisma for testing
 vi.mock('@prisma/client', () => ({
@@ -12,6 +32,31 @@ vi.mock('@prisma/client', () => ({
       delete: vi.fn(),
     },
     organization: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    project: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      findOne: vi.fn(),
+      findAll: vi.fn(),
+      remove: vi.fn(),
+      getProjectStats: vi.fn(),
+    },
+    task: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    ticket: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
@@ -53,6 +98,12 @@ vi.mock('@nestjs/config', () => ({
     get: vi.fn(),
   })),
 }));
+
+// Set test environment variables
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/testdb';
+process.env.JWT_SECRET = 'test-jwt-secret-key';
+process.env.JWT_REFRESH_SECRET = 'test-jwt-refresh-secret';
+process.env.NODE_ENV = 'test';
 
 // Export empty to make this a module
 export {};

@@ -28,40 +28,56 @@ export class ProjectController {
     @Body() createProjectDto: CreateProjectDto,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.projectService.create(createProjectDto);
+    return this.projectService.create(createProjectDto, organizationId);
   }
 
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
-  findAll(@Query('view') view?: string) {
+  findAll(
+    @CurrentOrganizationId() organizationId: string,
+    @Query('view') view?: string
+  ) {
     const normalizedView =
       view?.toLowerCase() === 'detail' ? 'detail' : 'summary';
-    return this.projectService.findAll(normalizedView);
+    return this.projectService.findAll(normalizedView, organizationId);
   }
 
   @Get(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.projectService.findOne(id, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
   @Patch(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only specific roles can update
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(id, updateProjectDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.projectService.update(id, updateProjectDto, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
   @Delete(':id')
   @Roles(Role.OrgOwner) // Only org owner can delete
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.projectService.remove(id, organizationId);
   }
 
   @Get(':id/stats')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  getProjectStats(@Param('id') id: string) {
-    return this.projectService.getProjectStats(id);
+  getProjectStats(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.projectService.getProjectStats(id, organizationId);
   }
 }

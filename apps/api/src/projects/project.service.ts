@@ -60,20 +60,24 @@ export interface UpdateProjectDto {
 export class ProjectService {
   constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
 
-  async create(createProjectDto: CreateProjectDto) {
+  async create(createProjectDto: CreateProjectDto, organizationId: string) {
     return this.multiTenantPrisma.project.create({
       data: {
         ...createProjectDto,
         status: createProjectDto.status || 'draft',
+        organizationId,
       },
     });
   }
 
-  async findAll(view: ProjectViewMode = 'summary') {
-    return this.multiTenantPrisma.project.findMany(buildProjectQuery(view));
+  async findAll(view: ProjectViewMode = 'summary', organizationId?: string) {
+    return this.multiTenantPrisma.project.findMany({
+      ...buildProjectQuery(view),
+      where: organizationId ? { organizationId } : undefined,
+    });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId?: string) {
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id },
       include: projectRelationsInclude,
@@ -83,12 +87,20 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
+    if (organizationId && project.organizationId !== organizationId) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
     return project;
   }
 
-  async update(id: string, updateProjectDto: UpdateProjectDto) {
-    // First check if project exists
-    await this.findOne(id);
+  async update(
+    id: string,
+    updateProjectDto: UpdateProjectDto,
+    organizationId?: string
+  ) {
+    // First check if project exists and belongs to organization
+    await this.findOne(id, organizationId);
 
     return this.multiTenantPrisma.project.update({
       where: { id },
@@ -96,9 +108,9 @@ export class ProjectService {
     });
   }
 
-  async remove(id: string) {
-    // First check if project exists
-    await this.findOne(id);
+  async remove(id: string, organizationId?: string) {
+    // First check if project exists and belongs to organization
+    await this.findOne(id, organizationId);
 
     return this.multiTenantPrisma.project.delete({
       where: { id },
@@ -123,11 +135,12 @@ export class ProjectService {
     });
   }
 
-  async getProjectStats(id: string) {
+  async getProjectStats(id: string, organizationId?: string) {
     const project = await this.multiTenantPrisma.project.findUnique({
       where: { id },
       select: {
         id: true,
+        organizationId: true,
         _count: {
           select: {
             milestones: true,
@@ -139,6 +152,10 @@ export class ProjectService {
     });
 
     if (!project) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
+    if (organizationId && project.organizationId !== organizationId) {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 

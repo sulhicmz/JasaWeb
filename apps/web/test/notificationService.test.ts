@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NotificationService } from '../src/services/notificationService';
-import type { LocalNotification } from '../src/services/notificationService';
 
 // Mock DOM environment
 Object.defineProperty(window, 'localStorage', {
@@ -107,7 +106,9 @@ describe('NotificationService', () => {
   describe('real-time notifications', () => {
     it('should display notification when page is visible', () => {
       // Mock appendChild to avoid actually adding to DOM (and verify call)
-      const mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as any);
+      const mockAppendChild = vi
+        .spyOn(document.body, 'appendChild')
+        .mockImplementation(() => null as any);
 
       notificationService.showRealtimeNotification('Test message', 'success');
 
@@ -130,7 +131,9 @@ describe('NotificationService', () => {
 
     it('should process notification queue when page becomes visible', () => {
       // Mock appendChild
-      const mockAppendChild = vi.spyOn(document.body, 'appendChild').mockImplementation(() => null as any);
+      const mockAppendChild = vi
+        .spyOn(document.body, 'appendChild')
+        .mockImplementation(() => null as any);
 
       Object.defineProperty(document, 'hidden', {
         value: true,
@@ -159,7 +162,7 @@ describe('NotificationService', () => {
   describe('dashboard integration', () => {
     it('should refresh dashboard stats when connected', () => {
       const mockEmit = vi.fn();
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true, emit: mockEmit };
 
       vi.mocked(localStorage.getItem).mockReturnValue('org-123');
@@ -173,7 +176,7 @@ describe('NotificationService', () => {
 
     it('should subscribe to dashboard updates', () => {
       const mockEmit = vi.fn();
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true, emit: mockEmit };
 
       notificationService.subscribeToDashboard('org-123');
@@ -184,7 +187,7 @@ describe('NotificationService', () => {
     });
 
     it('should get connection status', () => {
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.dashboardSocket = {
         connected: true,
         id: 'test-socket-id',
@@ -204,9 +207,9 @@ describe('NotificationService', () => {
       const mockDisconnect1 = vi.fn();
       const mockDisconnect2 = vi.fn();
 
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.socket = { disconnect: mockDisconnect1 };
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.dashboardSocket = { disconnect: mockDisconnect2 };
 
       notificationService.disconnect();
@@ -218,16 +221,16 @@ describe('NotificationService', () => {
     });
 
     it('should check connection status', () => {
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.socket = { connected: true };
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true };
 
       expect(notificationService.isConnected()).toBe(true);
 
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.socket = { connected: false };
-      // @ts-ignore
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true };
 
       expect(notificationService.isConnected()).toBe(false);
@@ -235,14 +238,12 @@ describe('NotificationService', () => {
   });
 
   describe('browser notifications', () => {
-      it('should call requestPermission on showBrowserNotification if permission is default', async () => {
-          // This tests private method indirectly via public event?
-          // Or we can simulate receiving a notification which calls showBrowserNotification
-
-          // Actually, Notification.requestPermission is called in constructor too if default.
-          // But that is hard to test unless we mock global.Notification before import.
-
-          // Let's rely on type checks and basic functionality.
-      });
+    it('should call requestPermission on showBrowserNotification if permission is default', async () => {
+      // This tests private method indirectly via public event?
+      // Or we can simulate receiving a notification which calls showBrowserNotification
+      // Actually, Notification.requestPermission is called in constructor too if default.
+      // But that is hard to test unless we mock global.Notification before import.
+      // Let's rely on type checks and basic functionality.
+    });
   });
 });

@@ -27,8 +27,11 @@ export class PerformanceService {
       // First Input Delay (FID)
       const fidObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          this.metrics.fid = entry.processingStart - entry.startTime;
+        entries.forEach((entry) => {
+          const fidEntry = entry as PerformancePaintTiming & {
+            processingStart: number;
+          };
+          this.metrics.fid = fidEntry.processingStart - fidEntry.startTime;
           console.log('FID:', this.metrics.fid);
         });
       });

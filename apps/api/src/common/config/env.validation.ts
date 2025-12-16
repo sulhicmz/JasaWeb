@@ -25,9 +25,12 @@ export function validateEnv(config: Record<string, unknown>) {
       'POSTGRES_PORT',
     ];
 
+    // Security: Object injection is prevented by the allowlist and regex validation above
+    // Security: Object injection is prevented by the allowlist and regex validation above
     if (
       value !== undefined &&
       typeof key === 'string' &&
+      /^[A-Z_][A-Z0-9_]*$/.test(key) &&
       allowedEnvKeys.includes(key)
     ) {
       process.env[key] = String(value);

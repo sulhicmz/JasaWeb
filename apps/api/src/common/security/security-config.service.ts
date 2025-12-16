@@ -225,7 +225,7 @@ export class SecurityConfigService {
     return this.config.isProduction;
   }
 
-  validateSecurityHeaders(req: any): boolean {
+  validateSecurityHeaders(req: { headers: Record<string, string> }): boolean {
     // Additional runtime security validation
     return (
       req.headers['x-forwarded-proto'] === 'https' || this.config.isDevelopment

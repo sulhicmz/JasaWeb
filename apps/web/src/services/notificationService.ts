@@ -1,7 +1,12 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 
-export type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'personal';
+export type NotificationType =
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'personal';
 
 export interface NotificationData {
   [key: string]: unknown;
@@ -194,7 +199,7 @@ export class NotificationService {
 
       // Subscribe to dashboard updates
       const organizationId = localStorage.getItem('organization_id');
-      if (organizationId) {
+      if (organizationId && this.dashboardSocket) {
         this.dashboardSocket.emit('subscribe-dashboard', { organizationId });
       }
     });
@@ -360,9 +365,7 @@ export class NotificationService {
       personal: 'bg-purple-500',
     };
 
-    notificationEl.classList.add(
-      colors[notification.type] || colors.info
-    );
+    notificationEl.classList.add(colors[notification.type] || colors.info);
 
     notificationEl.innerHTML = `
       <div class="flex items-center space-x-3 text-white">
@@ -413,21 +416,21 @@ export class NotificationService {
 
     // Check if data matches DashboardUpdate structure with 'type' field
     if ('type' in data && typeof data.type === 'string') {
-        const update = data as DashboardUpdate;
-        const payload = update.data as Record<string, unknown>; // Assuming data.data is the payload
+      const update = data as DashboardUpdate;
+      const payload = update.data as Record<string, unknown>; // Assuming data.data is the payload
 
-        switch (update.type) {
+      switch (update.type) {
         case 'project':
-            return `Project: ${payload?.name || 'Unknown'}`;
+          return `Project: ${payload?.name || 'Unknown'}`;
         case 'ticket':
-            return `Ticket: ${payload?.title || 'Unknown'}`;
+          return `Ticket: ${payload?.title || 'Unknown'}`;
         case 'milestone':
-            return `Milestone: ${payload?.title || 'Unknown'}`;
+          return `Milestone: ${payload?.title || 'Unknown'}`;
         case 'invoice':
-            return `Invoice: ${payload?.id || 'Unknown'}`;
+          return `Invoice: ${payload?.id || 'Unknown'}`;
         default:
-            return '';
-        }
+          return '';
+      }
     }
 
     return '';
@@ -437,7 +440,7 @@ export class NotificationService {
     while (this.notificationQueue.length > 0) {
       const notification = this.notificationQueue.shift();
       if (notification) {
-          this.displayNotification(notification);
+        this.displayNotification(notification);
       }
     }
   }
