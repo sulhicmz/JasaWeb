@@ -4,7 +4,7 @@ import {
   getOptionalEnv,
   getEnvNumber,
 } from '../../../../../packages/config/env-validation';
-import { DEFAULT_PORTS, DEFAULT_DATABASE_CONFIG, APP_URLS } from './constants';
+import { DEFAULT_DATABASE_CONFIG, APP_URLS } from './constants';
 
 @Injectable()
 export class AppConfigService {
