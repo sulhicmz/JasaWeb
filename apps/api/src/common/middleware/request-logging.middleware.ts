@@ -62,19 +62,11 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       ) {
         // Security: Object injection prevented by sensitive key filtering and validation
         if (Array.isArray(value)) {
+          // eslint-disable-next-line security/detect-object-injection
           safeHeaders[key] = value.join(', ');
         } else if (typeof value === 'string') {
-          safeHeaders[key] = value;
-        }
-      } else if (typeof key === 'string') {
-        // Security: Object injection prevented by regex validation of key
-        if (/^[a-zA-Z0-9-]+$/.test(key)) {
           // eslint-disable-next-line security/detect-object-injection
-          Object.defineProperty(safeHeaders, key, {
-            value: '[REDACTED]',
-            enumerable: true,
-            writable: false,
-          });
+          safeHeaders[key] = value;
         }
       }
     }

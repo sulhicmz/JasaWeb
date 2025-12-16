@@ -136,7 +136,14 @@ The migration includes:
    # See Environment Configuration section below
    ```
 
-5. **Start development services**
+5. **Generate Prisma client**
+
+   ```bash
+   # Generate Prisma client for TypeScript types
+   pnpm db:generate
+   ```
+
+6. **Start development services**
 
    ```bash
    # Start database and other services
@@ -149,7 +156,7 @@ The migration includes:
    pnpm db:seed
    ```
 
-6. **Start development servers**
+7. **Start development servers**
 
    ```bash
    # Start all applications in development mode

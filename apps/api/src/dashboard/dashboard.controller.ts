@@ -533,23 +533,23 @@ export class DashboardController {
         period,
         startDate,
         endDate: new Date(),
-        trends: trends.reduce((acc, trend, index) => {
-          const metric = selectedMetrics[index];
-          if (
-            metric &&
-            typeof metric === 'string' &&
-            /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
-            !['__proto__', 'constructor', 'prototype'].includes(metric)
-          ) {
-            Object.defineProperty(acc, metric, {
-              value: trend,
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            });
-          }
-          return acc;
-        }, Object.create(null)),
+        trends: (() => {
+          const result: Record<string, unknown> = {};
+          trends.forEach((trend, index) => {
+            const metric = selectedMetrics[index];
+            if (
+              metric &&
+              typeof metric === 'string' &&
+              /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
+              !['__proto__', 'constructor', 'prototype'].includes(metric)
+            ) {
+              // Security-safe: Metric is validated against prototype pollution
+              // eslint-disable-next-line security/detect-object-injection
+              result[metric] = trend;
+            }
+          });
+          return result;
+        })(),
       };
     } catch (error) {
       throw new InternalServerErrorException(
@@ -1150,15 +1150,13 @@ export class DashboardController {
         if (
           dateKey &&
           !['__proto__', 'constructor', 'prototype'].includes(dateKey) &&
-          Object.prototype.hasOwnProperty.call(dailyData, dateKey)
+          /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
-          const currentValue = dailyData[dateKey] || 0;
-          Object.defineProperty(dailyData, dateKey, {
-            value: currentValue + 1,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
+          const currentValue =
+            (dailyData as Record<string, number>)[dateKey] || 0;
+          // Security-safe: DateKey is validated against prototype pollution
+          // eslint-disable-next-line security/detect-object-injection
+          (dailyData as Record<string, number>)[dateKey] = currentValue + 1;
         }
       }
     });
