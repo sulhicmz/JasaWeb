@@ -66,16 +66,35 @@ export class SecurityConfigurationService {
       childSrc: ["'none'"],
       workerSrc: ["'self'"],
       manifestSrc: ["'self'"],
-      upgradeInsecureRequests: isProduction ? [] : undefined,
+      ...(isProduction && { upgradeInsecureRequests: [] }),
     };
 
-    // Filter out undefined values
-    Object.keys(directives).forEach((key) => {
-      directives[key] = directives[key].filter(Boolean);
-      if (directives[key].length === 0) {
-        delete directives[key];
+    // Filter out undefined values using safe Object.keys iteration
+    const validDirectiveKeys = [
+      'defaultSrc',
+      'scriptSrc',
+      'styleSrc',
+      'imgSrc',
+      'connectSrc',
+      'fontSrc',
+      'objectSrc',
+      'mediaSrc',
+      'frameSrc',
+      'childSrc',
+      'workerSrc',
+      'manifestSrc',
+      'upgradeInsecureRequests',
+    ] as const;
+
+    for (const key of validDirectiveKeys) {
+      const directiveValue = directives[key];
+      if (directiveValue) {
+        directives[key] = directiveValue.filter(Boolean);
+        if (directives[key]!.length === 0) {
+          delete directives[key];
+        }
       }
-    });
+    }
 
     return {
       directives,
@@ -90,12 +109,12 @@ export class SecurityConfigurationService {
     return {
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: isProduction ? 100 : 1000, // Stricter in production
-      message: {
+      message: JSON.stringify({
         error: 'Too many requests',
         statusCode: 429,
         timestamp: new Date().toISOString(),
         retryAfter: '15 minutes',
-      },
+      }),
       standardHeaders: true,
       legacyHeaders: false,
     };

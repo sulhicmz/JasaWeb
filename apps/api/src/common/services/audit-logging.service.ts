@@ -1,15 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 
+export type AuditLogDetails = Record<string, unknown>;
+
 export interface AuditLogEntry {
-  userId?: string;
+  actorId?: string;
   organizationId?: string;
   action: string;
-  resource: string;
+  target: string;
   resourceId?: string;
   ipAddress: string;
   userAgent?: string;
-  details?: Record<string, any>;
+  details?: AuditLogDetails;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   success: boolean;
   errorMessage?: string;
@@ -25,12 +27,12 @@ export interface SecurityEventEntry {
     | 'DATA_MODIFICATION'
     | 'SYSTEM'
     | 'SECURITY_VIOLATION';
-  userId?: string;
+  actorId?: string;
   organizationId?: string;
   ipAddress: string;
   userAgent?: string;
   description: string;
-  details?: Record<string, any>;
+  details?: AuditLogDetails;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   timestamp: Date;
   sessionId?: string;
@@ -55,25 +57,28 @@ export class AuditLoggingService {
       // Store in database
       await this.prisma.auditLog.create({
         data: {
-          userId: sanitizedEntry.userId,
-          organizationId: sanitizedEntry.organizationId,
+          ...(sanitizedEntry.actorId && { actorId: sanitizedEntry.actorId }),
+          organizationId: sanitizedEntry.organizationId || '',
           action: sanitizedEntry.action,
-          resource: sanitizedEntry.resource,
-          resourceId: sanitizedEntry.resourceId,
-          ipAddress: sanitizedEntry.ipAddress,
-          userAgent: sanitizedEntry.userAgent,
-          metadata: sanitizedEntry.details || {},
-          severity: sanitizedEntry.severity,
-          success: sanitizedEntry.success,
-          errorMessage: sanitizedEntry.errorMessage,
-          timestamp: sanitizedEntry.timestamp,
+          target: sanitizedEntry.target,
+          meta: JSON.stringify({
+            resourceId: sanitizedEntry.resourceId || null,
+            ipAddress: sanitizedEntry.ipAddress,
+            userAgent: sanitizedEntry.userAgent || null,
+            details: sanitizedEntry.details || {},
+            severity: sanitizedEntry.severity,
+            success: sanitizedEntry.success,
+            errorMessage: sanitizedEntry.errorMessage || null,
+            sessionId: sanitizedEntry.sessionId || null,
+          }),
+          createdAt: sanitizedEntry.timestamp,
         },
       });
 
       // Log to application logger for immediate visibility
       this.logger.log(
-        `AUDIT: ${entry.action} on ${entry.resource} ${
-          entry.userId ? `by user ${entry.userId}` : ''
+        `AUDIT: ${entry.action} on ${entry.target} ${
+          entry.actorId ? `by user ${entry.actorId}` : ''
         }`
       );
 
@@ -102,20 +107,21 @@ export class AuditLoggingService {
       // Store in database
       await this.prisma.auditLog.create({
         data: {
-          userId: sanitizedEvent.userId,
-          organizationId: sanitizedEvent.organizationId,
+          ...(sanitizedEvent.actorId && { actorId: sanitizedEvent.actorId }),
+          organizationId: sanitizedEvent.organizationId || '',
           action: `SECURITY_EVENT_${sanitizedEvent.eventType}`,
-          resource: 'SECURITY',
-          ipAddress: sanitizedEvent.ipAddress,
-          userAgent: sanitizedEvent.userAgent,
-          metadata: {
+          target: 'SECURITY',
+          meta: JSON.stringify({
+            ipAddress: sanitizedEvent.ipAddress,
+            userAgent: sanitizedEvent.userAgent || null,
             eventType: sanitizedEvent.eventType,
             description: sanitizedEvent.description,
-            ...sanitizedEvent.details,
-          },
-          severity: sanitizedEvent.severity,
-          success: true, // Security events are logged as successful logging operations
-          timestamp: sanitizedEvent.timestamp,
+            ...(sanitizedEvent.details || {}),
+            severity: sanitizedEvent.severity,
+            success: true, // Security events are logged as successful logging operations
+            sessionId: sanitizedEvent.sessionId || null,
+          }),
+          createdAt: sanitizedEvent.timestamp,
         },
       });
 
@@ -134,64 +140,45 @@ export class AuditLoggingService {
   }
 
   async searchAuditLogs(filters: {
-    userId?: string;
+    actorId?: string;
     organizationId?: string;
     action?: string;
-    resource?: string;
+    target?: string;
     fromDate?: Date;
     toDate?: Date;
-    severity?: string;
     limit?: number;
     offset?: number;
-  }): Promise<{ audits: any[]; total: number }> {
+  }): Promise<{ audits: unknown[]; total: number }> {
     try {
       const {
-        userId,
+        actorId,
         organizationId,
         action,
-        resource,
+        target,
         fromDate,
         toDate,
-        severity,
         limit = 50,
         offset = 0,
       } = filters;
 
-      const where: any = {};
+      const where: Record<string, unknown> = {};
 
-      if (userId) where.userId = userId;
+      if (actorId) where.actorId = actorId;
       if (organizationId) where.organizationId = organizationId;
       if (action) where.action = { contains: action, mode: 'insensitive' };
-      if (resource)
-        where.resource = { contains: resource, mode: 'insensitive' };
-      if (severity) where.severity = severity;
+      if (target) where.target = { contains: target, mode: 'insensitive' };
       if (fromDate || toDate) {
-        where.timestamp = {};
-        if (fromDate) where.timestamp.gte = fromDate;
-        if (toDate) where.timestamp.lte = toDate;
+        where.createdAt = {};
+        if (fromDate) (where.createdAt as Record<string, Date>).gte = fromDate;
+        if (toDate) (where.createdAt as Record<string, Date>).lte = toDate;
       }
 
       const [audits, total] = await Promise.all([
         this.prisma.auditLog.findMany({
           where,
-          orderBy: { timestamp: 'desc' },
+          orderBy: { createdAt: 'desc' },
           take: limit,
           skip: offset,
-          select: {
-            id: true,
-            userId: true,
-            organizationId: true,
-            action: true,
-            resource: true,
-            resourceId: true,
-            ipAddress: true,
-            userAgent: true,
-            metadata: true,
-            severity: true,
-            success: true,
-            errorMessage: true,
-            timestamp: true,
-          },
         }),
         this.prisma.auditLog.count({ where }),
       ]);
@@ -216,21 +203,29 @@ export class AuditLoggingService {
       'bankAccount',
     ];
 
-    const sanitize = (obj: any): any => {
+    const sanitize = (obj: unknown): unknown => {
       if (Array.isArray(obj)) {
         return obj.map(sanitize);
       }
 
-      if (obj && typeof obj === 'object') {
-        const sanitized: any = {};
-        for (const [key, value] of Object.entries(obj)) {
-          const lowerKey = key.toLowerCase();
-          if (sensitiveFields.some((field) => lowerKey.includes(field))) {
-            sanitized[key] = '[REDACTED]';
-          } else if (typeof value === 'object' && value !== null) {
-            sanitized[key] = sanitize(value);
-          } else {
-            sanitized[key] = value;
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        const sanitized: Record<string, unknown> = {};
+        const entries = Object.entries(obj as Record<string, unknown>);
+
+        for (const [key, value] of entries) {
+          if (typeof key === 'string') {
+            const lowerKey = key.toLowerCase();
+            const hasSensitiveField = sensitiveFields.some((field: string) =>
+              lowerKey.includes(field)
+            );
+
+            if (hasSensitiveField) {
+              sanitized[key] = '[REDACTED]';
+            } else if (typeof value === 'object' && value !== null) {
+              sanitized[key] = sanitize(value);
+            } else {
+              sanitized[key] = value;
+            }
           }
         }
         return sanitized;
@@ -241,7 +236,7 @@ export class AuditLoggingService {
 
     return {
       ...entry,
-      details: sanitize(entry.details),
+      details: sanitize(entry.details) as AuditLogDetails,
     };
   }
 
@@ -256,7 +251,7 @@ export class AuditLoggingService {
 
   private async triggerCriticalEventAlert(entry: AuditLogEntry): Promise<void> {
     this.logger.error(
-      `CRITICAL AUDIT EVENT: ${entry.action} on ${entry.resource}`,
+      `CRITICAL AUDIT EVENT: ${entry.action} on ${entry.target}`,
       entry
     );
 
@@ -285,18 +280,18 @@ export class AuditLoggingService {
   // Convenience methods for common audit operations
 
   async logUserLogin(
-    userId: string,
+    actorId: string,
     organizationId: string,
     ipAddress: string,
-    userAgent?: string,
     success: boolean,
+    userAgent?: string,
     errorMessage?: string
   ): Promise<void> {
     return this.logAuditEntry({
-      userId,
+      actorId,
       organizationId,
       action: 'USER_LOGIN',
-      resource: 'AUTHENTICATION',
+      target: 'AUTHENTICATION',
       ipAddress,
       userAgent,
       success,
@@ -306,19 +301,19 @@ export class AuditLoggingService {
   }
 
   async logDataAccess(
-    userId: string,
+    actorId: string,
     organizationId: string,
-    resource: string,
+    target: string,
     resourceId: string,
     ipAddress: string,
     userAgent?: string,
     details?: Record<string, any>
   ): Promise<void> {
     return this.logAuditEntry({
-      userId,
+      actorId,
       organizationId,
       action: 'DATA_ACCESS',
-      resource: resource.toUpperCase(),
+      target: target.toUpperCase(),
       resourceId,
       ipAddress,
       userAgent,
@@ -329,21 +324,21 @@ export class AuditLoggingService {
   }
 
   async logDataModification(
-    userId: string,
+    actorId: string,
     organizationId: string,
-    resource: string,
+    target: string,
     resourceId: string,
     ipAddress: string,
-    userAgent?: string,
-    operation: 'CREATE' | 'UPDATE' | 'DELETE',
     success: boolean,
+    userAgent?: string,
+    operation?: 'CREATE' | 'UPDATE' | 'DELETE',
     details?: Record<string, any>
   ): Promise<void> {
     return this.logAuditEntry({
-      userId,
+      actorId,
       organizationId,
       action: `DATA_${operation}`,
-      resource: resource.toUpperCase(),
+      target: target.toUpperCase(),
       resourceId,
       ipAddress,
       userAgent,

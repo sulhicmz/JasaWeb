@@ -76,6 +76,8 @@ This project has undergone significant cleanup and optimization:
 - **Organized**: Core documentation in root, specialized docs in `/docs/`
 - **Migrated**: Testing framework from Jest to Vitest across all packages
 - **Removed**: Redundant Babel configuration in favor of native TypeScript
+- **Removed**: Build artifacts and temporary files from repository
+- **Updated**: Documentation references to point to existing files in `/docs/` directory
 
 #### Tailwind CSS v4 Migration
 
@@ -622,7 +624,7 @@ This repository follows strict hygiene standards with regular cleanup and organi
 - **File Naming**: Consistent kebab-case for files, PascalCase for components
 - **Regular Cleanup**: Temporary artifacts and obsolete documentation removed
 - **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
-- **Latest Cleanup**: December 2025 - removed `plan.md`, `bug.md`, `task.md` and consolidated documentation
+- **Latest Cleanup**: December 2025 - removed `plan.md`, `bug.md`, `task.md`, cleaned build artifacts, and consolidated documentation
 
 ## 📄 License
 

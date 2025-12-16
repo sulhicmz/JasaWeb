@@ -1,6 +1,6 @@
 # TODO — Rencana Implementasi (Revisi)
 
-Sumber: `AGENTS.md` + `plan.md`. Checklist ini menyatukan tooling (pnpm, Vitest/Playwright, Prettier) dengan ruang lingkup MVP.
+Sumber: `AGENTS.md` + `/docs/` directory. Checklist ini menyatukan tooling (pnpm, Vitest/Playwright, Prettier) dengan ruang lingkup MVP.
 
 ## 0) Prasyarat & Tooling
 
@@ -203,15 +203,15 @@ Sumber: `AGENTS.md` + `plan.md`. Checklist ini menyatukan tooling (pnpm, Vitest/
 
 #### HIGH PRIORITY
 
-- [x] Implement multi-tenant architecture using organization_id (per plan.md)
-- [ ] Set up RBAC system with different user roles (per plan.md)
-- [ ] Implement file upload functionality with S3 adapter (per plan.md)
+- [x] Implement multi-tenant architecture using organization_id
+- [ ] Set up RBAC system with different user roles
+- [ ] Implement file upload functionality with S3 adapter
 - [x] Create middleware to enforce multi-tenant data isolation
 
 #### MEDIUM PRIORITY
 
 - [ ] Implement basic project and milestone modules in the API
-- [ ] Set up email service for notifications (per plan.md)
+- [ ] Set up email service for notifications
 - [ ] Create basic UI components in packages/ui (Button, Card, Input)
 - [ ] Implement proper validation and sanitization in API endpoints
 
@@ -273,7 +273,7 @@ Sumber: `AGENTS.md` + `plan.md`. Checklist ini menyatukan tooling (pnpm, Vitest/
 
 #### HIGH PRIORITY
 
-- [x] Implement audit logging system for critical actions (per plan.md security section)
+- [x] Implement audit logging system for critical actions
 - [ ] Add authentication refresh token functionality
 - [ ] Implement user session management
 - [ ] Add proper error handling and custom exception filters

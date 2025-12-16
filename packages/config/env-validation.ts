@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 export interface EnvSchema {
   type: 'string' | 'number' | 'boolean';
   required: boolean;
@@ -363,8 +365,17 @@ export function validateEnvironmentVariables(): void {
   const errors: string[] = [];
   const warnings: string[] = [];
 
+  // Define allowed keys to prevent prototype pollution
+  const allowedKeys = new Set(Object.keys(ENV_SCHEMA));
   const envKeys = Object.keys(ENV_SCHEMA) as Array<keyof typeof ENV_SCHEMA>;
+
   for (const key of envKeys) {
+    // Validate key against allowed set to prevent injection
+    if (!allowedKeys.has(key)) {
+      errors.push(`Invalid environment variable key: ${key}`);
+      continue;
+    }
+
     const schema = ENV_SCHEMA[key];
     const value = process.env[key];
 
@@ -495,6 +506,14 @@ export function getRequiredEnv(key: string): string {
   if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     throw new EnvValidationError(`Invalid environment variable key: ${key}`);
   }
+
+  // Double validation against allowed keys
+  if (!Object.prototype.hasOwnProperty.call(ENV_SCHEMA, key)) {
+    throw new EnvValidationError(
+      `Environment variable ${key} is not in schema`
+    );
+  }
+
   const value = process.env[key];
   if (!value) {
     throw new EnvValidationError(
@@ -512,6 +531,14 @@ export function getOptionalEnv(
   if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     throw new EnvValidationError(`Invalid environment variable key: ${key}`);
   }
+
+  // Double validation against allowed keys
+  if (!Object.prototype.hasOwnProperty.call(ENV_SCHEMA, key)) {
+    throw new EnvValidationError(
+      `Environment variable ${key} is not in schema`
+    );
+  }
+
   return process.env[key] || defaultValue;
 }
 

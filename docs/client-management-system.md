@@ -1587,7 +1587,7 @@ export class ProjectsController {
 - [API Documentation](http://localhost:3000/api/docs)
 - [Testing Strategy](./testing-strategy.md)
 - [Optimization Plan](./optimization-plan.md)
-- [Project Plan](../plan.md)
+- [Project Roadmap](./roadmap.md)
 
 ### Community
 

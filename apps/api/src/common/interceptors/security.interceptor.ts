@@ -9,7 +9,18 @@ import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { tap } from 'rxjs/operators';
 import { Request, Response } from 'express';
-import { logger } from '../../../../../packages/config/logger';
+// import { logger } from '../../../../../packages/config/logger';
+
+interface SafeObject {
+  [key: string]: unknown;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    organizationId: string;
+  };
+}
 
 export interface SecurityMetadata {
   requireAuth?: boolean;
@@ -24,8 +35,8 @@ export class SecurityInterceptor implements NestInterceptor {
 
   constructor(private reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest<Request>();
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const response = context.switchToHttp().getResponse<Response>();
     const metadata = this.reflector.get<SecurityMetadata>(
       'security',
@@ -40,29 +51,24 @@ export class SecurityInterceptor implements NestInterceptor {
     response.setHeader('X-Request-ID', requestId);
 
     // Capture security-relevant information
-    const securityInfo = {
+    const securityInfo: SafeObject = {
       requestId,
       method: request.method,
       url: request.url,
-      userAgent: request.get('User-Agent'),
+      userAgent: request.get('User-Agent') || 'unknown',
       ip: this.getClientIP(request),
-      origin: request.get('Origin'),
-      referer: request.get('Referer'),
-      userId: (request as any).user?.id,
+      origin: request.get('Origin') || 'unknown',
+      referer: request.get('Referer') || 'unknown',
+      userId: request.user?.id || 'anonymous',
       organizationId:
-        request.get('X-Tenant-ID') || (request as any).user?.organizationId,
+        request.get('X-Tenant-ID') || request.user?.organizationId || 'none',
       timestamp: new Date().toISOString(),
     };
 
     // Log request with security context
     if (metadata?.auditLog || metadata?.sensitiveOperation) {
-      logger.audit(
-        `Request started: ${request.method} ${request.url}`,
-        securityInfo.userId,
-        {
-          ...securityInfo,
-          sensitive: metadata?.sensitiveOperation,
-        }
+      this.logger.log(
+        `Request started: ${request.method} ${request.url} by ${(securityInfo.userId as string) || 'anonymous'}`
       );
     }
 
@@ -73,15 +79,8 @@ export class SecurityInterceptor implements NestInterceptor {
 
           // Log successful response
           if (metadata?.auditLog) {
-            logger.audit(
-              `Request completed: ${request.method} ${request.url}`,
-              securityInfo.userId,
-              {
-                ...securityInfo,
-                duration,
-                statusCode: response.statusCode,
-                success: true,
-              }
+            this.logger.log(
+              `Request completed: ${request.method} ${request.url} by ${(securityInfo.userId as string) || 'anonymous'} (${duration}ms)`
             );
           }
 
@@ -106,7 +105,7 @@ export class SecurityInterceptor implements NestInterceptor {
   }
 
   private generateRequestId(): string {
-    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 
   private getClientIP(request: Request): string {
@@ -114,15 +113,14 @@ export class SecurityInterceptor implements NestInterceptor {
       request.get('X-Forwarded-For')?.split(',')[0] ||
       request.get('X-Real-IP') ||
       request.get('X-Client-IP') ||
-      request.connection.remoteAddress ||
       request.socket.remoteAddress ||
       'unknown'
     );
   }
 
-  private sanitizeResponseData(data: any): void {
+  private sanitizeResponseData(data: unknown): unknown {
     // Remove sensitive information from response logs
-    if (typeof data === 'object' && data !== null) {
+    if (data !== null && typeof data === 'object') {
       const sensitiveFields = [
         'password',
         'token',
@@ -132,21 +130,29 @@ export class SecurityInterceptor implements NestInterceptor {
         'ssn',
       ];
 
-      const sanitize = (obj: any): any => {
+      const sanitize = (obj: unknown): unknown => {
         if (Array.isArray(obj)) {
           return obj.map(sanitize);
         }
 
-        if (obj && typeof obj === 'object') {
-          const sanitized: any = {};
-          for (const [key, value] of Object.entries(obj)) {
-            const lowerKey = key.toLowerCase();
-            if (sensitiveFields.some((field) => lowerKey.includes(field))) {
-              sanitized[key] = '[REDACTED]';
-            } else if (typeof value === 'object') {
-              sanitized[key] = sanitize(value);
-            } else {
-              sanitized[key] = value;
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          const sanitized: SafeObject = {};
+          const entries = Object.entries(obj as Record<string, unknown>);
+
+          for (const [key, value] of entries) {
+            if (typeof key === 'string') {
+              const lowerKey = key.toLowerCase();
+              const hasSensitiveField = sensitiveFields.some((field: string) =>
+                lowerKey.includes(field)
+              );
+
+              if (hasSensitiveField) {
+                sanitized[key] = '[REDACTED]';
+              } else if (typeof value === 'object' && value !== null) {
+                sanitized[key] = sanitize(value);
+              } else {
+                sanitized[key] = value;
+              }
             }
           }
           return sanitized;
@@ -157,31 +163,40 @@ export class SecurityInterceptor implements NestInterceptor {
 
       return sanitize(data);
     }
+    return data;
   }
 
-  private logSecurityError(error: any, context: any): void {
-    const securityRelevantErrors = [
+  private isValidObject(obj: unknown): obj is Record<string, unknown> {
+    return obj !== null && typeof obj === 'object' && !Array.isArray(obj);
+  }
+
+  private logSecurityError(
+    error: Error & { status?: number },
+    context: SafeObject
+  ): void {
+    const securityRelevantErrors = new Set([
       'UnauthorizedError',
       'ForbiddenError',
       'RateLimitExceeded',
       'CSRFError',
       'ValidationError',
-    ];
+    ]);
 
     const isSecurityError =
-      securityRelevantErrors.includes(error.constructor.name) ||
+      securityRelevantErrors.has(error.constructor.name) ||
       error.status === 401 ||
       error.status === 403 ||
       error.status === 429;
 
     if (isSecurityError) {
-      logger.security('Security error occurred', {
-        ...context,
-        error: error.message,
-        stack: error.stack,
+      this.logger.warn(`Security error: ${error.message}`, {
+        ip: context.ipAddress,
+        userAgent: context.userAgent,
       });
     } else {
-      logger.error('Request error occurred', error);
+      this.logger.error(`Request error: ${error.message}`, {
+        stack: error.stack,
+      });
     }
   }
 }

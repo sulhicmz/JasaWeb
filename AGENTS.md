@@ -30,7 +30,7 @@ The project is structured as an early-stage monorepo with plans for:
 
 ## Current Status
 
-The project is currently in the implementation phase with detailed documentation in `plan.md` and implementation roadmap in `todo.md`. The codebase is scaffolded according to the planned monorepo structure.
+The project is currently in the implementation phase with detailed documentation in the `/docs/` directory and implementation roadmap in `todo.md`. The codebase is scaffolded according to the planned monorepo structure.
 
 ## Key Features (Planned)
 
@@ -133,4 +133,4 @@ pnpm vitest run example.test.ts
 
 ## Current Implementation Status
 
-The project is currently in the implementation phase with detailed specifications in `plan.md` and a TODO list in `todo.md`. The codebase follows the planned monorepo architecture outlined in `AGENTS.md`.
+The project is currently in the implementation phase with detailed specifications in the `/docs/` directory and a TODO list in `todo.md`. The codebase follows the planned monorepo architecture outlined in `AGENTS.md`.

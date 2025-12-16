@@ -153,9 +153,17 @@ checkFilePatterns(
 );
 
 // 5. Run security audit (prefer pnpm, fallback to npm)
-const lockFile =
-  packageManager === 'pnpm' ? 'pnpm-lock.yaml' : 'package-lock.json';
-if (fs.existsSync(lockFile)) {
+const allowedLockFiles = ['pnpm-lock.yaml', 'package-lock.json'];
+const hasLockFile = allowedLockFiles.some((file) => {
+  try {
+    return fs.existsSync(file);
+  } catch (error) {
+    console.warn(`Error checking lock file ${file}:`, error.message);
+    return false;
+  }
+});
+
+if (hasLockFile) {
   // Run audit with different levels for comprehensive scanning
   const auditOutput = runCommand(
     `${packageManager} audit --audit-level moderate`,
@@ -192,7 +200,7 @@ if (fs.existsSync(lockFile)) {
     }
   }
 } else {
-  console.log(`⚠️  No ${lockFile} found, skipping ${packageManager} audit`);
+  console.log(`⚠️  No lock file found, skipping ${packageManager} audit`);
   console.log('   Consider running dependency audits in your CI environment\n');
   results.warnings.push(`Running ${packageManager} audit`);
 }
@@ -284,9 +292,18 @@ try {
 // 11. Check for security-related environment variables
 console.log('🔍 Checking for security environment variables...');
 try {
-  const envExamplePath = path.join(process.cwd(), '.env.example');
-  if (fs.existsSync(envExamplePath)) {
-    const envContent = fs.readFileSync(envExamplePath, 'utf-8');
+  const allowedEnvFiles = ['.env.example'];
+  const envExampleFile = allowedEnvFiles.find((file) => {
+    try {
+      return fs.existsSync(file);
+    } catch (error) {
+      console.warn(`Error checking env file ${file}:`, error.message);
+      return false;
+    }
+  });
+
+  if (envExampleFile) {
+    const envContent = fs.readFileSync(envExampleFile, 'utf-8');
     const securityVars = ['JWT_SECRET', 'DATABASE_URL', 'ENCRYPTION_KEY'];
     const foundVars = securityVars.filter((varName) =>
       envContent.includes(varName)
