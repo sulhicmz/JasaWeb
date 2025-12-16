@@ -1,5 +1,6 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
+import { logger } from '@jasaweb/config';
 
 export type NotificationType =
   | 'info'
@@ -194,7 +195,7 @@ export class NotificationService {
     if (!this.dashboardSocket) return;
 
     this.dashboardSocket.on('connect', () => {
-      console.log('Connected to dashboard WebSocket');
+      logger.debug('Connected to dashboard WebSocket');
       this.callbacks.onConnect?.();
 
       // Subscribe to dashboard updates
@@ -205,17 +206,17 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('disconnect', (reason: unknown) => {
-      console.log('Disconnected from dashboard WebSocket:', reason);
+      logger.warn('Disconnected from dashboard WebSocket', { reason });
       this.callbacks.onDisconnect?.();
     });
 
     this.dashboardSocket.on('connect_error', (error: unknown) => {
-      console.error('Dashboard WebSocket connection error:', error);
+      logger.error('Dashboard WebSocket connection error', error);
       this.callbacks.onError?.(error);
     });
 
     this.dashboardSocket.on('initial-data', (data: NotificationData) => {
-      console.log('Received initial dashboard data:', data);
+      logger.debug('Received initial dashboard data', data);
       // Dispatch custom event for dashboard components
       window.dispatchEvent(
         new CustomEvent('dashboard-initial-data', { detail: data })
@@ -223,7 +224,7 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('stats-updated', (data: NotificationData) => {
-      console.log('Stats updated:', data);
+      logger.debug('Stats updated', data);
       this.callbacks.onStatsUpdated?.(data);
 
       // Dispatch custom event for dashboard components
@@ -234,7 +235,7 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('dashboard-update', (update: DashboardUpdate) => {
-      console.log('Dashboard update:', update);
+      logger.debug('Dashboard update', update);
       this.callbacks.onDashboardUpdate?.(update);
 
       // Dispatch custom event for dashboard components
@@ -251,7 +252,7 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('personal-update', (data: DashboardUpdate) => {
-      console.log('Personal update:', data);
+      logger.debug('Personal update', data);
 
       // Show personal notification
       this.showRealtimeNotification(
@@ -262,7 +263,7 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('error', (error: unknown) => {
-      console.error('Dashboard WebSocket error:', error);
+      logger.error('Dashboard WebSocket error', error);
       this.callbacks.onError?.(error);
       this.showRealtimeNotification('Connection error', 'error');
     });

@@ -4,6 +4,7 @@ import {
   getOptionalEnv,
   getEnvNumber,
 } from '../../../../../packages/config/env-validation';
+import { logger } from '../../../../../packages/config/logger';
 import { DEFAULT_DATABASE_CONFIG, APP_URLS } from './constants';
 
 @Injectable()
@@ -198,16 +199,18 @@ export class AppConfigService {
 
   // Debug method to log configuration (without secrets)
   logConfiguration(): void {
-    console.log('🔧 Application Configuration:');
-    console.log(`  Environment: ${this.nodeEnv}`);
-    console.log(`  API Base URL: ${this.apiBaseUrl}`);
-    console.log(`  API Port: ${this.apiPort}`);
-    console.log(`  Web Base URL: ${this.webBaseUrl}`);
-    console.log(`  Frontend URL: ${this.frontendUrl}`);
-    console.log(`  Database Host: ${this.databaseHost}:${this.databasePort}`);
-    console.log(`  Email Host: ${this.emailHost}:${this.emailPort}`);
-    console.log(`  Email Secure: ${this.emailSecure}`);
-    console.log(`  WebSocket Origin: ${this.websocketOrigin}`);
-    console.log(`  CORS Origins: ${this.corsOrigins.join(', ')}`);
+    const config = {
+      environment: this.nodeEnv,
+      apiBaseUrl: this.apiBaseUrl,
+      apiPort: this.apiPort,
+      webBaseUrl: this.webBaseUrl,
+      frontendUrl: this.frontendUrl,
+      databaseHost: `${this.databaseHost}:${this.databasePort}`,
+      emailConfig: `${this.emailHost}:${this.emailPort} (secure: ${this.emailSecure})`,
+      websocketOrigin: this.websocketOrigin,
+      corsOrigins: this.corsOrigins,
+    };
+
+    logger.debug('Application configuration loaded', config);
   }
 }

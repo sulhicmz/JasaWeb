@@ -3,11 +3,13 @@
 ## 1. Tujuan & KPI
 
 ### Tujuan Utama
+
 - Menghasilkan lead berkualitas untuk layanan: **Website Sekolah**, **Portal Berita**, **Company Profile**.
 - Mempercepat kolaborasi klien melalui **Client Portal** (single source of truth).
 - Menstandarkan delivery (design system, komponen, alur persetujuan) agar **cycle time** proyek lebih pendek.
 
 ### KPI Keberhasilan
+
 - CVR Landing → Form Penawaran ≥ **5–8%**.
 - Lead → Proposal Terkirim ≥ **60%**; Proposal → Deal ≥ **30%**.
 - Waktu rata-rata dari kickoff → go‑live: **≤ 8–10 minggu**.
@@ -19,6 +21,7 @@
 ## 2. Cakupan Produk
 
 ### 2.1 Public Marketing Site
+
 - **Landing Page**: Segmentasi 3 layanan (Sekolah, Berita, Company Profile).
 - **Halaman Layanan**: Fitur, demo, paket harga, FAQ.
 - **Portofolio**: Filter menurut industri/jenis proyek.
@@ -26,6 +29,7 @@
 - **Umum**: Tentang, Kontak (form + booking), Testimoni, Partner, Login Portal.
 
 ### 2.2 Client Portal (Klien)
+
 - **Dashboard**: Ringkasan milestone, jadwal, blocker, tiket, status domain/SSL.
 - **Proyek**: Gantt, backlog, milestone, checklist UAT, approval flow.
 - **Files**: Unggah/unduh, versioning, pratinjau, folder.
@@ -38,6 +42,7 @@
 - **Manajemen**: User management, notifikasi, knowledge base.
 
 ### 2.3 Admin/Ops (Internal)
+
 - **CRM Ringan**: Pipeline lead → deal, proposal, e-sign.
 - **Manajemen**: Proyek lintas klien, kapasitas tim.
 - **Library**: Komponen & template.
@@ -66,6 +71,7 @@
 ## 4. Arsitektur Teknis
 
 ### Stack
+
 - **Frontend**: Next.js 14 / Astro 5 (SSR/ISR), Tailwind, shadcn/ui, Zod.
 - **Backend**: NestJS (REST/tRPC).
 - **Database**: PostgreSQL (Multi-tenant via `organization_id`).
@@ -75,6 +81,7 @@
 - **Auth**: Auth.js / NextAuth (Email/Google/Microsoft), 2FA TOTP, RBAC.
 
 ### Infrastruktur
+
 - **Hosting**: Vercel (FE) + Fly.io/Railway (API).
 - **Container**: Docker.
 - **CDN**: Cloudflare / AWS CloudFront.
@@ -84,12 +91,13 @@
 
 ## 5. Keamanan & Kepatuhan
 
-- **Standar**: OWASP Top 10.
-- **Proteksi**: Rate limiting, Strict CORS, CSRF.
-- **Enkripsi**: At rest (S3+KMS), In transit (HTTPS), Argon2 password hashing.
-- **Audit**: Log aktivitas penting (upload, approve, bayar, access change).
-- **Backup**: Harian otomatis + retensi 30/90 hari.
-- **Privasi**: Compliance UU PDP (Minimasi PII, consent).
+- **Standar**: OWASP Top 10 compliance dengan implementasi mendalam.
+- **Proteksi**: Rate limiting dinamis, CORS strict dengan validasi, CSRF protection, dan security interceptor.
+- **Enkripsi**: At rest (S3+KMS), In transit (HTTPS), Argon2 password hashing dengan salted rounds.
+- **Audit**: Log aktivitas penting dengan audit trail terperinci, security logging, dan real-time monitoring.
+- **Monitoring**: Security event logging, automated alerts untuk critical events, dan SIEM integration readiness.
+- **Backup**: Harian otomatis + retensi 30/90 hari dengan encryption.
+- **Privasi**: Compliance UU PDP (Minimasi PII, consent), data sanitization di logs, dan sensitive data redaction.
 
 ---
 

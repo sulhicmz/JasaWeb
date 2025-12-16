@@ -2,7 +2,12 @@
   "name": "@jasaweb/config",
   "version": "1.0.0",
   "description": "Shared configuration for JasaWeb",
-  "main": "eslint.config.js",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./logger": "./logger.ts"
+  },
+  "types": "index.ts",
   "scripts": {
     "lint": "echo 'TODO: Add lint script'"
   },

@@ -1,4 +1,6 @@
 // src/services/performanceService.ts
+import { logger } from '@jasaweb/config';
+
 export class PerformanceService {
   private static instance: PerformanceService;
   private metrics: { [key: string]: number } = {};
@@ -20,7 +22,9 @@ export class PerformanceService {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
         this.metrics.lcp = lastEntry.startTime;
-        console.log('LCP:', this.metrics.lcp);
+        logger.performance('LCP', this.metrics.lcp, {
+          metricType: 'largest-contentful-paint',
+        });
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 
@@ -32,7 +36,9 @@ export class PerformanceService {
             processingStart: number;
           };
           this.metrics.fid = fidEntry.processingStart - fidEntry.startTime;
-          console.log('FID:', this.metrics.fid);
+          logger.performance('FID', this.metrics.fid, {
+            metricType: 'first-input',
+          });
         });
       });
       fidObserver.observe({ entryTypes: ['first-input'] });
@@ -47,7 +53,9 @@ export class PerformanceService {
             this.metrics.cls = clsValue;
           }
         });
-        console.log('CLS:', this.metrics.cls);
+        logger.performance('CLS', this.metrics.cls, {
+          metricType: 'layout-shift',
+        });
       });
       clsObserver.observe({ entryTypes: ['layout-shift'] });
     }
@@ -64,8 +72,12 @@ export class PerformanceService {
       this.metrics.pageLoad = navigation.loadEventEnd - navigation.fetchStart;
       this.metrics.domContentLoaded =
         navigation.domContentLoadedEventEnd - navigation.fetchStart;
-      console.log('Page Load Time:', this.metrics.pageLoad);
-      console.log('DOM Content Loaded:', this.metrics.domContentLoaded);
+      logger.performance('Page Load Time', this.metrics.pageLoad, {
+        metricType: 'navigation',
+      });
+      logger.performance('DOM Content Loaded', this.metrics.domContentLoaded, {
+        metricType: 'navigation',
+      });
     });
   }
 
@@ -77,7 +89,7 @@ export class PerformanceService {
   // Send metrics to analytics (placeholder)
   sendMetrics() {
     // In a real implementation, send to your analytics service
-    console.log('Performance Metrics:', this.metrics);
+    logger.info('Performance Metrics collected', this.metrics);
   }
 }
 

@@ -477,25 +477,17 @@ export function validateEnvironmentVariables(): void {
 
   // Report results
   if (warnings.length > 0) {
-    console.warn('\n⚠️  Environment Security Warnings:');
-    warnings.forEach((warning: string) => console.warn(`  - ${warning}`));
+    logger.warn('Environment security warnings', { warnings });
   }
 
   if (errors.length > 0) {
-    console.error('\n❌ Environment Validation Errors:');
-    errors.forEach((error: string) => console.error(`  - ${error}`));
-    console.error(
-      '\nPlease set the required environment variables before starting the application.'
-    );
-    console.error(
-      'Refer to .env.example for the complete list of required variables.\n'
-    );
+    logger.error('Environment validation errors', { errors });
     throw new EnvValidationError(
       `Environment validation failed: ${errors.join(', ')}`
     );
   }
 
-  console.log('✅ Environment variables validated successfully');
+  logger.info('Environment variables validated successfully');
 }
 
 export function getRequiredEnv(key: string): string {

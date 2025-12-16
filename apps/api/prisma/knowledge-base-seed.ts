@@ -1,10 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { logger } from '../../../packages/config/logger';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding knowledge base data...');
+  logger.info('Seeding knowledge base data');
 
   // Create categories
   const gettingStartedCategory = await prisma.knowledgeBaseCategory.create({
@@ -344,12 +345,12 @@ async function main() {
     });
   }
 
-  console.log('Knowledge base seed data created successfully!');
+  logger.info('Knowledge base seed data created successfully');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    logger.error('Error seeding knowledge base data', e);
     process.exit(1);
   })
   .finally(async () => {

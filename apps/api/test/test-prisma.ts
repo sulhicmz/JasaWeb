@@ -1,23 +1,28 @@
 import { PrismaService } from './src/common/database/prisma.service';
+import { logger } from '../../../packages/config/logger';
 
 async function testPrismaService() {
   const prisma = new PrismaService();
 
   try {
     // Test access to models
-    console.log('Testing Prisma model access...');
+    logger.info('Testing Prisma model access');
 
     // Try accessing models that were mentioned in the error
-    console.log('prisma.project exists:', 'project' in prisma);
-    console.log('prisma.user exists:', 'user' in prisma);
-    console.log('prisma.invoice exists:', 'invoice' in prisma);
-    console.log('prisma.ticket exists:', 'ticket' in prisma);
-    console.log('prisma.auditLog exists:', 'auditLog' in prisma);
+    const modelAccess = {
+      project: 'project' in prisma,
+      user: 'user' in prisma,
+      invoice: 'invoice' in prisma,
+      ticket: 'ticket' in prisma,
+      auditLog: 'auditLog' in prisma,
+    };
+
+    logger.debug('Prisma model access check', modelAccess);
 
     await prisma.$disconnect();
-    console.log('PrismaService test completed successfully');
+    logger.info('PrismaService test completed successfully');
   } catch (error) {
-    console.error('Error testing PrismaService:', error);
+    logger.error('Error testing PrismaService', error);
     await prisma.$disconnect();
   }
 }

@@ -67,12 +67,14 @@ jasaweb/
 
 This project has undergone significant cleanup and optimization:
 
-#### Repository Cleanup (Latest)
+#### Repository Cleanup (Latest - December 2025)
 
-- **Removed**: OpenCode development workflows and temporary files
-- **Consolidated**: Security documentation from 13 files into comprehensive guide
+- **Removed**: Outdated documentation files (`plan.md`, `bug.md`, `task.md`) for cleaner repository structure
+- **Consolidated**: Scattered documentation into organized `/docs/` directory structure
+- **Standardized**: File naming conventions and folder organization across monorepo
+- **Cleaned**: Deprecated scripts and configuration files
+- **Organized**: Core documentation in root, specialized docs in `/docs/`
 - **Migrated**: Testing framework from Jest to Vitest across all packages
-- **Organized**: Configuration files into `packages/config/` for better maintainability
 - **Removed**: Redundant Babel configuration in favor of native TypeScript
 
 #### Tailwind CSS v4 Migration
@@ -534,21 +536,33 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 ## 📚 Documentation
 
-- [📋 Project Plan](./plan.md) - Detailed specifications and roadmap
+### Core Documentation
+
 - [📝 Implementation TODO](./todo.md) - Current development progress and tasks
-- [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
 - [🤖 Agent Guidelines](./AGENTS.md) - Development conventions
-- [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [🛡️ Security Policy](./SECURITY.md) - Security guidelines
 - [📄 Code of Conduct](./CODE_OF_CONDUCT.md) - Community guidelines
-- [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
+- [📋 Contributing Guide](./CONTRIBUTING.md) - How to contribute
+
+### Project Documentation
+
+- [🏢 Client Management System](./docs/client-management-system.md) - Complete system documentation
+- [📋 Project Blueprint](./docs/blueprint.md) - Detailed specifications and architecture
+- [🗺️ Development Roadmap](./docs/roadmap.md) - Project timeline and milestones
+- [🔧 Optimization Plan](./docs/optimization-plan.md) - Performance improvements
 - [📊 API Endpoints](./docs/api-endpoints.md) - API documentation
+
+### Security & Quality
+
 - [🔒 Security Best Practices](./docs/SECURITY_BEST_PRACTICES.md) - Security guidelines
 - [📋 Security Checklist](./docs/SECURITY_CHECKLIST.md) - Security validation
 - [🔍 OWASP Compliance](./docs/OWASP_COMPLIANCE.md) - Security compliance
 - [📈 Testing Summary](./docs/TESTING_SUMMARY.md) - Testing documentation
-- [📊 Performance Summary](./PERFORMANCE_SUMMARY.md) - Performance metrics
-- [🧹 Repository Cleanup](./docs/CLEANUP_SUMMARY.md) - Cleanup and maintenance summary
+
+### Deployment & Operations
+
+- [☁️ Cloudflare Pages Deployment](./docs/deployment/cloudflare-pages.md) - Deployment guide
+- [⚙️ Conflict Resolution](./docs/CONFLICT_RESOLUTION.md) - Merge conflict strategies
 
 ## 🐛 Troubleshooting
 
@@ -602,12 +616,13 @@ pnpm lint
 
 This repository follows strict hygiene standards with regular cleanup and organization:
 
-- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, obsolete docs archived and removed
+- **Documentation Structure**: Core docs in root, specialized docs in `/docs/`, obsolete docs removed
 - **Script Organization**: Essential scripts in `/scripts/` with dev-tools subdirectory
-- **Workflow Management**: Active workflows in `.github/workflows/` with OpenCode agents
+- **Workflow Management**: Active CI/CD workflows in `.github/workflows/`
 - **File Naming**: Consistent kebab-case for files, PascalCase for components
-- **Regular Cleanup**: Compiled files, temporary artifacts, and obsolete documentation removed
+- **Regular Cleanup**: Temporary artifacts and obsolete documentation removed
 - **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
+- **Latest Cleanup**: December 2025 - removed `plan.md`, `bug.md`, `task.md` and consolidated documentation
 
 ## 📄 License
 
