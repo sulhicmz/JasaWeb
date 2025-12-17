@@ -138,21 +138,39 @@ export class SecurityInterceptor implements NestInterceptor {
         if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
           const sanitized: SafeObject = {};
           const sensitiveFieldsSet = new Set(sensitiveFields);
+          const objKeys = Object.keys(obj) as string[];
 
-          for (const [key, value] of Object.entries(obj)) {
-            if (typeof key === 'string') {
-              const lowerKey = key.toLowerCase();
-              const hasSensitiveField = Array.from(sensitiveFieldsSet).some(
-                (field: string) => lowerKey.includes(field)
-              );
+          for (const key of objKeys) {
+            const value = obj[key as keyof typeof obj];
+            const lowerKey = key.toLowerCase();
+            const hasSensitiveField = Array.from(sensitiveFieldsSet).some(
+              (field: string) => lowerKey.includes(field)
+            );
 
-              if (hasSensitiveField) {
-                sanitized[key] = '[REDACTED]';
-              } else if (typeof value === 'object' && value !== null) {
-                sanitized[key] = sanitize(value);
-              } else {
-                sanitized[key] = value;
-              }
+            if (hasSensitiveField) {
+              // Security: Use Object.defineProperty with explicit configuration to prevent injection
+              Object.defineProperty(sanitized, key, {
+                value: '[REDACTED]',
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            } else if (typeof value === 'object' && value !== null) {
+              // Use Object.defineProperty for nested objects as well
+              Object.defineProperty(sanitized, key, {
+                value: sanitize(value),
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            } else {
+              // Use Object.defineProperty for regular values
+              Object.defineProperty(sanitized, key, {
+                value: value,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           }
           return sanitized;

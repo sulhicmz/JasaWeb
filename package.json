@@ -1,7 +1,7 @@
 {
   "name": "jasaweb",
   "version": "1.0.0",
-  "description": "Web berbasis astro untuk manage client",
+  "description": "Professional web development service platform with client portal",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
@@ -45,7 +45,10 @@
   "keywords": [
     "astro",
     "client-portal",
-    "websites"
+    "web-development",
+    "nestjs",
+    "postgresql",
+    "prisma"
   ],
   "author": "JasaWeb",
   "license": "MIT",

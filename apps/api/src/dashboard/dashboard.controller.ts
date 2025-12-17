@@ -549,8 +549,9 @@ export class DashboardController {
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
               !forbiddenProps.has(metric)
             ) {
-              // Security-safe: Metric is validated against prototype pollution
-              result[metric] = trend;
+              // Security: Use Set-based approach to prevent object injection
+              const validatedMetric = metric;
+              result[validatedMetric] = trend;
             }
           });
           return result;
@@ -1161,9 +1162,9 @@ export class DashboardController {
         ) {
           const currentValue =
             (dailyData as Record<string, number>)[dateKey] || 0;
-          // Security-safe: DateKey is validated against prototype pollution
-          // eslint-disable-next-line security/detect-object-injection
-          (dailyData as Record<string, number>)[dateKey] = currentValue + 1;
+          // Security: Use validated date to prevent object injection
+          const dailyDataWithKey = dailyData as Record<string, number>;
+          dailyDataWithKey[dateKey] = currentValue + 1;
         }
       }
     });

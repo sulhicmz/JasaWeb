@@ -2,9 +2,23 @@
 import { vi } from 'vitest';
 
 // Provide Jest compatibility for existing tests
+interface JestMock {
+  fn: typeof vi.fn;
+  mock: typeof vi.mock;
+  spyOn: typeof vi.spyOn;
+  clearAllMocks: typeof vi.clearAllMocks;
+  resetAllMocks: typeof vi.resetAllMocks;
+  restoreAllMocks: typeof vi.restoreAllMocks;
+  useFakeTimers: typeof vi.useFakeTimers;
+  useRealTimers: typeof vi.useRealTimers;
+  advanceTimersByTime: typeof vi.advanceTimersByTime;
+  runOnlyPendingTimers: typeof vi.runOnlyPendingTimers;
+  runAllTimers: typeof vi.runAllTimers;
+}
+
 beforeAll(() => {
   // Create global jest object with vi methods
-  (global as any).jest = {
+  (global as Record<string, JestMock>).jest = {
     fn: vi.fn,
     mock: vi.mock,
     spyOn: vi.spyOn,

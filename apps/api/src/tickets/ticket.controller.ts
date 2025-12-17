@@ -378,24 +378,16 @@ export class TicketController {
   private calculateSlaDueDate(priority: string): Date {
     const now = new Date();
 
-    // Define SLA timeframes (in hours) based on priority
-    const slaTimeframes: { [key: string]: number } = {
-      critical: 4, // 4 hours
-      high: 24, // 1 day
-      medium: 72, // 3 days
-      low: 168, // 1 week
-    };
-
     // Validate priority to prevent injection
     const validPriorities = new Set(['critical', 'high', 'medium', 'low']);
     const safePriority = validPriorities.has(priority) ? priority : 'low';
-    const timeframes: Record<string, number> = {
-      critical: 4, // 4 hours
-      high: 24, // 1 day
-      medium: 72, // 3 days
-      low: 168, // 1 week
-    };
-    const hoursToAdd = timeframes[safePriority] || 168; // Default to 1 week for low priority
+    const timeframes = new Map<string, number>([
+      ['critical', 4], // 4 hours
+      ['high', 24], // 1 day
+      ['medium', 72], // 3 days
+      ['low', 168], // 1 week
+    ]);
+    const hoursToAdd = timeframes.get(safePriority) || 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

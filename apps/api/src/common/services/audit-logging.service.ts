@@ -210,10 +210,16 @@ export class AuditLoggingService {
 
       if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
         const sanitized: Record<string, unknown> = {};
-        const entries = Object.entries(obj as Record<string, unknown>);
+        const objKeys = Object.keys(obj as Record<string, unknown>);
 
-        for (const [key, value] of entries) {
+        for (const key of objKeys) {
           if (typeof key === 'string') {
+            // Security: Use Object.getOwnPropertyDescriptor to prevent injection
+            const propertyDescriptor = Object.getOwnPropertyDescriptor(
+              obj,
+              key
+            );
+            const value = propertyDescriptor?.value;
             const lowerKey = key.toLowerCase();
             const hasSensitiveField = sensitiveFields.some((field: string) =>
               lowerKey.includes(field)
@@ -225,9 +231,13 @@ export class AuditLoggingService {
                 ? sanitize(value)
                 : value;
 
-            if (typeof key === 'string') {
-              sanitized[key] = sanitizedValue;
-            }
+            // Security: Use Object.defineProperty to prevent object injection
+            Object.defineProperty(sanitized, key, {
+              value: sanitizedValue,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
           }
         }
         return sanitized;
