@@ -10,6 +10,7 @@
     "dev-tools:watch": "./scripts/dev-tools/watch-and-reload.sh all",
     "dev-tools:db": "./scripts/dev-tools/database-tools.sh",
     "dev-tools:quality": "./scripts/dev-tools/code-quality.sh all",
+    "prebuild": "pnpm --filter @jasaweb/api exec npx prisma generate",
     "build": "pnpm run build:api && pnpm run build:web",
     "build:web": "cd apps/web && pnpm run build",
     "build:api": "cd apps/api && pnpm run build",
