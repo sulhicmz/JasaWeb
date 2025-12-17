@@ -1,3 +1,5 @@
+import { apiConfig } from '../config/apiConfig';
+
 interface ApiClientConfig {
   baseUrl: string;
   timeout: number;
@@ -21,42 +23,23 @@ class ApiClient {
   private defaultHeaders: Record<string, string>;
 
   constructor(config: Partial<ApiClientConfig> = {}) {
+    // Use centralized API configuration
+    const centralConfig = apiConfig.apiConfig;
+
     this.config = {
-      baseUrl: this.getApiBaseUrl(),
-      timeout: 30000,
-      retries: 3,
+      baseUrl: centralConfig.baseUrl,
+      timeout: centralConfig.timeout,
+      retries: centralConfig.retries,
       ...config,
     };
 
+    // Use headers from centralized config
     this.defaultHeaders = {
-      'Content-Type': 'application/json',
+      ...centralConfig.headers,
     };
 
     // Validate configuration
     this.validateConfig();
-  }
-
-  private getApiBaseUrl(): string {
-    // Priority: Runtime env > Build-time env > Fallback
-    const runtimeUrl = import.meta.env.PUBLIC_API_URL;
-    const buildTimeUrl = import.meta.env.API_URL;
-
-    if (runtimeUrl && typeof runtimeUrl === 'string') {
-      return runtimeUrl.replace(/\/$/, ''); // Remove trailing slash
-    }
-
-    if (buildTimeUrl && typeof buildTimeUrl === 'string') {
-      return buildTimeUrl.replace(/\/$/, '');
-    }
-
-    // Development fallback
-    if (import.meta.env.DEV) {
-      return 'http://localhost:3000';
-    }
-
-    throw new Error(
-      'API URL not configured. Set PUBLIC_API_URL or API_URL environment variable.'
-    );
   }
 
   private validateConfig(): void {

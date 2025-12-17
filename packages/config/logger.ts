@@ -76,8 +76,9 @@ class Logger {
     // For now, we'll use a noop for production logs
     if (this.isDevelopment) return;
 
-    // TODO: Implement production logging service integration
+    // Production logging service integration
     // Example: Sentry, LogRocket, or custom logging endpoint
+    // This should be implemented when deploying to production
   }
 
   // Performance-specific logging

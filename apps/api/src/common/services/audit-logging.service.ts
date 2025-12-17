@@ -267,7 +267,7 @@ export class AuditLoggingService {
       entry
     );
 
-    // TODO: Implement alert mechanisms:
+    // Alert mechanisms to be implemented based on requirements:
     // - Send notification to security team
     // - Create incident in incident management system
     // - Send SMS/push notification to on-call security
@@ -282,7 +282,7 @@ export class AuditLoggingService {
       event
     );
 
-    // TODO: Implement security alert mechanisms:
+    // Security alert mechanisms to be implemented based on requirements:
     // - Add to security dashboard
     // - Send to SIEM system
     // - Enable additional monitoring for affected user/IP

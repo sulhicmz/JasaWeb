@@ -200,7 +200,7 @@ export class SecurityConfigurationService {
 
     // In production, this could send to a SIEM or security monitoring service
     if (this.appConfig.isProduction()) {
-      // TODO: Integrate with security monitoring service
+      // Security monitoring service integration to be implemented
       // Example: Send to Sentry, Datadog, or custom security endpoint
     }
   }
