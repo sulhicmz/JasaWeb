@@ -88,7 +88,7 @@ export class SecurityConfigurationService {
 
     for (const key of validDirectiveKeys) {
       const directiveValue = directives[key];
-      if (directiveValue) {
+      if (directiveValue && Array.isArray(directiveValue)) {
         directives[key] = directiveValue.filter(Boolean);
         if (directives[key]!.length === 0) {
           delete directives[key];
@@ -195,7 +195,7 @@ export class SecurityConfigurationService {
   }
 
   // Method to log security events
-  logSecurityEvent(event: string, details: Record<string, any>): void {
+  logSecurityEvent(event: string, details: Record<string, unknown>): void {
     logger.security(event, details);
 
     // In production, this could send to a SIEM or security monitoring service

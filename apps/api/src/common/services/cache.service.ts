@@ -80,7 +80,9 @@ export class CacheService {
 
     try {
       // Try to access the store's clear method if available
-      const cache: any = this.cacheManager;
+      const cache = this.cacheManager as {
+        store?: { clear?: () => Promise<void>; reset?: () => Promise<void> };
+      };
       if (cache.store && cache.store.clear) {
         await cache.store.clear();
       } else if (cache.store && cache.store.reset) {
@@ -180,7 +182,9 @@ export class CacheService {
 
     try {
       // Note: This might not work with all cache stores
-      const cache: any = this.cacheManager;
+      const cache = this.cacheManager as {
+        store?: { keys?: (pattern: string) => Promise<string[]> };
+      };
       if (cache.store && cache.store.keys) {
         return await cache.store.keys(pattern);
       }
@@ -257,7 +261,7 @@ export class CacheService {
    * Warm up cache with initial data
    */
   async warmup(
-    entries: Array<{ key: string; value: any; ttl?: number }>
+    entries: Array<{ key: string; value: unknown; ttl?: number }>
   ): Promise<void> {
     if (!this.enableCache) {
       return;
@@ -271,13 +275,15 @@ export class CacheService {
   /**
    * Get cache statistics (if available)
    */
-  async getStats(): Promise<any> {
+  async getStats(): Promise<Record<string, unknown>> {
     if (!this.enableCache) {
       return { enabled: false };
     }
 
     try {
-      const cache: any = this.cacheManager;
+      const cache = this.cacheManager as {
+        store?: { getStats?: () => Promise<Record<string, unknown>> };
+      };
       if (cache.store && cache.store.getStats) {
         return {
           enabled: true,
