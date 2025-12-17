@@ -433,14 +433,23 @@ export function validateEnvironmentVariables(): void {
       /minioadmin/i,
       /redis_password/i,
       /^test$/, // Exact match for "test"
+      /CHANGE_THIS/,
+      /GENERATE_.*HERE/,
+      /your-.*-key/,
+      /default/,
+      /placeholder/i,
     ];
 
-    // Additional check for test database name (only warn in development)
+    // Additional check for insecure database names (only warn in development)
     if (
-      process.env.POSTGRES_DB === 'test' &&
+      (process.env.POSTGRES_DB === 'test' ||
+        process.env.POSTGRES_DB === 'prod' ||
+        process.env.POSTGRES_DB === 'production') &&
       process.env.NODE_ENV === 'development'
     ) {
-      warnings.push('Using test database name in development environment');
+      warnings.push(
+        `Using potentially database name in development environment: ${process.env.POSTGRES_DB}`
+      );
     }
 
     const checkWeakPassword = (value: string | undefined, name: string) => {
