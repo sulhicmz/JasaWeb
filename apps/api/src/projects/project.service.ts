@@ -56,6 +56,27 @@ export interface UpdateProjectDto {
   dueAt?: Date;
 }
 
+export interface PaginationOptions {
+  page: number;
+  limit: number;
+  filters?: {
+    status?: string[];
+    search?: string;
+  };
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 @Injectable()
 export class ProjectService {
   constructor(private readonly multiTenantPrisma: MultiTenantPrismaService) {}
@@ -70,11 +91,56 @@ export class ProjectService {
     });
   }
 
-  async findAll(view: ProjectViewMode = 'summary', organizationId?: string) {
-    return this.multiTenantPrisma.project.findMany({
-      ...buildProjectQuery(view),
-      where: organizationId ? { organizationId } : undefined,
+  async findAll(
+    view: ProjectViewMode = 'summary',
+    organizationId?: string,
+    options?: PaginationOptions
+  ) {
+    const { page = 1, limit = 20, filters = {} } = options || {};
+
+    // Build where clause
+    const whereClause: any = organizationId ? { organizationId } : {};
+
+    if (filters.status && filters.status.length > 0) {
+      whereClause.status = { in: filters.status };
+    }
+
+    if (filters.search) {
+      whereClause.name = {
+        contains: filters.search,
+        mode: 'insensitive',
+      };
+    }
+
+    // Get total count for pagination
+    const total = await this.multiTenantPrisma.project.count({
+      where: whereClause,
     });
+
+    // Calculate pagination
+    const totalPages = Math.ceil(total / limit);
+    const skip = (page - 1) * limit;
+
+    // Get paginated data
+    const data = await this.multiTenantPrisma.project.findMany({
+      ...buildProjectQuery(view),
+      where: whereClause,
+      orderBy: { updatedAt: 'desc' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
   }
 
   async findOne(id: string, organizationId?: string) {

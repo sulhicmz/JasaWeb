@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../../src/auth/auth.service';
-import { UsersService } from '../../src/users/users.service';
+import { UserService } from '../../s../users/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from '../../src/auth/refresh-token.service';
 import { PasswordService } from '../../src/auth/password.service';
@@ -11,7 +11,7 @@ import { vi } from 'vitest';
 describe('AuthService - Multi-tenant Integration', () => {
   let service: AuthService;
   let multiTenantPrisma: MultiTenantPrismaService;
-  let usersService: UsersService;
+  let usersService: UserService;
 
   const mockMultiTenantPrisma = {
     user: {
@@ -26,7 +26,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     },
   };
 
-  const mockUsersService = {
+  const mockUserService = {
     findByEmail: vi.fn(),
     create: vi.fn(),
   };
@@ -52,8 +52,8 @@ describe('AuthService - Multi-tenant Integration', () => {
       providers: [
         AuthService,
         {
-          provide: UsersService,
-          useValue: mockUsersService,
+          provide: UserService,
+          useValue: mockUserService,
         },
         {
           provide: JwtService,
@@ -78,7 +78,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     multiTenantPrisma = module.get<MultiTenantPrismaService>(
       MultiTenantPrismaService
     );
-    usersService = module.get<UsersService>(UsersService);
+    usersService = module.get<UserService>(UserService);
   });
 
   it('should authenticate user and return organization-specific data', async () => {
@@ -111,7 +111,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     };
 
     // Mock user lookup
-    mockUsersService.findByEmail.mockResolvedValue(mockUser);
+    mockUserService.findByEmail.mockResolvedValue(mockUser);
 
     // Mock password verification
     mockPasswordService.verifyPassword.mockResolvedValue({ valid: true });
@@ -148,7 +148,7 @@ describe('AuthService - Multi-tenant Integration', () => {
     });
 
     // Verify user lookup was called
-    expect(mockUsersService.findByEmail).toHaveBeenCalledWith(
+    expect(mockUserService.findByEmail).toHaveBeenCalledWith(
       'user@example.com'
     );
 
@@ -167,7 +167,7 @@ describe('AuthService - Multi-tenant Integration', () => {
       organizationId: 'org-1',
     };
 
-    mockUsersService.findByEmail.mockResolvedValue(null);
+    mockUserService.findByEmail.mockResolvedValue(null);
 
     await expect(service.login(loginUserDto)).rejects.toThrow(
       'Invalid credentials'
@@ -190,7 +190,7 @@ describe('AuthService - Multi-tenant Integration', () => {
       passwordHashVersion: 'v1' as const,
     };
 
-    mockUsersService.findByEmail.mockResolvedValue(mockUser);
+    mockUserService.findByEmail.mockResolvedValue(mockUser);
     mockPasswordService.verifyPassword.mockResolvedValue({ valid: false });
 
     await expect(service.login(loginUserDto)).rejects.toThrow(

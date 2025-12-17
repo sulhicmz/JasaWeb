@@ -29,7 +29,7 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
-// import { DashboardModule } from './dashboard/dashboard.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { OrganizationModule } from './common/services/organization.module';
 import { AppConfigModule } from './common/config/app.config.module';
 
@@ -72,7 +72,7 @@ const parseEnvNumber = (
     HealthModule,
     AnalyticsModule,
     KnowledgeBaseModule,
-    // DashboardModule,
+    DashboardModule,
     PrismaModule,
     MultiTenantPrismaModule,
     OrganizationModule,

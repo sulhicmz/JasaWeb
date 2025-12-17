@@ -7,20 +7,22 @@ import {
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { NotFoundException } from '@nestjs/common';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import {
+  createMockMultiTenantPrismaService,
+  createTestProject,
+  resetAllMocks,
+} from '../../test/test-helpers';
 
 describe('ProjectService', () => {
   let service: ProjectService;
 
-  const mockProject = {
+  const mockProject = createTestProject({
     id: '1',
     name: 'Test Project',
     status: 'active',
     startAt: new Date(),
     dueAt: new Date(),
-    organizationId: 'org1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  });
 
   const mockProjectWithRelations = {
     ...mockProject,
@@ -32,32 +34,28 @@ describe('ProjectService', () => {
     invoices: [],
   };
 
-  const mockMultiTenantPrismaService = {
-    project: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-    milestone: {
-      count: vi.fn(),
-    },
-    approval: {
-      count: vi.fn(),
-    },
-    task: {
-      count: vi.fn(),
-    },
-  };
+  const mockMultiTenantPrismaService = createMockMultiTenantPrismaService();
 
   beforeEach(async () => {
+    const mockRequest = {
+      organizationId: 'org1',
+      user: {
+        id: 'test-user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProjectService,
         {
           provide: MultiTenantPrismaService,
           useValue: mockMultiTenantPrismaService,
+        },
+        {
+          provide: 'REQUEST',
+          useValue: mockRequest,
         },
       ],
     }).compile();
@@ -69,7 +67,7 @@ describe('ProjectService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    resetAllMocks();
   });
 
   it('should be defined', () => {

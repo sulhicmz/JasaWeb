@@ -1,21 +1,14 @@
-
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
+import { UserService } from '../users/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from './refresh-token.service';
+import { PasswordService } from './password.service';
+import { PrismaService } from '../common/database/prisma.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { vi } from 'vitest';
 
-
-// Mock bcrypt
-vi.mock('bcrypt', () => ({
-  hash: vi.fn(),
-  compare: vi.fn(),
-}));
-
-// Mock UUID
+// UUID mock
 vi.mock('uuid', () => ({
   v4: vi.fn(() => 'mock-uuid-1234'),
 }));
@@ -23,7 +16,7 @@ vi.mock('uuid', () => ({
 describe('AuthService', () => {
   let service: AuthService;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let usersService: UsersService;
+  let usersService: UserService;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let jwtService: JwtService;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -34,10 +27,11 @@ describe('AuthService', () => {
     email: 'test@example.com',
     name: 'Test User',
     password: 'test-hash-pass',
+    passwordHashVersion: 'argon2id',
     profilePicture: null,
   };
 
-  const mockUsersService = {
+  const mockUserService = {
     findByEmail: vi.fn(),
     create: vi.fn(),
   };
@@ -51,13 +45,35 @@ describe('AuthService', () => {
     createRefreshToken: vi.fn(),
   };
 
+  const mockPasswordService = {
+    hashPassword: vi.fn(),
+    verifyPassword: vi.fn(),
+  };
+
+  const mockPrismaService = {
+    user: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+    membership: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+    },
+    organization: {
+      create: vi.fn(),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         {
-          provide: UsersService,
-          useValue: mockUsersService,
+          provide: UserService,
+          useValue: mockUserService,
         },
         {
           provide: JwtService,
@@ -67,11 +83,19 @@ describe('AuthService', () => {
           provide: RefreshTokenService,
           useValue: mockRefreshTokenService,
         },
+        {
+          provide: PasswordService,
+          useValue: mockPasswordService,
+        },
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    usersService = module.get<UsersService>(UsersService);
+    usersService = module.get<UserService>(UserService);
     jwtService = module.get<JwtService>(JwtService);
     refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
   });
@@ -92,16 +116,24 @@ describe('AuthService', () => {
     };
 
     it('should successfully register a new user', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(null);
-      mockUsersService.create.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(null);
+      mockUserService.create.mockResolvedValue(mockUser);
+      mockPasswordService.hashPassword.mockResolvedValue({
+        hash: 'test-hash-pass',
+        version: 'argon2id',
+      });
+      mockPrismaService.membership.findFirst.mockResolvedValue(null);
+      mockPrismaService.organization.create.mockResolvedValue({
+        id: 'org-1',
+        name: "Test User's Organization",
+        billingEmail: 'test@example.com',
+      });
+      mockPrismaService.membership.create.mockResolvedValue({});
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
         token: 'test-access-token',
         refreshToken: 'test-refresh-token',
         expiresAt: new Date(),
       });
-
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('test-hash-pass');
 
       const result = await service.register(createUserDto);
 
@@ -112,7 +144,7 @@ describe('AuthService', () => {
     });
 
     it('should throw BadRequestException if user already exists', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
 
       await expect(service.register(createUserDto)).rejects.toThrow(
         BadRequestException
@@ -128,15 +160,16 @@ describe('AuthService', () => {
     };
 
     it('should successfully login user', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
+      mockPasswordService.verifyPassword.mockResolvedValue({
+        isValid: true,
+        needsRehash: false,
+      });
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
         token: 'test-access-token',
         refreshToken: 'test-refresh-token',
         expiresAt: new Date(),
       });
-
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(true);
 
       const result = await service.login(loginUserDto);
 
@@ -146,7 +179,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException if user not found', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(null);
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         UnauthorizedException
@@ -154,10 +187,11 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(false);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
+      mockPasswordService.verifyPassword.mockResolvedValue({
+        isValid: false,
+        needsRehash: false,
+      });
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         UnauthorizedException
@@ -167,10 +201,11 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should return user without password if credentials are valid', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(true);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
+      mockPasswordService.verifyPassword.mockResolvedValue({
+        isValid: true,
+        needsRehash: false,
+      });
 
       const result = await service.validateUser(
         'test@example.com',
@@ -182,7 +217,7 @@ describe('AuthService', () => {
     });
 
     it('should return null if user not found', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(null);
 
       const result = await service.validateUser(
         'test@example.com',
@@ -193,10 +228,11 @@ describe('AuthService', () => {
     });
 
     it('should return null if password is invalid', async () => {
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(false);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
+      mockPasswordService.verifyPassword.mockResolvedValue({
+        isValid: false,
+        needsRehash: false,
+      });
 
       const result = await service.validateUser(
         'test@example.com',

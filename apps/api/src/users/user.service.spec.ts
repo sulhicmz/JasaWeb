@@ -1,20 +1,14 @@
-
-
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersService } from './users.service';
+import { UserService } from './user.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { vi } from 'vitest';
 
+// Note: bcrypt is mocked in setup.ts
 
-// Mock bcrypt
-vi.mock('bcrypt', () => ({
-  hash: vi.fn(),
-}));
-
-describe('UsersService', () => {
-  let service: UsersService;
+describe('UserService', () => {
+  let service: UserService;
   let prismaService: PrismaService;
 
   const mockUser = {
@@ -40,7 +34,7 @@ describe('UsersService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        UsersService,
+        UserService,
         {
           provide: PrismaService,
           useValue: mockPrismaService,
@@ -48,7 +42,7 @@ describe('UsersService', () => {
       ],
     }).compile();
 
-    service = module.get<UsersService>(UsersService);
+    service = module.get<UserService>(UserService);
     prismaService = module.get<PrismaService>(PrismaService);
   });
 
@@ -68,8 +62,8 @@ describe('UsersService', () => {
     };
 
     it('should create a new user with hashed password', async () => {
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('test-hash-pass');
+      const bcrypt = await import('bcrypt');
+      vi.mocked(bcrypt.hash).mockResolvedValue('test-hash-pass');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       const result = await service.create(createUserDto);
@@ -91,8 +85,8 @@ describe('UsersService', () => {
         profilePicture: 'profile.jpg',
       };
 
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('hashedPassword');
+      const bcrypt = await import('bcrypt');
+      vi.mocked(bcrypt.hash).mockResolvedValue('hashedPassword');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       await service.create(createUserDtoWithPicture);
@@ -185,8 +179,8 @@ describe('UsersService', () => {
         password: 'new-test-pass',
       };
 
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('new-test-hash');
+      const bcrypt = await import('bcrypt');
+      vi.mocked(bcrypt.hash).mockResolvedValue('new-test-hash');
       mockPrismaService.user.update.mockResolvedValue(mockUser);
 
       await service.update('1', updatePasswordDto);

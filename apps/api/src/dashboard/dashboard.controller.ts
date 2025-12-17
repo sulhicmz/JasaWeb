@@ -17,6 +17,7 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
+import { EnhancedCacheService } from '../common/cache/enhanced-cache.service';
 import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
 
 // Type for Project with relations
@@ -77,7 +78,8 @@ export class DashboardController {
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly dashboardGateway: DashboardGateway
+    private readonly dashboardGateway: DashboardGateway,
+    private readonly enhancedCache: EnhancedCacheService
   ) {}
 
   @Get('stats')
@@ -86,11 +88,15 @@ export class DashboardController {
     @CurrentOrganizationId() organizationId: string,
     @Query('refresh') refresh?: string
   ): Promise<DashboardStats> {
-    const cacheKey = CACHE_KEYS.DASHBOARD_STATS(organizationId);
+    const cacheKey = EnhancedCacheService.generateStatsKey(
+      organizationId,
+      'dashboard'
+    );
 
-    // Return cached data if available and not forcing refresh
+    // Use enhanced cache with multi-level strategy
     if (!refresh || refresh !== 'true') {
-      const cachedStats = await this.cacheManager.get<DashboardStats>(cacheKey);
+      const cachedStats =
+        await this.enhancedCache.get<DashboardStats>(cacheKey);
       if (cachedStats) {
         return cachedStats;
       }
@@ -112,8 +118,8 @@ export class DashboardController {
       milestones: milestonesStats,
     };
 
-    // Cache for 5 minutes (300 seconds)
-    await this.cacheManager.set(cacheKey, stats, 300000);
+    // Cache using enhanced service (5 minutes TTL)
+    await this.enhancedCache.set(cacheKey, stats, { ttl: 300 });
 
     return stats;
   }
@@ -171,20 +177,6 @@ export class DashboardController {
         stagingUrl: true,
         productionUrl: true,
         repositoryUrl: true,
-        milestones: {
-          select: {
-            id: true,
-            status: true,
-            dueAt: true,
-          },
-        },
-        tickets: {
-          select: {
-            id: true,
-            status: true,
-            priority: true,
-          },
-        },
         _count: {
           select: {
             milestones: true,
@@ -196,50 +188,100 @@ export class DashboardController {
       take: limitNum,
     });
 
-    // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map(
-      (project: ProjectWithMilestonesAndTickets) => {
-        const totalMilestones = project.milestones?.length || 0;
-        const completedMilestones =
-          project.milestones?.filter((m: Milestone) => m.status === 'completed')
-            .length || 0;
-        const progress =
-          totalMilestones > 0
-            ? Math.round((completedMilestones / totalMilestones) * 100)
-            : 0;
+    // Fetch milestones and tickets separately to avoid N+1 queries
+    const projectIds = projects.map((p) => p.id);
 
-        const openTickets =
-          project.tickets?.filter(
-            (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
-          ).length || 0;
+    const [milestones, tickets] = await Promise.all([
+      this.multiTenantPrisma.milestone.findMany({
+        where: { projectId: { in: projectIds } },
+        select: {
+          id: true,
+          projectId: true,
+          status: true,
+          dueAt: true,
+        },
+      }),
+      this.multiTenantPrisma.ticket.findMany({
+        where: { projectId: { in: projectIds } },
+        select: {
+          id: true,
+          projectId: true,
+          status: true,
+          priority: true,
+        },
+      }),
+    ]);
 
-        const highPriorityTickets =
-          project.tickets?.filter(
-            (t: Ticket) =>
-              (t.priority === 'high' || t.priority === 'critical') &&
-              (t.status === 'open' || t.status === 'in-progress')
-          ).length || 0;
-
-        return {
-          id: project.id,
-          name: project.name,
-          description: null, // Project model doesn't have description field
-          status: project.status,
-          progress,
-          totalMilestones,
-          completedMilestones,
-          openTickets,
-          highPriorityTickets,
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
-          startAt: project.startAt,
-          dueAt: project.dueAt,
-          stagingUrl: project.stagingUrl,
-          productionUrl: project.productionUrl,
-          repositoryUrl: project.repositoryUrl,
-        };
-      }
+    // Group related data by project
+    const milestonesByProject = milestones.reduce(
+      (acc, milestone) => {
+        const projectId = milestone.projectId;
+        if (!acc[projectId]) {
+          acc[projectId] = [];
+        }
+        acc[projectId].push(milestone);
+        return acc;
+      },
+      {} as Record<string, typeof milestones>
     );
+
+    const ticketsByProject = tickets.reduce(
+      (acc, ticket) => {
+        const projectId = ticket.projectId;
+        if (projectId && !acc[projectId]) {
+          acc[projectId] = [];
+        }
+        if (projectId && acc[projectId]) {
+          acc[projectId].push(ticket);
+        }
+        return acc;
+      },
+      {} as Record<string, typeof tickets>
+    );
+
+    // Calculate progress and additional metrics for each project
+    const projectsWithMetrics = projects.map((project) => {
+      const projectMilestones = milestonesByProject[project.id] || [];
+      const projectTickets = ticketsByProject[project.id] || [];
+
+      const totalMilestones = projectMilestones.length;
+      const completedMilestones = projectMilestones.filter(
+        (m: Milestone) => m.status === 'completed'
+      ).length;
+      const progress =
+        totalMilestones > 0
+          ? Math.round((completedMilestones / totalMilestones) * 100)
+          : 0;
+
+      const openTickets = projectTickets.filter(
+        (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
+      ).length;
+
+      const highPriorityTickets = projectTickets.filter(
+        (t: Ticket) =>
+          (t.priority === 'high' || t.priority === 'critical') &&
+          (t.status === 'open' || t.status === 'in-progress')
+      ).length;
+
+      return {
+        id: project.id,
+        name: project.name,
+        description: null, // Project model doesn't have description field
+        status: project.status,
+        progress,
+        totalMilestones,
+        completedMilestones,
+        openTickets,
+        highPriorityTickets,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        startAt: project.startAt,
+        dueAt: project.dueAt,
+        stagingUrl: project.stagingUrl,
+        productionUrl: project.productionUrl,
+        repositoryUrl: project.repositoryUrl,
+      };
+    });
 
     return projectsWithMetrics;
   }

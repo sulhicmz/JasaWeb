@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { getRequiredEnv } from '@jasaweb/config/env-validation';
 
 import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
+import { EnhancedCacheService } from '../common/cache/enhanced-cache.service';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
     MultiTenantPrismaModule,
   ],
   controllers: [DashboardController],
-  providers: [DashboardGateway],
+  providers: [DashboardGateway, EnhancedCacheService],
   exports: [DashboardGateway],
 })
 export class DashboardModule {}

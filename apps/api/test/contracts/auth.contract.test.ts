@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AuthService } from '../../src/auth/auth.service';
-import { UsersService } from '../../src/users/users.service';
+import { UserService } from '../../s../users/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from '../../src/auth/refresh-token.service';
 import { PasswordService } from '../../src/auth/password.service';
@@ -11,7 +11,7 @@ import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 describe('AuthService API Contract Tests', () => {
   let service: AuthService;
 
-  const mockUsersService = {
+  const mockUserService = {
     findByEmail: vi.fn(),
     create: vi.fn(),
     updatePasswordHash: vi.fn(),
@@ -53,7 +53,7 @@ describe('AuthService API Contract Tests', () => {
 
   beforeEach(() => {
     service = new AuthService(
-      mockUsersService as unknown as UsersService,
+      mockUserService as unknown as UserService,
       mockJwtService as unknown as JwtService,
       mockRefreshTokenService as unknown as RefreshTokenService,
       mockPasswordService as unknown as PasswordService,
@@ -88,7 +88,7 @@ describe('AuthService API Contract Tests', () => {
       };
 
       // Mock user lookup
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
 
       // Mock password verification
       mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
@@ -143,7 +143,7 @@ describe('AuthService API Contract Tests', () => {
         organizationId: 'org-1',
       };
 
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(null);
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         'Invalid credentials'
@@ -166,7 +166,7 @@ describe('AuthService API Contract Tests', () => {
         passwordHashVersion: 'v1' as const,
       };
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
       mockPasswordService.verifyPassword.mockResolvedValue({ isValid: false });
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
@@ -199,10 +199,10 @@ describe('AuthService API Contract Tests', () => {
       };
 
       // Mock existing user check (null means no existing user)
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(null);
 
       // Mock user creation
-      mockUsersService.create.mockResolvedValue(mockUser);
+      mockUserService.create.mockResolvedValue(mockUser);
 
       // Mock password hashing
       mockPasswordService.hashPassword.mockResolvedValue({ hash: 'hashedPassword' });
@@ -281,7 +281,7 @@ describe('AuthService API Contract Tests', () => {
         passwordHashVersion: 'v1' as const,
       };
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
       mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
 
       const result = await service.validateUser(
@@ -303,7 +303,7 @@ describe('AuthService API Contract Tests', () => {
         organizationId: 'org-1',
       };
 
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(null);
 
       const result = await service.validateUser(
         loginUserDto.email,
@@ -322,7 +322,7 @@ describe('AuthService API Contract Tests', () => {
         organizationId: 'org-1',
       };
 
-      mockUsersService.findByEmail.mockRejectedValue(
+      mockUserService.findByEmail.mockRejectedValue(
         new Error('Database connection failed')
       );
 
@@ -347,7 +347,7 @@ describe('AuthService API Contract Tests', () => {
         passwordHashVersion: 'v1' as const,
       };
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
       mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
 
       // We also need to mock the membership check here, as it happens before token generation
@@ -377,7 +377,7 @@ describe('AuthService API Contract Tests', () => {
       };
 
       // This should be handled by DTO validation, but we test service behavior
-      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUserService.findByEmail.mockResolvedValue(null);
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         'Invalid credentials'
@@ -400,7 +400,7 @@ describe('AuthService API Contract Tests', () => {
         passwordHashVersion: 'v1' as const,
       };
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUserService.findByEmail.mockResolvedValue(mockUser);
       mockPasswordService.verifyPassword.mockResolvedValue({ isValid: false });
 
       await expect(service.login(loginUserDto)).rejects.toThrow(

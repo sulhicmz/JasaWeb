@@ -6,7 +6,7 @@ import { PasswordService, PasswordHashVersion } from '../auth/password.service';
 import { User } from '@prisma/client';
 
 @Injectable()
-export class UsersService {
+export class UserService {
   constructor(
     private prisma: PrismaService,
     private passwordService: PasswordService
