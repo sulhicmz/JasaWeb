@@ -3,6 +3,7 @@ import {
   EnvValidationError,
   generateSecureSecret,
 } from '../env-validation';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('Environment Variable Validation', () => {
   // Store original env vars

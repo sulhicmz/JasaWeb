@@ -2,11 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
+import 'reflect-metadata';
 
 // Mock AppService
 const mockAppService = {
-  getHello: vi.fn(),
-  getHealth: vi.fn(),
+  getHello: vi.fn().mockReturnValue('Hello World!'),
+  getHealth: vi.fn().mockReturnValue({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+  }),
 };
 
 describe('AppController', () => {
@@ -25,6 +29,9 @@ describe('AppController', () => {
     }).compile();
 
     appController = module.get<AppController>(AppController);
+
+    // Reset mocks before each test
+    vi.clearAllMocks();
   });
 
   afterEach(() => {

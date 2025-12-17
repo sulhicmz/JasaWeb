@@ -1,6 +1,16 @@
 // Vitest setup file for test environment
 import { vi } from 'vitest';
 
+// Ensure vitest globals are available
+global.describe = global.describe || describe;
+global.it = global.it || it;
+global.test = global.test || test;
+global.expect = global.expect || expect;
+global.beforeAll = global.beforeAll || beforeAll;
+global.afterAll = global.afterAll || afterAll;
+global.beforeEach = global.beforeEach || beforeEach;
+global.afterEach = global.afterEach || afterEach;
+
 // Provide Jest compatibility for existing tests
 beforeAll(() => {
   // Create global jest object with vi methods
