@@ -1,11 +1,8 @@
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
 
-export default defineConfig({
+export const baseVitestConfig = defineConfig({
   test: {
-    environment: 'node',
     globals: true,
-    setupFiles: ['./test/setup.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -24,11 +21,6 @@ export default defineConfig({
       threads: {
         singleThread: true,
       },
-    },
-  },
-  resolve: {
-    alias: {
-      '@': resolve(__dirname, './src'),
     },
   },
 });

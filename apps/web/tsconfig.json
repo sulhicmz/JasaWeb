@@ -1,16 +1,14 @@
 {
+  "extends": "../../packages/config/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ES2020",
     "module": "ES2022",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",
-    "allowImportingTsExtensions": true,
     "noEmit": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node"
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@jasaweb/*": ["../../packages/*"]
+    }
   },
   "include": ["src/**/*", "src/**/*.tsx"]
 }
