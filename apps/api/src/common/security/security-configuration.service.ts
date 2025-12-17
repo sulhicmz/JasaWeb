@@ -86,18 +86,28 @@ export class SecurityConfigurationService {
       'upgradeInsecureRequests',
     ] as const;
 
+    // Create a new object to safely handle directives without prototype pollution
+    const safeDirectives = Object.create(null);
+
     for (const key of validDirectiveKeys) {
-      const directiveValue = directives[key];
-      if (directiveValue && Array.isArray(directiveValue)) {
-        directives[key] = directiveValue.filter(Boolean);
-        if (directives[key]!.length === 0) {
-          delete directives[key];
+      if (Object.prototype.hasOwnProperty.call(directives, key)) {
+        const directiveValue = directives[key];
+        if (directiveValue && Array.isArray(directiveValue)) {
+          const filtered = directiveValue.filter(Boolean);
+          if (filtered.length > 0) {
+            Object.defineProperty(safeDirectives, key, {
+              value: filtered,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
+          }
         }
       }
     }
 
     return {
-      directives,
+      directives: safeDirectives,
       reportOnly: isDevelopment, // Use report-only in development
     };
   }

@@ -26,17 +26,23 @@ export function validateEnv(config: Record<string, unknown>) {
 
   const allowedEnvKeysSet = new Set(allowedEnvKeys);
 
-  Object.entries(config).forEach(([key, value]) => {
-    // Security: Object injection prevented by strict whitelist validation
+  // Use safe property assignment to prevent object injection
+  for (const key of Object.keys(config)) {
     if (
-      value !== undefined &&
       typeof key === 'string' &&
+      allowedEnvKeysSet.has(key) &&
       /^[A-Z_][A-Z0-9_]*$/.test(key) &&
-      allowedEnvKeysSet.has(key)
+      config[key] !== undefined
     ) {
-      process.env[key] = String(value);
+      // Use Object.defineProperty with specific properties to prevent prototype pollution
+      Object.defineProperty(process.env, key, {
+        value: String(config[key]),
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
-  });
+  }
 
   // Run validation using the shared function
   validateEnvironmentVariables();

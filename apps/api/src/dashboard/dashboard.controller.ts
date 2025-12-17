@@ -541,6 +541,9 @@ export class DashboardController {
             'prototype',
           ]);
 
+          // Use safe object creation without prototype
+          const safeResult = Object.create(null);
+
           trends.forEach((trend, index) => {
             const metric = selectedMetrics[index];
             if (
@@ -549,11 +552,16 @@ export class DashboardController {
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
               !forbiddenProps.has(metric)
             ) {
-              // Security-safe: Metric is validated against prototype pollution
-              result[metric] = trend;
+              // Use Object.defineProperty to prevent prototype pollution
+              Object.defineProperty(safeResult, metric, {
+                value: trend,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           });
-          return result;
+          return safeResult;
         })(),
       };
     } catch (error) {

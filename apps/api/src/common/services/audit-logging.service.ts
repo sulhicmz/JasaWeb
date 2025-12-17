@@ -225,8 +225,19 @@ export class AuditLoggingService {
                 ? sanitize(value)
                 : value;
 
-            if (typeof key === 'string') {
-              sanitized[key] = sanitizedValue;
+            // Use safe property assignment to prevent object injection
+            if (
+              typeof key === 'string' &&
+              key !== '__proto__' &&
+              key !== 'constructor' &&
+              key !== 'prototype'
+            ) {
+              Object.defineProperty(sanitized, key, {
+                value: sanitizedValue,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           }
         }

@@ -325,17 +325,17 @@ export class DashboardGateway
     });
 
     const total = tickets.length;
-    const open = tickets.filter((t: any) => t.status === 'open').length;
-    const inProgress = tickets.filter(
-      (t: any) => t.status === 'in-progress'
-    ).length;
+
+    // Use type-safe filtering instead of any
+    const open = tickets.filter((t) => t.status === 'open').length;
+    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
     const highPriority = tickets.filter(
-      (t: any) =>
+      (t) =>
         (t.priority === 'high' || t.priority === 'critical') &&
         (t.status === 'open' || t.status === 'in-progress')
     ).length;
     const critical = tickets.filter(
-      (t: any) =>
+      (t) =>
         t.priority === 'critical' &&
         (t.status === 'open' || t.status === 'in-progress')
     ).length;
@@ -384,14 +384,12 @@ export class DashboardGateway
     });
 
     const total = milestones.length;
-    const completed = milestones.filter(
-      (m: any) => m.status === 'completed'
-    ).length;
+    const completed = milestones.filter((m) => m.status === 'completed').length;
     const overdue = milestones.filter(
-      (m: any) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
+      (m) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
     ).length;
     const dueThisWeek = milestones.filter(
-      (m: any) =>
+      (m) =>
         m.status !== 'completed' &&
         m.dueAt &&
         new Date(m.dueAt) >= now &&
@@ -415,7 +413,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return projects.map((project: any) => ({
+    return projects.map((project) => ({
       id: project.id,
       type: 'project' as const,
       title: project.name,
@@ -439,7 +437,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return tickets.map((ticket: any) => ({
+    return tickets.map((ticket) => ({
       id: ticket.id,
       type: 'ticket' as const,
       title: `${ticket.type} ticket`,
@@ -468,7 +466,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return milestones.map((milestone: any) => ({
+    return milestones.map((milestone) => ({
       id: milestone.id,
       type: 'milestone' as const,
       title: milestone.title,
@@ -493,7 +491,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return invoices.map((invoice: any) => ({
+    return invoices.map((invoice) => ({
       id: invoice.id,
       type: 'invoice' as const,
       title: `Invoice ${invoice.id.slice(-8)}`,

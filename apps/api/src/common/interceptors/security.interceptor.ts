@@ -136,23 +136,47 @@ export class SecurityInterceptor implements NestInterceptor {
         }
 
         if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-          const sanitized: SafeObject = {};
+          const sanitized = Object.create(null); // Create object without prototype to prevent pollution
           const sensitiveFieldsSet = new Set(sensitiveFields);
 
-          for (const [key, value] of Object.entries(obj)) {
-            if (typeof key === 'string') {
-              const lowerKey = key.toLowerCase();
-              const hasSensitiveField = Array.from(sensitiveFieldsSet).some(
-                (field: string) => lowerKey.includes(field)
-              );
+          // Use Object.getOwnPropertyNames for safer enumeration
+          for (const key of Object.getOwnPropertyNames(obj)) {
+            if (
+              key === '__proto__' ||
+              key === 'constructor' ||
+              key === 'prototype'
+            ) {
+              continue; // Skip dangerous prototype properties
+            }
 
-              if (hasSensitiveField) {
-                sanitized[key] = '[REDACTED]';
-              } else if (typeof value === 'object' && value !== null) {
-                sanitized[key] = sanitize(value);
-              } else {
-                sanitized[key] = value;
-              }
+            const lowerKey = key.toLowerCase();
+            const hasSensitiveField = Array.from(sensitiveFieldsSet).some(
+              (field: string) => lowerKey.includes(field)
+            );
+
+            const value = (obj as Record<string, unknown>)[key];
+
+            if (hasSensitiveField) {
+              Object.defineProperty(sanitized, key, {
+                value: '[REDACTED]',
+                writable: false,
+                enumerable: true,
+                configurable: false,
+              });
+            } else if (typeof value === 'object' && value !== null) {
+              Object.defineProperty(sanitized, key, {
+                value: sanitize(value),
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            } else {
+              Object.defineProperty(sanitized, key, {
+                value: value,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           }
           return sanitized;
