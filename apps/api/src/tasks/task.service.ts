@@ -56,7 +56,7 @@ export class TaskService {
     });
   }
 
-  async findAll(projectId?: string, organizationId: string = '') {
+  async findAll(projectId?: string) {
     if (projectId) {
       // Validate project exists and belongs to organization
       const project = await this.multiTenantPrisma.project.findUnique({
@@ -108,7 +108,7 @@ export class TaskService {
     }
   }
 
-  async findOne(id: string, organizationId: string) {
+  async findOne(id: string) {
     const task = await this.multiTenantPrisma.task.findUnique({
       where: { id },
       include: {
@@ -137,11 +137,7 @@ export class TaskService {
     return task;
   }
 
-  async update(
-    id: string,
-    updateTaskDto: UpdateTaskDto,
-    organizationId: string
-  ) {
+  async update(id: string, updateTaskDto: UpdateTaskDto) {
     // Check if task exists
     const existingTask = await this.multiTenantPrisma.task.findUnique({
       where: { id },
@@ -159,7 +155,7 @@ export class TaskService {
     });
   }
 
-  async remove(id: string, organizationId: string) {
+  async remove(id: string) {
     const task = await this.multiTenantPrisma.task.findUnique({
       where: { id },
     });

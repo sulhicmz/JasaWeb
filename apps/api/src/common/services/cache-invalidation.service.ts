@@ -270,7 +270,7 @@ export class CacheInvalidationService {
     entity: string,
     entityId: string,
     organizationId: string,
-    data: any
+    data: unknown
   ): Promise<void> {
     const cacheKey = this.cacheService.generateKey(
       entity,
@@ -284,7 +284,7 @@ export class CacheInvalidationService {
   /**
    * Get cache invalidation statistics
    */
-  async getInvalidationStats(): Promise<any> {
+  async getInvalidationStats(): Promise<Record<string, unknown>> {
     return {
       rulesCount: this.invalidationRules.size,
       rules: Array.from(this.invalidationRules.entries()).map(

@@ -535,16 +535,21 @@ export class DashboardController {
         endDate: new Date(),
         trends: (() => {
           const result: Record<string, unknown> = {};
+          const forbiddenProps = new Set([
+            '__proto__',
+            'constructor',
+            'prototype',
+          ]);
+
           trends.forEach((trend, index) => {
             const metric = selectedMetrics[index];
             if (
               metric &&
               typeof metric === 'string' &&
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
-              !['__proto__', 'constructor', 'prototype'].includes(metric)
+              !forbiddenProps.has(metric)
             ) {
               // Security-safe: Metric is validated against prototype pollution
-              // eslint-disable-next-line security/detect-object-injection
               result[metric] = trend;
             }
           });
@@ -1139,17 +1144,19 @@ export class DashboardController {
     }
 
     items.forEach((item) => {
+      const forbiddenProps = new Set(['__proto__', 'constructor', 'prototype']);
+
       if (
         dateField &&
         typeof dateField === 'string' &&
-        !['__proto__', 'constructor', 'prototype'].includes(dateField)
+        !forbiddenProps.has(dateField)
       ) {
         const dateValue = item[dateField] as string | number | Date;
         const date = new Date(dateValue);
         const dateKey = date.toISOString().split('T')[0];
         if (
           dateKey &&
-          !['__proto__', 'constructor', 'prototype'].includes(dateKey) &&
+          !forbiddenProps.has(dateKey) &&
           /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
           const currentValue =

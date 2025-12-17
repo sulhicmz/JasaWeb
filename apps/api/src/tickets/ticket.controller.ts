@@ -387,9 +387,15 @@ export class TicketController {
     };
 
     // Validate priority to prevent injection
-    const validPriorities = ['critical', 'high', 'medium', 'low'];
-    const safePriority = validPriorities.includes(priority) ? priority : 'low';
-    const hoursToAdd = slaTimeframes[safePriority] || 168; // Default to 1 week for low priority
+    const validPriorities = new Set(['critical', 'high', 'medium', 'low']);
+    const safePriority = validPriorities.has(priority) ? priority : 'low';
+    const timeframes: Record<string, number> = {
+      critical: 4, // 4 hours
+      high: 24, // 1 day
+      medium: 72, // 3 days
+      low: 168, // 1 week
+    };
+    const hoursToAdd = timeframes[safePriority] || 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

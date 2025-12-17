@@ -79,7 +79,7 @@ export class TicketService {
     });
   }
 
-  async remove(id: string, organizationId: string) {
+  async remove(id: string) {
     return this.prisma.ticket.delete({
       where: {
         id,

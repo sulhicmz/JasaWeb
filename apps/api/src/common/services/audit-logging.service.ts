@@ -219,12 +219,14 @@ export class AuditLoggingService {
               lowerKey.includes(field)
             );
 
-            if (hasSensitiveField) {
-              sanitized[key] = '[REDACTED]';
-            } else if (typeof value === 'object' && value !== null) {
-              sanitized[key] = sanitize(value);
-            } else {
-              sanitized[key] = value;
+            const sanitizedValue = hasSensitiveField
+              ? '[REDACTED]'
+              : typeof value === 'object' && value !== null
+                ? sanitize(value)
+                : value;
+
+            if (typeof key === 'string') {
+              sanitized[key] = sanitizedValue;
             }
           }
         }
@@ -244,7 +246,17 @@ export class AuditLoggingService {
     return {
       ...event,
       details: event.details
-        ? this.sanitizeAuditData({ details: event.details } as any).details
+        ? this.sanitizeAuditData({
+            action: 'TEMP_AUDIT',
+            actorId: '',
+            organizationId: '',
+            target: 'temp',
+            ipAddress: '',
+            severity: 'LOW',
+            success: true,
+            timestamp: new Date(),
+            details: event.details,
+          }).details
         : undefined,
     };
   }
@@ -307,7 +319,7 @@ export class AuditLoggingService {
     resourceId: string,
     ipAddress: string,
     userAgent?: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     return this.logAuditEntry({
       actorId,
@@ -332,7 +344,7 @@ export class AuditLoggingService {
     success: boolean,
     userAgent?: string,
     operation?: 'CREATE' | 'UPDATE' | 'DELETE',
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     return this.logAuditEntry({
       actorId,
@@ -353,7 +365,7 @@ export class AuditLoggingService {
     violationType: string,
     ipAddress: string,
     userAgent?: string,
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   ): Promise<void> {
     return this.logSecurityEvent({
       eventType: 'SECURITY_VIOLATION',

@@ -137,13 +137,13 @@ export class SecurityInterceptor implements NestInterceptor {
 
         if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
           const sanitized: SafeObject = {};
-          const entries = Object.entries(obj as Record<string, unknown>);
+          const sensitiveFieldsSet = new Set(sensitiveFields);
 
-          for (const [key, value] of entries) {
+          for (const [key, value] of Object.entries(obj)) {
             if (typeof key === 'string') {
               const lowerKey = key.toLowerCase();
-              const hasSensitiveField = sensitiveFields.some((field: string) =>
-                lowerKey.includes(field)
+              const hasSensitiveField = Array.from(sensitiveFieldsSet).some(
+                (field: string) => lowerKey.includes(field)
               );
 
               if (hasSensitiveField) {

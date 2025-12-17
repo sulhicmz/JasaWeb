@@ -37,7 +37,7 @@ export class TaskController {
     @Query('projectId') projectId?: string,
     @CurrentOrganizationId() organizationId: string = ''
   ) {
-    return this.taskService.findAll(projectId, organizationId);
+    return this.taskService.findAll(projectId);
   }
 
   @Get(':id')
@@ -46,7 +46,7 @@ export class TaskController {
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.taskService.findOne(id, organizationId);
+    return this.taskService.findOne(id);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -57,7 +57,7 @@ export class TaskController {
     @Body() updateTaskDto: UpdateTaskDto,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.taskService.update(id, updateTaskDto, organizationId);
+    return this.taskService.update(id, updateTaskDto);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -67,15 +67,14 @@ export class TaskController {
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.taskService.remove(id, organizationId);
+    return this.taskService.remove(id);
   }
 
   @Get('status/:status')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async findByStatus(
     @Param('status') status: string,
-    @Query('projectId') projectId?: string,
-    @CurrentOrganizationId() organizationId: string = ''
+    @Query('projectId') projectId?: string
   ) {
     return this.taskService.findByStatus(status, projectId);
   }
@@ -84,8 +83,7 @@ export class TaskController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async findByAssignee(
     @Param('assignedTo') assignedTo: string,
-    @Query('projectId') projectId?: string,
-    @CurrentOrganizationId() organizationId: string = ''
+    @Query('projectId') projectId?: string
   ) {
     return this.taskService.findByAssignee(assignedTo, projectId);
   }

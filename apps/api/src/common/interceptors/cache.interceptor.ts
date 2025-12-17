@@ -19,19 +19,19 @@ export const CACHE_ENABLED_METADATA = 'cache_enabled';
  */
 export const CacheKey =
   (key: string) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (target: object, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(CACHE_KEY_METADATA, key, descriptor.value);
   };
 
 export const CacheTTL =
   (ttl: number) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (target: object, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(CACHE_TTL_METADATA, ttl, descriptor.value);
   };
 
 export const CacheEnabled =
   (enabled: boolean = true) =>
-  (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
+  (target: object, propertyKey: string, descriptor: PropertyDescriptor) => {
     Reflect.defineMetadata(CACHE_ENABLED_METADATA, enabled, descriptor.value);
   };
 
@@ -50,7 +50,7 @@ export class CacheInterceptor implements NestInterceptor {
   async intercept(
     context: ExecutionContext,
     next: CallHandler
-  ): Promise<Observable<any>> {
+  ): Promise<Observable<unknown>> {
     const request = context.switchToHttp().getRequest();
 
     // Get caching metadata

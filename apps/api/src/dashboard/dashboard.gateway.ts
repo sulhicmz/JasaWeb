@@ -35,7 +35,7 @@ interface AuthenticatedSocket {
   id: string;
   join: (room: string) => Promise<void>;
   leave: (room: string) => Promise<void>;
-  emit: (event: string, data: any) => void;
+  emit: (event: string, data: unknown) => void;
   disconnect: () => void;
 }
 
@@ -67,7 +67,7 @@ export class DashboardGateway
     private readonly multiTenantPrisma: MultiTenantPrismaService
   ) {}
 
-  afterInit(server: Server) {
+  afterInit() {
     this.logger.log('Dashboard WebSocket Gateway initialized');
   }
 
@@ -291,7 +291,7 @@ export class DashboardGateway
 
     return allActivities
       .sort(
-        (a: any, b: any) =>
+        (a: { createdAt: Date }, b: { createdAt: Date }) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
       .slice(0, limit);
@@ -305,12 +305,15 @@ export class DashboardGateway
 
     const total = projects.length;
     const active = projects.filter(
-      (p: any) => p.status === 'active' || p.status === 'in-progress'
+      (p: { status: string }) =>
+        p.status === 'active' || p.status === 'in-progress'
     ).length;
     const completed = projects.filter(
-      (p: any) => p.status === 'completed'
+      (p: { status: string }) => p.status === 'completed'
     ).length;
-    const onHold = projects.filter((p: any) => p.status === 'on-hold').length;
+    const onHold = projects.filter(
+      (p: { status: string }) => p.status === 'on-hold'
+    ).length;
 
     return { total, active, completed, onHold };
   }

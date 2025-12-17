@@ -24,21 +24,19 @@ export function validateEnv(config: Record<string, unknown>) {
     'POSTGRES_PORT',
   ] as const;
 
-  for (const key in config) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      const value = config[key];
+  const allowedEnvKeysSet = new Set(allowedEnvKeys);
 
-      // Security: Object injection prevented by strict whitelist validation
-      if (
-        value !== undefined &&
-        typeof key === 'string' &&
-        /^[A-Z_][A-Z0-9_]*$/.test(key) &&
-        allowedEnvKeys.includes(key)
-      ) {
-        process.env[key] = String(value);
-      }
+  Object.entries(config).forEach(([key, value]) => {
+    // Security: Object injection prevented by strict whitelist validation
+    if (
+      value !== undefined &&
+      typeof key === 'string' &&
+      /^[A-Z_][A-Z0-9_]*$/.test(key) &&
+      allowedEnvKeysSet.has(key)
+    ) {
+      process.env[key] = String(value);
     }
-  }
+  });
 
   // Run validation using the shared function
   validateEnvironmentVariables();
