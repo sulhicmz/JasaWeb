@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Body,
   Patch,
   Param,
@@ -10,8 +11,11 @@ import {
   UseInterceptors,
   SetMetadata,
 } from '@nestjs/common';
-import { ProjectService } from './project.service';
-import type { UpdateProjectDto } from './project.service';
+import {
+  ProjectService,
+  CreateProjectDto,
+  UpdateProjectDto,
+} from './project.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -26,6 +30,16 @@ import {
 @UseGuards(RolesGuard) // Use the roles guard
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
+
+  @UseGuards(ThrottlerGuard)
+  @Post()
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only specific roles can create
+  create(
+    @Body() createProjectDto: CreateProjectDto,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.projectService.create(createProjectDto, organizationId);
+  }
 
   @Get()
   @UseInterceptors(CacheInterceptor)
