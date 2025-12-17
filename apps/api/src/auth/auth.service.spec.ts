@@ -1,5 +1,3 @@
-
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -8,11 +6,13 @@ import { RefreshTokenService } from './refresh-token.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { vi } from 'vitest';
 
-
 // Mock bcrypt
+const mockHash = vi.fn();
+const mockCompare = vi.fn();
+
 vi.mock('bcrypt', () => ({
-  hash: vi.fn(),
-  compare: vi.fn(),
+  hash: mockHash,
+  compare: mockCompare,
 }));
 
 // Mock UUID
@@ -100,8 +100,7 @@ describe('AuthService', () => {
         expiresAt: new Date(),
       });
 
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('test-hash-pass');
+      mockHash.mockResolvedValue('test-hash-pass');
 
       const result = await service.register(createUserDto);
 
@@ -135,8 +134,7 @@ describe('AuthService', () => {
         expiresAt: new Date(),
       });
 
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(true);
+      mockCompare.mockResolvedValue(true);
 
       const result = await service.login(loginUserDto);
 
@@ -156,8 +154,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if password is invalid', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(false);
+      mockCompare.mockResolvedValue(false);
 
       await expect(service.login(loginUserDto)).rejects.toThrow(
         UnauthorizedException
@@ -169,8 +166,7 @@ describe('AuthService', () => {
     it('should return user without password if credentials are valid', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(true);
+      mockCompare.mockResolvedValue(true);
 
       const result = await service.validateUser(
         'test@example.com',
@@ -195,8 +191,7 @@ describe('AuthService', () => {
     it('should return null if password is invalid', async () => {
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
 
-      const bcrypt = require('bcrypt');
-      bcrypt.compare.mockResolvedValue(false);
+      mockCompare.mockResolvedValue(false);
 
       const result = await service.validateUser(
         'test@example.com',

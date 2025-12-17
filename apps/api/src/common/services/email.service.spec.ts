@@ -1,36 +1,18 @@
-
-
-import { Test, TestingModule } from '@nestjs/testing';
-import { EmailService } from './email.service';
-import { MailerService } from '@nestjs-modules/mailer';
 import { vi } from 'vitest';
+import { EmailService, EmailOptions } from './email.service';
 
-
+// Create a simple test without NestJS DI
 describe('EmailService', () => {
   let service: EmailService;
-  let mailerService: MailerService;
+  let mockMailerService: any;
 
-  const mockMailerService = {
-    sendMail: vi.fn(),
-  };
+  beforeEach(() => {
+    mockMailerService = {
+      sendMail: vi.fn(),
+    };
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        EmailService,
-        {
-          provide: MailerService,
-          useValue: mockMailerService,
-        },
-      ],
-    }).compile();
-
-    service = module.get<EmailService>(EmailService);
-    mailerService = module.get<MailerService>(MailerService);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
+    // Manually create the service with the mocked MailerService
+    service = new EmailService(mockMailerService);
   });
 
   it('should be defined', () => {
@@ -39,7 +21,7 @@ describe('EmailService', () => {
 
   describe('sendEmail', () => {
     it('should send email successfully', async () => {
-      const emailOptions = {
+      const emailOptions: EmailOptions = {
         to: 'test@example.com',
         subject: 'Test Subject',
         html: '<p>Test HTML content</p>',
@@ -51,23 +33,22 @@ describe('EmailService', () => {
 
       await service.sendEmail(emailOptions);
 
-      expect(mailerService.sendMail).toHaveBeenCalledWith(emailOptions);
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith(emailOptions);
     });
 
     it('should handle email sending errors gracefully', async () => {
-      const emailOptions = {
+      const emailOptions: EmailOptions = {
         to: 'test@example.com',
         subject: 'Test Subject',
         html: '<p>Test HTML content</p>',
       };
 
-      mockMailerService.sendMail.mockRejectedValue(
-        new Error('SMTP connection failed')
-      );
+      const error = new Error('SMTP connection failed');
+      mockMailerService.sendMail.mockRejectedValue(error);
 
       // Should not throw error, but should log it
       await expect(service.sendEmail(emailOptions)).resolves.not.toThrow();
-      expect(mailerService.sendMail).toHaveBeenCalledWith(emailOptions);
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith(emailOptions);
     });
   });
 
@@ -82,7 +63,7 @@ describe('EmailService', () => {
 
       await service.sendWelcomeEmail(email, name);
 
-      expect(mailerService.sendMail).toHaveBeenCalledWith({
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith({
         to: email,
         subject: 'Welcome to JasaWeb Client Portal',
         template: './welcome',
@@ -101,7 +82,7 @@ describe('EmailService', () => {
 
       await service.sendWelcomeEmail(email);
 
-      expect(mailerService.sendMail).toHaveBeenCalledWith({
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith({
         to: email,
         subject: 'Welcome to JasaWeb Client Portal',
         template: './welcome',
@@ -116,7 +97,7 @@ describe('EmailService', () => {
     it('should send approval request notification', async () => {
       const email = 'test@example.com';
       const projectName = 'Test Project';
-      const approvalDetails = 'Please approve the new design';
+      const approvalDetails = 'Design mockup for review';
 
       mockMailerService.sendMail.mockResolvedValue({
         messageId: 'test-message-id',
@@ -128,7 +109,7 @@ describe('EmailService', () => {
         approvalDetails
       );
 
-      expect(mailerService.sendMail).toHaveBeenCalledWith({
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith({
         to: email,
         subject: 'Approval Request for Test Project',
         template: './approval-request',
@@ -145,7 +126,7 @@ describe('EmailService', () => {
       const email = 'test@example.com';
       const projectName = 'Test Project';
       const status = 'approved' as const;
-      const feedback = 'Looks great!';
+      const feedback = 'Looks good!';
 
       mockMailerService.sendMail.mockResolvedValue({
         messageId: 'test-message-id',
@@ -158,7 +139,7 @@ describe('EmailService', () => {
         feedback
       );
 
-      expect(mailerService.sendMail).toHaveBeenCalledWith({
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith({
         to: email,
         subject: 'Approval APPROVED for Test Project',
         template: './approval-completed',
@@ -185,7 +166,7 @@ describe('EmailService', () => {
         status
       );
 
-      expect(mailerService.sendMail).toHaveBeenCalledWith({
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith({
         to: email,
         subject: 'Approval REJECTED for Test Project',
         template: './approval-completed',

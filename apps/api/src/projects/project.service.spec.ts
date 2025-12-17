@@ -10,6 +10,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('ProjectService', () => {
   let service: ProjectService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockProject = {
@@ -165,7 +166,9 @@ describe('ProjectService', () => {
 
       await service.findAll('summary', 'org1');
 
-      expect(mockMultiTenantPrismaService.project.findMany).toHaveBeenCalledWith(
+      expect(
+        mockMultiTenantPrismaService.project.findMany
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { organizationId: 'org1' },
         })

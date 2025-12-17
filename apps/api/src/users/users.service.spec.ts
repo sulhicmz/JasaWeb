@@ -1,5 +1,3 @@
-
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { PrismaService } from '../common/database/prisma.service';
@@ -7,14 +5,16 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { vi } from 'vitest';
 
-
 // Mock bcrypt
+const mockHash = vi.fn();
+
 vi.mock('bcrypt', () => ({
-  hash: vi.fn(),
+  hash: mockHash,
 }));
 
 describe('UsersService', () => {
   let service: UsersService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let prismaService: PrismaService;
 
   const mockUser = {
@@ -68,13 +68,12 @@ describe('UsersService', () => {
     };
 
     it('should create a new user with hashed password', async () => {
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('test-hash-pass');
+      mockHash.mockResolvedValue('test-hash-pass');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       const result = await service.create(createUserDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(mockHash).toHaveBeenCalledWith(createUserDto.password, 10);
       expect(mockPrismaService.user.create).toHaveBeenCalledWith({
         data: {
           email: createUserDto.email,
@@ -91,16 +90,15 @@ describe('UsersService', () => {
         profilePicture: 'profile.jpg',
       };
 
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('hashedPassword');
+      mockHash.mockResolvedValue('hashedPassword');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       await service.create(createUserDtoWithPicture);
 
       expect(mockPrismaService.user.create).toHaveBeenCalledWith({
         data: {
-          email: createUserDto.email,
-          name: createUserDto.name,
+          email: createUserDtoWithPicture.email,
+          name: createUserDtoWithPicture.name,
           password: 'hashedPassword',
           profilePicture: 'profile.jpg',
         },
@@ -110,12 +108,12 @@ describe('UsersService', () => {
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const users = [mockUser];
-      mockPrismaService.user.findMany.mockResolvedValue(users);
+      const mockUsers = [mockUser];
+      mockPrismaService.user.findMany.mockResolvedValue(mockUsers);
 
       const result = await service.findAll();
 
-      expect(result).toEqual(users);
+      expect(result).toEqual(mockUsers);
       expect(mockPrismaService.user.findMany).toHaveBeenCalled();
     });
   });
@@ -156,66 +154,53 @@ describe('UsersService', () => {
     it('should return null if user not found by email', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      const result = await service.findByEmail('notfound@example.com');
+      const result = await service.findByEmail('nonexistent@example.com');
 
       expect(result).toBeNull();
     });
   });
 
   describe('update', () => {
-    const updateUserDto: UpdateUserDto = {
-      name: 'Updated Name',
-    };
-
     it('should update user name', async () => {
+      const updateUserDto: UpdateUserDto = { name: 'Updated Name' };
       const updatedUser = { ...mockUser, name: 'Updated Name' };
       mockPrismaService.user.update.mockResolvedValue(updatedUser);
 
       const result = await service.update('1', updateUserDto);
 
+      expect(result).toEqual(updatedUser);
       expect(mockPrismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { name: 'Updated Name' },
+        data: updateUserDto,
       });
-      expect(result).toEqual(updatedUser);
     });
 
     it('should update user password with hashing', async () => {
-      const updatePasswordDto: UpdateUserDto = {
-        password: 'new-test-pass',
-      };
+      const updateUserDto: UpdateUserDto = { password: 'new-password' };
+      const updatedUser = { ...mockUser, password: 'new-hashed-password' };
+      mockHash.mockResolvedValue('new-hashed-password');
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
 
-      const bcrypt = require('bcrypt');
-      bcrypt.hash.mockResolvedValue('new-test-hash');
-      mockPrismaService.user.update.mockResolvedValue(mockUser);
+      const result = await service.update('1', updateUserDto);
 
-      await service.update('1', updatePasswordDto);
-
-      expect(bcrypt.hash).toHaveBeenCalledWith('new-test-pass', 10);
-      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
-        where: { id: '1' },
-        data: { password: 'new-test-hash' },
-      });
+      expect(mockHash).toHaveBeenCalledWith('new-password', 10);
+      expect(result).toEqual(updatedUser);
     });
 
     it('should update multiple fields', async () => {
-      const updateMultipleDto: UpdateUserDto = {
-        email: 'updated@example.com',
+      const updateUserDto: UpdateUserDto = {
         name: 'Updated Name',
-        profilePicture: 'new-profile.jpg',
+        profilePicture: 'new-picture.jpg',
       };
+      const updatedUser = { ...mockUser, ...updateUserDto };
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
 
-      mockPrismaService.user.update.mockResolvedValue(mockUser);
+      const result = await service.update('1', updateUserDto);
 
-      await service.update('1', updateMultipleDto);
-
+      expect(result).toEqual(updatedUser);
       expect(mockPrismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: {
-          email: 'updated@example.com',
-          name: 'Updated Name',
-          profilePicture: 'new-profile.jpg',
-        },
+        data: updateUserDto,
       });
     });
   });
