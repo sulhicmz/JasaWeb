@@ -1,4 +1,4 @@
-/// <reference types="@types/jest" />
+
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
@@ -6,16 +6,18 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from './refresh-token.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { vi } from 'vitest';
+
 
 // Mock bcrypt
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
-  compare: jest.fn(),
+vi.mock('bcrypt', () => ({
+  hash: vi.fn(),
+  compare: vi.fn(),
 }));
 
 // Mock UUID
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mock-uuid-1234'),
+vi.mock('uuid', () => ({
+  v4: vi.fn(() => 'mock-uuid-1234'),
 }));
 
 describe('AuthService', () => {
@@ -36,17 +38,17 @@ describe('AuthService', () => {
   };
 
   const mockUsersService = {
-    findByEmail: jest.fn(),
-    create: jest.fn(),
+    findByEmail: vi.fn(),
+    create: vi.fn(),
   };
 
   const mockJwtService = {
-    sign: jest.fn(),
-    verify: jest.fn(),
+    sign: vi.fn(),
+    verify: vi.fn(),
   };
 
   const mockRefreshTokenService = {
-    createRefreshToken: jest.fn(),
+    createRefreshToken: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -75,7 +77,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

@@ -2,8 +2,8 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './common/config/env.validation';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
+import { RedisCacheModule } from './common/services/redis-cache.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from './users/user.module';
@@ -48,13 +48,7 @@ const parseEnvNumber = (
       envFilePath: '.env',
       validate: validateEnv,
     }),
-    CacheModule.registerAsync({
-      isGlobal: true,
-      useFactory: async () => ({
-        ttl: parseEnvNumber(process.env.CACHE_TTL, 5), // Time to live in seconds
-        max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
-      }),
-    }),
+    RedisCacheModule,
     ThrottlerModule.forRoot([
       {
         ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds

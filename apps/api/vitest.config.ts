@@ -1,5 +1,4 @@
 import { defineConfig } from 'vitest/config';
-import swc from 'unplugin-swc';
 import { resolve } from 'path';
 
 export default defineConfig({
@@ -13,13 +12,12 @@ export default defineConfig({
     },
     include: ['**/*.{test,spec}.{js,ts}'],
     exclude: ['node_modules', 'dist', '.next', '.astro'],
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
+    },
   },
-  plugins: [
-    // Required for NestJS dependency injection with decorators
-    swc.vite({
-      module: { type: 'es6' },
-    }),
-  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

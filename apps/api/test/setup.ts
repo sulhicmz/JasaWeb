@@ -1,25 +1,26 @@
 // Vitest setup file for test environment
-import {
-  vi,
-  beforeEach,
-  afterEach,
-  describe,
-  it,
-  expect,
-  beforeAll,
-  afterAll,
-} from 'vitest';
+import { vi } from 'vitest';
 
-// Provide Jest-like globals for compatibility
-global.describe = describe;
-global.it = it;
-global.test = it;
-global.expect = expect;
-global.beforeEach = beforeEach;
-global.afterEach = afterEach;
-global.beforeAll = beforeAll;
-global.afterAll = afterAll;
-global.vi = vi;
+// Provide Jest compatibility for existing tests
+beforeAll(() => {
+  // Create global jest object with vi methods
+  (global as any).jest = {
+    fn: vi.fn,
+    mock: vi.mock,
+    spyOn: vi.spyOn,
+    clearAllMocks: vi.clearAllMocks,
+    resetAllMocks: vi.resetAllMocks,
+    restoreAllMocks: vi.restoreAllMocks,
+    useFakeTimers: vi.useFakeTimers,
+    useRealTimers: vi.useRealTimers,
+    advanceTimersByTime: vi.advanceTimersByTime,
+    runOnlyPendingTimers: vi.runOnlyPendingTimers,
+    runAllTimers: vi.runAllTimers,
+  };
+});
+
+// Set up Reflect for NestJS decorators
+import 'reflect-metadata';
 
 // Mock Prisma for testing
 vi.mock('@prisma/client', () => ({

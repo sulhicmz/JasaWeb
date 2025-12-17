@@ -4,9 +4,11 @@ import { Reflector } from '@nestjs/core';
 import { of, throwError } from 'rxjs';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { logger } from '../../../../../packages/config/logger';
+import { vi } from 'vitest';
+
 
 // Mock the logger
-jest.mock('../../../../../packages/config/logger');
+vi.mock('../../../../../packages/config/logger');
 const mockLogger = logger as jest.Mocked<typeof logger>;
 
 describe('SecurityInterceptor', () => {
@@ -15,7 +17,7 @@ describe('SecurityInterceptor', () => {
 
   beforeEach(async () => {
     const mockReflector = {
-      get: jest.fn(),
+      get: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -32,7 +34,7 @@ describe('SecurityInterceptor', () => {
     reflector = module.get<Reflector>(Reflector) as jest.Mocked<Reflector>;
 
     // Reset logger mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -49,24 +51,24 @@ describe('SecurityInterceptor', () => {
       mockRequest = {
         method: 'GET',
         url: '/api/test',
-        get: jest.fn(),
+        get: vi.fn(),
         user: { id: 'user123', organizationId: 'org123' },
       };
 
       mockResponse = {
-        setHeader: jest.fn(),
+        setHeader: vi.fn(),
         statusCode: 200,
       };
 
       mockContext = {
-        switchToHttp: jest.fn().mockReturnValue({
+        switchToHttp: vi.fn().mockReturnValue({
           getRequest: () => mockRequest,
           getResponse: () => mockResponse,
         }),
       } as any;
 
       mockCallHandler = {
-        handle: jest.fn(),
+        handle: vi.fn(),
       };
 
       reflector.get.mockReturnValue({});

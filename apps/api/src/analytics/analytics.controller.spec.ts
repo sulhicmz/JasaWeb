@@ -1,8 +1,10 @@
-/// <reference types="@types/jest" />
+
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
+import { vi } from 'vitest';
+
 
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
@@ -10,12 +12,12 @@ describe('AnalyticsController', () => {
 
   beforeEach(async () => {
     const mockService = {
-      getProjectAnalytics: jest.fn(),
-      getTeamPerformanceAnalytics: jest.fn(),
-      getFinancialAnalytics: jest.fn(),
-      getClientInsightsAnalytics: jest.fn(),
-      getActivityTrends: jest.fn(),
-      getOverviewAnalytics: jest.fn(),
+      getProjectAnalytics: vi.fn(),
+      getTeamPerformanceAnalytics: vi.fn(),
+      getFinancialAnalytics: vi.fn(),
+      getClientInsightsAnalytics: vi.fn(),
+      getActivityTrends: vi.fn(),
+      getOverviewAnalytics: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

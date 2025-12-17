@@ -418,9 +418,12 @@ export function validateEnvironmentVariables(): void {
     }
   }
 
-  // Security checks for production
-  if (process.env.NODE_ENV === 'production') {
-    // Check for weak passwords
+  // Security checks for production and development
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.NODE_ENV === 'development'
+  ) {
+    // Check for weak passwords and hardcoded test credentials
     const weakPatterns = [
       /password/i,
       /123456/,
@@ -429,7 +432,16 @@ export function validateEnvironmentVariables(): void {
       /qwerty/i,
       /minioadmin/i,
       /redis_password/i,
+      /^test$/, // Exact match for "test"
     ];
+
+    // Additional check for test database name (only warn in development)
+    if (
+      process.env.POSTGRES_DB === 'test' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      warnings.push('Using test database name in development environment');
+    }
 
     const checkWeakPassword = (value: string | undefined, name: string) => {
       if (value) {
@@ -443,9 +455,12 @@ export function validateEnvironmentVariables(): void {
     };
 
     checkWeakPassword(process.env.POSTGRES_PASSWORD, 'PostgreSQL password');
+    checkWeakPassword(process.env.POSTGRES_USER, 'PostgreSQL username');
     checkWeakPassword(process.env.REDIS_PASSWORD, 'Redis password');
     checkWeakPassword(process.env.S3_SECRET_KEY, 'S3 secret key');
+    checkWeakPassword(process.env.S3_ACCESS_KEY, 'S3 access key');
     checkWeakPassword(process.env.MINIO_ROOT_PASSWORD, 'MinIO password');
+    checkWeakPassword(process.env.MINIO_ROOT_USER, 'MinIO username');
 
     // Check for default secrets
     const defaultSecrets = [

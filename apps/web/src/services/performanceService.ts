@@ -1,5 +1,17 @@
 // src/services/performanceService.ts
-import { logger } from '@jasaweb/config';
+// Simple logger fallback for web app
+const logger = {
+  debug: (message: string, data?: any) =>
+    console.debug(`[DEBUG] ${message}`, data),
+  info: (message: string, data?: any) =>
+    console.info(`[INFO] ${message}`, data),
+  warn: (message: string, data?: any) =>
+    console.warn(`[WARN] ${message}`, data),
+  error: (message: string, error?: any) =>
+    console.error(`[ERROR] ${message}`, error),
+  performance: (metric: string, value: number, details?: any) =>
+    console.info(`[PERF] ${metric}: ${value}ms`, details),
+};
 
 export class PerformanceService {
   private static instance: PerformanceService;

@@ -28,14 +28,15 @@ export const DEFAULT_CORS_ORIGINS = [
 
 /**
  * Default Database Configuration
+ * Note: Sensitive credentials are loaded from environment variables
  */
 export const DEFAULT_DATABASE_CONFIG = {
-  HOST: 'localhost',
-  PORT: DEFAULT_PORTS.DATABASE,
-  USER: 'test',
-  PASSWORD: 'test',
-  DATABASE: 'test',
-  URL: 'postgresql://test:test@localhost:5432/test',
+  HOST: process.env.POSTGRES_HOST || 'localhost',
+  PORT: Number(process.env.POSTGRES_PORT) || DEFAULT_PORTS.DATABASE,
+  USER: process.env.POSTGRES_USER,
+  PASSWORD: process.env.POSTGRES_PASSWORD,
+  DATABASE: process.env.POSTGRES_DB,
+  URL: process.env.DATABASE_URL,
 } as const;
 
 /**

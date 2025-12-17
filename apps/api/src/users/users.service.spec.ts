@@ -1,14 +1,16 @@
-/// <reference types="@types/jest" />
+
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { vi } from 'vitest';
+
 
 // Mock bcrypt
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
+vi.mock('bcrypt', () => ({
+  hash: vi.fn(),
 }));
 
 describe('UsersService', () => {
@@ -27,11 +29,11 @@ describe('UsersService', () => {
 
   const mockPrismaService = {
     user: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
     },
   };
 
@@ -51,7 +53,7 @@ describe('UsersService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

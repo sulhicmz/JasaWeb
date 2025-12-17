@@ -1,15 +1,17 @@
-/// <reference types="@types/jest" />
+
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
 import { MailerService } from '@nestjs-modules/mailer';
+import { vi } from 'vitest';
+
 
 describe('EmailService', () => {
   let service: EmailService;
   let mailerService: MailerService;
 
   const mockMailerService = {
-    sendMail: jest.fn(),
+    sendMail: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -28,7 +30,7 @@ describe('EmailService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should be defined', () => {

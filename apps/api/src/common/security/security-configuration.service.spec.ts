@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SecurityConfigurationService } from './security-configuration.service';
 import { AppConfigService } from '../config/app.config.service';
+import { vi } from 'vitest';
+
 
 describe('SecurityConfigurationService', () => {
   let service: SecurityConfigurationService;
@@ -8,9 +10,9 @@ describe('SecurityConfigurationService', () => {
 
   beforeEach(async () => {
     mockAppConfigService = {
-      isProduction: jest.fn(),
-      isDevelopment: jest.fn(),
-      getCorsOrigins: jest.fn(),
+      isProduction: vi.fn(),
+      isDevelopment: vi.fn(),
+      getCorsOrigins: vi.fn(),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({

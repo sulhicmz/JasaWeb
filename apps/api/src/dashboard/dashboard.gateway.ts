@@ -10,7 +10,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { APP_URLS, CACHE_KEYS } from '../common/config/constants';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { Logger, UseGuards } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -20,10 +20,23 @@ import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 
-interface AuthenticatedSocket extends Socket {
+interface AuthenticatedSocket {
   userId?: string;
   organizationId?: string;
   userRole?: Role;
+  handshake: {
+    auth: {
+      token?: string;
+    };
+    headers: {
+      authorization?: string;
+    };
+  };
+  id: string;
+  join: (room: string) => Promise<void>;
+  leave: (room: string) => Promise<void>;
+  emit: (event: string, data: any) => void;
+  disconnect: () => void;
 }
 
 interface DashboardUpdatePayload {
@@ -54,7 +67,7 @@ export class DashboardGateway
     private readonly multiTenantPrisma: MultiTenantPrismaService
   ) {}
 
-  afterInit(_server: Server) {
+  afterInit(server: Server) {
     this.logger.log('Dashboard WebSocket Gateway initialized');
   }
 
@@ -278,7 +291,7 @@ export class DashboardGateway
 
     return allActivities
       .sort(
-        (a, b) =>
+        (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
       .slice(0, limit);
@@ -292,10 +305,12 @@ export class DashboardGateway
 
     const total = projects.length;
     const active = projects.filter(
-      (p) => p.status === 'active' || p.status === 'in-progress'
+      (p: any) => p.status === 'active' || p.status === 'in-progress'
     ).length;
-    const completed = projects.filter((p) => p.status === 'completed').length;
-    const onHold = projects.filter((p) => p.status === 'on-hold').length;
+    const completed = projects.filter(
+      (p: any) => p.status === 'completed'
+    ).length;
+    const onHold = projects.filter((p: any) => p.status === 'on-hold').length;
 
     return { total, active, completed, onHold };
   }
@@ -307,15 +322,17 @@ export class DashboardGateway
     });
 
     const total = tickets.length;
-    const open = tickets.filter((t) => t.status === 'open').length;
-    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
+    const open = tickets.filter((t: any) => t.status === 'open').length;
+    const inProgress = tickets.filter(
+      (t: any) => t.status === 'in-progress'
+    ).length;
     const highPriority = tickets.filter(
-      (t) =>
+      (t: any) =>
         (t.priority === 'high' || t.priority === 'critical') &&
         (t.status === 'open' || t.status === 'in-progress')
     ).length;
     const critical = tickets.filter(
-      (t) =>
+      (t: any) =>
         t.priority === 'critical' &&
         (t.status === 'open' || t.status === 'in-progress')
     ).length;
@@ -331,18 +348,21 @@ export class DashboardGateway
 
     const total = invoices.length;
     const pending = invoices.filter(
-      (i) => i.status === 'draft' || i.status === 'issued'
+      (i: any) => i.status === 'draft' || i.status === 'issued'
     ).length;
     const overdue = invoices.filter(
-      (i) =>
+      (i: any) =>
         (i.status === 'issued' || i.status === 'overdue') &&
         new Date(i.dueAt) < new Date()
     ).length;
 
-    const totalAmount = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
+    const totalAmount = invoices.reduce(
+      (sum: number, i: any) => sum + (i.amount || 0),
+      0
+    );
     const pendingAmount = invoices
-      .filter((i) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum, i) => sum + (i.amount || 0), 0);
+      .filter((i: any) => i.status === 'draft' || i.status === 'issued')
+      .reduce((sum: number, i: any) => sum + (i.amount || 0), 0);
 
     return { total, pending, overdue, totalAmount, pendingAmount };
   }
@@ -361,12 +381,14 @@ export class DashboardGateway
     });
 
     const total = milestones.length;
-    const completed = milestones.filter((m) => m.status === 'completed').length;
+    const completed = milestones.filter(
+      (m: any) => m.status === 'completed'
+    ).length;
     const overdue = milestones.filter(
-      (m) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
+      (m: any) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
     ).length;
     const dueThisWeek = milestones.filter(
-      (m) =>
+      (m: any) =>
         m.status !== 'completed' &&
         m.dueAt &&
         new Date(m.dueAt) >= now &&
@@ -390,7 +412,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return projects.map((project) => ({
+    return projects.map((project: any) => ({
       id: project.id,
       type: 'project' as const,
       title: project.name,
@@ -414,7 +436,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return tickets.map((ticket) => ({
+    return tickets.map((ticket: any) => ({
       id: ticket.id,
       type: 'ticket' as const,
       title: `${ticket.type} ticket`,
@@ -443,7 +465,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return milestones.map((milestone) => ({
+    return milestones.map((milestone: any) => ({
       id: milestone.id,
       type: 'milestone' as const,
       title: milestone.title,
@@ -468,7 +490,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return invoices.map((invoice) => ({
+    return invoices.map((invoice: any) => ({
       id: invoice.id,
       type: 'invoice' as const,
       title: `Invoice ${invoice.id.slice(-8)}`,
