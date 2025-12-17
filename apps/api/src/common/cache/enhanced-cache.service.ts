@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { logger } from '@jasaweb/config';
 
 interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -49,7 +50,11 @@ export class EnhancedCacheService {
     l3: 600, // 10 minutes
   };
 
-  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
+  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {
+    this.logger = logger;
+  }
+
+  private readonly logger: typeof logger;
 
   /**
    * Get data from cache with multi-level fallback
@@ -88,7 +93,7 @@ export class EnhancedCacheService {
           return l2Data;
         }
       } catch (error) {
-        console.warn(`L2 cache error for key ${key}:`, error);
+        this.logger.warn(`L2 cache error for key ${key}`, error);
       }
     }
 
@@ -126,7 +131,7 @@ export class EnhancedCacheService {
       try {
         await this.cacheManager.set(key, value, ttl * 1000); // Convert to milliseconds
       } catch (error) {
-        console.warn(`L2 cache set error for key ${key}:`, error);
+        this.logger.warn(`L2 cache set error for key ${key}`, error);
       }
     }
 
@@ -146,7 +151,7 @@ export class EnhancedCacheService {
     try {
       await this.cacheManager.del(key);
     } catch (error) {
-      console.warn(`L2 cache delete error for key ${key}:`, error);
+      this.logger.warn(`L2 cache delete error for key ${key}`, error);
     }
   }
 
@@ -161,7 +166,7 @@ export class EnhancedCacheService {
     try {
       await this.cacheManager.clear();
     } catch (error) {
-      console.warn('L2 cache clear error:', error);
+      this.logger.warn('L2 cache clear error', error);
     }
   }
 
@@ -218,7 +223,7 @@ export class EnhancedCacheService {
 
     // For L2 cache, we'd need Redis SCAN or KEYS command
     // For now, we'll skip this as it requires Redis-specific operations
-    console.log(
+    this.logger.debug(
       `Pattern invalidation for "${pattern}" - L2 cache not implemented`
     );
   }
@@ -238,7 +243,7 @@ export class EnhancedCacheService {
         const data = await factory();
         await this.set(key, data, options);
       } catch (error) {
-        console.warn(`Cache warm-up error for key ${key}:`, error);
+        this.logger.warn(`Cache warm-up error for key ${key}`, error);
       }
     });
 
