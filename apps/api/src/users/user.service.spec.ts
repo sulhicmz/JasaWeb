@@ -9,7 +9,6 @@ import { vi } from 'vitest';
 
 describe('UserService', () => {
   let service: UserService;
-  let prismaService: PrismaService;
 
   const mockUser = {
     id: '1',
@@ -43,7 +42,6 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UserService>(UserService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

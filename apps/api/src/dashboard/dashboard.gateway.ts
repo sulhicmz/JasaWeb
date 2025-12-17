@@ -19,6 +19,50 @@ import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { Invoice } from '@prisma/client';
+
+interface InvoiceStatus {
+  id: string;
+  status: string;
+  amount: number | null;
+  dueAt: Date | null;
+}
+
+interface MilestoneStatus {
+  status: string;
+  dueAt: Date | null;
+}
+
+interface ProjectActivity {
+  id: string;
+  name: string;
+  status: string;
+  updatedAt: Date;
+}
+
+interface TicketActivity {
+  id: string;
+  type: string;
+  priority: string;
+  status: string;
+  createdAt: Date;
+}
+
+interface MilestoneActivity {
+  id: string;
+  title: string;
+  status: string;
+  createdAt: Date;
+  dueAt: Date | null;
+}
+
+interface InvoiceActivity {
+  id: string;
+  status: string;
+  amount: number | null;
+  dueAt: Date | null;
+  createdAt: Date;
+}
 
 interface AuthenticatedSocket {
   userId?: string;
@@ -363,21 +407,24 @@ export class DashboardGateway
 
     const total = invoices.length;
     const pending = invoices.filter(
-      (i: any) => i.status === 'draft' || i.status === 'issued'
+      (i: InvoiceStatus) => i.status === 'draft' || i.status === 'issued'
     ).length;
     const invoiceOverdue = invoices.filter(
-      (i: any) =>
+      (i: InvoiceStatus) =>
         (i.status === 'issued' || i.status === 'overdue') &&
+        i.dueAt &&
         new Date(i.dueAt) < new Date()
     ).length;
 
     const totalAmount = invoices.reduce(
-      (sum: number, i: any) => sum + (i.amount || 0),
+      (sum: number, i: InvoiceStatus) => sum + (i.amount || 0),
       0
     );
     const pendingAmount = invoices
-      .filter((i: any) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum: number, i: any) => sum + (i.amount || 0), 0);
+      .filter(
+        (i: InvoiceStatus) => i.status === 'draft' || i.status === 'issued'
+      )
+      .reduce((sum: number, i: InvoiceStatus) => sum + (i.amount || 0), 0);
 
     return {
       total,
@@ -403,13 +450,14 @@ export class DashboardGateway
 
     const total = milestones.length;
     const completed = milestones.filter(
-      (m: any) => m.status === 'completed'
+      (m: MilestoneStatus) => m.status === 'completed'
     ).length;
     const milestoneOverdue = milestones.filter(
-      (m: any) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
+      (m: MilestoneStatus) =>
+        m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
     ).length;
     const dueThisWeek = milestones.filter(
-      (m: any) =>
+      (m: MilestoneStatus) =>
         m.status !== 'completed' &&
         m.dueAt &&
         new Date(m.dueAt) >= now &&
@@ -433,7 +481,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return projects.map((project: any) => ({
+    return projects.map((project: ProjectActivity) => ({
       id: project.id,
       type: 'project' as const,
       title: project.name,
@@ -457,10 +505,10 @@ export class DashboardGateway
       take: limit,
     });
 
-    return tickets.map((ticket: any) => ({
+    return tickets.map((ticket: TicketActivity) => ({
       id: ticket.id,
       type: 'ticket' as const,
-      title: ticket.title || `${ticket.type} ticket`,
+      title: `${ticket.type} ticket`,
       description: 'No description',
       status: ticket.status,
       priority: ticket.priority,
@@ -486,7 +534,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return milestones.map((milestone: any) => ({
+    return milestones.map((milestone: MilestoneActivity) => ({
       id: milestone.id,
       type: 'milestone' as const,
       title: milestone.title,
@@ -511,10 +559,10 @@ export class DashboardGateway
       take: limit,
     });
 
-    return invoices.map((invoice: any) => ({
+    return invoices.map((invoice: InvoiceActivity) => ({
       id: invoice.id,
       type: 'invoice' as const,
-      title: invoice.invoiceNumber || `Invoice ${invoice.id.slice(-8)}`,
+      title: `Invoice ${invoice.id.slice(-8)}`,
       description: 'Invoice',
       status: invoice.status,
       createdAt: invoice.createdAt,

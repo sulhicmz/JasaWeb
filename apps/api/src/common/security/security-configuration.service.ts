@@ -69,27 +69,9 @@ export class SecurityConfigurationService {
       ...(isProduction && { upgradeInsecureRequests: [] }),
     };
 
-    // Filter out undefined values using safe Set-based approach
-    const validDirectiveKeys = new Set([
-      'defaultSrc',
-      'scriptSrc',
-      'styleSrc',
-      'imgSrc',
-      'connectSrc',
-      'fontSrc',
-      'objectSrc',
-      'mediaSrc',
-      'frameSrc',
-      'childSrc',
-      'workerSrc',
-      'manifestSrc',
-      'upgradeInsecureRequests',
-    ] as const);
-
-    // Security: Safe iteration using Set validation
+    // Security: Safe iteration using explicit allowed keys
     const directiveEntries: Array<[string, string[]]> = [];
-    // Security: Explicitly check allowed keys to prevent object injection
-    const allowedKeys: Array<keyof typeof directives> = [
+    const allowedKeys = new Set([
       'defaultSrc',
       'scriptSrc',
       'styleSrc',
@@ -103,52 +85,41 @@ export class SecurityConfigurationService {
       'workerSrc',
       'manifestSrc',
       'upgradeInsecureRequests',
-    ];
+    ]);
 
-    // Security: Use explicit key checks instead of Set.has to avoid type issues
-    for (const key of allowedKeys) {
-      const directiveValue = directives[key];
-      if (directiveValue) {
-        // Convert kebab-case to camelCase for validation
-        const camelKey = key as keyof typeof directives;
-        if (
-          camelKey === 'defaultSrc' ||
-          camelKey === 'scriptSrc' ||
-          camelKey === 'styleSrc' ||
-          camelKey === 'imgSrc' ||
-          camelKey === 'connectSrc' ||
-          camelKey === 'fontSrc' ||
-          camelKey === 'objectSrc' ||
-          camelKey === 'mediaSrc' ||
-          camelKey === 'frameSrc' ||
-          camelKey === 'childSrc' ||
-          camelKey === 'workerSrc' ||
-          camelKey === 'manifestSrc' ||
-          camelKey === 'upgradeInsecureRequests'
-        ) {
-          // Type-safe array check
-          const value = directiveValue as readonly string[];
-          if (Array.isArray(value)) {
-            directiveEntries.push([key, [...value]]);
-          }
+    // Security: Use Set for secure iteration to prevent object injection
+    for (const key of Object.keys(directives)) {
+      if (allowedKeys.has(key)) {
+        const directiveValue = directives[key as keyof typeof directives];
+        if (directiveValue && Array.isArray(directiveValue)) {
+          directiveEntries.push([key, [...directiveValue]]);
         }
       }
     }
 
-    // Security: Use explicit object creation with known keys
+    // Security: Use safe object creation with validated keys
     const filteredDirectives: Record<string, string[]> = {};
+    const validKeys = new Set([
+      'defaultSrc',
+      'scriptSrc',
+      'styleSrc',
+      'imgSrc',
+      'fontSrc',
+      'connectSrc',
+      'mediaSrc',
+      'objectSrc',
+      'childSrc',
+      'frameSrc',
+      'workerSrc',
+      'manifestSrc',
+      'upgradeInsecureRequests',
+    ]);
 
     for (const [key, value] of directiveEntries) {
-      if (Array.isArray(value)) {
+      if (validKeys.has(key) && Array.isArray(value)) {
         const filtered = value.filter(Boolean);
         if (filtered.length > 0) {
-          // Use Object.defineProperty to prevent injection
-          Object.defineProperty(filteredDirectives, key, {
-            value: filtered,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
+          filteredDirectives[key] = filtered;
         }
       }
     }

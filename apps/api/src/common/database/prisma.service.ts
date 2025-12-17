@@ -1,11 +1,12 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { EnvironmentService } from '../config/environment.service';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  constructor() {
+  constructor(private envService: EnvironmentService) {
     super({
-      accelerateUrl: process.env.DATABASE_URL,
+      accelerateUrl: envService.databaseUrl,
     });
   }
 

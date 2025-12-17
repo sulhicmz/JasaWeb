@@ -29,9 +29,6 @@ vi.mock('chart.js', () => ({
 }));
 
 describe('DashboardCharts', () => {
-  let DashboardCharts: any;
-  let dashboardCharts: any;
-
   beforeEach(async () => {
     // Setup DOM
     document.body.innerHTML = `
@@ -47,9 +44,8 @@ describe('DashboardCharts', () => {
     `;
 
     // Dynamic import
-    const module = await import(
-      '../src/components/dashboard/DashboardCharts.astro'
-    );
+    const module =
+      await import('../src/components/dashboard/DashboardCharts.astro');
     // Note: Since this is an Astro component, we'll test the JavaScript logic separately
   });
 

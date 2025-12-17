@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../../src/auth/auth.service';
-import { UserService } from '../../s../users/user.service';
+import { UserService } from '../../src/users/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from '../../src/auth/refresh-token.service';
 import { PasswordService } from '../../src/auth/password.service';
@@ -10,8 +10,6 @@ import { vi } from 'vitest';
 
 describe('AuthService - Multi-tenant Integration', () => {
   let service: AuthService;
-  let multiTenantPrisma: MultiTenantPrismaService;
-  let usersService: UserService;
 
   const mockMultiTenantPrisma = {
     user: {
@@ -75,10 +73,6 @@ describe('AuthService - Multi-tenant Integration', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
-    usersService = module.get<UserService>(UserService);
   });
 
   it('should authenticate user and return organization-specific data', async () => {

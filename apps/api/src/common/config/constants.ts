@@ -31,12 +31,12 @@ export const DEFAULT_CORS_ORIGINS = [
  * Note: Sensitive credentials are loaded from environment variables
  */
 export const DEFAULT_DATABASE_CONFIG = {
-  HOST: process.env.POSTGRES_HOST || 'localhost',
-  PORT: Number(process.env.POSTGRES_PORT) || DEFAULT_PORTS.DATABASE,
-  USER: process.env.POSTGRES_USER,
-  PASSWORD: process.env.POSTGRES_PASSWORD,
-  DATABASE: process.env.POSTGRES_DB,
-  URL: process.env.DATABASE_URL,
+  HOST: 'localhost',
+  PORT: DEFAULT_PORTS.DATABASE,
+  USER: undefined,
+  PASSWORD: undefined,
+  DATABASE: undefined,
+  URL: undefined,
 } as const;
 
 /**
@@ -52,9 +52,8 @@ export const DEFAULT_EMAIL_CONFIG = {
  * Application URLs
  */
 export const APP_URLS = {
-  FRONTEND_URL:
-    process.env.FRONTEND_URL || `http://localhost:${DEFAULT_PORTS.WEB}`,
-  API_URL: process.env.API_URL || `http://localhost:${DEFAULT_PORTS.API}`,
+  FRONTEND_URL: `http://localhost:${DEFAULT_PORTS.WEB}`,
+  API_URL: `http://localhost:${DEFAULT_PORTS.API}`,
 } as const;
 
 /**
@@ -118,10 +117,10 @@ export const RATE_LIMIT_CONFIG = {
  * Environment Configuration
  */
 export const ENV_CONFIG = {
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
-  IS_PRODUCTION: process.env.NODE_ENV === 'production',
-  IS_TEST: process.env.NODE_ENV === 'test',
+  NODE_ENV: 'development',
+  IS_DEVELOPMENT: true,
+  IS_PRODUCTION: false,
+  IS_TEST: false,
 } as const;
 
 /**

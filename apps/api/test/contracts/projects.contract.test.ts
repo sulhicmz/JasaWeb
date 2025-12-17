@@ -14,7 +14,6 @@ import { Reflector } from '@nestjs/core';
 describe('ProjectController API Contract Tests', () => {
   let controller: ProjectController;
   let service: ProjectService;
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockProject = {
     id: '1',
@@ -95,9 +94,6 @@ describe('ProjectController API Contract Tests', () => {
 
     controller = module.get<ProjectController>(ProjectController);
     service = module.get<ProjectService>(ProjectService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
 
     // Manually inject the service if it's not injected properly
     if (!(controller as any).projectService) {

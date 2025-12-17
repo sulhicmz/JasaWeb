@@ -7,6 +7,7 @@ import {
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { EnvironmentService } from '../config/environment.service';
 
 export interface FileUploadOptions {
   bucket: string;
@@ -34,17 +35,17 @@ export class FileStorageService {
   private readonly logger = new Logger(FileStorageService.name);
   private s3Client: S3Client;
 
-  constructor() {
-    // Initialize S3 client with environment variables
+  constructor(private envService: EnvironmentService) {
+    // Initialize S3 client with environment service
     this.s3Client = new S3Client({
-      region: process.env.S3_REGION || 'us-east-1',
-      endpoint: process.env.S3_ENDPOINT, // For S3-compatible services like MinIO
+      region: this.envService.s3Region,
+      endpoint: this.envService.s3Endpoint, // For S3-compatible services like MinIO
       credentials: {
-        accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+        accessKeyId: this.envService.s3AccessKeyId || '',
+        secretAccessKey: this.envService.s3SecretAccessKey || '',
       },
       // For MinIO or other S3-compatible services, force path style
-      forcePathStyle: !!process.env.S3_ENDPOINT,
+      forcePathStyle: this.envService.isS3Compatible,
     });
   }
 

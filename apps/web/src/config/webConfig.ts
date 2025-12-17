@@ -55,6 +55,21 @@ function getRequiredString(
   key: string,
   fallback?: string
 ): string {
+  // Validate key to prevent object injection
+  const allowedKeys = new Set([
+    'PUBLIC_API_URL',
+    'PUBLIC_SITE_URL',
+    'PUBLIC_WS_URL',
+    'SITE_NAME',
+    'SITE_DESCRIPTION',
+  ]);
+
+  if (!allowedKeys.has(key)) {
+    throw new WebConfigError(
+      `Unauthorized environment variable access: ${key}`
+    );
+  }
+
   const value = env[key] || fallback;
   if (!value || value.trim() === '') {
     throw new WebConfigError(
@@ -68,6 +83,20 @@ function getOptionalString(
   env: Record<string, string>,
   key: string
 ): string | undefined {
+  // Validate key to prevent object injection
+  const allowedKeys = new Set([
+    'PUBLIC_ANALYTICS_ID',
+    'PUBLIC_SENTRY_DSN',
+    'CONTACT_EMAIL',
+    'COMPANY_ADDRESS',
+  ]);
+
+  if (!allowedKeys.has(key)) {
+    throw new WebConfigError(
+      `Unauthorized environment variable access: ${key}`
+    );
+  }
+
   const value = env[key];
   if (!value || value.trim() === '') {
     return undefined;
@@ -80,6 +109,20 @@ function getBoolean(
   key: string,
   fallback = false
 ): boolean {
+  // Validate key to prevent object injection
+  const allowedKeys = new Set([
+    'ENABLE_ANALYTICS',
+    'ENABLE_SENTRY',
+    'DEBUG_MODE',
+    'MAINTENANCE_MODE',
+  ]);
+
+  if (!allowedKeys.has(key)) {
+    throw new WebConfigError(
+      `Unauthorized environment variable access: ${key}`
+    );
+  }
+
   const value = env[key];
   if (value === undefined) {
     return fallback;
@@ -92,8 +135,8 @@ function getLogLevel(
   fallback: 'debug' | 'info' | 'warn' | 'error' = 'info'
 ): 'debug' | 'info' | 'warn' | 'error' {
   const level = env.LOG_LEVEL?.toLowerCase();
-  const validLevels = ['debug', 'info', 'warn', 'error'];
-  if (level && validLevels.includes(level)) {
+  const validLevels = new Set(['debug', 'info', 'warn', 'error']);
+  if (level && validLevels.has(level)) {
     return level as 'debug' | 'info' | 'warn' | 'error';
   }
   return fallback;

@@ -99,7 +99,9 @@ export class ProjectService {
     const { page = 1, limit = 20, filters = {} } = options || {};
 
     // Build where clause
-    const whereClause: any = organizationId ? { organizationId } : {};
+    const whereClause: Record<string, unknown> = organizationId
+      ? { organizationId }
+      : {};
 
     if (filters.status && filters.status.length > 0) {
       whereClause.status = { in: filters.status };

@@ -266,9 +266,8 @@ describe('DashboardController', () => {
       (mockPrismaService.milestone as any).findMany.mockResolvedValue([]);
       (mockPrismaService.invoice as any).findMany.mockResolvedValue([]);
 
-      const result = await controller.getRecentActivity('org-123', '2');
-
       // Should cap at 2 items
+      await controller.getRecentActivity('org-123', '2');
       expect((mockPrismaService.project as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 1 }) // Math.ceil(2/4) = 1
       );

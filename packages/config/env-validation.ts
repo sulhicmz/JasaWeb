@@ -529,6 +529,14 @@ export function getRequiredEnv(key: string): string {
     );
   }
 
+  // Security: Additional key validation
+  const allowedKeys = new Set(Object.keys(ENV_SCHEMA));
+  if (!allowedKeys.has(key)) {
+    throw new EnvValidationError(
+      `Unauthorized environment variable access: ${key}`
+    );
+  }
+
   const value = process.env[key];
   if (!value) {
     throw new EnvValidationError(
@@ -547,10 +555,11 @@ export function getOptionalEnv(
     throw new EnvValidationError(`Invalid environment variable key: ${key}`);
   }
 
-  // Double validation against allowed keys
-  if (!Object.prototype.hasOwnProperty.call(ENV_SCHEMA, key)) {
+  // Security: Additional key validation with Set
+  const allowedKeys = new Set(Object.keys(ENV_SCHEMA));
+  if (!allowedKeys.has(key)) {
     throw new EnvValidationError(
-      `Environment variable ${key} is not in schema`
+      `Unauthorized environment variable access: ${key}`
     );
   }
 

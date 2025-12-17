@@ -1,15 +1,15 @@
 // src/services/performanceService.ts
 // Simple logger fallback for web app
 const logger = {
-  debug: (message: string, data?: any) =>
+  debug: (message: string, data?: unknown) =>
     console.debug(`[DEBUG] ${message}`, data),
-  info: (message: string, data?: any) =>
+  info: (message: string, data?: unknown) =>
     console.info(`[INFO] ${message}`, data),
-  warn: (message: string, data?: any) =>
+  warn: (message: string, data?: unknown) =>
     console.warn(`[WARN] ${message}`, data),
-  error: (message: string, error?: any) =>
+  error: (message: string, error?: unknown) =>
     console.error(`[ERROR] ${message}`, error),
-  performance: (metric: string, value: number, details?: any) =>
+  performance: (metric: string, value: number, details?: unknown) =>
     console.info(`[PERF] ${metric}: ${value}ms`, details),
 };
 
@@ -59,9 +59,13 @@ export class PerformanceService {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: any) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+        entries.forEach((entry) => {
+          const layoutShiftEntry = entry as PerformanceEntry & {
+            value: number;
+            hadRecentInput: boolean;
+          };
+          if (!layoutShiftEntry.hadRecentInput) {
+            clsValue += layoutShiftEntry.value;
             this.metrics.cls = clsValue;
           }
         });

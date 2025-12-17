@@ -6,7 +6,7 @@ import {
 } from './project.service';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { NotFoundException } from '@nestjs/common';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createMockMultiTenantPrismaService,
   createTestProject,
@@ -15,6 +15,7 @@ import {
 
 describe('ProjectService', () => {
   let service: ProjectService;
+  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockProject = createTestProject({
     id: '1',
@@ -61,9 +62,6 @@ describe('ProjectService', () => {
     }).compile();
 
     service = module.get<ProjectService>(ProjectService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
   });
 
   afterEach(() => {

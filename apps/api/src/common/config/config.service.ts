@@ -78,20 +78,51 @@ export class ConfigService {
   /**
    * Get configuration value by dot notation path
    */
-  get(path: string): any {
+  get<T = unknown>(path: string): T {
     const config = this.getAllConfig();
     const keys = path.split('.');
-    let value: any = config;
+    let value: unknown = config;
+
+    // Define allowed keys for security
+    const allowedKeys = new Set([
+      'site',
+      'emails',
+      'security',
+      'network',
+      'cache',
+      'name',
+      'description',
+      'contact',
+      'urls',
+      'api',
+      'production',
+      'maxFileUploadSize',
+      'maxLoginAttempts',
+      'bcryptRounds',
+      'rateLimit',
+      'windowMs',
+      'maxRequests',
+      'defaultTtl',
+      'dashboardTtl',
+    ]);
 
     for (const key of keys) {
-      if (value && typeof value === 'object' && key in value) {
-        value = value[key];
+      if (!allowedKeys.has(key)) {
+        throw new Error(`Configuration key '${key}' is not allowed`);
+      }
+      if (
+        value &&
+        typeof value === 'object' &&
+        value !== null &&
+        key in value
+      ) {
+        value = (value as Record<string, unknown>)[key];
       } else {
         throw new Error(`Configuration path '${path}' not found`);
       }
     }
 
-    return value;
+    return value as T;
   }
 
   /**
@@ -117,7 +148,7 @@ export class ConfigService {
   /**
    * Get configuration summary for monitoring
    */
-  getConfigSummary(): Record<string, any> {
+  getConfigSummary(): Record<string, unknown> {
     return {
       site: {
         name: this.get('site.name'),

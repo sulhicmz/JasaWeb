@@ -42,7 +42,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         throw new Error(response.error || 'Failed to fetch dashboard stats');
       }
 
-      const stats = response.data as any;
+      const stats = response.data as Record<string, Record<string, number>>;
 
       // Transform data for charts
       const projectChartData: ChartData = {

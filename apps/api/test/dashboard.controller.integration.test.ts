@@ -50,14 +50,6 @@ describe('DashboardController Integration Tests', () => {
     broadcastDashboardUpdate: jest.fn(),
   };
 
-  const mockGuard = {
-    canActivate: (context: ExecutionContext) => {
-      const request = context.switchToHttp().getRequest();
-      request.user = { id: mockUserId, organizationId: mockOrganizationId };
-      return true;
-    },
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DashboardController],

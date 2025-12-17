@@ -60,12 +60,7 @@ export class EnhancedCacheService {
    * Get data from cache with multi-level fallback
    */
   async get<T>(key: string, options: CacheOptions = {}): Promise<T | null> {
-    const {
-      ttl = this.DEFAULT_TTL.l1,
-      l1 = true,
-      l2 = true,
-      l3 = false,
-    } = options;
+    const { ttl = this.DEFAULT_TTL.l1, l1 = true, l2 = true } = options;
 
     // Try L1 cache (in-memory) first
     if (l1) {
@@ -112,12 +107,7 @@ export class EnhancedCacheService {
     value: T,
     options: CacheOptions = {}
   ): Promise<void> {
-    const {
-      ttl = this.DEFAULT_TTL.l1,
-      l1 = true,
-      l2 = true,
-      l3 = false,
-    } = options;
+    const { ttl = this.DEFAULT_TTL.l1, l1 = true, l2 = true } = options;
 
     this.stats.sets++;
 

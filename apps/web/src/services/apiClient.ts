@@ -100,9 +100,10 @@ class ApiClient {
 
       if (!response.ok) {
         return {
-          error: data
-            ? (data as any).message || response.statusText
-            : response.statusText,
+          error:
+            data && typeof data === 'object' && 'message' in data
+              ? (data as { message?: string }).message || response.statusText
+              : response.statusText,
           status: response.status,
         };
       }

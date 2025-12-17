@@ -26,12 +26,6 @@ type ProjectWithRelations = Project & {
   tickets?: Ticket[];
 };
 
-// Type definitions for project with relations
-type ProjectWithMilestonesAndTickets = Project & {
-  milestones?: Milestone[];
-  tickets?: Ticket[];
-};
-
 interface DashboardStats {
   projects: {
     total: number;
@@ -212,14 +206,21 @@ export class DashboardController {
       }),
     ]);
 
-    // Group related data by project
+    // Group related data by project with secure property access
     const milestonesByProject = milestones.reduce(
       (acc, milestone) => {
         const projectId = milestone.projectId;
-        if (!acc[projectId]) {
-          acc[projectId] = [];
+        // Validate projectId format to prevent injection
+        if (
+          projectId &&
+          typeof projectId === 'string' &&
+          /^[a-f0-9-]{36}$/.test(projectId)
+        ) {
+          if (!acc[projectId]) {
+            acc[projectId] = [];
+          }
+          acc[projectId].push(milestone);
         }
-        acc[projectId].push(milestone);
         return acc;
       },
       {} as Record<string, typeof milestones>
@@ -228,10 +229,15 @@ export class DashboardController {
     const ticketsByProject = tickets.reduce(
       (acc, ticket) => {
         const projectId = ticket.projectId;
-        if (projectId && !acc[projectId]) {
-          acc[projectId] = [];
-        }
-        if (projectId && acc[projectId]) {
+        // Validate projectId format to prevent injection
+        if (
+          projectId &&
+          typeof projectId === 'string' &&
+          /^[a-f0-9-]{36}$/.test(projectId)
+        ) {
+          if (!acc[projectId]) {
+            acc[projectId] = [];
+          }
           acc[projectId].push(ticket);
         }
         return acc;
