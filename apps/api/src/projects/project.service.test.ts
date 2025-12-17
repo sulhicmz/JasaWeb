@@ -10,8 +10,6 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 describe('ProjectService', () => {
   let service: ProjectService;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockProject = {
     id: '1',
@@ -65,9 +63,9 @@ describe('ProjectService', () => {
     }).compile();
 
     service = module.get<ProjectService>(ProjectService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
+
+    // Manually assign the mock to handle REQUEST-scoped dependency injection in testing
+    (service as any).multiTenantPrisma = mockMultiTenantPrismaService;
   });
 
   afterEach(() => {
