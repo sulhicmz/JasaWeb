@@ -1,12 +1,40 @@
 # Configuration Management
 
-This document explains JasaWeb's centralized configuration management system and how to use it effectively.
+This document explains JasaWeb's centralized configuration management system and how to use it effectively, including the newly implemented production-ready environment configuration system.
 
 ## Overview
 
 JasaWeb uses a centralized configuration system to eliminate hardcoded values and ensure consistent configuration across the entire monorepo. This approach improves maintainability, deployment stability, and developer experience.
 
 ## Configuration Services
+
+### Environment Configuration (`apps/web/src/config/envConfig.ts`)
+
+**NEW**: Production-ready environment configuration system that handles various deployment scenarios gracefully while maintaining strict production requirements.
+
+```typescript
+import { envConfig } from '../config/envConfig';
+
+// Get configuration values
+const apiUrl = envConfig.get('PUBLIC_API_URL');
+const isProduction = envConfig.isProduction();
+
+// Get configuration summary
+const summary = envConfig.getConfigSummary();
+
+// Validate configuration
+const validation = envConfig.validateConfig();
+if (!validation.isValid) {
+  console.error('Configuration errors:', validation.errors);
+}
+```
+
+**Key Features:**
+
+- **Build-Safe**: Automatically detects build-time environments and provides safe fallbacks
+- **Multi-Environment**: Supports development, production, and build scenarios
+- **Type Safety**: Full TypeScript support with proper type definitions
+- **Validation**: Runtime validation with detailed error messages
 
 ### Web Configuration (`apps/web/src/config/webConfig.ts`)
 
@@ -27,7 +55,28 @@ if (webConfig.enableNotifications) {
 
 ### API Configuration (`apps/web/src/config/apiConfig.ts`)
 
-Manages API client settings, endpoints, rate limiting, and WebSocket configuration.
+**UPDATED**: Now uses the centralized environment configuration service for better consistency and build safety.
+
+```typescript
+import { apiConfig } from '../config/apiConfig';
+
+// Get API endpoints
+const loginUrl = apiConfig.getEndpoint('auth', 'login');
+const projectsUrl = apiConfig.getEndpoint('projects');
+
+// Build authenticated requests
+const headers = apiConfig.getAuthHeader(token);
+
+// Get configuration summary
+const summary = apiConfig.getConfigSummary();
+```
+
+**Key Improvements:**
+
+- **Build Safety**: No more build failures due to missing environment variables
+- **Centralized Management**: Uses `envConfig` for all environment access
+- **Better Error Handling**: Graceful handling of missing environment variables
+- **Production Ready**: Strict validation in production environments
 
 ```typescript
 import { apiConfig } from '../config/apiConfig';
@@ -59,15 +108,29 @@ const dockerServices = servicePorts.generateDockerComposeServices();
 
 ### Web Application (`apps/web`)
 
-| Variable                   | Description              | Default                 | Required |
-| -------------------------- | ------------------------ | ----------------------- | -------- |
-| `SITE_URL`                 | Application base URL     | `http://localhost:4321` | No       |
-| `SITE_NAME`                | Site name for SEO        | `JasaWeb`               | No       |
-| `PUBLIC_API_URL`           | Public API URL           | `http://localhost:3000` | No       |
-| `API_TIMEOUT`              | Request timeout (ms)     | `30000`                 | No       |
-| `API_RETRIES`              | Number of retry attempts | `3`                     | No       |
-| `ENABLE_REAL_TIME_UPDATES` | WebSocket feature flag   | `true`                  | No       |
-| `ENABLE_ANALYTICS`         | Analytics feature flag   | `false`                 | No       |
+| Variable                   | Description              | Default                 | Required | Production Required |
+| -------------------------- | ------------------------ | ----------------------- | -------- | ------------------- |
+| `NODE_ENV`                 | Environment mode         | `development`           | No       | Yes                 |
+| `PUBLIC_API_URL`           | Public API URL           | `http://localhost:3000` | No       | Yes                 |
+| `API_PREFIX`               | API endpoint prefix      | `api`                   | No       | No                  |
+| `API_TIMEOUT`              | Request timeout (ms)     | `30000`                 | No       | No                  |
+| `API_RETRIES`              | Number of retry attempts | `3`                     | No       | No                  |
+| `API_RETRY_DELAY`          | Retry delay (ms)         | `1000`                  | No       | No                  |
+| `WS_ENABLED`               | Enable WebSocket         | `true`                  | No       | No                  |
+| `WS_URL`                   | WebSocket URL            | `ws://localhost:3000`   | No       | No                  |
+| `WS_RECONNECT_ATTEMPTS`    | WebSocket reconnects     | `5`                     | No       | No                  |
+| `WS_RECONNECT_DELAY`       | WebSocket delay (ms)     | `1000`                  | No       | No                  |
+| `WS_HEARTBEAT_INTERVAL`    | WebSocket heartbeat (ms) | `30000`                 | No       | No                  |
+| `API_RATE_LIMIT_ENABLED`   | Enable rate limiting     | `true`                  | No       | No                  |
+| `API_RATE_LIMIT_WINDOW`    | Rate limit window (ms)   | `60000`                 | No       | No                  |
+| `API_RATE_LIMIT_MAX`       | Max requests per window  | `100`                   | No       | No                  |
+| `APP_VERSION`              | Application version      | `1.0.0`                 | No       | No                  |
+| `SITE_NAME`                | Site name for SEO        | `JasaWeb`               | No       | No                  |
+| `SITE_URL`                 | Application base URL     | `http://localhost:4321` | No       | No                  |
+| `ENABLE_REAL_TIME_UPDATES` | WebSocket feature flag   | `true`                  | No       | No                  |
+| `ENABLE_ANALYTICS`         | Analytics feature flag   | `false`                 | No       | No                  |
+
+**⚠️ Important**: The new environment configuration system provides automatic fallbacks during build time, but production deployments require proper environment variable configuration.
 
 ### API Configuration
 

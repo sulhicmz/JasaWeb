@@ -1,7 +1,9 @@
 /**
  * API Configuration Service
- * Centralized configuration management for API client and service configuration
+ * Production-ready configuration management using the centralized envConfig service
  */
+
+import { envConfig } from './envConfig';
 
 interface ApiEndpoints {
   auth: {
@@ -91,17 +93,13 @@ export class ApiConfigService {
   }
 
   private buildApiConfig(): ApiConfig {
-    const baseUrl = this.getRequiredEnv(
-      'PUBLIC_API_URL',
-      'http://localhost:3000'
-    );
-    const prefix = this.getRequiredEnv('API_PREFIX', 'api');
-    const timeout = this.getEnvNumber('API_TIMEOUT', 30000);
-    const retries = this.getEnvNumber('API_RETRIES', 3);
-    const retryDelay = this.getEnvNumber('API_RETRY_DELAY', 1000);
+    const env = envConfig.envConfig;
 
-    // Validate configuration
-    this.validateApiConfig(baseUrl, timeout, retries, retryDelay);
+    const baseUrl = env.PUBLIC_API_URL as string;
+    const prefix = env.API_PREFIX as string;
+    const timeout = env.API_TIMEOUT as number;
+    const retries = env.API_RETRIES as number;
+    const retryDelay = env.API_RETRY_DELAY as number;
 
     return {
       baseUrl: this.normalizeUrl(baseUrl),
@@ -165,68 +163,29 @@ export class ApiConfigService {
   }
 
   private buildRateLimitConfig(): RateLimitConfig {
+    const env = envConfig.envConfig;
+
     return {
-      enabled: this.getEnvBoolean('API_RATE_LIMIT_ENABLED', true),
-      windowMs: this.getEnvNumber('API_RATE_LIMIT_WINDOW', 60000),
-      maxRequests: this.getEnvNumber('API_RATE_LIMIT_MAX', 100),
-      skipSuccessfulRequests: this.getEnvBoolean(
-        'API_RATE_LIMIT_SKIP_SUCCESS',
-        false
-      ),
-      skipFailedRequests: this.getEnvBoolean(
-        'API_RATE_LIMIT_SKIP_FAILED',
-        true
-      ),
+      enabled: env.API_RATE_LIMIT_ENABLED as boolean,
+      windowMs: env.API_RATE_LIMIT_WINDOW as number,
+      maxRequests: env.API_RATE_LIMIT_MAX as number,
+      skipSuccessfulRequests: env.API_RATE_LIMIT_SKIP_SUCCESS as boolean,
+      skipFailedRequests: env.API_RATE_LIMIT_SKIP_FAILED as boolean,
     };
   }
 
   private buildWebSocketConfig(): WebSocketConfig {
-    const wsUrl = this.getEnvString('WS_URL', '').replace('http', 'ws');
+    const env = envConfig.envConfig;
+    const wsUrl = env.WS_URL as string;
+    const baseUrl = env.PUBLIC_API_URL as string;
 
     return {
-      enabled: this.getEnvBoolean('WS_ENABLED', true),
-      url:
-        wsUrl ||
-        this.normalizeUrl(
-          this.getRequiredEnv('PUBLIC_API_URL', 'http://localhost:3000')
-        ).replace('http', 'ws'),
-      reconnectAttempts: this.getEnvNumber('WS_RECONNECT_ATTEMPTS', 5),
-      reconnectDelay: this.getEnvNumber('WS_RECONNECT_DELAY', 1000),
-      heartbeatInterval: this.getEnvNumber('WS_HEARTBEAT_INTERVAL', 30000),
+      enabled: env.WS_ENABLED as boolean,
+      url: wsUrl || this.normalizeUrl(baseUrl).replace('http', 'ws'),
+      reconnectAttempts: env.WS_RECONNECT_ATTEMPTS as number,
+      reconnectDelay: env.WS_RECONNECT_DELAY as number,
+      heartbeatInterval: env.WS_HEARTBEAT_INTERVAL as number,
     };
-  }
-
-  private validateApiConfig(
-    baseUrl: string,
-    timeout: number,
-    retries: number,
-    retryDelay: number
-  ): void {
-    // Validate URL format
-    try {
-      new URL(baseUrl);
-    } catch {
-      throw new Error(`Invalid API URL: ${baseUrl}`);
-    }
-
-    // Validate timeout range (1s to 5 minutes)
-    if (timeout < 1000 || timeout > 300000) {
-      throw new Error(
-        `API_TIMEOUT must be between 1000ms and 300000ms, got ${timeout}`
-      );
-    }
-
-    // Validate retries range (0 to 10)
-    if (retries < 0 || retries > 10) {
-      throw new Error(`API_RETRIES must be between 0 and 10, got ${retries}`);
-    }
-
-    // Validate retry delay range (100ms to 10s)
-    if (retryDelay < 100 || retryDelay > 10000) {
-      throw new Error(
-        `API_RETRY_DELAY must be between 100ms and 10000ms, got ${retryDelay}`
-      );
-    }
   }
 
   private normalizeUrl(url: string): string {
@@ -234,48 +193,10 @@ export class ApiConfigService {
   }
 
   private getUserAgent(): string {
-    const siteName = this.getEnvString('SITE_NAME', 'JasaWeb');
-    const version = this.getEnvString('APP_VERSION', '1.0.0');
+    const env = envConfig.envConfig;
+    const siteName = env.SITE_NAME as string;
+    const version = env.APP_VERSION as string;
     return `${siteName}-Web/${version}`;
-  }
-
-  // Environment variable helpers
-  private getRequiredEnv(key: string, fallback: string): string {
-    const value = import.meta.env[key];
-    if (!value) {
-      if (import.meta.env.DEV || import.meta.env.MODE === 'build') {
-        console.warn(
-          `⚠️ Environment variable ${key} not set, using fallback: ${fallback}`
-        );
-        return fallback;
-      }
-      throw new Error(`Required environment variable ${key} is not set`);
-    }
-    return value;
-  }
-
-  private getEnvString(key: string, fallback: string): string {
-    return import.meta.env[key] || fallback;
-  }
-
-  private getEnvNumber(key: string, fallback: number): number {
-    const value = import.meta.env[key];
-    if (!value) return fallback;
-
-    const num = parseInt(value, 10);
-    if (isNaN(num)) {
-      throw new Error(
-        `Environment variable ${key} must be a valid number, got "${value}"`
-      );
-    }
-    return num;
-  }
-
-  private getEnvBoolean(key: string, fallback: boolean): boolean {
-    const value = import.meta.env[key];
-    if (!value) return fallback;
-
-    return value.toLowerCase() === 'true';
   }
 
   // Public getters
@@ -318,36 +239,14 @@ export class ApiConfigService {
 
   // Validation and debugging
   public validateConfiguration(): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    try {
-      new URL(this.config.baseUrl);
-    } catch {
-      errors.push(`Invalid API baseUrl: ${this.config.baseUrl}`);
-    }
-
-    try {
-      new URL(this.websocket.url);
-    } catch {
-      errors.push(`Invalid WebSocket URL: ${this.websocket.url}`);
-    }
-
-    if (this.config.timeout < 1000) {
-      errors.push('API timeout must be at least 1000ms');
-    }
-
-    if (this.config.retries < 0 || this.config.retries > 10) {
-      errors.push('API retries must be between 0 and 10');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
+    return envConfig.validateConfig();
   }
 
   public getConfigSummary(): Record<string, any> {
+    const envSummary = envConfig.getConfigSummary();
+
     return {
+      ...envSummary,
       api: {
         baseUrl: this.obscureUrl(this.config.baseUrl),
         prefix: this.config.prefix,
@@ -360,8 +259,6 @@ export class ApiConfigService {
         url: this.obscureUrl(this.websocket.url),
         reconnectAttempts: this.websocket.reconnectAttempts,
       },
-      environment: import.meta.env.MODE,
-      isDev: import.meta.env.DEV,
     };
   }
 
