@@ -30,28 +30,31 @@ export interface SecurityPolicyConfig {
 export class SecurityConfigurationService {
   constructor(private readonly appConfig: AppConfigService) {}
 
-  // Enhanced Content Security Policy configuration
-  getCSPConfig(): SecurityPolicyConfig['csp'] {
-    const isProduction = this.appConfig.isProduction();
+  // Enhanced CSP configuration with multi-tenant safety
+  getCspConfig(): SecurityPolicyConfig['csp'] {
     const isDevelopment = this.appConfig.isDevelopment();
+    const allowedOrigins = this.getAllowedOrigins();
 
-    const directives: Record<string, string[]> = {
+    const directives = {
       defaultSrc: ["'self'"],
-      styleSrc: [
-        "'self'",
-        "'unsafe-inline'", // Required for Tailwind CSS and other frameworks
-        'https://fonts.googleapis.com',
-      ],
       scriptSrc: [
         "'self'",
-        isDevelopment && "'unsafe-eval'", // Allow eval in development for Vite/HMR
+        "'unsafe-inline'", // Temporary for development
+        'https://cdnjs.cloudflare.com',
+        'https://www.googletagmanager.com',
+        ...(isDevelopment ? ['ws://localhost:*'] : []),
       ].filter(Boolean) as string[],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'", // Required for Tailwind CSS
+        'https://fonts.googleapis.com',
+      ],
       imgSrc: [
         "'self'",
         'data:',
-        'https:',
-        'https://*.googleapis.com',
-        'https://*.gstatic.com',
+        'blob:',
+        'https://*.jasaweb.com',
+        'https://res.cloudinary.com',
       ],
       connectSrc: [
         "'self'",
@@ -66,10 +69,11 @@ export class SecurityConfigurationService {
       childSrc: ["'none'"],
       workerSrc: ["'self'"],
       manifestSrc: ["'self'"],
-      ...(isProduction && { upgradeInsecureRequests: [] }),
+      ...(this.appConfig.isProduction() && { upgradeInsecureRequests: [] }),
     };
 
-    // Filter out undefined values using safe Object.keys iteration
+    // Create a new object to safely handle directives without prototype pollution
+    const safeDirectives = Object.create(null);
     const validDirectiveKeys = [
       'defaultSrc',
       'scriptSrc',
@@ -85,9 +89,6 @@ export class SecurityConfigurationService {
       'manifestSrc',
       'upgradeInsecureRequests',
     ] as const;
-
-    // Create a new object to safely handle directives without prototype pollution
-    const safeDirectives = Object.create(null);
 
     for (const key of validDirectiveKeys) {
       if (Object.prototype.hasOwnProperty.call(directives, key)) {
@@ -106,54 +107,6 @@ export class SecurityConfigurationService {
       }
     }
 
-<<<<<<< HEAD
-    // Security: Use safe object creation with validated keys
-    const filteredDirectives: Record<string, string[]> = {};
-    const validKeys = new Set([
-      'defaultSrc',
-      'scriptSrc',
-      'styleSrc',
-      'imgSrc',
-      'fontSrc',
-      'connectSrc',
-      'mediaSrc',
-      'objectSrc',
-      'childSrc',
-      'frameSrc',
-      'workerSrc',
-      'manifestSrc',
-      'upgradeInsecureRequests',
-    ]);
-
-    for (const [key, value] of directiveEntries) {
-      if (validKeys.has(key) && Array.isArray(value)) {
-        const filtered = value.filter(Boolean);
-        if (filtered.length > 0) {
-          Object.defineProperty(filteredDirectives, key, {
-            value: filtered,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
-        }
-      }
-    }
-
-    // Security: Safely clear and repopulate directives object
-    const directiveKeys = Object.keys(directives);
-    for (const key of directiveKeys) {
-      delete directives[key as keyof typeof directives];
-    }
-
-    // Explicit assignment of filtered directives
-    for (const [key, value] of Object.entries(filteredDirectives)) {
-      if (key in directives) {
-        directives[key as keyof typeof directives] = value;
-      }
-    }
-
-=======
->>>>>>> 946a7a49b31f0dbd2631030128cac0a50ca324d6
     return {
       directives: safeDirectives,
       reportOnly: isDevelopment, // Use report-only in development
@@ -178,100 +131,163 @@ export class SecurityConfigurationService {
     };
   }
 
-  // Enhanced CORS configuration
-  getCORSConfig(): SecurityPolicyConfig['cors'] {
-    const origins = this.appConfig.getCorsOrigins;
-    const isProduction = this.appConfig.isProduction();
+  // CORS configuration with multi-tenant support
+  getCorsConfig(): SecurityPolicyConfig['cors'] {
+    const allowedOrigins = this.getAllowedOrigins();
+    const isDevelopment = this.appConfig.isDevelopment();
 
     return {
-      origin: origins,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+      origin: allowedOrigins,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Tenant-ID',
-        'X-Organization-ID',
-        'X-Requested-With',
-        'Accept',
         'Origin',
-        'Cache-Control',
+        'X-Requested-With',
+        'Content-Type',
+        'Accept',
+        'Authorization',
+        'x-tenant-id',
+        'x-organization-id',
       ],
-      exposedHeaders: [
-        'X-Total-Count',
-        'X-Page-Count',
-        'X-Rate-Limit-Limit',
-        'X-Rate-Limit-Remaining',
-        'X-Rate-Limit-Reset',
-      ],
+      exposedHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining'],
       credentials: true,
-      maxAge: isProduction ? 86400 : 3600, // 24h in production, 1h in development
+      maxAge: 24 * 60 * 60, // 24 hours
       preflightContinue: false,
       optionsSuccessStatus: 204,
     };
   }
 
-  // Additional security headers configuration
-  getAdditionalSecurityHeaders(): Record<string, string> {
+  // Helper method to get allowed origins based on environment
+  private getAllowedOrigins(): string[] {
+    const isDevelopment = this.appConfig.isDevelopment();
     const isProduction = this.appConfig.isProduction();
 
+    const origins: string[] = [
+      'http://localhost:3000',
+      'http://localhost:4321', // Astro default port
+      'https://jasaweb.com',
+      'https://www.jasaweb.com',
+      'https://app.jasaweb.com',
+    ];
+
+    if (isDevelopment) {
+      origins.push(
+        'http://localhost:8080',
+        'http://localhost:3001',
+        'http://localhost:3333'
+      );
+    }
+
+    // Add organization-specific subdomains in production
+    if (isProduction) {
+      // This would be dynamically generated based on active organizations
+      origins.push('https://*.jasaweb.com');
+    }
+
+    return origins;
+  }
+
+  // Security headers configuration
+  getSecurityHeaders() {
     return {
-      'Permissions-Policy':
-        'geolocation=(), microphone=(), camera=(), usb=(), payment=(), fullscreen=(self)',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Resource-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': isProduction
-        ? 'require-corp'
-        : 'unsafe-none',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block',
-      'Strict-Transport-Security': isProduction
-        ? 'max-age=31536000; includeSubDomains; preload'
-        : 'max-age=0',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': this.getPermissionsPolicy(),
+      'Strict-Transport-Security': this.getHSTSHeader(),
     };
   }
 
-  // Method to validate incoming requests
-  validateRequestOrigin(origin: string): boolean {
-    const allowedOrigins = this.appConfig.getCorsOrigins;
+  private getPermissionsPolicy(): string {
+    return [
+      'geolocation=()',
+      'microphone=()',
+      'camera=()',
+      'payment=()',
+      'usb=()',
+      'magnetometer=()',
+      'gyroscope=()',
+      'accelerometer=()',
+    ].join(', ');
+  }
 
-    if (allowedOrigins.includes('*')) {
-      logger.security(
-        'Wildcard CORS origin detected - consider limiting in production'
-      );
+  private getHSTSHeader(): string {
+    const isProduction = this.appConfig.isProduction();
+    if (isProduction) {
+      return 'max-age=31536000; includeSubDomains; preload';
+    }
+    return 'max-age=0'; // Disabled in development
+  }
+
+  // Validate and sanitize security configurations
+  validateSecurityConfig(config: Partial<SecurityPolicyConfig>): boolean {
+    try {
+      if (config.csp?.directives) {
+        // Validate CSP directives structure
+        for (const [key, value] of Object.entries(config.csp.directives)) {
+          if (!Array.isArray(value)) {
+            logger.error(`Invalid CSP directive structure for ${key}`);
+            return false;
+          }
+        }
+      }
+
+      // Validate CORS origins
+      if (config.cors?.origin) {
+        const origins = Array.isArray(config.cors.origin)
+          ? config.cors.origin
+          : [config.cors.origin];
+
+        for (const origin of origins) {
+          if (
+            typeof origin !== 'string' ||
+            !origin.match(/^https?:\/\/[\w.-]+/)
+          ) {
+            logger.error(`Invalid CORS origin: ${origin}`);
+            return false;
+          }
+        }
+      }
+
       return true;
-    }
-
-    const isAllowed = allowedOrigins.includes(origin);
-
-    if (!isAllowed) {
-      logger.security('Unauthorized CORS attempt', { origin, allowedOrigins });
-    }
-
-    return isAllowed;
-  }
-
-  // Method to log security events
-  logSecurityEvent(event: string, details: Record<string, unknown>): void {
-    logger.security(event, details);
-
-    // In production, this could send to a SIEM or security monitoring service
-    if (this.appConfig.isProduction()) {
-      // Security monitoring service integration to be implemented
-      // Example: Send to Sentry, Datadog, or custom security endpoint
+    } catch (error) {
+      logger.error('Security configuration validation failed:', error);
+      return false;
     }
   }
 
-  // Get complete security configuration
-  getCompleteSecurityConfig(): SecurityPolicyConfig & {
-    additionalHeaders: Record<string, string>;
-  } {
-    return {
-      csp: this.getCSPConfig(),
+  // Get organization-specific security context
+  getOrganizationSecurityContext(organizationId: string) {
+    const baseConfig = {
+      csp: this.getCspConfig(),
+      cors: this.getCorsConfig(),
       rateLimit: this.getRateLimitConfig(),
-      cors: this.getCORSConfig(),
-      additionalHeaders: this.getAdditionalSecurityHeaders(),
     };
+
+    // Customize based on organization tier/requirements
+    // This would integrate with your organization management system
+    const organizationOverrides =
+      this.getOrganizationSecurityOverrides(organizationId);
+
+    return {
+      ...baseConfig,
+      ...organizationOverrides,
+    };
+  }
+
+  private getOrganizationSecurityOverrides(organizationId: string) {
+    // Example: Different security policies for different organization tiers
+    const enhancedOrgs = ['premium-org-1', 'enterprise-org-2'];
+
+    if (enhancedOrgs.includes(organizationId)) {
+      return {
+        rateLimit: {
+          ...this.getRateLimitConfig(),
+          max: 500, // Higher rate limit for premium organizations
+        },
+      };
+    }
+
+    return {};
   }
 }

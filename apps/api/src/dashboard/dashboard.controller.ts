@@ -1242,7 +1242,7 @@ export class DashboardController {
             : 0;
           // Security: Use Object.defineProperty to prevent object injection
           Object.defineProperty(dailyData, dateKey, {
-            value: currentValue + 1,
+            value: (currentValue || 0) + 1,
             writable: true,
             enumerable: true,
             configurable: true,
