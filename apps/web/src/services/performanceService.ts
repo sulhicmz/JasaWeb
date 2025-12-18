@@ -63,7 +63,7 @@ export class PerformanceService {
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach((entry: PerformanceEntry) => {
-          const layoutShiftEntry = entry as {
+          const layoutShiftEntry = entry as unknown as {
             hadRecentInput: boolean;
             value: number;
           };
