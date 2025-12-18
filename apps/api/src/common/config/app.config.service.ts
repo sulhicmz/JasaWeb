@@ -321,6 +321,15 @@ export class AppConfigService {
 
         // Use safe property access to prevent object injection
         if (Object.prototype.hasOwnProperty.call(recordValue, key)) {
+          // Additional validation to prevent prototype pollution
+          const forbiddenKeys = new Set([
+            '__proto__',
+            'constructor',
+            'prototype',
+          ]);
+          if (forbiddenKeys.has(key)) {
+            throw new Error(`Forbidden configuration key access: ${key}`);
+          }
           value = recordValue[key];
         } else {
           throw new Error(`Configuration property '${key}' does not exist`);

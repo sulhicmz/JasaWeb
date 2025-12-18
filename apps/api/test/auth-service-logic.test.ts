@@ -5,13 +5,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  createMockUserService,
-  createMockJwtService,
-  createMockRefreshTokenService,
-  createMockPasswordService,
   createMockMultiTenantPrismaService,
   createTestUser,
-  createTestOrganization,
 } from '../test/test-helpers';
 
 // Mock UserService for dependencies

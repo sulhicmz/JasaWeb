@@ -39,9 +39,7 @@ export class ProjectController {
     @Query('view') view?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('organizationId') organizationId?: string,
-    @Query('_status') _status?: string,
-    @Query('_search') _search?: string
+    @Query('organizationId') organizationId?: string
   ) {
     const normalizedView =
       view?.toLowerCase() === 'detail' ? 'detail' : 'summary';

@@ -182,8 +182,12 @@ export class DatabasePerformanceService {
     }
 
     const queryType = this.extractQueryType(metric.query);
-    this.stats.queryTypes[queryType] =
-      (this.stats.queryTypes[queryType] || 0) + 1;
+    // Safe property assignment to prevent object injection
+    const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
+    if (!forbiddenKeys.has(queryType)) {
+      this.stats.queryTypes[queryType] =
+        (this.stats.queryTypes[queryType] || 0) + 1;
+    }
   }
 
   private sanitizeQuery(query: string): string {
@@ -222,12 +226,22 @@ export class DatabasePerformanceService {
 
     this.queryMetrics.forEach((metric) => {
       const operation = this.extractOperation(metric.query);
-      patterns[operation] = (patterns[operation] || 0) + 1;
+      // Safe property assignment to prevent object injection
+      const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
+      if (!forbiddenKeys.has(operation)) {
+        patterns[operation] = (patterns[operation] || 0) + 1;
+      }
 
       const tables = this.extractTables(metric.query);
       tables.forEach((table) => {
-        const key = `table:${table}`;
-        patterns[key] = (patterns[key] || 0) + 1;
+        // Validate table name to prevent injection
+        if (
+          /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table) &&
+          !forbiddenKeys.has(table)
+        ) {
+          const key = `table:${table}`;
+          patterns[key] = (patterns[key] || 0) + 1;
+        }
       });
     });
 
@@ -328,10 +342,17 @@ export class DatabasePerformanceService {
         .replace(/['"][^'"]*['"]/g, "'X'")
         .substring(0, 100);
 
-      if (!groups[pattern]) {
-        groups[pattern] = [];
+      // Validate pattern to prevent object injection
+      const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
+      if (
+        !forbiddenKeys.has(pattern) &&
+        /^[a-zA-Z0-9'X\s\-_,()]+$/.test(pattern)
+      ) {
+        if (!groups[pattern]) {
+          groups[pattern] = [];
+        }
+        groups[pattern].push(query);
       }
-      groups[pattern].push(query);
     });
 
     return groups;

@@ -38,12 +38,16 @@ abstract class BaseStorageAdapter implements StorageAdapter {
 
   abstract exists(key: string): Promise<boolean>;
 
-  async getSignedUrl(_key: string, _expiresIn: number): Promise<string> {
+  async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+    // Validate key to prevent injection
+    if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+      throw new Error('Invalid key format');
+    }
     throw new Error('Signed URLs not supported by this storage adapter');
   }
 
   async list(
-    _prefix: string
+    prefix: string
   ): Promise<{ key: string; size: number; lastModified: Date }[]> {
     throw new Error('List operation not supported by this storage adapter');
   }
@@ -148,6 +152,14 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Sanitize the key to prevent path traversal
     const sanitizedKey = options.key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    // Additional validation to prevent path traversal
+    if (
+      sanitizedKey.includes('..') ||
+      sanitizedKey.includes('~') ||
+      sanitizedKey.startsWith('/')
+    ) {
+      throw new Error('Invalid file key detected');
+    }
     const filePath = path.join(this.uploadPath, sanitizedKey);
     const normalizedPath = path.normalize(filePath);
 
@@ -191,6 +203,14 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Sanitize key to prevent path traversal
     const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    // Additional validation to prevent path traversal
+    if (
+      sanitizedKey.includes('..') ||
+      sanitizedKey.includes('~') ||
+      sanitizedKey.startsWith('/')
+    ) {
+      throw new Error('Invalid file key detected');
+    }
     const filePath = path.join(this.uploadPath, sanitizedKey);
     const normalizedPath = path.normalize(filePath);
 
@@ -216,6 +236,14 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Sanitize key to prevent path traversal
     const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    // Additional validation to prevent path traversal
+    if (
+      sanitizedKey.includes('..') ||
+      sanitizedKey.includes('~') ||
+      sanitizedKey.startsWith('/')
+    ) {
+      throw new Error('Invalid file key detected');
+    }
     const filePath = path.join(this.uploadPath, sanitizedKey);
     const normalizedPath = path.normalize(filePath);
 
@@ -243,6 +271,14 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Sanitize key to prevent path traversal
     const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    // Additional validation to prevent path traversal
+    if (
+      sanitizedKey.includes('..') ||
+      sanitizedKey.includes('~') ||
+      sanitizedKey.startsWith('/')
+    ) {
+      return false; // Treat suspicious paths as non-existent
+    }
     const filePath = path.join(this.uploadPath, sanitizedKey);
     const normalizedPath = path.normalize(filePath);
 
@@ -303,12 +339,13 @@ class S3StorageAdapter extends BaseStorageAdapter {
     return false;
   }
 
-  override async getSignedUrl(
-    _key: string,
-    _expiresIn: number
-  ): Promise<string> {
+  override async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+    // Validate key to prevent injection
+    if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+      throw new Error('Invalid key format');
+    }
     // TODO: Implement S3 signed URL logic
-    return `https://s3-signed-url-placeholder/placeholder?expires=3600`;
+    return `https://s3-signed-url-placeholder/placeholder?expires=${expiresIn}`;
   }
 }
 

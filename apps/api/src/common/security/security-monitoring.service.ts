@@ -464,10 +464,12 @@ export class SecurityMonitoringService {
 
     // Use Map for safe key iteration
     const keys = Object.keys(data as Record<string, unknown>);
+    const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
     for (const key of keys) {
       if (
         typeof key === 'string' &&
-        /^[a-zA-Z0-9_-]+$/.test(key) // Only allow safe characters
+        /^[a-zA-Z0-9_-]+$/.test(key) && // Only allow safe characters
+        !forbiddenKeys.has(key) // Prevent prototype pollution
       ) {
         const value = (data as Record<string, unknown>)[key];
         if (typeof value === 'number' && Number.isFinite(value)) {

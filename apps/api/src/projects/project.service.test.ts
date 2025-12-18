@@ -15,7 +15,6 @@ import {
 
 describe('ProjectService', () => {
   let service: ProjectService;
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockProject = createTestProject({
     id: '1',

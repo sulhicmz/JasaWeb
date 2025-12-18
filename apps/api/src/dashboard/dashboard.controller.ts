@@ -5,7 +5,6 @@ import {
   Query,
   Post,
   Body,
-  Inject,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { CACHE_KEYS, CACHE_CONFIG } from '../common/config/constants';
@@ -1247,12 +1246,15 @@ export class DashboardController {
           )
             ? (dailyData[dateKey] as number)
             : 0;
-          Object.defineProperty(dailyData, dateKey, {
-            value: currentValue + 1,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
+          // Additional check for date key validation
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+            Object.defineProperty(dailyData, dateKey, {
+              value: currentValue + 1,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
+          }
         }
       }
     });
@@ -1348,12 +1350,15 @@ export class DashboardController {
           priorityTickets.length > 0
             ? Math.round((resolved.length / priorityTickets.length) * 100)
             : 0;
-        Object.defineProperty(acc, priority, {
-          value,
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        });
+        // Ensure priority is a valid string before using as property key
+        if (typeof priority === 'string' && /^[a-z]+$/.test(priority)) {
+          Object.defineProperty(acc, priority, {
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        }
       }
       return acc;
     }, Object.create(null));
