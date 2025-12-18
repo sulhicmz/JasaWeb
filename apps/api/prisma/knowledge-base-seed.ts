@@ -60,9 +60,20 @@ async function main() {
     prisma.kbTag.create({ data: { name: 'billing', color: '#EC4899' } }),
   ]);
 
-  // Get or create a user for article author
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@jasaweb.com';
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+  // Get or create a user for article author - require secure credentials
+  const adminEmail = process.env.SEED_ADMIN_EMAIL;
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error(
+      'SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables are required for seeding'
+    );
+  }
+
+  // Validate password strength
+  if (adminPassword.length < 8) {
+    throw new Error('SEED_ADMIN_PASSWORD must be at least 8 characters long');
+  }
 
   let user = await prisma.user.findFirst({
     where: { email: adminEmail },
@@ -197,7 +208,7 @@ async function main() {
           <li>Submit the request</li>
         </ol>
         
-        <h2>Review Process</h1>
+        <h2>Review Process</h2>
         <p>Approvers will receive notifications and can:</p>
         <ul>
           <li>Approve the request as-is</li>

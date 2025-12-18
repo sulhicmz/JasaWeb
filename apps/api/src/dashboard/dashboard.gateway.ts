@@ -19,86 +19,10 @@ import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { Invoice } from '@prisma/client';
-
-interface InvoiceStatus {
-  id: string;
-  status: string;
-  amount: number | null;
-  dueAt: Date | null;
-}
-
-interface MilestoneStatus {
-  status: string;
-  dueAt: Date | null;
-}
-
-interface ProjectActivity {
-  id: string;
-  name: string;
-  status: string;
-  updatedAt: Date;
-}
-
-interface TicketActivity {
-  id: string;
-  type: string;
-  priority: string;
-  status: string;
-  createdAt: Date;
-}
-
-interface MilestoneActivity {
-  id: string;
-  title: string;
-  status: string;
-  createdAt: Date;
-  dueAt: Date | null;
-}
-
-interface InvoiceActivity {
-  id: string;
-  status: string;
-  amount: number | null;
-  dueAt: Date | null;
-  createdAt: Date;
-}
-
-interface AuthenticatedSocket {
-  userId?: string;
-  organizationId?: string;
-  userRole?: Role;
-  handshake: {
-    auth: {
-      token?: string;
-    };
-    headers: {
-      authorization?: string;
-    };
-  };
-  id: string;
-  join: (room: string) => Promise<void>;
-  leave: (room: string) => Promise<void>;
-  emit: (event: string, data: unknown) => void;
-  disconnect: () => void;
-}
-
-interface DashboardUpdatePayload {
-  type: 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice';
-  data: Record<string, unknown>;
-  timestamp: Date;
-  organizationId: string;
-}
-
-interface TicketStatus {
-  status: string; // Use string to match database entity
-  priority: string;
-}
-
-interface TicketStatus {
-  status: string; // Use string to match database entity
-  priority: string;
-}
+import type {
+  AuthenticatedSocket,
+  DashboardUpdatePayload,
+} from './types/dashboard.types';
 
 @WebSocketGateway({
   cors: {
@@ -379,19 +303,17 @@ export class DashboardGateway
     });
 
     const total = tickets.length;
-    const open = tickets.filter(
-      (t: TicketStatus) => t.status === 'open'
-    ).length;
-    const inProgress = tickets.filter(
-      (t: TicketStatus) => t.status === 'in-progress'
-    ).length;
+
+    // Use type-safe filtering instead of any
+    const open = tickets.filter((t) => t.status === 'open').length;
+    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
     const highPriority = tickets.filter(
-      (t: TicketStatus) =>
+      (t) =>
         (t.priority === 'high' || t.priority === 'critical') &&
         (t.status === 'open' || t.status === 'in-progress')
     ).length;
     const critical = tickets.filter(
-      (t: TicketStatus) =>
+      (t) =>
         t.priority === 'critical' &&
         (t.status === 'open' || t.status === 'in-progress')
     ).length;
@@ -407,32 +329,30 @@ export class DashboardGateway
 
     const total = invoices.length;
     const pending = invoices.filter(
-      (i: InvoiceStatus) => i.status === 'draft' || i.status === 'issued'
+      (i: { status: string; dueAt: Date | null }) =>
+        i.status === 'draft' || i.status === 'issued'
     ).length;
-    const invoiceOverdue = invoices.filter(
-      (i: InvoiceStatus) =>
+    const overdue = invoices.filter(
+      (i: { status: string; dueAt: Date | null }) =>
         (i.status === 'issued' || i.status === 'overdue') &&
         i.dueAt &&
         new Date(i.dueAt) < new Date()
     ).length;
 
     const totalAmount = invoices.reduce(
-      (sum: number, i: InvoiceStatus) => sum + (i.amount || 0),
+      (sum: number, i: { amount: number | null }) => sum + (i.amount || 0),
       0
     );
     const pendingAmount = invoices
       .filter(
-        (i: InvoiceStatus) => i.status === 'draft' || i.status === 'issued'
+        (i: { status: string }) => i.status === 'draft' || i.status === 'issued'
       )
-      .reduce((sum: number, i: InvoiceStatus) => sum + (i.amount || 0), 0);
+      .reduce(
+        (sum: number, i: { amount: number | null }) => sum + (i.amount || 0),
+        0
+      );
 
-    return {
-      total,
-      pending,
-      overdue: invoiceOverdue,
-      totalAmount,
-      pendingAmount,
-    };
+    return { total, pending, overdue, totalAmount, pendingAmount };
   }
 
   private async getMilestonesStats(organizationId: string) {
@@ -449,22 +369,19 @@ export class DashboardGateway
     });
 
     const total = milestones.length;
-    const completed = milestones.filter(
-      (m: MilestoneStatus) => m.status === 'completed'
-    ).length;
-    const milestoneOverdue = milestones.filter(
-      (m: MilestoneStatus) =>
-        m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
+    const completed = milestones.filter((m) => m.status === 'completed').length;
+    const overdue = milestones.filter(
+      (m) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
     ).length;
     const dueThisWeek = milestones.filter(
-      (m: MilestoneStatus) =>
+      (m) =>
         m.status !== 'completed' &&
         m.dueAt &&
         new Date(m.dueAt) >= now &&
         new Date(m.dueAt) <= weekFromNow
     ).length;
 
-    return { total, completed, overdue: milestoneOverdue, dueThisWeek };
+    return { total, completed, overdue, dueThisWeek };
   }
 
   private async getRecentProjects(organizationId: string, limit: number) {
@@ -481,7 +398,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return projects.map((project: ProjectActivity) => ({
+    return projects.map((project) => ({
       id: project.id,
       type: 'project' as const,
       title: project.name,
@@ -505,11 +422,11 @@ export class DashboardGateway
       take: limit,
     });
 
-    return tickets.map((ticket: TicketActivity) => ({
+    return tickets.map((ticket) => ({
       id: ticket.id,
       type: 'ticket' as const,
       title: `${ticket.type} ticket`,
-      description: 'No description',
+      description: `Priority: ${ticket.priority}`,
       status: ticket.status,
       priority: ticket.priority,
       createdAt: ticket.createdAt,
@@ -534,11 +451,11 @@ export class DashboardGateway
       take: limit,
     });
 
-    return milestones.map((milestone: MilestoneActivity) => ({
+    return milestones.map((milestone) => ({
       id: milestone.id,
       type: 'milestone' as const,
       title: milestone.title,
-      description: 'No description',
+      description: 'Milestone',
       status: milestone.status,
       createdAt: milestone.createdAt,
       dueDate: milestone.dueAt || undefined,
@@ -559,7 +476,7 @@ export class DashboardGateway
       take: limit,
     });
 
-    return invoices.map((invoice: InvoiceActivity) => ({
+    return invoices.map((invoice) => ({
       id: invoice.id,
       type: 'invoice' as const,
       title: `Invoice ${invoice.id.slice(-8)}`,

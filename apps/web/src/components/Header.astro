@@ -2,7 +2,12 @@
 // src/components/Header.astro
 import Navigation from './Navigation.astro';
 
-const navigationItems = [
+export interface NavigationItem {
+  label: string;
+  href: string;
+}
+
+export const navigationItems: NavigationItem[] = [
   { label: 'Beranda', href: '/' },
   { label: 'Layanan', href: '/services' },
   { label: 'Portofolio', href: '/portfolio' },
@@ -36,6 +41,7 @@ const navigationItems = [
   // Mobile menu toggle functionality (optimized)
   document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
+    if (!mobileMenuButton) return;
     
     // Create mobile menu with proper styling
     const mobileMenu = document.createElement('div');
@@ -44,8 +50,8 @@ const navigationItems = [
     mobileMenu.setAttribute('role', 'navigation');
     mobileMenu.setAttribute('aria-label', 'Mobile navigation');
 
-    // Add mobile navigation items
-    const mobileNavItems = [
+    // Add mobile navigation items using the same structure as desktop
+    const navigationItemsForMobile = [
       { label: 'Beranda', href: '/' },
       { label: 'Layanan', href: '/services' },
       { label: 'Portofolio', href: '/portfolio' },
@@ -56,7 +62,7 @@ const navigationItems = [
 
     mobileMenu.innerHTML = `
       <div class="container px-4 py-4 space-y-2">
-        ${mobileNavItems.map(item => `
+        ${navigationItemsForMobile.map((item) => `
           <a href="${item.href}" class="block px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
             ${item.label}
           </a>
@@ -64,7 +70,10 @@ const navigationItems = [
       </div>
     `;
 
-    document.querySelector('header').appendChild(mobileMenu);
+    const header = document.querySelector('header');
+    if (header) {
+      header.appendChild(mobileMenu);
+    }
 
     // Toggle mobile menu
     mobileMenuButton.addEventListener('click', () => {
@@ -73,14 +82,16 @@ const navigationItems = [
       
       // Update button icon and aria-label
       const icon = mobileMenuButton.querySelector('i');
-      if (isHidden) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-        mobileMenuButton.setAttribute('aria-label', 'Close mobile menu');
-      } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-        mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
+      if (icon) {
+        if (isHidden) {
+          icon.classList.remove('fa-bars');
+          icon.classList.add('fa-times');
+          mobileMenuButton.setAttribute('aria-label', 'Close mobile menu');
+        } else {
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+          mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
+        }
       }
     });
 
@@ -91,8 +102,10 @@ const navigationItems = [
           !mobileMenuButton.contains(e.target as Node)) {
         mobileMenu.classList.add('hidden');
         const icon = mobileMenuButton.querySelector('i');
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
+        if (icon) {
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+        }
         mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
       }
     });
@@ -102,8 +115,10 @@ const navigationItems = [
       if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
         mobileMenu.classList.add('hidden');
         const icon = mobileMenuButton.querySelector('i');
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
+        if (icon) {
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+        }
         mobileMenuButton.setAttribute('aria-label', 'Open mobile menu');
       }
     });

@@ -29,8 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unused configuration files (.nycrc.json, playwright.config.ts)
 - Removed temporary files (basic.test.ts, verify-typescript-config.js, performance-test.sh)
 - Removed duplicate dashboard components directory
-- Enhanced development environment setup
-- Optimized API performance with query improvements
+  - Removed external dependency GitHub workflows
+  - Renamed remaining .spec.ts files to .test.ts for consistency
+  - Enhanced development environment setup
+  - Optimized API performance with query improvements
 - Updated documentation with detailed guides
 
 ### Fixed

@@ -1,26 +1,12 @@
 {
   "extends": "../../packages/config/tsconfig/base.json",
   "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@jasaweb/*": ["../../packages/*"],
-      "@jasaweb/config": ["../../packages/config"],
-      "@jasaweb/config/*": ["../../packages/config/*"]
-    },
-    "strict": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true,
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "isolatedModules": false,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "lib": ["ES2021"]
+      "@jasaweb/*": ["../../packages/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]

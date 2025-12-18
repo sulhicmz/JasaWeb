@@ -90,12 +90,8 @@ model Project {
   @@index([organizationId])
   @@index([status])
   @@index([organizationId, status])
-  @@index([organizationId, status, updatedAt]) // Composite for dashboard projects overview
-  @@index([organizationId, createdAt]) // For recent projects
-  @@index([organizationId, dueAt]) // For projects due soon/overdue
   @@index([createdAt])
   @@index([dueAt])
-  @@index([updatedAt]) // For sorting in dashboard
 }
 
 model Milestone {
@@ -110,10 +106,10 @@ model Milestone {
 
   @@index([projectId])
   @@index([status])
-  @@index([projectId, status]) // For project milestone stats
-  @@index([dueAt]) // For upcoming milestones
-  @@index([status, dueAt]) // For overdue milestones
-  @@index([createdAt]) // For recent milestones
+  @@index([dueAt])
+  @@index([projectId, status])
+  @@index([projectId, status, dueAt])
+  @@index([status, dueAt])
 }
 
 model File {
@@ -182,14 +178,12 @@ model Ticket {
   @@index([status])
   @@index([priority])
   @@index([assigneeId])
-  @@index([organizationId, status]) // For ticket stats
-  @@index([organizationId, priority, status]) // For high priority open tickets
-  @@index([organizationId, createdAt]) // For recent tickets
-  @@index([status, priority]) // For SLA calculations
+  @@index([organizationId, status])
+  @@index([organizationId, priority])
+  @@index([organizationId, priority, status])
   @@index([slaDueAt])
-  @@index([assigneeId, status]) // For assignee workloads
   @@index([createdAt])
-  @@index([updatedAt]) // For recent activity
+  @@index([status, priority])
 }
 
 model Invoice {
@@ -211,14 +205,12 @@ model Invoice {
   @@index([organizationId])
   @@index([status])
   @@index([userId])
-  @@index([organizationId, status]) // For invoice stats
-  @@index([organizationId, dueAt]) // For overdue invoices
-  @@index([organizationId, status, dueAt]) // For pending and overdue amounts
-  @@index([status, dueAt]) // For payment followups
+  @@index([organizationId, status])
+  @@index([status, dueAt])
+  @@index([organizationId, status, dueAt])
   @@index([dueAt])
   @@index([issuedAt])
   @@index([createdAt])
-  @@index([updatedAt]) // For recent activity
 }
 
 model Session {

@@ -2,15 +2,15 @@ import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 // Simple logger fallback for web app
 const logger = {
-  debug: (message: string, data?: unknown) =>
+  debug: (message: string, data?: any) =>
     console.debug(`[DEBUG] ${message}`, data),
-  info: (message: string, data?: unknown) =>
+  info: (message: string, data?: any) =>
     console.info(`[INFO] ${message}`, data),
-  warn: (message: string, data?: unknown) =>
+  warn: (message: string, data?: any) =>
     console.warn(`[WARN] ${message}`, data),
-  error: (message: string, error?: unknown) =>
+  error: (message: string, error?: any) =>
     console.error(`[ERROR] ${message}`, error),
-  performance: (metric: string, value: number, details?: unknown) =>
+  performance: (metric: string, value: number, details?: any) =>
     console.info(`[PERF] ${metric}: ${value}ms`, details),
 };
 
@@ -431,17 +431,6 @@ export class NotificationService {
     if ('type' in data && typeof data.type === 'string') {
       const update = data as DashboardUpdate;
       const payload = update.data as Record<string, unknown>; // Assuming data.data is the payload
-
-      // Security: Validate update type to prevent injection
-      const allowedTypes = new Set([
-        'project',
-        'ticket',
-        'milestone',
-        'invoice',
-      ]);
-      if (!allowedTypes.has(update.type)) {
-        return '';
-      }
 
       switch (update.type) {
         case 'project':

@@ -1,15 +1,15 @@
 // src/services/performanceService.ts
 // Simple logger fallback for web app
 const logger = {
-  debug: (message: string, data?: unknown) =>
+  debug: (message: string, data?: any) =>
     console.debug(`[DEBUG] ${message}`, data),
-  info: (message: string, data?: unknown) =>
+  info: (message: string, data?: any) =>
     console.info(`[INFO] ${message}`, data),
-  warn: (message: string, data?: unknown) =>
+  warn: (message: string, data?: any) =>
     console.warn(`[WARN] ${message}`, data),
-  error: (message: string, error?: unknown) =>
+  error: (message: string, error?: any) =>
     console.error(`[ERROR] ${message}`, error),
-  performance: (metric: string, value: number, details?: unknown) =>
+  performance: (metric: string, value: number, details?: any) =>
     console.info(`[PERF] ${metric}: ${value}ms`, details),
 };
 
@@ -33,7 +33,7 @@ export class PerformanceService {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
-        this.metrics.lcp = lastEntry.startTime;
+        this.metrics.lcp = lastEntry?.startTime || 0;
         logger.performance('LCP', this.metrics.lcp, {
           metricType: 'largest-contentful-paint',
         });
@@ -59,17 +59,13 @@ export class PerformanceService {
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry) => {
-          const layoutShiftEntry = entry as PerformanceEntry & {
-            value: number;
-            hadRecentInput: boolean;
-          };
-          if (!layoutShiftEntry.hadRecentInput) {
-            clsValue += layoutShiftEntry.value;
+        entries.forEach((entry: any) => {
+          if (!entry.hadRecentInput) {
+            clsValue += entry.value;
             this.metrics.cls = clsValue;
           }
         });
-        logger.performance('CLS', this.metrics.cls, {
+        logger.performance('CLS', this.metrics.cls || 0, {
           metricType: 'layout-shift',
         });
       });

@@ -472,9 +472,9 @@ describe('ProjectController API Contract Tests', () => {
         new Error('Validation failed')
       );
 
-      await expect(controller.create(invalidProjectDto)).rejects.toThrow(
-        'Validation failed'
-      );
+      await expect(
+        controller.create(invalidProjectDto, 'org1')
+      ).rejects.toThrow('Validation failed');
     });
   });
 
@@ -488,14 +488,14 @@ describe('ProjectController API Contract Tests', () => {
         'cancelled',
       ];
 
-      validStatuses.forEach((status) => {
+      for (const status of validStatuses) {
         const project = { ...mockProject, status };
         mockProjectsService.findAll.mockResolvedValue([project]);
 
-        return expect(
+        await expect(
           controller.findAll('org1', 'summary')
         ).resolves.toBeDefined();
-      });
+      }
     });
 
     it('should handle invalid project ID format', async () => {
@@ -521,8 +521,8 @@ describe('ProjectController API Contract Tests', () => {
 
       expect(result.startAt).toBeInstanceOf(Date);
       expect(result.dueAt).toBeInstanceOf(Date);
-      expect(result.startAt.getTime()).toBeLessThanOrEqual(
-        result.dueAt.getTime()
+      expect(result.startAt!.getTime()).toBeLessThanOrEqual(
+        result.dueAt!.getTime()
       );
     });
   });

@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { EnvironmentService } from '../config/environment.service';
 
 // Allowed base directories for uploads
-const ALLOWED_BASE_DIRECTORIES = ['/tmp'];
+const ALLOWED_BASE_DIRECTORIES = [
+  process.env.UPLOAD_DIR || '/tmp/uploads',
+  '/tmp',
+];
 
 // Sanitize file paths to prevent directory traversal
 function sanitizePath(filePath: string): string {
@@ -48,10 +50,6 @@ export interface LocalFileUploadOptions {
 
 @Injectable()
 export class LocalFileStorageService {
-  constructor(private envService: EnvironmentService) {
-    // Add the configured upload directory to allowed base directories
-    ALLOWED_BASE_DIRECTORIES.push(this.envService.uploadDir);
-  }
   /**
    * Upload a file to local storage
    */

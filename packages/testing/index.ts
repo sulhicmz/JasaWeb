@@ -20,12 +20,12 @@ export const createTestApp = async (
  * Creates a testing module with common providers
  */
 export const createTestingModule = (
-  imports: unknown[],
-  providers: unknown[] = []
+  imports: any[],
+  providers: any[] = []
 ): Promise<TestingModule> => {
   return Test.createTestingModule({
-    imports: imports as any[],
-    providers: providers as any[],
+    imports,
+    providers,
   }).compile();
 };
 

@@ -18,7 +18,7 @@
     "start:api": "cd apps/api && pnpm start:prod",
     "test": "cd apps/api && pnpm test",
     "test:api": "cd apps/api && pnpm test",
-    "test:web": "vitest run apps/web",
+    "test:web": "cd apps/web && pnpm test",
     "lint": "pnpm exec eslint . --max-warnings 500",
     "lint:fix": "pnpm exec eslint . --fix",
     "format": "prettier --write .",
@@ -38,9 +38,14 @@
     "quick-start": "./scripts/quick-start.sh",
     "security:audit": "pnpm audit --audit-level moderate",
     "security:audit:fix": "pnpm audit --fix",
+    "security:audit:json": "pnpm audit --audit-level moderate --json > audit-results.json || true",
+    "security:audit:high": "pnpm audit --audit-level high",
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
-    "security:scan": "node scripts/security-scan.js"
+    "security:scan": "ts-node scripts/security-scan.ts",
+    "security:scan:ci": "ts-node scripts/security-scan.ts && pnpm security:audit:high && pnpm security:audit:json",
+    "security:vulnerability:scan": "ts-node scripts/vulnerability-scanner.ts",
+    "security:vulnerability:fix": "ts-node scripts/vulnerability-scanner.ts --fix"
   },
   "keywords": [
     "astro",
@@ -63,6 +68,7 @@
     "eslint-plugin-security": "^3.0.1",
     "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.0",
     "vite": "^7.3.0",

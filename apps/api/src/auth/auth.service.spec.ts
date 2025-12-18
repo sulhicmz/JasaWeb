@@ -34,6 +34,7 @@ describe('AuthService', () => {
   const mockUserService = {
     findByEmail: vi.fn(),
     create: vi.fn(),
+    hashPassword: vi.fn(),
   };
 
   const mockJwtService = {
@@ -69,6 +70,7 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [],
       providers: [
         AuthService,
         {
@@ -95,6 +97,14 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+
+    // Manually set the private dependencies due to injection issues
+    (service as any).usersService = mockUserService;
+    (service as any).jwtService = mockJwtService;
+    (service as any).refreshTokenService = mockRefreshTokenService;
+    (service as any).passwordService = mockPasswordService;
+    (service as any).prisma = mockPrismaService;
+
     usersService = module.get<UserService>(UserService);
     jwtService = module.get<JwtService>(JwtService);
     refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
@@ -164,6 +174,14 @@ describe('AuthService', () => {
       mockPasswordService.verifyPassword.mockResolvedValue({
         isValid: true,
         needsRehash: false,
+      });
+      mockPrismaService.membership.findFirst.mockResolvedValue({
+        id: 'membership-1',
+        userId: mockUser.id,
+        organizationId: loginUserDto.organizationId,
+        role: 'member',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       mockRefreshTokenService.createRefreshToken.mockResolvedValue({
         token: 'test-access-token',

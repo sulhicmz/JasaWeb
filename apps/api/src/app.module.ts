@@ -33,6 +33,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { OrganizationModule } from './common/services/organization.module';
 import { AppConfigModule } from './common/config/app.config.module';
 import { EnvironmentModule } from './common/config/environment.module';
+import { SecurityModule } from './common/security/security.module';
 
 @Module({
   imports: [
@@ -43,8 +44,6 @@ import { EnvironmentModule } from './common/config/environment.module';
     }),
     RedisCacheModule,
     EnvironmentModule,
-    EnvironmentModule,
-    RedisCacheModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60, // Time window in seconds
@@ -74,6 +73,7 @@ import { EnvironmentModule } from './common/config/environment.module';
     OrganizationModule,
     EnvironmentModule,
     AppConfigModule,
+    SecurityModule,
   ],
   controllers: [AppController],
   providers: [

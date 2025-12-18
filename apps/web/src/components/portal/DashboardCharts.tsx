@@ -42,7 +42,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         throw new Error(response.error || 'Failed to fetch dashboard stats');
       }
 
-      const stats = response.data as Record<string, Record<string, number>>;
+      const stats = response.data as any;
 
       // Transform data for charts
       const projectChartData: ChartData = {
@@ -91,7 +91,11 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   };
 
   const renderBarChart = (data: ChartData, title: string) => {
-    if (!data || data.datasets[0].data.every((value) => value === 0)) {
+    if (
+      !data ||
+      !data.datasets[0] ||
+      data.datasets[0].data.every((value) => value === 0)
+    ) {
       return (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
@@ -115,17 +119,17 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       );
     }
 
-    const maxValue = Math.max(...data.datasets[0].data);
+    const maxValue = Math.max(...(data.datasets[0]?.data || []));
 
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
         <div className="space-y-4">
-          {data.labels.map((label, index) => {
-            const value = data.datasets[0].data[index];
+          {(data.labels || []).map((label, index) => {
+            const value = (data.datasets[0]?.data || [])[index] || 0;
             const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
             const backgroundColor =
-              data.datasets[0].backgroundColor?.[index] || '#6B7280';
+              (data.datasets[0]?.backgroundColor || [])[index] || '#6B7280';
 
             return (
               <div key={label} className="space-y-2">
@@ -151,7 +155,10 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   };
 
   const renderPieChart = (data: ChartData, title: string) => {
-    const total = data.datasets[0].data.reduce((sum, value) => sum + value, 0);
+    const total = (data.datasets[0]?.data || []).reduce(
+      (sum, value) => sum + (value || 0),
+      0
+    );
 
     if (total === 0) {
       return (
@@ -185,8 +192,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
 
     // Calculate angles for pie slices
     let currentAngle = 0;
-    const slices = data.labels.map((label, index) => {
-      const value = data.datasets[0].data[index];
+    const slices = (data.labels || []).map((label, index) => {
+      const value = (data.datasets[0]?.data || [])[index] || 0;
       const percentage = (value / total) * 100;
       const angle = (percentage / 100) * 360;
       const startAngle = currentAngle;
@@ -199,7 +206,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         percentage,
         startAngle,
         endAngle,
-        color: data.datasets[0].backgroundColor?.[index] || '#6B7280',
+        color: (data.datasets[0]?.backgroundColor || [])[index] || '#6B7280',
       };
     });
 

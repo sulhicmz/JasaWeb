@@ -5,50 +5,63 @@
  * Performs comprehensive security checks on the codebase
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 console.log('🔒 Starting Security Scan...\n');
 
-// Detect package manager
+// Enhanced package manager detection with better fallback handling
 let packageManager = 'npm'; // default fallback
-if (fs.existsSync('pnpm-lock.yaml')) {
+let packageManagerAvailable = false;
+
+// Prioritize pnpm since the project uses pnpm-workspace.yaml
+if (fs.existsSync('pnpm-lock.yaml') || fs.existsSync('pnpm-workspace.yaml')) {
   try {
     execSync('pnpm --version', { stdio: 'pipe' });
     packageManager = 'pnpm';
+    packageManagerAvailable = true;
     console.log('✅ Using pnpm for security scanning\n');
   } catch (error) {
-    console.log(
-      '⚠️  pnpm-lock.yaml found but pnpm not available, attempting to install pnpm...\n'
-    );
+    console.log('⚠️  pnpm-lock.yaml found but pnpm not available\n');
+
+    // Try corepack first (modern Node.js approach)
     try {
-      // Try to install pnpm using corepack
-      execSync('corepack enable && corepack prepare pnpm@latest --activate', {
-        stdio: 'pipe',
-      });
+      execSync('corepack enable', { stdio: 'pipe' });
+      execSync('corepack prepare pnpm@8.15.0 --activate', { stdio: 'pipe' });
       execSync('pnpm --version', { stdio: 'pipe' });
       packageManager = 'pnpm';
-      console.log('✅ pnpm installed and activated for security scanning\n');
-    } catch (pnpmError) {
-      console.log('⚠️  Failed to install pnpm, using npm fallback\n');
+      packageManagerAvailable = true;
+      console.log('✅ pnpm activated via corepack for security scanning\n');
+    } catch (corepackError) {
+      console.log('⚠️  Corepack activation failed, trying npm...\n');
+
+      // Fallback to npm for basic checks
       try {
         execSync('npm --version', { stdio: 'pipe' });
         packageManager = 'npm';
-        console.log('✅ Using npm as fallback for security scanning\n');
+        packageManagerAvailable = true;
+        console.log('⚠️  Using npm fallback for limited security scanning\n');
+        console.log('💡 Consider installing pnpm for full security features\n');
       } catch (npmError) {
-        console.log(
-          '❌ Neither pnpm nor npm available for security scanning\n'
-        );
+        console.log('❌ No package manager available for security scanning\n');
         process.exit(1);
       }
     }
   }
 } else if (fs.existsSync('package-lock.json')) {
-  packageManager = 'npm';
-  console.log('✅ Using npm for security scanning\n');
+  try {
+    execSync('npm --version', { stdio: 'pipe' });
+    packageManager = 'npm';
+    packageManagerAvailable = true;
+    console.log('✅ Using npm for security scanning\n');
+  } catch (error) {
+    console.log('❌ npm not available for security scanning\n');
+    process.exit(1);
+  }
 } else {
-  console.log('⚠️  No lockfile found, security scanning may be incomplete\n');
+  console.log('⚠️  No lockfile found, security scanning will be limited\n');
+  packageManagerAvailable = false;
 }
 
 const results = {
@@ -152,7 +165,7 @@ checkFilePatterns(
   'scripts/security-scan.js'
 );
 
-// 5. Run security audit (prefer pnpm, fallback to npm)
+// 5. Enhanced security audit with JSON output and comprehensive scanning
 const allowedLockFiles = ['pnpm-lock.yaml', 'package-lock.json'];
 const hasLockFile = allowedLockFiles.some((file) => {
   try {
@@ -163,46 +176,139 @@ const hasLockFile = allowedLockFiles.some((file) => {
   }
 });
 
-if (hasLockFile) {
-  // Run audit with different levels for comprehensive scanning
-  const auditOutput = runCommand(
-    `${packageManager} audit --audit-level moderate`,
+if (hasLockFile && packageManagerAvailable) {
+  console.log(`🔒 Running comprehensive ${packageManager} security audit...\n`);
+
+  // Generate JSON audit report for CI integration
+  const auditJsonCommand = `${packageManager} audit --audit-level moderate --json`;
+  try {
+    console.log(`📊 Generating JSON audit report...`);
+    const auditJsonOutput = execSync(auditJsonCommand, {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    });
+
+    // Save audit results to file for GitHub Actions
+    fs.writeFileSync('audit-results.json', auditJsonOutput);
+    results.passed.push('JSON audit report generation');
+    console.log('✅ JSON audit report saved\n');
+
+    // Parse and analyze results
+    try {
+      const auditData = JSON.parse(auditJsonOutput);
+      const vulnerabilityCount = auditData.vulnerabilities
+        ? Object.keys(auditData.vulnerabilities).length
+        : 0;
+
+      if (vulnerabilityCount > 0) {
+        results.warnings.push('Security vulnerabilities detected');
+        console.log(
+          `⚠️  Found ${vulnerabilityCount} security vulnerabilities\n`
+        );
+      } else {
+        results.passed.push('No security vulnerabilities');
+        console.log('✅ No security vulnerabilities found\n');
+      }
+    } catch (parseError) {
+      console.log('⚠️  Could not parse audit JSON output\n');
+    }
+  } catch (error) {
+    // Continue with other checks even if JSON audit fails
+    console.log(
+      '⚠️  JSON audit generation failed, continuing with text audit\n'
+    );
+  }
+
+  // Run moderate level audit
+  const moderateAuditCommand = `${packageManager} audit --audit-level moderate`;
+  const moderateAuditOutput = runCommand(
+    moderateAuditCommand,
     `Running ${packageManager} audit (moderate level)`
   );
 
-  // Also check for high-severity vulnerabilities specifically
-  runCommand(
-    `${packageManager} audit --audit-level high`,
-    `Running ${packageManager} audit (high severity check)`
-  );
+  // Run high-severity audit with stricter failure
+  console.log(`🚨 Running high-severity vulnerability check...`);
+  try {
+    execSync(`${packageManager} audit --audit-level high`, {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    });
+    results.passed.push('High-severity vulnerability check');
+    console.log('✅ No high-severity vulnerabilities\n');
+  } catch (highError) {
+    results.failed.push('High-severity vulnerability check');
+    console.log('❌ HIGH-SEVERITY VULNERABILITIES DETECTED');
+    console.log('🚨 These must be fixed before deployment\n');
+    console.log(highError.stdout || highError.message);
+    console.log('');
+  }
 
-  // Check for pnpm overrides if using pnpm
+  // Enhanced pnpm overrides validation
   if (packageManager === 'pnpm') {
-    console.log('🔍 Checking pnpm overrides configuration...');
+    console.log('🛡️ Validating pnpm security overrides...');
     try {
       const packageJsonPath = path.join(process.cwd(), 'package.json');
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 
       if (packageJson.pnpm && packageJson.pnpm.overrides) {
-        const overridesCount = Object.keys(packageJson.pnpm.overrides).length;
+        const overrides = packageJson.pnpm.overrides;
+        const overridesCount = Object.keys(overrides).length;
+
         results.passed.push('pnpm overrides configuration');
         console.log(
-          `✅ pnpm overrides configured with ${overridesCount} overrides\n`
+          `✅ pnpm overrides configured with ${overridesCount} overrides`
         );
+
+        // Check for critical security overrides
+        const criticalPackages = [
+          'js-yaml',
+          'nodemailer',
+          'validator',
+          'axios',
+        ];
+        const appliedCriticalOverrides = criticalPackages.filter(
+          (pkg) => overrides[pkg]
+        );
+
+        if (appliedCriticalOverrides.length > 0) {
+          console.log(
+            `🔒 Applied critical security overrides: ${appliedCriticalOverrides.join(', ')}`
+          );
+        }
+
+        // Validate override versions are recent
+        let outdatedOverrides = 0;
+        for (const [pkg, version] of Object.entries(overrides)) {
+          if (typeof version === 'string') {
+            // Simple version check - look for known vulnerable patterns
+            if (version.includes('4.1.0') || version.includes('6.0.0')) {
+              console.log(`⚠️  Override ${pkg}@${version} may be outdated`);
+              outdatedOverrides++;
+            }
+          }
+        }
+
+        if (outdatedOverrides === 0) {
+          console.log('✅ All overrides appear to be up-to-date\n');
+        } else {
+          results.warnings.push('Outdated pnpm overrides');
+          console.log(`⚠️  ${outdatedOverrides} overrides may need updating\n`);
+        }
       } else {
         results.warnings.push('pnpm overrides configuration');
         console.log(
-          '⚠️  No pnpm overrides found - consider adding security overrides\n'
+          '⚠️  No pnpm overrides found - consider adding security overrides'
         );
+        console.log('💡 Add overrides for known vulnerable packages\n');
       }
     } catch (error) {
-      console.log('⚠️  Error checking pnpm overrides configuration\n');
+      console.log('⚠️  Error validating pnpm overrides configuration\n');
     }
   }
 } else {
-  console.log(`⚠️  No lock file found, skipping ${packageManager} audit`);
-  console.log('   Consider running dependency audits in your CI environment\n');
-  results.warnings.push(`Running ${packageManager} audit`);
+  console.log(`⚠️  No lock file or package manager available, skipping audit`);
+  console.log('   Ensure p/npm is installed and lockfile exists\n');
+  results.warnings.push(`${packageManager} audit unavailable`);
 }
 
 // 6. Check for outdated dependencies

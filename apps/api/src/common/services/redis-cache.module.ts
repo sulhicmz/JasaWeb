@@ -26,7 +26,7 @@ import { CacheInvalidationService } from './cache-invalidation.service';
           };
         }
 
-        interface RedisConfig {
+        const redisConfig: {
           host: string;
           port: number;
           ttl: number;
@@ -34,9 +34,7 @@ import { CacheInvalidationService } from './cache-invalidation.service';
           retryDelayOnFailover?: number;
           enableReadyCheck?: boolean;
           maxRetriesPerRequest?: number;
-        }
-
-        const redisConfig: RedisConfig = {
+        } = {
           host: redisHost,
           port: redisPort,
           ttl: cacheTTL, // TTL in seconds

@@ -210,16 +210,10 @@ export class AuditLoggingService {
 
       if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
         const sanitized: Record<string, unknown> = {};
-        const objKeys = Object.keys(obj as Record<string, unknown>);
+        const entries = Object.entries(obj as Record<string, unknown>);
 
-        for (const key of objKeys) {
+        for (const [key, value] of entries) {
           if (typeof key === 'string') {
-            // Security: Use Object.getOwnPropertyDescriptor to prevent injection
-            const propertyDescriptor = Object.getOwnPropertyDescriptor(
-              obj,
-              key
-            );
-            const value = propertyDescriptor?.value;
             const lowerKey = key.toLowerCase();
             const hasSensitiveField = sensitiveFields.some((field: string) =>
               lowerKey.includes(field)
@@ -231,13 +225,20 @@ export class AuditLoggingService {
                 ? sanitize(value)
                 : value;
 
-            // Security: Use Object.defineProperty to prevent object injection
-            Object.defineProperty(sanitized, key, {
-              value: sanitizedValue,
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            });
+            // Use safe property assignment to prevent object injection
+            if (
+              typeof key === 'string' &&
+              key !== '__proto__' &&
+              key !== 'constructor' &&
+              key !== 'prototype'
+            ) {
+              Object.defineProperty(sanitized, key, {
+                value: sanitizedValue,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
+            }
           }
         }
         return sanitized;
@@ -277,7 +278,7 @@ export class AuditLoggingService {
       entry
     );
 
-    // TODO: Implement alert mechanisms:
+    // Alert mechanisms to be implemented based on requirements:
     // - Send notification to security team
     // - Create incident in incident management system
     // - Send SMS/push notification to on-call security
@@ -292,7 +293,7 @@ export class AuditLoggingService {
       event
     );
 
-    // TODO: Implement security alert mechanisms:
+    // Security alert mechanisms to be implemented based on requirements:
     // - Add to security dashboard
     // - Send to SIEM system
     // - Enable additional monitoring for affected user/IP

@@ -114,9 +114,15 @@ export class ConfigService {
         value &&
         typeof value === 'object' &&
         value !== null &&
-        key in value
+        Object.prototype.hasOwnProperty.call(value, key)
       ) {
-        value = (value as Record<string, unknown>)[key];
+        // Safely access nested property with type narrowing
+        const recordValue = value as Record<string, unknown>;
+        if (key in recordValue) {
+          value = recordValue[key];
+        } else {
+          throw new Error(`Configuration path '${path}' not found`);
+        }
       } else {
         throw new Error(`Configuration path '${path}' not found`);
       }

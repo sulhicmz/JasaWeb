@@ -42,8 +42,9 @@ export default defineConfig({
     },
 
     // Environment setup
-    environment: 'jsdom',
+    environment: 'node',
     globals: true,
+    setupFiles: [],
 
     // Minimal reporting for CI
     reporters: process.env.CI ? ['verbose'] : ['default'],
