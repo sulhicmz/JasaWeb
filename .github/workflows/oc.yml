@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 1
           # Optional: Uncomment baris di bawah jika ingin checkout branch dev sejak awal
-          # ref: dev 
+          ref: dev 
 
       - name: Install OpenCode CLI
         run: |
