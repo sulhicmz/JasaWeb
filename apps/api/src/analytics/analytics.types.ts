@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, AuditLog } from '@prisma/client';
 
 // Project-related types
 export interface ProjectWithRelations extends Prisma.ProjectGetPayload<{

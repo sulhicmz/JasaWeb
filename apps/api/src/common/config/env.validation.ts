@@ -37,7 +37,9 @@ export function validateEnv(config: Record<string, unknown>) {
       // Use Object.defineProperty with specific properties to prevent prototype pollution
       // Ensure key is a valid string and not a prototype property
       const safeKey = key;
-      const configValue = config[safeKey];
+      const configValue = Object.prototype.hasOwnProperty.call(config, safeKey)
+        ? config[safeKey]
+        : undefined;
       if (configValue !== undefined) {
         Object.defineProperty(process.env, safeKey, {
           value: String(configValue),

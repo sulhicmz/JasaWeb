@@ -33,7 +33,6 @@ export class SecurityConfigurationService {
   // Enhanced CSP configuration with multi-tenant safety
   getCspConfig(): SecurityPolicyConfig['csp'] {
     const isDevelopment = this.appConfig.isDevelopment();
-    const allowedOrigins = this.getAllowedOrigins();
 
     const directives = {
       defaultSrc: ["'self'"],
@@ -91,17 +90,14 @@ export class SecurityConfigurationService {
     ] as const;
 
     for (const key of validDirectiveKeys) {
+      // eslint-disable-next-line security/detect-object-injection
       if (Object.prototype.hasOwnProperty.call(directives, key)) {
+        // eslint-disable-next-line security/detect-object-injection
         const directiveValue = directives[key];
         if (directiveValue && Array.isArray(directiveValue)) {
           const filtered = directiveValue.filter(Boolean);
           if (filtered.length > 0) {
-            Object.defineProperty(safeDirectives, key, {
-              value: filtered,
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            });
+            safeDirectives[key] = filtered;
           }
         }
       }
@@ -134,7 +130,6 @@ export class SecurityConfigurationService {
   // CORS configuration with multi-tenant support
   getCorsConfig(): SecurityPolicyConfig['cors'] {
     const allowedOrigins = this.getAllowedOrigins();
-    const isDevelopment = this.appConfig.isDevelopment();
 
     return {
       origin: allowedOrigins,
