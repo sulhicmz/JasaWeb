@@ -319,7 +319,12 @@ export class AppConfigService {
           throw new Error(`Unauthorized configuration key access: ${key}`);
         }
 
-        value = recordValue[key];
+        // Use safe property access to prevent object injection
+        if (Object.prototype.hasOwnProperty.call(recordValue, key)) {
+          value = recordValue[key];
+        } else {
+          throw new Error(`Configuration property '${key}' does not exist`);
+        }
       } else {
         throw new Error(`Configuration path '${path}' not found`);
       }

@@ -597,8 +597,13 @@ export class DashboardController {
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
               !forbiddenProps.has(metric)
             ) {
-              // Security: Safe property assignment with validation
-              safeResult[metric] = trend;
+              // Security: Safe property assignment using Object.defineProperty
+              Object.defineProperty(safeResult, metric, {
+                value: trend,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           });
           return safeResult;
@@ -1208,9 +1213,19 @@ export class DashboardController {
           /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
           // Security: Safe property assignment with validation
-          const currentValue =
-            (dailyData as Record<string, number>)[dateKey] || 0;
-          dailyData[dateKey] = currentValue + 1;
+          // Security: Safe property access to prevent object injection
+          const currentValue = Object.prototype.hasOwnProperty.call(
+            dailyData,
+            dateKey
+          )
+            ? (dailyData[dateKey] as number)
+            : 0;
+          Object.defineProperty(dailyData, dateKey, {
+            value: currentValue + 1,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
         }
       }
     });

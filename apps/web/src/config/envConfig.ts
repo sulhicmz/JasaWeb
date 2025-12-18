@@ -153,11 +153,18 @@ export class EnvConfigService {
   }
 
   private getEnv(key: string, fallback: string): string {
-    return import.meta.env[key] || fallback;
+    // Security: Use safe property access to prevent object injection
+    return Object.prototype.hasOwnProperty.call(import.meta.env, key)
+      ? import.meta.env[key] || fallback
+      : fallback;
   }
 
   private getNumber(key: string, fallback: number): number {
-    const value = import.meta.env[key];
+    // Security: Use safe property access to prevent object injection
+    const value = Object.prototype.hasOwnProperty.call(import.meta.env, key)
+      ? import.meta.env[key]
+      : undefined;
+
     if (!value) return fallback;
 
     const num = parseInt(value, 10);
@@ -165,6 +172,19 @@ export class EnvConfigService {
   }
 
   private getBoolean(key: string, fallback: boolean): boolean {
+    // Security: Validate key before accessing environment
+    const ALLOWED_BOOLEAN_KEYS = [
+      'DEV',
+      'PROD',
+      'WS_ENABLED',
+      'ENABLE_ANALYTICS',
+      'ENABLE_SENTRY',
+    ];
+
+    if (!ALLOWED_BOOLEAN_KEYS.includes(key)) {
+      throw new Error(`Boolean key '${key}' is not allowed`);
+    }
+
     const value = import.meta.env[key];
     if (!value) return fallback;
     return value.toLowerCase() === 'true';
@@ -175,7 +195,10 @@ export class EnvConfigService {
     fallback: string,
     useFallback: boolean
   ): string {
-    const value = import.meta.env[key];
+    // Security: Use safe property access
+    const value = Object.prototype.hasOwnProperty.call(import.meta.env, key)
+      ? import.meta.env[key]
+      : undefined;
 
     if (!value) {
       if (useFallback || this.isBuildLikeEnvironment()) {
@@ -200,7 +223,10 @@ export class EnvConfigService {
   }
 
   public get(key: keyof EnvironmentConfig): string | number | boolean {
-    return this.config[key];
+    // Security: Use safe property access to prevent object injection
+    return Object.prototype.hasOwnProperty.call(this.config, key)
+      ? this.config[key]
+      : ('' as string | number | boolean); // Default fallback
   }
 
   public isProduction(): boolean {
@@ -211,7 +237,7 @@ export class EnvConfigService {
     return this.config.DEV || this.isBuildLikeEnvironment();
   }
 
-  public getConfigSummary(): Record<string, any> {
+  public getConfigSummary(): Record<string, unknown> {
     return {
       environment: {
         nodeEnv: this.config.NODE_ENV,

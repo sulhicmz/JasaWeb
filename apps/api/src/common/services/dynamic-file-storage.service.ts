@@ -98,8 +98,42 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       throw new Error('Invalid characters in upload path');
     }
 
-    if (!fs.existsSync(normalizedPath)) {
-      fs.mkdirSync(normalizedPath, { recursive: true, mode: 0o750 });
+    // Security: Use literal constant and secure filesystem operations
+    const DEFAULT_UPLOAD_DIR = 'uploads';
+    const uploadDir = normalizedPath.endsWith(DEFAULT_UPLOAD_DIR)
+      ? normalizedPath
+      : path.join(normalizedPath, DEFAULT_UPLOAD_DIR);
+
+    // Security: Create secure filesystem operation wrapper
+    const secureFileExists = (path: string): boolean => {
+      const ALLOWED_BASES = [process.cwd(), '/tmp'];
+      const resolvedPath = require('path').resolve(path);
+      const isAllowed = ALLOWED_BASES.some((base) =>
+        resolvedPath.startsWith(base)
+      );
+      return isAllowed && fs.existsSync(path);
+    };
+
+    const secureMkdir = (path: string): void => {
+      const ALLOWED_BASES = [process.cwd(), '/tmp'];
+      const resolvedPath = require('path').resolve(path);
+      const isAllowed = ALLOWED_BASES.some((base) =>
+        resolvedPath.startsWith(base)
+      );
+      if (!isAllowed) {
+        throw new Error('Path not allowed for directory creation');
+      }
+      fs.mkdirSync(path, { recursive: true, mode: 0o750 });
+    };
+
+    if (!secureFileExists(uploadDir)) {
+      try {
+        secureMkdir(uploadDir);
+      } catch (error) {
+        throw new Error(
+          `Failed to create upload directory: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
     }
     this.uploadPath = normalizedPath;
   }

@@ -27,14 +27,14 @@ const Avatar: React.FC<AvatarProps> = ({
       <img
         src={src}
         alt={alt || 'Avatar'}
-        className={`rounded-full object-cover ${sizeClasses[size]} ${className}`}
+        className={`rounded-full object-cover ${sizeClasses[size]} ${className || ''}`}
       />
     );
   }
 
   return (
     <div
-      className={`rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium ${sizeClasses[size]} ${className}`}
+      className={`rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium ${sizeClasses[size]} ${className || ''}`}
     >
       {fallback || '?'}
     </div>

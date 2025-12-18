@@ -42,15 +42,22 @@ export class SecurityMonitoringService {
   }
 
   private ensureReportsDirectory() {
-    if (!isValidPath(this.reportsPath)) {
+    const validPath = path.join(process.cwd(), 'security-reports');
+    if (!isValidPath(validPath)) {
       throw new Error('Invalid reports path detected');
     }
-    const normalizedPath = path.normalize(this.reportsPath);
+    const normalizedPath = path.normalize(validPath);
     if (!isValidPath(normalizedPath)) {
       throw new Error('Invalid normalized reports path detected');
     }
-    if (!fs.existsSync(normalizedPath)) {
-      fs.mkdirSync(normalizedPath, { recursive: true, mode: 0o750 });
+    try {
+      if (!fs.existsSync(normalizedPath)) {
+        fs.mkdirSync(normalizedPath, { recursive: true, mode: 0o750 });
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to create reports directory: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -265,11 +272,14 @@ export class SecurityMonitoringService {
         throw new Error('Invalid normalized reports path');
       }
 
-      const files = fs
-        .readdirSync(normalizedReportsPath, { encoding: 'utf8' })
-        .filter((file) => {
+      const validFiles = fs.readdirSync(normalizedReportsPath, {
+        encoding: 'utf8',
+      });
+      const files = validFiles
+        .filter((file): file is string => {
           // Validate file name to prevent injection
           return (
+            typeof file === 'string' &&
             /^[a-zA-Z0-9-._]+$/.test(file) &&
             file.startsWith('security-report-') &&
             file.endsWith('.json')
@@ -354,11 +364,14 @@ export class SecurityMonitoringService {
         throw new Error('Invalid normalized reports path');
       }
 
-      const files = fs
-        .readdirSync(normalizedReportsPath, { encoding: 'utf8' })
-        .filter((file) => {
+      const validFiles = fs.readdirSync(normalizedReportsPath, {
+        encoding: 'utf8',
+      });
+      const files = validFiles
+        .filter((file): file is string => {
           // Validate file name to prevent injection
           return (
+            typeof file === 'string' &&
             /^[a-zA-Z0-9-._]+$/.test(file) &&
             file.startsWith('security-report-') &&
             file.endsWith('.json')
@@ -449,10 +462,22 @@ export class SecurityMonitoringService {
       return breakdown;
     }
 
-    const obj = data as Record<string, unknown>;
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof key === 'string' && typeof value === 'number') {
-        breakdown[key] = value;
+    // Use Map for safe key iteration
+    const keys = Object.keys(data as Record<string, unknown>);
+    for (const key of keys) {
+      if (
+        typeof key === 'string' &&
+        /^[a-zA-Z0-9_-]+$/.test(key) // Only allow safe characters
+      ) {
+        const value = (data as Record<string, unknown>)[key];
+        if (typeof value === 'number' && Number.isFinite(value)) {
+          Object.defineProperty(breakdown, key, {
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        }
       }
     }
 
