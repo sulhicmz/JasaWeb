@@ -49,8 +49,6 @@ export class SecurityMonitoringService {
       fs.mkdirSync(this.reportsPath, { recursive: true, mode: 0o750 });
     }
   }
-    }
-  }
 
   @Cron('0 2 * * *') // Run daily at 2 AM
   async performDailySecurityScan(): Promise<SecurityReport> {

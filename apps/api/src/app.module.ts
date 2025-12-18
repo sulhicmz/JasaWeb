@@ -1,39 +1,39 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { validateEnv } from './common/config/env.validation';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { CacheModule } from '@nestjs/cache-manager';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { UserModule } from './users/user.module';
-import { ProjectModule } from './projects/project.module';
-import { MilestoneModule } from './milestones/milestone.module';
-import { TaskModule } from './tasks/task.module';
-import { TicketModule } from './tickets/ticket.module';
-import { InvoiceModule } from './invoices/invoice.module';
-import { FileModule } from './files/file.module';
-import { ApprovalModule } from './approvals/approval.module';
-import { EmailModule } from './common/services/email.module';
-import { AuditModule } from './common/services/audit.module';
-import { ErrorHandlingModule } from './common/services/error-handling.module';
-import { SessionModule } from './common/services/session.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './common/database/prisma.module';
-import { MultiTenantPrismaModule } from './common/database/multi-tenant-prisma.module';
-import { MultiTenantGuard } from './common/guards/multi-tenant.guard';
-import { MultiTenantMiddleware } from './common/middleware/multi-tenant.middleware';
-import { RolesGuard } from './common/guards/roles.guard';
-import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
-import { HealthModule } from './health/health.module';
-import { AnalyticsModule } from './analytics/analytics.module';
-import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { OrganizationModule } from './common/services/organization.module';
+import { ApprovalModule } from './approvals/approval.module';
+import { AuthModule } from './auth/auth.module';
 import { AppConfigModule } from './common/config/app.config.module';
+import { validateEnv } from './common/config/env.validation';
 import { EnvironmentModule } from './common/config/environment.module';
+import { MultiTenantPrismaModule } from './common/database/multi-tenant-prisma.module';
+import { PrismaModule } from './common/database/prisma.module';
+import { MultiTenantGuard } from './common/guards/multi-tenant.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { MultiTenantMiddleware } from './common/middleware/multi-tenant.middleware';
+import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { SecurityModule } from './common/security/security.module';
+import { AuditModule } from './common/services/audit.module';
+import { EmailModule } from './common/services/email.module';
+import { ErrorHandlingModule } from './common/services/error-handling.module';
+import { OrganizationModule } from './common/services/organization.module';
+import { RedisCacheModule } from './common/services/redis-cache.module';
+import { SessionModule } from './common/services/session.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { FileModule } from './files/file.module';
+import { HealthModule } from './health/health.module';
+import { InvoiceModule } from './invoices/invoice.module';
+import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
+import { MilestoneModule } from './milestones/milestone.module';
+import { ProjectModule } from './projects/project.module';
+import { TaskModule } from './tasks/task.module';
+import { TicketModule } from './tickets/ticket.module';
+import { UserModule } from './users/user.module';
 
 @Module({
   imports: [
@@ -42,18 +42,8 @@ import { SecurityModule } from './common/security/security.module';
       envFilePath: '.env',
       validate: validateEnv,
     }),
-<<<<<<< HEAD
-    CacheModule.registerAsync({
-      isGlobal: true,
-      useFactory: async () => ({
-        ttl: parseEnvNumber(process.env.CACHE_TTL, 5), // Time to live in seconds
-        max: parseEnvNumber(process.env.CACHE_MAX, 100), // Maximum number of items in cache
-      }),
-    }),
-=======
     RedisCacheModule,
     EnvironmentModule,
->>>>>>> origin/main
     ThrottlerModule.forRoot([
       {
         ttl: 60, // Time window in seconds
