@@ -172,23 +172,16 @@ export class DashboardController {
         productionUrl: true,
         repositoryUrl: true,
         milestones: {
+          where: { status: 'completed' },
           select: {
             id: true,
-            status: true,
-            dueAt: true,
           },
         },
         tickets: {
+          where: { status: { in: ['open', 'in-progress'] } },
           select: {
             id: true,
-            status: true,
             priority: true,
-          },
-        },
-        _count: {
-          select: {
-            milestones: true,
-            tickets: true,
           },
         },
       },
@@ -196,113 +189,183 @@ export class DashboardController {
       take: limitNum,
     });
 
-    // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map(
-      (project: ProjectWithMilestonesAndTickets) => {
-        const totalMilestones = project.milestones?.length || 0;
-        const completedMilestones =
-          project.milestones?.filter((m: Milestone) => m.status === 'completed')
-            .length || 0;
-        const progress =
-          totalMilestones > 0
-            ? Math.round((completedMilestones / totalMilestones) * 100)
-            : 0;
-
-        const openTickets =
-          project.tickets?.filter(
-            (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
-          ).length || 0;
-
-        const highPriorityTickets =
-          project.tickets?.filter(
-            (t: Ticket) =>
-              (t.priority === 'high' || t.priority === 'critical') &&
-              (t.status === 'open' || t.status === 'in-progress')
-          ).length || 0;
+    // Get milestone counts for each project
+    const milestoneCounts = await Promise.all(
+      projects.map(async (project) => {
+        const [total, completed] = await Promise.all([
+          this.multiTenantPrisma.milestone.count({
+            where: { projectId: project.id },
+          }),
+          this.multiTenantPrisma.milestone.count({
+            where: {
+              projectId: project.id,
+              status: 'completed',
+            },
+          }),
+        ]);
 
         return {
-          id: project.id,
-          name: project.name,
-          description: null, // Project model doesn't have description field
-          status: project.status,
-          progress,
-          totalMilestones,
-          completedMilestones,
-          openTickets,
-          highPriorityTickets,
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
-          startAt: project.startAt,
-          dueAt: project.dueAt,
-          stagingUrl: project.stagingUrl,
-          productionUrl: project.productionUrl,
-          repositoryUrl: project.repositoryUrl,
+          projectId: project.id,
+          totalMilestones: total,
+          completedMilestones: completed,
+          progress: total > 0 ? Math.round((completed / total) * 100) : 0,
         };
-      }
+      })
     );
+
+    // Create lookup map for milestone counts
+    const milestoneMap = new Map(milestoneCounts.map((m) => [m.projectId, m]));
+
+    // Calculate progress and additional metrics for each project
+    const projectsWithMetrics = projects.map((project: any) => {
+      const milestoneData = milestoneMap.get(project.id) || {
+        totalMilestones: 0,
+        completedMilestones: 0,
+        progress: 0,
+      };
+
+      const openTickets = project.tickets?.length || 0;
+      const highPriorityTickets =
+        project.tickets?.filter(
+          (t: any) => t.priority === 'high' || t.priority === 'critical'
+        ).length || 0;
+
+      return {
+        id: project.id,
+        name: project.name,
+        description: null, // Project model doesn't have description field
+        status: project.status,
+        progress: milestoneData.progress,
+        totalMilestones: milestoneData.totalMilestones,
+        completedMilestones: milestoneData.completedMilestones,
+        openTickets,
+        highPriorityTickets,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        startAt: project.startAt,
+        dueAt: project.dueAt,
+        stagingUrl: project.stagingUrl,
+        productionUrl: project.productionUrl,
+        repositoryUrl: project.repositoryUrl,
+      };
+    });
 
     return projectsWithMetrics;
   }
 
   private async getProjectsStats(organizationId: string) {
-    const projects = await this.multiTenantPrisma.project.findMany({
-      where: { organizationId },
-      select: { status: true },
-    });
-
-    const total = projects.length;
-    const active = projects.filter(
-      (p) => p.status === 'active' || p.status === 'in-progress'
-    ).length;
-    const completed = projects.filter((p) => p.status === 'completed').length;
-    const onHold = projects.filter((p) => p.status === 'on-hold').length;
+    const [total, active, completed, onHold] = await Promise.all([
+      this.multiTenantPrisma.project.count({
+        where: { organizationId },
+      }),
+      this.multiTenantPrisma.project.count({
+        where: {
+          organizationId,
+          status: { in: ['active', 'in-progress'] },
+        },
+      }),
+      this.multiTenantPrisma.project.count({
+        where: {
+          organizationId,
+          status: 'completed',
+        },
+      }),
+      this.multiTenantPrisma.project.count({
+        where: {
+          organizationId,
+          status: 'on-hold',
+        },
+      }),
+    ]);
 
     return { total, active, completed, onHold };
   }
 
   private async getTicketsStats(organizationId: string) {
-    const tickets = await this.multiTenantPrisma.ticket.findMany({
-      where: { organizationId },
-      select: { status: true, priority: true },
-    });
-
-    const total = tickets.length;
-    const open = tickets.filter((t) => t.status === 'open').length;
-    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
-    const highPriority = tickets.filter(
-      (t) =>
-        (t.priority === 'high' || t.priority === 'critical') &&
-        (t.status === 'open' || t.status === 'in-progress')
-    ).length;
-    const critical = tickets.filter(
-      (t) =>
-        t.priority === 'critical' &&
-        (t.status === 'open' || t.status === 'in-progress')
-    ).length;
+    const [total, open, inProgress, highPriority, critical] = await Promise.all(
+      [
+        this.multiTenantPrisma.ticket.count({
+          where: { organizationId },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            status: 'open',
+          },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            status: 'in-progress',
+          },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            priority: { in: ['high', 'critical'] },
+            status: { in: ['open', 'in-progress'] },
+          },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            priority: 'critical',
+            status: { in: ['open', 'in-progress'] },
+          },
+        }),
+      ]
+    );
 
     return { total, open, inProgress, highPriority, critical };
   }
 
   private async getInvoicesStats(organizationId: string) {
-    const invoices = await this.multiTenantPrisma.invoice.findMany({
-      where: { organizationId },
-      select: { status: true, amount: true, dueAt: true },
-    });
+    const now = new Date();
 
-    const total = invoices.length;
-    const pending = invoices.filter(
-      (i) => i.status === 'draft' || i.status === 'issued'
-    ).length;
-    const overdue = invoices.filter(
-      (i) =>
-        (i.status === 'issued' || i.status === 'overdue') &&
-        new Date(i.dueAt) < new Date()
-    ).length;
+    const [
+      total,
+      pending,
+      overdue,
+      totalAmountInvoices,
+      pendingAmountInvoices,
+    ] = await Promise.all([
+      this.multiTenantPrisma.invoice.count({
+        where: { organizationId },
+      }),
+      this.multiTenantPrisma.invoice.count({
+        where: {
+          organizationId,
+          status: { in: ['draft', 'issued'] },
+        },
+      }),
+      this.multiTenantPrisma.invoice.count({
+        where: {
+          organizationId,
+          status: { in: ['issued', 'overdue'] },
+          dueAt: { lt: now },
+        },
+      }),
+      this.multiTenantPrisma.invoice.findMany({
+        where: { organizationId },
+        select: { amount: true },
+      }),
+      this.multiTenantPrisma.invoice.findMany({
+        where: {
+          organizationId,
+          status: { in: ['draft', 'issued'] },
+        },
+        select: { amount: true },
+      }),
+    ]);
 
-    const totalAmount = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
-    const pendingAmount = invoices
-      .filter((i) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum, i) => sum + (i.amount || 0), 0);
+    const totalAmount = totalAmountInvoices.reduce(
+      (sum, inv) => sum + (inv.amount || 0),
+      0
+    );
+    const pendingAmount = pendingAmountInvoices.reduce(
+      (sum, inv) => sum + (inv.amount || 0),
+      0
+    );
 
     return { total, pending, overdue, totalAmount, pendingAmount };
   }
@@ -311,27 +374,41 @@ export class DashboardController {
     const now = new Date();
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: {
-        project: {
-          organizationId,
+    const [total, completed, overdue, dueThisWeek] = await Promise.all([
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
         },
-      },
-      select: { status: true, dueAt: true },
-    });
-
-    const total = milestones.length;
-    const completed = milestones.filter((m) => m.status === 'completed').length;
-    const overdue = milestones.filter(
-      (m) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
-    ).length;
-    const dueThisWeek = milestones.filter(
-      (m) =>
-        m.status !== 'completed' &&
-        m.dueAt &&
-        new Date(m.dueAt) >= now &&
-        new Date(m.dueAt) <= weekFromNow
-    ).length;
+      }),
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
+          status: 'completed',
+        },
+      }),
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
+          status: { not: 'completed' },
+          dueAt: { lt: now },
+        },
+      }),
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
+          status: { not: 'completed' },
+          dueAt: { gte: now, lte: weekFromNow },
+        },
+      }),
+    ]);
 
     return { total, completed, overdue, dueThisWeek };
   }

@@ -103,6 +103,13 @@ model Milestone {
   status    String // todo, in-progress, completed, overdue
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([dueAt])
+  @@index([projectId, status])
+  @@index([projectId, status, dueAt])
+  @@index([status, dueAt])
 }
 
 model File {
@@ -172,8 +179,11 @@ model Ticket {
   @@index([priority])
   @@index([assigneeId])
   @@index([organizationId, status])
+  @@index([organizationId, priority])
+  @@index([organizationId, priority, status])
   @@index([slaDueAt])
   @@index([createdAt])
+  @@index([status, priority])
 }
 
 model Invoice {
@@ -196,6 +206,8 @@ model Invoice {
   @@index([status])
   @@index([userId])
   @@index([organizationId, status])
+  @@index([status, dueAt])
+  @@index([organizationId, status, dueAt])
   @@index([dueAt])
   @@index([issuedAt])
   @@index([createdAt])
