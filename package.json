@@ -18,7 +18,7 @@
     "start:api": "cd apps/api && pnpm start:prod",
     "test": "cd apps/api && pnpm test",
     "test:api": "cd apps/api && pnpm test",
-    "test:web": "vitest run apps/web",
+    "test:web": "cd apps/web && pnpm test",
     "lint": "pnpm exec eslint . --max-warnings 500",
     "lint:fix": "pnpm exec eslint . --fix",
     "format": "prettier --write .",

@@ -206,7 +206,7 @@ const KnowledgeBaseHome: React.FC<KnowledgeBaseHomeProps> = () => {
                         </h3>
                         {article.tags.length > 0 && (
                           <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            {article.tags[0].name}
+                            {article.tags[0]?.name}
                           </span>
                         )}
                       </div>

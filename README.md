@@ -628,7 +628,7 @@ This repository follows strict hygiene standards with regular cleanup and organi
 - **File Naming**: Consistent kebab-case for files, PascalCase for components
 - **Regular Cleanup**: Temporary artifacts and obsolete documentation removed
 - **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
-- **Latest Cleanup**: December 2025 - removed temporary log files, outdated documentation (`TESTING.md`, branch cleanup reports), and fixed script path references
+- **Latest Cleanup**: December 2025 - removed redundant `TESTING.md` documentation, fixed broken issue template references in CONTRIBUTING.md, removed duplicate test files, standardized package script commands
 
 ## 📄 License
 

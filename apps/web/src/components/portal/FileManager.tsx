@@ -87,6 +87,8 @@ const FileManager: React.FC<FileManagerProps> = ({
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
+        if (!file) continue; // Skip undefined files
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('projectId', projectId);
