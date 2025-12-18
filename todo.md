@@ -91,6 +91,7 @@ Source: `AGENTS.md` + `/docs/` directory. This checklist unifies tooling (pnpm, 
 
 #### HIGH PRIORITY
 
+- [x] Standardize and consolidate configuration management for STORAGE_TYPE
 - [ ] Safelist dynamic Tailwind classes for Services page
 - [ ] Add Inter font from Google Fonts to Layout
 - [ ] Enable smooth scroll-to-top on route change

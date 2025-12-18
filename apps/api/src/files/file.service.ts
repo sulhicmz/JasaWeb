@@ -4,7 +4,7 @@ import { FileStorageService } from '../common/services/file-storage.service';
 import { LocalFileStorageService } from '../common/services/local-file-storage.service';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
-import { getRequiredEnv } from '@jasaweb/config/env-validation';
+import { getRequiredEnv } from '@jasaweb/config';
 
 export type UploadedFilePayload = {
   originalname: string;
@@ -85,10 +85,12 @@ export class FileService {
       throw new BadRequestException('File is required');
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    // Validate file size using centralized config
+    const maxSize =
+      this.configService.get<number>('MAX_FILE_SIZE') || MAX_FILE_SIZE;
+    if (file.size > maxSize) {
       throw new BadRequestException(
-        `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+        `File size exceeds maximum allowed size of ${maxSize / (1024 * 1024)}MB`
       );
     }
 
@@ -99,65 +101,32 @@ export class FileService {
       );
     }
 
-    // Validate project ID if provided
-    if (projectId) {
-      const project = await this.multiTenantPrisma.project.findUnique({
-        where: { id: projectId },
-      });
+    // Validate project ID exists and belongs to organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: projectId },
+    });
 
-      if (!project) {
-        throw new BadRequestException(
-          'Project not found or does not belong to your organization'
-        );
-      }
+    if (!project) {
+      throw new BadRequestException(
+        'Project not found or does not belong to your organization'
+      );
     }
 
     try {
-      // Determine if we're using S3 or local storage based on config
-      const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
+      // Determine storage type using centralized config
+      const storageType = this.configService.get<string>(
+        'STORAGE_TYPE',
+        'local'
+      );
+      const useS3 = storageType === 's3';
 
       let fileIdentifier: string;
 
       if (useS3) {
         // Upload to S3
-        fileIdentifier = await this.fileStorageService.uploadFile(file.buffer, {
-          bucket: getRequiredEnv('S3_BUCKET'),
-          key: `organizations/${organizationId}/projects/${projectId || 'general'}/${Date.now()}_${file.originalname}`,
-          contentType: file.mimetype,
-          metadata: {
-            originalName: file.originalname,
-            size: file.size.toString(),
-            uploadedBy: uploadedById,
-          },
-        });
-
-        // Ensure we store just the filename part if that's what we want, or the full key?
-        // uploadFile returns the key.
-        // For S3, download expects key construction.
-        // Logic in downloadFile: key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`
-        // So fileRecord.filename should be just the filename part!
-        // But uploadFile returns full key for S3?
-        // Let's check FileStorageService.uploadFile in memory or assume standard.
-        // Usually returns key.
-        // If it returns full key, then downloadFile logic is constructing a key from a key?
-        // `organizations/...` + key? That would be wrong.
-
-        // Let's assume fileIdentifier needs to be the filename part.
-        // The key used for upload is `.../${Date.now()}_${file.originalname}`.
-        // So we should extract the filename from the key if uploadFile returns the full key.
-        // OR we construct the filename first.
-
         const timestampedFilename = `${Date.now()}_${file.originalname}`;
-        // Re-upload with consistent key/filename usage
-        // Wait, I can't easily change the uploadFile logic without seeing FileStorageService.
-        // But assuming I can just use the timestampedFilename I generated.
-        // The previous code: `key: ...`
-
         fileIdentifier = timestampedFilename;
-        // The previous code didn't assign fileIdentifier inside the if block!
-        // So I will just use `timestampedFilename` as the identifier we save to DB.
 
-        // We still need to call uploadFile with the full key.
         await this.fileStorageService.uploadFile(file.buffer, {
           bucket: getRequiredEnv('S3_BUCKET'),
           key: `organizations/${organizationId}/projects/${projectId || 'general'}/${timestampedFilename}`,
@@ -188,8 +157,8 @@ export class FileService {
           project: {
             connect: { id: projectId },
           },
-          filename: fileIdentifier, // Use the stored filename (with timestamp)
-          version: '1.0', // Initial version
+          filename: fileIdentifier,
+          version: '1.0',
           size: file.size,
           uploadedBy: {
             connect: { id: uploadedById },
@@ -198,7 +167,7 @@ export class FileService {
       });
 
       this.logger.log(
-        `File uploaded: ${file.originalname} for organization ${organizationId}`
+        `File uploaded: ${file.originalname} for organization ${organizationId} (storage: ${storageType})`
       );
 
       return {
@@ -234,8 +203,12 @@ export class FileService {
         throw new BadRequestException('File not found');
       }
 
-      // Determine if we're using S3 or local based on config
-      const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
+      // Determine storage type using centralized config
+      const storageType = this.configService.get<string>(
+        'STORAGE_TYPE',
+        'local'
+      );
+      const useS3 = storageType === 's3';
 
       if (useS3) {
         // Generate a signed URL for S3 download
@@ -284,8 +257,12 @@ export class FileService {
         throw new BadRequestException('File not found');
       }
 
-      // Determine if we're using S3 or local based on config
-      const useS3 = this.configService.get<string>('STORAGE_TYPE') === 's3';
+      // Determine storage type using centralized config
+      const storageType = this.configService.get<string>(
+        'STORAGE_TYPE',
+        'local'
+      );
+      const useS3 = storageType === 's3';
 
       if (useS3) {
         // Delete from S3
@@ -305,7 +282,7 @@ export class FileService {
       });
 
       this.logger.log(
-        `File deleted: ${fileRecord.filename} for organization ${organizationId}`
+        `File deleted: ${fileRecord.filename} for organization ${organizationId} (storage: ${storageType})`
       );
 
       return { message: 'File deleted successfully' };

@@ -173,6 +173,13 @@ export const ENV_SCHEMA: Record<string, EnvSchema> = {
   },
 
   // File Storage Configuration (S3/MinIO)
+  STORAGE_TYPE: {
+    type: 'string',
+    required: false,
+    pattern: /^(local|s3)$/,
+    defaultValue: 'local',
+    description: 'Storage type: local or s3',
+  },
   S3_ENDPOINT: {
     type: 'string',
     required: false,
