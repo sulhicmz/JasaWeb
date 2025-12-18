@@ -4,7 +4,7 @@
   "description": "NestJS API for JasaWeb Client Portal",
   "type": "commonjs",
   "scripts": {
-    "build": "prisma generate && npx nest build",
+    "build": "prisma generate && tsc --project tsconfig.build.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

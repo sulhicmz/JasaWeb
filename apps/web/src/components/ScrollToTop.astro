@@ -1,8 +1,8 @@
 ---
-// ScrollToTop.astro - Smooth scroll to top component
+// ScrollToTop.astro - Smooth scroll to top component (Enhanced)
 ---
 
-<script>
+<script is:inline>
   // Show/hide scroll-to-top button based on scroll position
   function handleScroll() {
     const scrollButton = document.getElementById('scroll-to-top');
@@ -19,21 +19,20 @@
     }
   }
 
-  // Smooth scroll to top function
-  function scrollToTop() {
+  // Smooth scroll to top function (accessible globally)
+  window.scrollToTop = function() {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
-  }
+  };
 
   // Handle route changes
   function handleRouteChange() {
     setTimeout(() => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      if (window.scrollToTop) {
+        window.scrollToTop();
+      }
     }, 100);
   }
 
@@ -65,7 +64,7 @@
   id="scroll-to-top"
   class="fixed bottom-8 right-8 z-50 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-110 transition-all duration-300 opacity-0 pointer-events-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-950"
   aria-label="Scroll to top"
-  onclick="scrollToTop()"
+  onclick="window.scrollToTop()"
 >
   <i class="fas fa-arrow-up text-sm"></i>
 </button>

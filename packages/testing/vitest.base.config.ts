@@ -31,7 +31,7 @@ export const baseVitestConfig = defineConfig({
 
     // Coverage settings (can be overridden by apps)
     coverage: {
-      provider: 'v8',
+      provider: 'v8' as const,
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/**',
@@ -51,7 +51,7 @@ export const baseVitestConfig = defineConfig({
     bail: 1, // Stop on first failure in CI
 
     // Environment-specific reporter
-    reporter: process.env.CI ? ['verbose'] : ['default'],
+    reporters: process.env.CI ? ['verbose'] : ['default'],
   },
 });
 
@@ -64,7 +64,8 @@ export const apiVitestConfig = defineConfig({
     ...baseVitestConfig.test,
     environment: 'node',
     coverage: {
-      ...baseVitestConfig.test!.coverage,
+      provider: 'v8' as const,
+      reporter: ['text', 'json', 'html'],
       thresholds: {
         global: {
           branches: 80,
@@ -73,6 +74,15 @@ export const apiVitestConfig = defineConfig({
           statements: 80,
         },
       },
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/test/**',
+        '**/tests/**',
+        '**/coverage/**',
+      ],
     },
   },
 });
@@ -86,7 +96,8 @@ export const webVitestConfig = defineConfig({
     ...baseVitestConfig.test,
     environment: 'jsdom',
     coverage: {
-      ...baseVitestConfig.test!.coverage,
+      provider: 'v8' as const,
+      reporter: ['text', 'json', 'html'],
       thresholds: {
         global: {
           branches: 75,
@@ -95,6 +106,15 @@ export const webVitestConfig = defineConfig({
           statements: 75,
         },
       },
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/test/**',
+        '**/tests/**',
+        '**/coverage/**',
+      ],
     },
   },
 });
@@ -108,7 +128,7 @@ export const packageVitestConfig = defineConfig({
     ...baseVitestConfig.test,
     environment: 'node',
     coverage: {
-      ...baseVitestConfig.test!.coverage,
+      provider: 'v8' as const,
       reporter: ['text', 'json'], // Exclude HTML for packages
       thresholds: {
         global: {
@@ -118,6 +138,15 @@ export const packageVitestConfig = defineConfig({
           statements: 60,
         },
       },
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/test/**',
+        '**/tests/**',
+        '**/coverage/**',
+      ],
     },
   },
 });

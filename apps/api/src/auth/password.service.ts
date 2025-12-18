@@ -1,10 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
-import * as bcrypt from 'bcrypt';
 
 export enum PasswordHashVersion {
-  BCRYPT = 'bcrypt',
   ARGON2 = 'argon2',
 }
 
@@ -52,19 +50,6 @@ export class PasswordService {
           }
 
           return { isValid: isValidArgon2 };
-        }
-
-        case PasswordHashVersion.BCRYPT: {
-          const isValidBcrypt = await bcrypt.compare(password, hash);
-
-          if (isValidBcrypt) {
-            this.logger.log('Migrating bcrypt hash to Argon2');
-            const { hash: newHash, version: newVersion } =
-              await this.hashPassword(password);
-            return { isValid: true, needsRehash: true, newHash, newVersion };
-          }
-
-          return { isValid: isValidBcrypt };
         }
 
         default:

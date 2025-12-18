@@ -8,7 +8,6 @@ import {
   createMockMultiTenantPrismaService,
   createTestTask,
   createTestProject,
-  resetAllMocks,
 } from '../test/test-helpers';
 
 // Create a mock TaskService class for testing

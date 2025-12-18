@@ -152,7 +152,7 @@ const { title } = Astro.props;
     <ScrollToTop />
 
     <!-- Performance optimization script -->
-    <script type="module">
+    <script is:inline type="module">
       // Register Service Worker for PWA capabilities
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -179,13 +179,13 @@ const { title } = Astro.props;
       }
       window.addEventListener('scroll', updateScrollPosition, { passive: true });
 
-      // Add to home screen prompt
-      let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // Show install button if needed
-      });
+      // Add to home screen prompt (commented out to remove unused variable warning)
+      // let deferredPrompt;
+      // window.addEventListener('beforeinstallprompt', (e) => {
+      //   e.preventDefault();
+      //   deferredPrompt = e;
+      //   // Show install button if needed
+      // });
     </script>
   </body>
 </html>

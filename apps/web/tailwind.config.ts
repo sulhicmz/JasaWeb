@@ -5,37 +5,6 @@ const config: Config = {
     './src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}',
     '../../../packages/ui/src/**/*.{js,ts,jsx,tsx}',
   ],
-  safelist: [
-    // Service color classes
-    'service-blue',
-    'service-green',
-    'service-purple',
-    'service-icon-blue',
-    'service-icon-green',
-    'service-icon-purple',
-
-    // Team color classes
-    'team-blue',
-    'team-green',
-    'team-purple',
-    'team-red',
-    'team-yellow',
-    'team-pink',
-    'team-indigo',
-    'team-gray',
-
-    // Glass panel variants
-    'glass-panel',
-    'glass-header',
-
-    // Animation classes
-    'animate-float',
-    'animate-pulse-glow',
-
-    // Text utilities
-    'text-glow',
-    'bg-glow',
-  ],
   theme: {
     extend: {
       colors: {
@@ -73,4 +42,4 @@ const config: Config = {
   plugins: [],
 };
 
-export default config;
+export default config satisfies Config;
