@@ -32,6 +32,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      jiti:
+        specifier: ^2.6.1
+        version: 2.6.1
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.1
@@ -59,7 +63,7 @@ importers:
         version: 9.2.1
       eslint:
         specifier: ^9.39.2
-        version: 9.39.2
+        version: 9.39.2(jiti@2.6.1)
       eslint-plugin-security:
         specifier: ^3.0.1
         version: 3.0.1
@@ -74,7 +78,7 @@ importers:
         version: 10.9.2(@swc/core@1.15.5)(@types/node@25.0.3)(typescript@5.9.3)
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -83,7 +87,7 @@ importers:
         version: 8.50.0(eslint@9.39.2)(typescript@5.9.3)
       vite:
         specifier: ^7.3.0
-        version: 7.3.0(@types/node@25.0.3)
+        version: 7.3.0(@types/node@25.0.3)(jiti@2.6.1)
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@25.0.3)(@vitest/ui@2.1.9)(jsdom@27.3.0)
@@ -273,10 +277,10 @@ importers:
     dependencies:
       '@astrojs/cloudflare':
         specifier: ^12.6.10
-        version: 12.6.10(@types/node@25.0.3)(astro@5.15.9)
+        version: 12.6.10(@types/node@25.0.3)(astro@5.15.9)(jiti@2.6.1)
       '@astrojs/react':
         specifier: ^4.4.2
-        version: 4.4.2(@types/node@25.0.3)(@types/react-dom@19.2.3)(@types/react@19.2.7)(react-dom@18.3.1)(react@18.3.1)
+        version: 4.4.2(@types/node@25.0.3)(@types/react-dom@19.2.3)(@types/react@19.2.7)(jiti@2.6.1)(react-dom@18.3.1)(react@18.3.1)
       '@jasaweb/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -288,7 +292,7 @@ importers:
         version: 4.1.17(vite@7.3.0)
       astro:
         specifier: 5.15.9
-        version: 5.15.9(@types/node@25.0.3)(typescript@5.9.3)
+        version: 5.15.9(@types/node@25.0.3)(jiti@2.6.1)(typescript@5.9.3)
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
@@ -351,7 +355,7 @@ importers:
     devDependencies:
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(postcss@8.5.6)(typescript@5.9.3)
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(typescript@5.9.3)
 
 packages:
 
@@ -475,7 +479,7 @@ packages:
   /@asamuzakjp/nwsapi@2.3.9:
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
 
-  /@astrojs/cloudflare@12.6.10(@types/node@25.0.3)(astro@5.15.9):
+  /@astrojs/cloudflare@12.6.10(@types/node@25.0.3)(astro@5.15.9)(jiti@2.6.1):
     resolution: {integrity: sha512-qUtGwlGDzwYd0DJCZRkWZsB9vvO14arZkv7TG3OF5aEFIrj9bztXZQA1d9Z3DDRoZYUcdfATLWKQyvGEdMSuPg==}
     peerDependencies:
       astro: 5.15.9
@@ -483,9 +487,9 @@ packages:
       '@astrojs/internal-helpers': 0.7.4
       '@astrojs/underscore-redirects': 1.0.0
       '@cloudflare/workers-types': 4.20251117.0
-      astro: 5.15.9(@types/node@25.0.3)(typescript@5.9.3)
+      astro: 5.15.9(@types/node@25.0.3)(jiti@2.6.1)(typescript@5.9.3)
       tinyglobby: 0.2.15
-      vite: 6.4.1(@types/node@25.0.3)
+      vite: 6.4.1(@types/node@25.0.3)(jiti@2.6.1)
       wrangler: 4.41.0(@cloudflare/workers-types@4.20251117.0)
     transitivePeerDependencies:
       - '@types/node'
@@ -550,7 +554,7 @@ packages:
       prismjs: 1.30.0
     dev: false
 
-  /@astrojs/react@4.4.2(@types/node@25.0.3)(@types/react-dom@19.2.3)(@types/react@19.2.7)(react-dom@18.3.1)(react@18.3.1):
+  /@astrojs/react@4.4.2(@types/node@25.0.3)(@types/react-dom@19.2.3)(@types/react@19.2.7)(jiti@2.6.1)(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-1tl95bpGfuaDMDn8O3x/5Dxii1HPvzjvpL2YTuqOOrQehs60I2DKiDgh1jrKc7G8lv+LQT5H15V6QONQ+9waeQ==}
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
     peerDependencies:
@@ -565,7 +569,7 @@ packages:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       ultrahtml: 1.6.0
-      vite: 6.4.1(@types/node@25.0.3)
+      vite: 6.4.1(@types/node@25.0.3)(jiti@2.6.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -1970,7 +1974,7 @@ packages:
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
     dependencies:
-      eslint: 9.39.2
+      eslint: 9.39.2(jiti@2.6.1)
       eslint-visitor-keys: 3.4.3
     dev: true
 
@@ -4587,7 +4591,7 @@ packages:
       '@tailwindcss/node': 4.1.17
       '@tailwindcss/oxide': 4.1.17
       tailwindcss: 4.1.17
-      vite: 7.3.0(@types/node@25.0.3)
+      vite: 7.3.0(@types/node@25.0.3)(jiti@2.6.1)
     dev: false
 
   /@tokenizer/inflate@0.3.1:
@@ -4927,7 +4931,7 @@ packages:
       '@typescript-eslint/type-utils': 8.50.0(eslint@9.39.2)(typescript@5.9.3)
       '@typescript-eslint/utils': 8.50.0(eslint@9.39.2)(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.50.0
-      eslint: 9.39.2
+      eslint: 9.39.2(jiti@2.6.1)
       ignore: 7.0.5
       natural-compare: 1.4.0
       ts-api-utils: 2.1.0(typescript@5.9.3)
@@ -4948,7 +4952,7 @@ packages:
       '@typescript-eslint/typescript-estree': 8.50.0(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.50.0
       debug: 4.4.3
-      eslint: 9.39.2
+      eslint: 9.39.2(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -4996,7 +5000,7 @@ packages:
       '@typescript-eslint/typescript-estree': 8.50.0(typescript@5.9.3)
       '@typescript-eslint/utils': 8.50.0(eslint@9.39.2)(typescript@5.9.3)
       debug: 4.4.3
-      eslint: 9.39.2
+      eslint: 9.39.2(jiti@2.6.1)
       ts-api-utils: 2.1.0(typescript@5.9.3)
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -5039,7 +5043,7 @@ packages:
       '@typescript-eslint/scope-manager': 8.50.0
       '@typescript-eslint/types': 8.50.0
       '@typescript-eslint/typescript-estree': 8.50.0(typescript@5.9.3)
-      eslint: 9.39.2
+      eslint: 9.39.2(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -5069,7 +5073,7 @@ packages:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.4.1(@types/node@25.0.3)
+      vite: 6.4.1(@types/node@25.0.3)(jiti@2.6.1)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -5523,7 +5527,7 @@ packages:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
     engines: {node: '>=12'}
 
-  /astro@5.15.9(@types/node@25.0.3)(typescript@5.9.3):
+  /astro@5.15.9(@types/node@25.0.3)(jiti@2.6.1)(typescript@5.9.3):
     resolution: {integrity: sha512-XLDXxu0282cC/oYHswWZm3johGlRvk9rLRS7pWVWSne+HsZe9JgrpHI+vewAJSSNHBGd1aCyaQOElT5RNGe7IQ==}
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
@@ -5582,7 +5586,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.17.2
       vfile: 6.0.3
-      vite: 6.4.1(@types/node@25.0.3)
+      vite: 6.4.1(@types/node@25.0.3)(jiti@2.6.1)
       vitefu: 1.1.1(vite@6.4.1)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -7034,7 +7038,7 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     dev: true
 
-  /eslint@9.39.2:
+  /eslint@9.39.2(jiti@2.6.1):
     resolution: {integrity: sha512-LEyamqS7W5HB3ujJyvi0HQK/dtVINZvd5mAAp9eT5S/ujByGjiZLCzPcHVzuXbpJDJF/cxwHlfceVUDZ2lnSTw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     hasBin: true
@@ -7073,6 +7077,7 @@ packages:
       ignore: 5.3.2
       imurmurhash: 0.1.4
       is-glob: 4.0.3
+      jiti: 2.6.1
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
       minimatch: 3.1.2
@@ -10391,6 +10396,7 @@ packages:
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+    requiresBuild: true
     dev: false
 
   /picomatch@4.0.2:
@@ -10427,7 +10433,7 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /postcss-load-config@6.0.1(postcss@8.5.6):
+  /postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.6):
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
     engines: {node: '>= 18'}
     peerDependencies:
@@ -10445,6 +10451,7 @@ packages:
       yaml:
         optional: true
     dependencies:
+      jiti: 2.6.1
       lilconfig: 3.1.3
       postcss: 8.5.6
     dev: true
@@ -11952,7 +11959,7 @@ packages:
   /tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  /tsup@8.5.1(postcss@8.5.6)(typescript@5.9.3):
+  /tsup@8.5.1(jiti@2.6.1)(postcss@8.5.6)(typescript@5.9.3):
     resolution: {integrity: sha512-xtgkqwdhpKWr3tKPmCkvYmS9xnQK3m3XgxZHwSUjvfTjp7YfXe5tT3GgWi0F2N+ZSMsOeWeZFh7ZZFg5iPhing==}
     engines: {node: '>=18'}
     hasBin: true
@@ -11981,7 +11988,7 @@ packages:
       joycon: 3.1.1
       picocolors: 1.1.1
       postcss: 8.5.6
-      postcss-load-config: 6.0.1(postcss@8.5.6)
+      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.6)
       resolve-from: 5.0.0
       rollup: 4.53.2
       source-map: 0.7.6
@@ -12042,7 +12049,7 @@ packages:
       '@typescript-eslint/parser': 8.50.0(eslint@9.39.2)(typescript@5.9.3)
       '@typescript-eslint/typescript-estree': 8.50.0(typescript@5.9.3)
       '@typescript-eslint/utils': 8.50.0(eslint@9.39.2)(typescript@5.9.3)
-      eslint: 9.39.2
+      eslint: 9.39.2(jiti@2.6.1)
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -12470,7 +12477,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
 
-  /vite@6.4.1(@types/node@25.0.3):
+  /vite@6.4.1(@types/node@25.0.3)(jiti@2.6.1):
     resolution: {integrity: sha512-+Oxm7q9hDoLMyJOYfUYBuHQo+dkAloi33apOPP56pzj+vsdJDzr+j1NISE5pyaAuKL4A3UD34qd0lx5+kfKp2g==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -12513,6 +12520,7 @@ packages:
       '@types/node': 25.0.3
       esbuild: 0.25.0
       fdir: 6.5.0(picomatch@4.0.3)
+      jiti: 2.6.1
       picomatch: 4.0.3
       postcss: 8.5.6
       rollup: 4.53.2
@@ -12521,7 +12529,7 @@ packages:
       fsevents: 2.3.3
     dev: false
 
-  /vite@7.3.0(@types/node@25.0.3):
+  /vite@7.3.0(@types/node@25.0.3)(jiti@2.6.1):
     resolution: {integrity: sha512-dZwN5L1VlUBewiP6H9s2+B3e3Jg96D0vzN+Ry73sOefebhYr9f94wwkMNN/9ouoU8pV1BqA1d1zGk8928cx0rg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -12564,6 +12572,7 @@ packages:
       '@types/node': 25.0.3
       esbuild: 0.25.0
       fdir: 6.5.0(picomatch@4.0.3)
+      jiti: 2.6.1
       picomatch: 4.0.3
       postcss: 8.5.6
       rollup: 4.53.3
@@ -12579,7 +12588,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.4.1(@types/node@25.0.3)
+      vite: 6.4.1(@types/node@25.0.3)(jiti@2.6.1)
     dev: false
 
   /vitest@2.1.9(@types/node@25.0.3)(@vitest/ui@2.1.9)(jsdom@24.1.3):

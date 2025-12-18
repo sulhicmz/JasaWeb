@@ -1,51 +1,12 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
+import { apiVitestConfig } from '@jasaweb/testing';
 
 export default defineConfig({
+  ...apiVitestConfig,
   test: {
-    include: ['**/*.{test,spec}.{js,ts,tsx}'],
-    exclude: [
-      'node_modules',
-      'dist',
-      '.next',
-      '.astro',
-      '**/*.d.ts',
-      '**/*.config.*',
-      '**/coverage/**',
-    ],
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
-    testTimeout: 10000,
-    hookTimeout: 10000,
-    globals: true,
-    bail: 1,
-    reporters: process.env.CI ? ['verbose'] : ['default'],
-    environment: 'node',
+    ...apiVitestConfig.test,
     setupFiles: ['./test/setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      thresholds: {
-        global: {
-          branches: 80,
-          functions: 80,
-          lines: 80,
-          statements: 80,
-        },
-      },
-      exclude: [
-        'node_modules/**',
-        'dist/**',
-        '**/*.d.ts',
-        '**/*.config.*',
-        '**/test/**',
-        '**/tests/**',
-        '**/coverage/**',
-      ],
-    },
   },
   optimizeDeps: {
     include: [

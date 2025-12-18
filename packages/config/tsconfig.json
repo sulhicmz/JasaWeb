@@ -26,20 +26,24 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@jasaweb/*": ["packages/*"],
-      "@jasaweb/ui": ["packages/ui/src"],
-      "@jasaweb/ui/*": ["packages/ui/src/*"],
-      "@jasaweb/config": ["packages/config/src"],
-      "@jasaweb/config/*": ["packages/config/src/*"],
-      "@jasaweb/testing": ["packages/testing/src"],
-      "@jasaweb/testing/*": ["packages/testing/src/*"],
-      "@jasaweb/api/*": ["apps/api/src/*"],
-      "@jasaweb/web/*": ["apps/web/src/*"]
+      "@jasaweb/*": ["../../../"],
+      "@jasaweb/ui": ["../../../packages/ui/src"],
+      "@jasaweb/ui/*": ["../../../packages/ui/src/*"],
+      "@jasaweb/config": ["../../../packages/config/src"],
+      "@jasaweb/config/*": ["../../../packages/config/src/*"],
+      "@jasaweb/testing": ["../../../packages/testing/src"],
+      "@jasaweb/testing/*": ["../../../packages/testing/src/*"],
+      "@jasaweb/shared": ["../../../packages/shared/src"],
+      "@jasaweb/shared/*": ["../../../packages/shared/src/*"],
+      "@jasaweb/api/*": ["../../../apps/api/src/*"],
+      "@jasaweb/web/*": ["../../../apps/web/src/*"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,
     "incremental": true,
     "resolveJsonModule": true,
-    "jsx": "react-jsx"
-  }
+    "jsx": "react-jsx",
+    "composite": true
+  },
+  "exclude": ["node_modules", "dist", "build"]
 }
