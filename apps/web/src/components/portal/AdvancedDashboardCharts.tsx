@@ -70,7 +70,7 @@ interface Prediction {
   currentMonthlyAverage?: number;
   predictedRevenue?: number;
   revenueGrowthRate?: number;
-  riskLevel?: number;
+  riskLevel?: string;
   overallRiskScore?: number;
 }
 
@@ -139,7 +139,11 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
   };
 
   const renderLineChart = (data: ChartData, title: string) => {
-    if (!data || data.datasets[0].data.every((value) => value === 0)) {
+    if (
+      !data ||
+      !data.datasets[0] ||
+      data.datasets[0].data.every((value) => value === 0)
+    ) {
       return (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
@@ -163,7 +167,7 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
       );
     }
 
-    const maxValue = Math.max(...data.datasets[0].data);
+    const maxValue = Math.max(...(data.datasets[0]?.data || []));
     const months = [
       'Jan',
       'Feb',
@@ -178,7 +182,7 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
       'Nov',
       'Dec',
     ];
-    const labels = data.labels.map((label) => {
+    const labels = (data.labels || []).map((label) => {
       const date = new Date(label);
       return months[date.getMonth()];
     });
@@ -189,8 +193,9 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
         <div className="relative h-64 mb-4">
           {/* Simple SVG line chart visualization */}
           <svg viewBox="0 0 400 150" className="w-full h-full">
-            {data.datasets[0].data.map((value, index) => {
-              const x = (index / (data.datasets[0].data.length - 1)) * 380 + 10;
+            {(data.datasets[0]?.data || []).map((value, index) => {
+              const dataLength = (data.datasets[0]?.data || []).length;
+              const x = (index / (dataLength - 1)) * 380 + 10;
               const y = maxValue > 0 ? 140 - (value / maxValue) * 120 : 70;
 
               return (
@@ -209,10 +214,10 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
               fill="none"
               stroke="#3B82F6"
               strokeWidth="2"
-              points={data.datasets[0].data
+              points={(data.datasets[0]?.data || [])
                 .map((value, index) => {
-                  const x =
-                    (index / (data.datasets[0].data.length - 1)) * 380 + 10;
+                  const dataLength = (data.datasets[0]?.data || []).length;
+                  const x = (index / (dataLength - 1)) * 380 + 10;
                   const y = maxValue > 0 ? 140 - (value / maxValue) * 120 : 70;
                   return `${x},${y}`;
                 })
@@ -376,9 +381,11 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
               <span className="text-gray-600">Overall Risk Level</span>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  predictiveData.predictions.risks?.riskLevel === 'high'
+                  (predictiveData.predictions.risks?.riskLevel || 'low') ===
+                  'high'
                     ? 'bg-red-100 text-red-800'
-                    : predictiveData.predictions.risks?.riskLevel === 'medium'
+                    : (predictiveData.predictions.risks?.riskLevel || 'low') ===
+                        'medium'
                       ? 'bg-yellow-100 text-yellow-800'
                       : 'bg-green-100 text-green-800'
                 }`}

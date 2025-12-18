@@ -34,9 +34,7 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
       setEditingMilestone(milestone);
       setFormData({
         title: milestone.title,
-        dueAt: milestone.dueAt
-          ? new Date(milestone.dueAt).toISOString().split('T')[0]
-          : '',
+        dueAt: milestone.dueAt || '',
       });
     } else {
       setEditingMilestone(null);

@@ -208,7 +208,7 @@ async function main() {
           <li>Submit the request</li>
         </ol>
         
-        <h2>Review Process</h1>
+        <h2>Review Process</h2>
         <p>Approvers will receive notifications and can:</p>
         <ul>
           <li>Approve the request as-is</li>

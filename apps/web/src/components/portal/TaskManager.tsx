@@ -44,9 +44,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
         title: task.title,
         description: task.description || '',
         status: task.status,
-        dueAt: task.dueAt
-          ? new Date(task.dueAt).toISOString().split('T')[0]
-          : '',
+        dueAt: task.dueAt || '',
       });
     } else {
       setEditingTask(null);

@@ -33,7 +33,7 @@ export class PerformanceService {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
-        this.metrics.lcp = lastEntry.startTime;
+        this.metrics.lcp = lastEntry?.startTime || 0;
         logger.performance('LCP', this.metrics.lcp, {
           metricType: 'largest-contentful-paint',
         });
@@ -65,7 +65,7 @@ export class PerformanceService {
             this.metrics.cls = clsValue;
           }
         });
-        logger.performance('CLS', this.metrics.cls, {
+        logger.performance('CLS', this.metrics.cls || 0, {
           metricType: 'layout-shift',
         });
       });
