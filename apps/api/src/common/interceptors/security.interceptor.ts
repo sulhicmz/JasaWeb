@@ -154,7 +154,7 @@ export class SecurityInterceptor implements NestInterceptor {
               (field: string) => lowerKey.includes(field)
             );
 
-            const value = (obj as Record<string, unknown>)[key];
+            const value = (obj as Record<string, unknown>)[key]; // eslint-disable-line security/detect-object-injection -- Safe access with validation
 
             if (hasSensitiveField) {
               Object.defineProperty(sanitized, key, {

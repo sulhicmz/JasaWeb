@@ -6,7 +6,7 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { vi } from 'vitest';
+
 import {
   createMockUserService,
   createMockJwtService,

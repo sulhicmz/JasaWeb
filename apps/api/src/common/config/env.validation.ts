@@ -32,12 +32,12 @@ export function validateEnv(config: Record<string, unknown>) {
       typeof key === 'string' &&
       allowedEnvKeysSet.has(key) &&
       /^[A-Z_][A-Z0-9_]*$/.test(key) &&
-      config[key] !== undefined
+      Object.prototype.hasOwnProperty.call(config, key)
     ) {
       // Use Object.defineProperty with specific properties to prevent prototype pollution
       // Ensure key is a valid string and not a prototype property
       const safeKey = String(key);
-      const configValue = config[safeKey];
+      const configValue = (config as Record<string, unknown>)[safeKey]; // eslint-disable-line security/detect-object-injection -- Safe access with pre-validated key
       if (configValue !== undefined) {
         Object.defineProperty(process.env, safeKey, {
           value: String(configValue),

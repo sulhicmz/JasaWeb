@@ -134,7 +134,7 @@ export class ConfigService {
           throw new Error(`Unauthorized configuration key access: ${key}`);
         }
 
-        value = recordValue[key];
+        value = recordValue[key]; // eslint-disable-line security/detect-object-injection -- Safe access with pre-validated key
       } else {
         throw new Error(`Configuration path '${path}' not found`);
       }

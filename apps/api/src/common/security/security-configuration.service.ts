@@ -91,11 +91,11 @@ export class SecurityConfigurationService {
     ] as const;
 
     for (const key of validDirectiveKeys) {
-      const directiveValue = directives[key];
+      const directiveValue = directives[key]; // eslint-disable-line security/detect-object-injection -- Safe access with pre-validated whitelist
       if (directiveValue && Array.isArray(directiveValue)) {
         const filtered = directiveValue.filter(Boolean);
         if (filtered.length > 0) {
-          safeDirectives[key] = filtered;
+          safeDirectives[key] = filtered; // eslint-disable-line security/detect-object-injection -- Safe assignment with validated key
         }
       }
     }
