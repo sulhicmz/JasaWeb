@@ -1,10 +1,9 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { FileStorageService } from '../common/services/file-storage.service';
-import { LocalFileStorageService } from '../common/services/local-file-storage.service';
+import { DynamicFileStorageService } from '../common/services/dynamic-file-storage.service';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'path';
-import { getRequiredEnv } from '@jasaweb/config';
+import { storageConfigRegistry } from '@jasaweb/config';
 
 export type UploadedFilePayload = {
   originalname: string;
@@ -49,6 +48,7 @@ export interface FileUploadDto {
   file: UploadedFilePayload;
   projectId: string;
   uploadedById: string;
+  storageType?: string;
 }
 
 export interface FileUploadResult {
@@ -65,8 +65,7 @@ export class FileService {
 
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
-    private readonly fileStorageService: FileStorageService,
-    private readonly localFileStorageService: LocalFileStorageService,
+    private readonly dynamicFileStorageService: DynamicFileStorageService,
     private readonly configService: ConfigService
   ) {}
 
@@ -74,7 +73,12 @@ export class FileService {
     fileUploadDto: FileUploadDto,
     organizationId: string
   ): Promise<FileUploadResult> {
-    const { file, projectId, uploadedById } = fileUploadDto;
+    const {
+      file,
+      projectId,
+      uploadedById,
+      storageType: requestedStorageType,
+    } = fileUploadDto;
 
     if (!projectId) {
       throw new BadRequestException('Project ID is required for file uploads');
@@ -85,19 +89,36 @@ export class FileService {
       throw new BadRequestException('File is required');
     }
 
-    // Validate file size using centralized config
-    const maxSize =
-      this.configService.get<number>('MAX_FILE_SIZE') || MAX_FILE_SIZE;
+    // Get current storage configuration
+    const storageConfig = storageConfigRegistry.getCurrentStorageConfig();
+    const currentStorageType = storageConfigRegistry.getCurrentStorageType();
+
+    // Validate requested storage type if provided
+    if (requestedStorageType) {
+      const switchResult = storageConfigRegistry.switchStorageType(
+        requestedStorageType as any
+      );
+      if (!switchResult.isValid) {
+        throw new BadRequestException(
+          `Storage type '${requestedStorageType}' is not available: ${switchResult.errors.join(', ')}`
+        );
+      }
+    }
+
+    // Validate file size using dynamic config
+    const maxSize = storageConfig?.validation.maxFileSize || MAX_FILE_SIZE;
     if (file.size > maxSize) {
       throw new BadRequestException(
         `File size exceeds maximum allowed size of ${maxSize / (1024 * 1024)}MB`
       );
     }
 
-    // Validate file type
-    if (!VALID_MIME_TYPES.includes(file.mimetype)) {
+    // Validate file type using dynamic config
+    const allowedTypes =
+      storageConfig?.validation.allowedMimeTypes || VALID_MIME_TYPES;
+    if (!allowedTypes.includes(file.mimetype)) {
       throw new BadRequestException(
-        `File type ${file.mimetype} is not allowed`
+        `File type ${file.mimetype} is not allowed. Allowed types: ${allowedTypes.join(', ')}`
       );
     }
 
@@ -113,43 +134,29 @@ export class FileService {
     }
 
     try {
-      // Determine storage type using centralized config
-      const storageType = this.configService.get<string>(
-        'STORAGE_TYPE',
-        'local'
-      );
-      const useS3 = storageType === 's3';
+      // Generate unique file identifier
+      const timestampedFilename = `${Date.now()}_${file.originalname}`;
+      const fileKey = `organizations/${organizationId}/projects/${projectId}/${timestampedFilename}`;
 
-      let fileIdentifier: string;
-
-      if (useS3) {
-        // Upload to S3
-        const timestampedFilename = `${Date.now()}_${file.originalname}`;
-        fileIdentifier = timestampedFilename;
-
-        await this.fileStorageService.uploadFile(file.buffer, {
-          bucket: getRequiredEnv('S3_BUCKET'),
-          key: `organizations/${organizationId}/projects/${projectId || 'general'}/${timestampedFilename}`,
+      // Upload using dynamic storage service
+      const uploadResult = await this.dynamicFileStorageService.uploadFile(
+        file.buffer,
+        {
+          key: fileKey,
           contentType: file.mimetype,
           metadata: {
             originalName: file.originalname,
             size: file.size.toString(),
             uploadedBy: uploadedById,
+            organizationId,
+            projectId,
           },
-        });
-      } else {
-        // Upload to local storage
-        const uploadResult = await this.localFileStorageService.uploadFile(
-          file.buffer,
-          {
-            directory: `./uploads/${organizationId}`,
-            filename: `${Date.now()}_${file.originalname}`,
-            allowedExtensions: ALLOWED_EXTENSIONS,
-          }
-        );
-
-        fileIdentifier = uploadResult.filename;
-      }
+          bucket: storageConfig?.validation.bucketRequired
+            ? this.configService.get('S3_BUCKET') ||
+              this.configService.get('MINIO_BUCKET')
+            : undefined,
+        }
+      );
 
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({
@@ -157,7 +164,7 @@ export class FileService {
           project: {
             connect: { id: projectId },
           },
-          filename: fileIdentifier,
+          filename: timestampedFilename,
           version: '1.0',
           size: file.size,
           uploadedBy: {
@@ -167,7 +174,7 @@ export class FileService {
       });
 
       this.logger.log(
-        `File uploaded: ${file.originalname} for organization ${organizationId} (storage: ${storageType})`
+        `File uploaded: ${file.originalname} for organization ${organizationId} (storage: ${currentStorageType})`
       );
 
       return {
@@ -180,6 +187,12 @@ export class FileService {
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error uploading file: ${errorMessage}`);
+
+      // Switch back to original storage type if requested type failed
+      if (requestedStorageType) {
+        storageConfigRegistry.switchStorageType(currentStorageType);
+      }
+
       throw new BadRequestException('Error uploading file');
     }
   }
@@ -197,48 +210,59 @@ export class FileService {
       // Find the file in the database (with multi-tenant isolation)
       const fileRecord = await this.multiTenantPrisma.file.findUnique({
         where: { id },
+        include: {
+          project: {
+            select: { id: true },
+          },
+        },
       });
 
       if (!fileRecord) {
         throw new BadRequestException('File not found');
       }
 
-      // Determine storage type using centralized config
-      const storageType = this.configService.get<string>(
-        'STORAGE_TYPE',
-        'local'
-      );
-      const useS3 = storageType === 's3';
+      // Get current storage configuration
+      const storageConfig = storageConfigRegistry.getCurrentStorageConfig();
+      const currentStorageType = storageConfigRegistry.getCurrentStorageType();
 
-      if (useS3) {
-        // Generate a signed URL for S3 download
-        const signedUrl = await this.fileStorageService.generateDownloadUrl({
-          bucket: getRequiredEnv('S3_BUCKET'),
-          key: `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`,
-          expiresIn: 3600, // 1 hour
-        });
+      // Build file key
+      const fileKey = `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`;
 
-        // Redirect to the signed URL
-        response.redirect(signedUrl);
-      } else {
-        // Get file from local storage
-        const filePath = `./uploads/${organizationId}/${fileRecord.filename}`;
-        const fileBuffer = await this.localFileStorageService.getFile(filePath);
-
-        // Set response headers based on file type
-        response.setHeader(
-          'Content-Type',
-          this.getMimeType(fileRecord.filename)
-        );
-        response.setHeader(
-          'Content-Disposition',
-          `attachment; filename="${fileRecord.filename}"`
-        );
-        response.setHeader('Content-Length', fileRecord.size || 0);
-
-        // Send the file
-        response.send(fileBuffer);
+      // Try signed URL first (for cloud storage)
+      if (storageConfig?.type !== 'local') {
+        try {
+          const signedUrl =
+            await this.dynamicFileStorageService.generateSignedUrl(
+              fileKey,
+              3600 // 1 hour
+            );
+          response.redirect(signedUrl);
+          return;
+        } catch (signedUrlError) {
+          this.logger.warn(
+            `Signed URL generation failed, falling back to direct download: ${signedUrlError}`
+          );
+        }
       }
+
+      // Direct download
+      const fileBuffer =
+        await this.dynamicFileStorageService.downloadFile(fileKey);
+
+      // Set response headers based on file type
+      response.setHeader('Content-Type', this.getMimeType(fileRecord.filename));
+      response.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileRecord.filename}"`
+      );
+      response.setHeader('Content-Length', fileRecord.size || 0);
+
+      // Send the file
+      response.send(fileBuffer);
+
+      this.logger.log(
+        `File downloaded: ${fileRecord.filename} for organization ${organizationId} (storage: ${currentStorageType})`
+      );
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       this.logger.error(`Error downloading file: ${errorMessage}`);
@@ -251,30 +275,25 @@ export class FileService {
       // First get the file record to know its details
       const fileRecord = await this.multiTenantPrisma.file.findUnique({
         where: { id },
+        include: {
+          project: {
+            select: { id: true },
+          },
+        },
       });
 
       if (!fileRecord) {
         throw new BadRequestException('File not found');
       }
 
-      // Determine storage type using centralized config
-      const storageType = this.configService.get<string>(
-        'STORAGE_TYPE',
-        'local'
-      );
-      const useS3 = storageType === 's3';
+      // Get current storage configuration
+      const currentStorageType = storageConfigRegistry.getCurrentStorageType();
 
-      if (useS3) {
-        // Delete from S3
-        await this.fileStorageService.deleteFile(
-          getRequiredEnv('S3_BUCKET'),
-          `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`
-        );
-      } else {
-        // Delete from local storage
-        const filePath = `./uploads/${organizationId}/${fileRecord.filename}`;
-        await this.localFileStorageService.deleteFile(filePath);
-      }
+      // Build file key
+      const fileKey = `organizations/${organizationId}/projects/${fileRecord.projectId || 'general'}/${fileRecord.filename}`;
+
+      // Delete from storage
+      await this.dynamicFileStorageService.deleteFile(fileKey);
 
       // Delete file record from database
       await this.multiTenantPrisma.file.delete({
@@ -282,7 +301,7 @@ export class FileService {
       });
 
       this.logger.log(
-        `File deleted: ${fileRecord.filename} for organization ${organizationId} (storage: ${storageType})`
+        `File deleted: ${fileRecord.filename} for organization ${organizationId} (storage: ${currentStorageType})`
       );
 
       return { message: 'File deleted successfully' };

@@ -42,5 +42,37 @@ export {
 // Export logger
 export { logger } from './logger';
 
+// Export unified configuration
+export {
+  UnifiedConfigService,
+  unifiedConfig,
+} from './src/unified-config.service';
+
+export type {
+  JasaWebConfig,
+  ConfigSection,
+  EnvironmentType,
+  ConfigValidationResult,
+  ConfigSummaryOptions,
+} from './src/unified-config.service';
+
+// Export dynamic storage configuration
+export {
+  storageConfigRegistry,
+  StorageConfigRegistry,
+} from './src/dynamic-storage-config.service';
+
+export type {
+  StorageType,
+  StorageConfig,
+  StorageValidation,
+  ValidationResult,
+  StorageAdapter,
+  StorageUploadOptions,
+  StorageUploadResult,
+  StorageDownloadOptions,
+  StorageListItem,
+} from './src/dynamic-storage-config.service';
+
 // Default export for compatibility
 export { BUSINESS_CONFIG as default } from './src/business-config';

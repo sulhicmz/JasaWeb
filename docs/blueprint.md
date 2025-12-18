@@ -101,7 +101,41 @@
 
 ---
 
-## 6. Informasi Arsitektur (Sitemap)
+## 6. Arsitektur Storage & Konfigurasi Dinamis
+
+### **Dynamic Storage Configuration**
+
+- **Registry Pattern**: Manajemen storage type terpusat dengan seleksi berbasis prioritas
+- **Automatic Failover**: Runtime switching antar storage backend yang tersedia
+- **Security Validation**: Validasi komprehensif untuk setiap storage type
+- **Monitoring**: Health check real-time dan metrics untuk storage adapters
+
+### **Storage Backends**
+
+- **Local**: File system storage untuk development (Priority 1 - Always available)
+- **MinIO**: S3-compatible untuk staging/development (Priority 2)
+- **Amazon S3**: Production cloud storage (Priority 3)
+- **Future**: Google Cloud Storage (Priority 4), Azure Blob Storage (Priority 5)
+
+### **Storage Configuration Flow**
+
+1. Seleksi storage type berbasis environment via `STORAGE_TYPE`
+2. Validasi otomatis environment variables yang required
+3. Fallback ke storage terbaik jika requested type unavailable
+4. Runtime health monitoring dengan automatic failover
+5. Validasi security komprehensif untuk semua operasi storage
+
+### **Security Features**
+
+- Runtime configuration validation dengan error reporting terperinci
+- Safe storage switching dengan rollback ke configuration sebelumnya
+- Comprehensive logging untuk semua storage operations
+- Protection terhadap file injection dan path traversal
+- Enkripsi support untuk storage yang compatible
+
+---
+
+## 7. Informasi Arsitektur (Sitemap)
 
 **Public**:
 `Home` · `Layanan` (Sekolah, Berita, Company) · `Portofolio` · `Harga` · `Demo` · `Blog` · `Resource` · `Tentang` · `FAQ` · `Kontak` · `Login`
@@ -187,8 +221,11 @@
 - ✅ **Security**: Enhanced with comprehensive type safety and object injection prevention
 - ✅ **Maintainability**: Improved through systematic code quality refactoring
 
-#### Latest Security Enhancements (2025-12-17):
+#### Latest Security & Architecture Enhancements (2025-12-18):
 
+- ✅ **Dynamic Storage Configuration**: Implemented comprehensive storage type management with automatic failover
+- ✅ **Storage Adapter Architecture**: Created flexible system supporting local, S3, MinIO with unified interface
+- ✅ **Security Validation**: Enhanced configuration validation with runtime switching and rollback
 - ✅ **Object Injection Protection**: Fixed Generic Object Injection Sinks across security-sensitive modules
 - ✅ **Prototype Pollution Prevention**: Implemented safe object creation using Object.create(null)
 - ✅ **Type Safety Improvements**: Replaced all `any` types with proper TypeScript interfaces

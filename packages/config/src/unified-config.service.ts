@@ -48,10 +48,10 @@ class EnvironmentDetector {
   static isBuildTime(): boolean {
     // Detect build-like environments (Vite, Astro build, etc.)
     return (
-      // Vite/EnvImport
-      (typeof import.meta !== 'undefined' &&
-        ((import.meta as any).env?.MODE === 'build' ||
-          Boolean((import.meta as any).env?.DEV))) ||
+      // Vite/EnvImport - only check if available, not critical
+      (typeof window === 'undefined' &&
+        typeof global !== 'undefined' &&
+        (global as any).importMeta?.env?.MODE === 'build') ||
       // Next.js build
       (typeof process !== 'undefined' &&
         process.env?.NEXT_PHASE === 'phase-production-build') ||
@@ -66,10 +66,8 @@ class EnvironmentDetector {
 
   static getEnvironmentType(): EnvironmentType {
     const nodeEnv = process?.env?.NODE_ENV;
-    const mode =
-      typeof import.meta !== 'undefined' && (import.meta as any).env
-        ? (import.meta as any).env.MODE
-        : undefined;
+    // Fallback to process.env for consistency in Node.js environments
+    const mode = process?.env?.MODE || nodeEnv;
 
     if (nodeEnv === 'production' || mode === 'production') return 'production';
     if (nodeEnv === 'test' || mode === 'test') return 'test';
@@ -85,16 +83,12 @@ class EnvironmentAccess {
    * Get environment variable with type safety
    */
   static getString(key: string, fallback?: string): string {
-    // Browser/Vite environment
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      return (import.meta as any).env[key] || fallback || '';
-    }
-
-    // Node.js environment
+    // Node.js environment (primary for backend services)
     if (typeof process !== 'undefined' && process.env) {
       return process.env[key] || fallback || '';
     }
 
+    // Fallback
     return fallback || '';
   }
 
@@ -712,3 +706,22 @@ export type {
   ConfigValidationResult,
   ConfigSummaryOptions,
 };
+
+// Export dynamic storage configuration
+export {
+  storageConfigRegistry,
+  StorageConfigRegistry,
+} from './dynamic-storage-config.service';
+
+// Re-export types from the dynamic storage config directly
+export type {
+  StorageType as DynamicStorageType,
+  StorageConfig as DynamicStorageConfig,
+  StorageValidation as DynamicStorageValidation,
+  ValidationResult as DynamicValidationResult,
+  StorageAdapter as DynamicStorageAdapter,
+  StorageUploadOptions as DynamicStorageUploadOptions,
+  StorageUploadResult as DynamicStorageUploadResult,
+  StorageDownloadOptions as DynamicStorageDownloadOptions,
+  StorageListItem as DynamicStorageListItem,
+} from './dynamic-storage-config.service';

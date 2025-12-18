@@ -69,7 +69,9 @@ export function generateSecureSecret(length: number = 32): string {
     crypto.getRandomValues(values);
 
     for (let i = 0; i < length; i++) {
-      result += charset[values[i] % charset.length];
+      if (values[i] !== undefined) {
+        result += charset[values[i]! % charset.length];
+      }
     }
   } else {
     // Fallback for environments without crypto.getRandomValues
