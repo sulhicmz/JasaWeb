@@ -7,11 +7,15 @@ import { PasswordService } from './password.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { vi } from 'vitest';
-
-// UUID mock
-vi.mock('uuid', () => ({
-  v4: vi.fn(() => 'mock-uuid-1234'),
-}));
+import {
+  createMockUserService,
+  createMockJwtService,
+  createMockRefreshTokenService,
+  createMockPasswordService,
+  createMockPrismaService,
+  createMockUser,
+  clearAllMocks,
+} from '../../test/test-helpers';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -22,51 +26,21 @@ describe('AuthService', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let refreshTokenService: RefreshTokenService;
 
-  const mockUser = {
+  const mockUser = createMockUser({
     id: '1',
-    email: 'test@example.com',
-    name: 'Test User',
     password: 'test-hash-pass',
     passwordHashVersion: 'argon2id',
-    profilePicture: null,
-  };
+  });
 
-  const mockUserService = {
-    findByEmail: vi.fn(),
-    create: vi.fn(),
-    hashPassword: vi.fn(),
-  };
-
-  const mockJwtService = {
-    sign: vi.fn(),
-    verify: vi.fn(),
-  };
-
-  const mockRefreshTokenService = {
-    createRefreshToken: vi.fn(),
-  };
-
-  const mockPasswordService = {
-    hashPassword: vi.fn(),
-    verifyPassword: vi.fn(),
-  };
-
-  const mockPrismaService = {
-    user: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-    membership: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
-    },
-    organization: {
-      create: vi.fn(),
-    },
-  };
+  const mockUserService = createMockUserService([
+    'findByEmail',
+    'create',
+    'hashPassword',
+  ]);
+  const mockJwtService = createMockJwtService();
+  const mockRefreshTokenService = createMockRefreshTokenService();
+  const mockPasswordService = createMockPasswordService();
+  const mockPrismaService = createMockPrismaService();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -111,7 +85,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    clearAllMocks();
   });
 
   it('should be defined', () => {

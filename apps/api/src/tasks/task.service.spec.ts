@@ -4,26 +4,18 @@ import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma
 import { CreateTaskDto, TaskStatus } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { vi } from 'vitest';
+import {
+  createMockMultiTenantPrismaService,
+  createTestTask,
+  createTestProject,
+  clearAllMocks,
+} from '../../test/test-helpers';
 
 describe('TaskService', () => {
   let service: TaskService;
   let multiTenantPrisma: MultiTenantPrismaService;
 
-  const mockPrisma = {
-    project: {
-      findUnique: vi.fn(),
-    },
-    task: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-    user: {
-      findUnique: vi.fn(),
-    },
-  };
+  const mockPrisma = createMockMultiTenantPrismaService();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,6 +34,10 @@ describe('TaskService', () => {
     );
   });
 
+  afterEach(() => {
+    clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -57,21 +53,21 @@ describe('TaskService', () => {
         priority: 'HIGH' as any,
       };
 
-      const project = {
+      const project = createTestProject({
         id: 'project-1',
         organizationId: 'org-1',
-      };
+      });
 
       const assignedUser = {
         id: 'user-1',
         name: 'Test User',
       };
 
-      const result = {
+      const result = createTestTask({
         id: 'task-1',
         title: 'Test Task',
         status: TaskStatus.TODO,
-      };
+      });
 
       mockPrisma.project.findUnique.mockResolvedValue(project);
       mockPrisma.user.findUnique.mockResolvedValue(assignedUser);
