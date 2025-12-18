@@ -71,7 +71,6 @@ import { SecurityModule } from './common/security/security.module';
     PrismaModule,
     MultiTenantPrismaModule,
     OrganizationModule,
-    EnvironmentModule,
     AppConfigModule,
     SecurityModule,
   ],

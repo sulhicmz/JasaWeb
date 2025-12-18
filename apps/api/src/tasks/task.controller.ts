@@ -15,6 +15,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('tasks')
@@ -27,9 +28,10 @@ export class TaskController {
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
   async create(
     @Body() createTaskDto: CreateTaskDto,
-    @CurrentOrganizationId() organizationId: string
+    @CurrentOrganizationId() organizationId: string,
+    @CurrentUserId() userId: string
   ) {
-    return this.taskService.create(createTaskDto, organizationId);
+    return this.taskService.create(createTaskDto, organizationId, userId);
   }
 
   @Get()
