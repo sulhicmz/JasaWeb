@@ -257,7 +257,10 @@ export class SecurityConfigurationService {
 
       return true;
     } catch (error) {
-      logger.error('Security configuration validation failed:', error);
+      logger.error(
+        'Security configuration validation failed:',
+        error as Error | Record<string, unknown>
+      );
       return false;
     }
   }

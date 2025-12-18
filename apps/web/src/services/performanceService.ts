@@ -63,7 +63,10 @@ export class PerformanceService {
       const clsObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach((entry: PerformanceEntry) => {
-          const layoutShiftEntry = entry as any;
+          const layoutShiftEntry = entry as {
+            hadRecentInput: boolean;
+            value: number;
+          };
           if (!layoutShiftEntry.hadRecentInput) {
             clsValue += layoutShiftEntry.value;
             this.metrics.cls = clsValue;

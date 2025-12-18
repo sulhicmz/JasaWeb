@@ -51,11 +51,11 @@ function validateEmail(email: string, fieldName: string): string {
 }
 
 function getRequiredString(
-  env: Record<string, string>,
+  _env: Record<string, string>,
   key: string,
   fallback?: string
 ): string {
-  const value = env[key] || fallback;
+  const value = _env[key] || fallback;
   if (!value || value.trim() === '') {
     throw new WebConfigError(
       `Required environment variable ${key} is missing or empty`
@@ -104,7 +104,7 @@ function createWebConfig(): WebConfig {
 
   try {
     const nodeEnv = env.NODE_ENV || 'development';
-    const isProduction = nodeEnv === 'production';
+    // const isProduction = nodeEnv === 'production'; // Unused variable
     const isDevelopment = nodeEnv === 'development';
 
     // Get port configurations dynamically

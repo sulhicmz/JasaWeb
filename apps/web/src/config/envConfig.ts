@@ -80,7 +80,7 @@ export class EnvConfigService {
 
   private buildConfig(): EnvironmentConfig {
     // Determine if we're in a build-like environment
-    const isBuildLike = this.isBuildLikeEnvironment();
+    this.isBuildLikeEnvironment();
     const apiBaseUrl = this.getApiBaseUrl();
     const wsUrl = this.getWebSocketUrl();
 
@@ -179,6 +179,9 @@ export class EnvConfigService {
       'WS_ENABLED',
       'ENABLE_ANALYTICS',
       'ENABLE_SENTRY',
+      'API_RATE_LIMIT_ENABLED',
+      'API_RATE_LIMIT_SKIP_SUCCESS',
+      'API_RATE_LIMIT_SKIP_FAILED',
     ];
 
     if (!ALLOWED_BOOLEAN_KEYS.includes(key)) {

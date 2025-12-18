@@ -330,7 +330,14 @@ export class AppConfigService {
           if (forbiddenKeys.has(key)) {
             throw new Error(`Forbidden configuration key access: ${key}`);
           }
-          value = recordValue[key];
+          // Secure access with key validation to prevent Object Injection Sink
+          if (key in recordValue) {
+            value = recordValue[key];
+          } else {
+            throw new Error(
+              `Configuration key '${key}' does not exist in path '${path}'`
+            );
+          }
         } else {
           throw new Error(`Configuration property '${key}' does not exist`);
         }

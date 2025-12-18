@@ -407,7 +407,7 @@ export class TicketController {
       timeframes,
       safePriority
     )
-      ? (timeframes as any)[safePriority]
+      ? (timeframes as Record<string, number>)[safePriority] || 168
       : 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }

@@ -226,9 +226,15 @@ export class SecurityMonitoringService {
       if (!normalizedPath.startsWith(path.normalize(this.reportsPath))) {
         throw new Error('File path traversal attempt detected');
       }
-      fs.writeFileSync(normalizedPath, JSON.stringify(report, null, 2), {
-        mode: 0o640,
-      });
+      // Secure file write with validated path
+      try {
+        fs.writeFileSync(normalizedPath, JSON.stringify(report, null, 2), {
+          mode: 0o640,
+        });
+      } catch (writeError) {
+        this.logger.error('Failed to write security report file:', writeError);
+        throw writeError;
+      }
       this.logger.log(`Security report saved: ${filename}`);
     } catch (error: unknown) {
       this.logger.error('Failed to save security report:', error);
@@ -272,9 +278,19 @@ export class SecurityMonitoringService {
         throw new Error('Invalid normalized reports path');
       }
 
-      const validFiles = fs.readdirSync(normalizedReportsPath, {
-        encoding: 'utf8',
-      });
+      // Secure directory read with validated path
+      let validFiles: string[];
+      try {
+        validFiles = fs.readdirSync(normalizedReportsPath, {
+          encoding: 'utf8',
+        });
+      } catch (readError) {
+        this.logger.error(
+          'Failed to read security reports directory:',
+          readError
+        );
+        throw readError;
+      }
       const files = validFiles
         .filter((file): file is string => {
           // Validate file name to prevent injection
@@ -308,7 +324,14 @@ export class SecurityMonitoringService {
         throw new Error('File path traversal attempt detected');
       }
 
-      const fileContent = fs.readFileSync(normalizedFilepath, 'utf-8');
+      // Secure file read with validated path
+      let fileContent: string;
+      try {
+        fileContent = fs.readFileSync(normalizedFilepath, 'utf-8');
+      } catch (readError) {
+        this.logger.error('Failed to read security report file:', readError);
+        throw readError;
+      }
 
       // Safe JSON parsing with validation
       const parsed = JSON.parse(fileContent);
@@ -403,9 +426,19 @@ export class SecurityMonitoringService {
             continue;
           }
 
-          const fileContent = fs.readFileSync(normalizedFilepath, {
-            encoding: 'utf-8',
-          });
+          // Secure file read with validated path
+          let fileContent: string;
+          try {
+            fileContent = fs.readFileSync(normalizedFilepath, {
+              encoding: 'utf-8',
+            });
+          } catch (readError) {
+            this.logger.warn(
+              `Failed to read security report file ${file}:`,
+              readError
+            );
+            continue;
+          }
           const parsed = JSON.parse(fileContent);
           const validatedReport = this.validateSecurityReport(parsed);
           reports.push(validatedReport);
@@ -438,8 +471,11 @@ export class SecurityMonitoringService {
       typeof obj.totalVulnerabilities === 'number'
         ? obj.totalVulnerabilities
         : 0;
+    // Secure object property access to prevent Object Injection Sink
     report.severityBreakdown = this.validateSeverityBreakdown(
-      obj.severityBreakdown
+      obj && typeof obj === 'object'
+        ? (obj as any).severityBreakdown
+        : undefined
     );
     report.criticalVulnerabilities = this.validateVulnerabilityArray(
       obj.criticalVulnerabilities

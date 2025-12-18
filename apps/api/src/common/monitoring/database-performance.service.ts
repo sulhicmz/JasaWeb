@@ -184,9 +184,10 @@ export class DatabasePerformanceService {
     const queryType = this.extractQueryType(metric.query);
     // Safe property assignment to prevent object injection
     const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
-    if (!forbiddenKeys.has(queryType)) {
-      this.stats.queryTypes[queryType] =
-        (this.stats.queryTypes[queryType] || 0) + 1;
+    // Secure object property access to prevent Object Injection Sink
+    if (!forbiddenKeys.has(queryType) && typeof queryType === 'string') {
+      const current = this.stats.queryTypes[queryType] || 0;
+      this.stats.queryTypes[queryType] = current + 1;
     }
   }
 
@@ -228,8 +229,10 @@ export class DatabasePerformanceService {
       const operation = this.extractOperation(metric.query);
       // Safe property assignment to prevent object injection
       const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
-      if (!forbiddenKeys.has(operation)) {
-        patterns[operation] = (patterns[operation] || 0) + 1;
+      // Secure property access to prevent Object Injection Sink
+      if (!forbiddenKeys.has(operation) && typeof operation === 'string') {
+        const current = patterns[operation] || 0;
+        patterns[operation] = current + 1;
       }
 
       const tables = this.extractTables(metric.query);
@@ -237,10 +240,12 @@ export class DatabasePerformanceService {
         // Validate table name to prevent injection
         if (
           /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(table) &&
-          !forbiddenKeys.has(table)
+          !forbiddenKeys.has(table) &&
+          typeof table === 'string'
         ) {
           const key = `table:${table}`;
-          patterns[key] = (patterns[key] || 0) + 1;
+          const current = patterns[key] || 0;
+          patterns[key] = current + 1;
         }
       });
     });
@@ -346,12 +351,16 @@ export class DatabasePerformanceService {
       const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
       if (
         !forbiddenKeys.has(pattern) &&
-        /^[a-zA-Z0-9'X\s\-_,()]+$/.test(pattern)
+        /^[a-zA-Z0-9'X\s\-_,()]+$/.test(pattern) &&
+        typeof pattern === 'string'
       ) {
-        if (!groups[pattern]) {
+        // Secure property access to prevent Object Injection Sink
+        if (!Object.prototype.hasOwnProperty.call(groups, pattern)) {
           groups[pattern] = [];
         }
-        groups[pattern].push(query);
+        if (groups[pattern]) {
+          groups[pattern].push(query);
+        }
       }
     });
 

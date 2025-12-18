@@ -28,13 +28,17 @@ class Logger {
     return this.isDevelopment && level >= this.currentLevel;
   }
 
-  private formatMessage(level: string, message: string, data?: any): string {
+  private formatMessage(
+    level: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data)}` : '';
     return `[${timestamp}] [${level}] ${message}${dataStr}`;
   }
 
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: Record<string, unknown>): void {
     if (this.shouldLog(LOG_LEVELS.DEBUG)) {
       // Use dev-only logging
       if (this.isDevelopment) {
@@ -43,7 +47,7 @@ class Logger {
     }
   }
 
-  info(message: string, data?: any): void {
+  info(message: string, data?: Record<string, unknown>): void {
     if (this.shouldLog(LOG_LEVELS.INFO)) {
       if (this.isDevelopment) {
         console.info(this.formatMessage('INFO', message, data));
@@ -53,7 +57,7 @@ class Logger {
     }
   }
 
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: Record<string, unknown>): void {
     if (this.shouldLog(LOG_LEVELS.WARN)) {
       if (this.isDevelopment) {
         console.warn(this.formatMessage('WARN', message, data));
@@ -62,16 +66,22 @@ class Logger {
     }
   }
 
-  error(message: string, error?: Error | any): void {
+  error(message: string, error?: Error | Record<string, unknown>): void {
     if (this.shouldLog(LOG_LEVELS.ERROR)) {
       if (this.isDevelopment) {
-        console.error(this.formatMessage('ERROR', message, error));
+        console.error(
+          this.formatMessage('ERROR', message, error as Record<string, unknown>)
+        );
       }
-      this.sendToLogService('ERROR', message, error);
+      this.sendToLogService('ERROR', message, error as Record<string, unknown>);
     }
   }
 
-  private sendToLogService(level: string, message: string, data?: any): void {
+  private sendToLogService(
+    level: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void {
     // In production, send to centralized logging service
     // For now, we'll use a noop for production logs
     if (this.isDevelopment) return;
