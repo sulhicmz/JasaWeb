@@ -6,7 +6,9 @@ This directory contains utility scripts to help with JasaWeb development.
 
 ### `setup.sh` (Linux/macOS)
 
-Complete development environment setup script that:
+🔧 **Complete Development Environment Setup** - Best for new developers or fresh environments
+
+This comprehensive script handles everything needed for a complete development environment:
 
 - Checks system requirements (Node.js 20+, pnpm, Docker, Git)
 - Sets up environment files from templates
@@ -35,7 +37,19 @@ Windows users should use WSL (Windows Subsystem for Linux) or Git Bash to run th
 
 ### `quick-start.sh` (Linux/macOS)
 
-Fast setup for experienced developers who want to get running quickly.
+⚡ **Quick Start for Experienced Developers** - Minimal setup for fast development
+
+This streamlined script gets you running quickly with minimal interaction:
+
+- Quick system checks
+- Install dependencies
+- Setup basic environment
+- Start database and run migrations
+- Launch development servers
+
+**Use this if:** You're experienced with the stack and want to get coding fast.
+
+**Use setup.sh if:** You want a complete, verified setup with all features.
 
 **Usage:**
 

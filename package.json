@@ -58,6 +58,9 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -68,6 +71,7 @@
     "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.0",
     "vite": "^7.3.0",
