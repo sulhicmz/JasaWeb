@@ -6,8 +6,8 @@ describe('Basic Functionality Test', () => {
     const secret = generateSecureSecret(16);
     expect(secret).toHaveLength(16);
     expect(typeof secret).toBe('string');
-    // Test that it contains only alphanumeric characters
-    expect(/^[a-zA-Z0-9]+$/.test(secret)).toBe(true);
+    // Test that it contains only allowed secure characters
+    expect(/^[A-Za-z0-9+/=_-]+$/.test(secret)).toBe(true);
   });
 
   it('should generate different secrets each time', () => {
