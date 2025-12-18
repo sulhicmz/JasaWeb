@@ -298,6 +298,15 @@ export declare class StorageConfigRegistry {
     getCurrentStorageType(): StorageType;
     getStorageConfig(type: StorageType): StorageConfig | undefined;
     getCurrentStorageConfig(): StorageConfig | undefined;
+    getAvailableStorageConfigs(): StorageConfig[];
+    validateCurrentStorage(): ValidationResult;
+    getStorageSummary(): Record<string, unknown>;
+    autoSelectBestStorage(): {
+        previousType: StorageType;
+        newType: StorageType;
+        reason: string;
+    };
+    switchStorageType(type: StorageType): ValidationResult;
 }
 export declare const storageConfigRegistry: StorageConfigRegistry;
 export declare class JasaWebConfigService {
@@ -307,7 +316,6 @@ export declare class JasaWebConfigService {
     private readonly env;
     constructor();
     private buildConfig;
-    getConfig(): JasaWebConfig;
     getSection<T extends ConfigSection>(section: T): JasaWebConfig[T];
     get<T = unknown>(path: string): T;
     isDevelopment(): boolean;
@@ -316,7 +324,6 @@ export declare class JasaWebConfigService {
     getEnvironmentType(): EnvironmentType;
     getNetworkConfig(): NetworkConfig;
     private getDynamicCorsOrigins;
-    getDatabaseConfig(): DatabaseConfig;
     private buildDatabaseUrl;
     private extractHostFromUrl;
     private extractPortFromUrl;

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskController } from './task.controller';
 import { TaskService } from './task.service';
-import { CreateTaskDto, TaskStatus } from './dto/create-task.dto';
+import { CreateTaskDto, TaskStatus, TaskPriority } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { vi } from 'vitest';
 
@@ -43,7 +43,7 @@ describe('TaskController', () => {
         description: 'Test description',
         assignedTo: 'user-1',
         dueAt: new Date('2024-12-31'),
-        priority: 'HIGH' as any,
+        priority: TaskPriority.HIGH,
       };
 
       const result = {

@@ -5,7 +5,7 @@ import {
   getEnvNumber,
   getEnvBoolean,
   generateSecureSecret,
-} from '@jasaweb/config/env-validation';
+} from './env.validation';
 import { DEFAULT_PORTS, DEFAULT_CORS_ORIGINS } from './constants';
 
 @Injectable()

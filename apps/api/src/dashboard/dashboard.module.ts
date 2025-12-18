@@ -4,7 +4,7 @@ import { DashboardGateway } from './dashboard.gateway';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
-import { getRequiredEnv } from '@jasaweb/config/env-validation';
+import { getRequiredEnv } from '../common/config/env.validation';
 
 import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.module';
 

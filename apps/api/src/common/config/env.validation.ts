@@ -1,4 +1,53 @@
-import { validateEnvironmentVariables } from '@jasaweb/config/env-validation';
+/**
+ * Gets a required environment variable, throws an error if not found
+ */
+export function getRequiredEnv(key: string): string {
+  const value = process.env[key];
+  if (value === undefined || value === '') {
+    throw new Error(`Required environment variable ${key} is missing or empty`);
+  }
+  return value;
+}
+
+/**
+ * Gets an optional environment variable with a default value
+ */
+export function getOptionalEnv(
+  key: string,
+  defaultValue?: string
+): string | undefined {
+  const value = process.env[key];
+  return value !== undefined && value !== '' ? value : defaultValue;
+}
+
+/**
+ * Gets an environment variable as a number with a default value
+ */
+export function getEnvNumber(key: string, defaultValue: number): number {
+  const value = process.env[key];
+  const num = value !== undefined ? parseInt(value, 10) : defaultValue;
+  if (isNaN(num)) {
+    throw new Error(`Environment variable ${key} must be a valid number`);
+  }
+  return num;
+}
+
+/**
+ * Gets an environment variable as a boolean with a default value
+ */
+export function getEnvBoolean(key: string, defaultValue: boolean): boolean {
+  const value = process.env[key];
+  if (value === undefined) return defaultValue;
+  return value.toLowerCase() === 'true';
+}
+
+/**
+ * Generates a secure random secret using crypto module
+ */
+export function generateSecureSecret(length: number = 64): string {
+  const crypto = require('crypto');
+  return crypto.randomBytes(length).toString('hex');
+}
 
 export function validateEnv(config: Record<string, unknown>) {
   // Set environment variables from config for validation
@@ -48,9 +97,6 @@ export function validateEnv(config: Record<string, unknown>) {
       }
     }
   }
-
-  // Run validation using the shared function
-  validateEnvironmentVariables();
 
   return config;
 }

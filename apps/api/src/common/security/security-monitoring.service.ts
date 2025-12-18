@@ -24,6 +24,36 @@ export interface SecurityReport {
   recommendations: string[];
 }
 
+interface AuditAdvisory {
+  severity: 'low' | 'moderate' | 'high' | 'critical';
+  title: string;
+  url: string;
+  fixAvailable?: {
+    version: string;
+  };
+  recommendation?: string;
+}
+
+interface AuditVulnerability {
+  [packageName: string]: {
+    severity: 'low' | 'moderate' | 'high' | 'critical';
+    title: string;
+    url: string;
+    fixAvailable?: {
+      version: string;
+    };
+    recommendation?: string;
+  };
+}
+
+interface AuditResult {
+  vulnerabilities?: AuditVulnerability;
+}
+
+interface NpmAuditError extends Error {
+  stdout?: string;
+}
+
 @Injectable()
 export class SecurityMonitoringService {
   private readonly logger = new Logger(SecurityMonitoringService.name);
@@ -70,22 +100,22 @@ export class SecurityMonitoringService {
       });
       return auditOutput;
     } catch (error) {
-      return (error as any).stdout || '';
+      return (error as NpmAuditError).stdout || '';
     }
   }
 
   private parseAuditResults(auditOutput: string): Vulnerability[] {
     try {
-      const auditResult = JSON.parse(auditOutput);
+      const auditResult = JSON.parse(auditOutput) as AuditResult;
       const vulnerabilities: Vulnerability[] = [];
 
       if (auditResult.vulnerabilities) {
         for (const [packageName, vulnData] of Object.entries(
           auditResult.vulnerabilities
         )) {
-          const vuln = vulnData as any;
+          const vuln = vulnData;
           vulnerabilities.push({
-            severity: vuln.severity as any,
+            severity: vuln.severity,
             package: packageName,
             title: vuln.title,
             url: vuln.url,
@@ -220,7 +250,7 @@ export class SecurityMonitoringService {
     }
   }
 
-  async checkPackageSecurity(packageName: string): Promise<any[]> {
+  async checkPackageSecurity(packageName: string): Promise<Vulnerability[]> {
     try {
       const { execSync } = require('child_process');
       const auditOutput = execSync(`npm audit --json ${packageName}`, {
@@ -228,15 +258,15 @@ export class SecurityMonitoringService {
         stdio: ['pipe', 'pipe', 'pipe'],
       });
 
-      const auditResult = JSON.parse(auditOutput);
-      const vulnerabilities: any[] = [];
+      const auditResult = JSON.parse(auditOutput) as AuditResult;
+      const vulnerabilities: Vulnerability[] = [];
 
       if (auditResult.vulnerabilities) {
         for (const [pkgName, vulnData] of Object.entries(
           auditResult.vulnerabilities
         )) {
           if (pkgName === packageName) {
-            const vuln = vulnData as any;
+            const vuln = vulnData;
             vulnerabilities.push({
               severity: vuln.severity,
               package: pkgName,

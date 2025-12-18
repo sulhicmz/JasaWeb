@@ -106,7 +106,10 @@ function parseDatabaseUrl(url: string): { host: string; port: number } {
 function createApiConfig(): ApiConfig {
   try {
     // Use unified configuration
-    const config = jasaWebConfig.getConfig();
+    const baseConfig = jasaWebConfig.getSection('base');
+    const apiConfig = jasaWebConfig.getSection('api');
+    const storageConfig = jasaWebConfig.getSection('storage');
+    const redisConfig = jasaWebConfig.getSection('redis');
     const networkConfig = jasaWebConfig.getNetworkConfig();
     const databaseConfig = jasaWebConfig.getDatabaseConfig();
     const securityConfig = jasaWebConfig.getSecurityConfig();
@@ -122,7 +125,7 @@ function createApiConfig(): ApiConfig {
       apiBaseUrl: networkConfig.api.baseUrl,
       corsOrigins: networkConfig.cors.origins,
       webBaseUrl: networkConfig.web.baseUrl,
-      frontendUrl: config.api.FRONTEND_URL,
+      frontendUrl: apiConfig.FRONTEND_URL,
       databaseUrl: databaseConfig.url,
       databaseHost: databaseConfig.host,
       databasePort: databaseConfig.port,
@@ -137,13 +140,13 @@ function createApiConfig(): ApiConfig {
       emailSecure: emailConfig.secure,
       websocketOrigin: networkConfig.websocket.origin,
       redisUrl: process.env.REDIS_URL,
-      redisHost: config.redis.REDIS_HOST,
-      redisPort: config.redis.REDIS_PORT,
-      minioEndpoint: config.storage.MINIO_ENDPOINT,
+      redisHost: redisConfig.REDIS_HOST,
+      redisPort: redisConfig.REDIS_PORT,
+      minioEndpoint: storageConfig.MINIO_ENDPOINT,
       minioPort: 9000, // Default MinIO port
-      minioAccessKey: config.storage.MINIO_ACCESS_KEY,
-      minioSecretKey: config.storage.MINIO_SECRET_KEY,
-      minioBucket: config.storage.MINIO_BUCKET,
+      minioAccessKey: storageConfig.MINIO_ACCESS_KEY,
+      minioSecretKey: storageConfig.MINIO_SECRET_KEY,
+      minioBucket: storageConfig.MINIO_BUCKET,
       minioUseSsl: jasaWebConfig.isProduction(),
     };
   } catch (error) {

@@ -220,6 +220,89 @@ class StorageConfigRegistry {
     getCurrentStorageConfig() {
         return this.configurations.get(this.currentType);
     }
+    getAvailableStorageConfigs() {
+        return Array.from(this.configurations.values())
+            .filter((config) => config.isAvailable)
+            .sort((a, b) => b.priority - a.priority);
+    }
+    validateCurrentStorage() {
+        const config = this.getCurrentStorageConfig();
+        if (!config) {
+            return {
+                isValid: false,
+                errors: ['No storage configuration available'],
+                warnings: ['Local storage will be used as fallback'],
+            };
+        }
+        return {
+            isValid: config.isAvailable,
+            errors: [],
+            warnings: [],
+        };
+    }
+    getStorageSummary() {
+        const currentConfig = this.getCurrentStorageConfig();
+        const availableConfigs = this.getAvailableStorageConfigs();
+        return {
+            current: {
+                type: this.currentType,
+                name: currentConfig?.displayName || 'Unknown',
+                available: currentConfig?.isAvailable || false,
+            },
+            available: availableConfigs.map((config) => ({
+                type: config.type,
+                name: config.displayName,
+                priority: config.priority,
+            })),
+            total: this.configurations.size,
+            validation: this.validateCurrentStorage(),
+        };
+    }
+    autoSelectBestStorage() {
+        const previousType = this.currentType;
+        const previousConfig = this.configurations.get(previousType);
+        if (previousConfig?.isAvailable) {
+            return {
+                previousType,
+                newType: previousType,
+                reason: 'Current storage is optimal',
+            };
+        }
+        this.determineOptimalStorage();
+        const newConfig = this.configurations.get(this.currentType);
+        return {
+            previousType,
+            newType: this.currentType,
+            reason: previousConfig?.isAvailable
+                ? `Previous storage '${previousType}' became unavailable, switched to '${this.currentType}'`
+                : `Selected best available storage: '${newConfig?.displayName}'`,
+        };
+    }
+    switchStorageType(type) {
+        const config = this.configurations.get(type);
+        if (!config) {
+            return {
+                isValid: false,
+                errors: [`Storage type '${type}' is not supported`],
+                warnings: [],
+            };
+        }
+        if (!config.isAvailable) {
+            return {
+                isValid: false,
+                errors: [`Storage type '${type}' is not available`],
+                warnings: [],
+            };
+        }
+        this.currentType = type;
+        return {
+            isValid: true,
+            errors: [],
+            warnings: config.type === 'local'
+                ? ['Using local storage - ensure proper backup strategy']
+                : [],
+        };
+    }
 }
 exports.StorageConfigRegistry = StorageConfigRegistry;
 exports.storageConfigRegistry = StorageConfigRegistry.getInstance();
@@ -408,8 +491,16 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
             },
         };
     }
-    getConfig() {
-        return this.config;
+    getDatabaseConfig() {
+        return {
+            url: this.config.database.DATABASE_URL || this.buildDatabaseUrl(),
+            host: this.extractHostFromUrl(this.config.database.DATABASE_URL) ||
+                'localhost',
+            port: this.extractPortFromUrl(this.config.database.DATABASE_URL) || 5432,
+            name: this.config.database.POSTGRES_DB || 'jasaweb',
+            user: this.config.database.POSTGRES_USER || 'postgres',
+            ssl: this.isProduction(),
+        };
     }
     getSection(section) {
         return this.config[section];
@@ -530,13 +621,13 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
     }
     getEmailConfig() {
         return {
-            host: this.config.email.SMTP_HOST,
-            port: this.config.email.SMTP_PORT,
-            secure: this.config.email.SMTP_SECURE,
+            host: this.config.email.SMTP_HOST || 'smtp.gmail.com',
+            port: this.config.email.SMTP_PORT || 587,
+            secure: this.config.email.SMTP_SECURE || false,
             user: this.config.email.SMTP_USER || undefined,
             pass: this.config.email.SMTP_PASS || undefined,
-            from: this.config.email.EMAIL_FROM,
-            contact: this.config.email.CONTACT_EMAIL,
+            from: this.config.email.EMAIL_FROM || '"JasaWeb" <noreply@jasaweb.com>',
+            contact: this.config.email.CONTACT_EMAIL || 'contact@jasaweb.com',
         };
     }
     getSecurityConfig() {

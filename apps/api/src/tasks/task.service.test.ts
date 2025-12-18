@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskService } from './task.service';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { CreateTaskDto, TaskStatus } from './dto/create-task.dto';
+import { CreateTaskDto, TaskStatus, TaskPriority } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import {
   createMockMultiTenantPrismaService,
@@ -47,7 +47,7 @@ describe('TaskService', () => {
         description: 'Test description',
         assignedTo: 'user-1',
         dueAt: new Date('2024-12-31'),
-        priority: 'HIGH' as any,
+        priority: TaskPriority.HIGH,
       };
 
       const project = createTestProject({

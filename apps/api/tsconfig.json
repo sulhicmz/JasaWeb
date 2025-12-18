@@ -3,10 +3,12 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": ".",
+    "rootDir": ".",
     "paths": {
       "@/*": ["src/*"],
       "@jasaweb/*": ["../../packages/*"]
-    }
+    },
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
