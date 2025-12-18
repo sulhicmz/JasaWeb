@@ -29,17 +29,11 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
-// import { DashboardModule } from './dashboard/dashboard.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { OrganizationModule } from './common/services/organization.module';
 import { AppConfigModule } from './common/config/app.config.module';
-
-const parseEnvNumber = (
-  value: string | undefined,
-  fallback: number
-): number => {
-  const parsed = Number.parseInt(value ?? '', 10);
-  return Number.isNaN(parsed) ? fallback : parsed;
-};
+import { EnvironmentModule } from './common/config/environment.module';
+import { SecurityModule } from './common/security/security.module';
 
 @Module({
   imports: [
@@ -49,10 +43,11 @@ const parseEnvNumber = (
       validate: validateEnv,
     }),
     RedisCacheModule,
+    EnvironmentModule,
     ThrottlerModule.forRoot([
       {
-        ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
-        limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
+        ttl: 60, // Time window in seconds
+        limit: 10, // Max requests per window
       },
     ]),
     AuthModule,
@@ -72,11 +67,13 @@ const parseEnvNumber = (
     HealthModule,
     AnalyticsModule,
     KnowledgeBaseModule,
-    // DashboardModule,
+    DashboardModule,
     PrismaModule,
     MultiTenantPrismaModule,
     OrganizationModule,
+    EnvironmentModule,
     AppConfigModule,
+    SecurityModule,
   ],
   controllers: [AppController],
   providers: [
