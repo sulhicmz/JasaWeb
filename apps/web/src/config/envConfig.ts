@@ -3,6 +3,8 @@
  * Production-ready environment configuration with build-safe defaults
  */
 
+import { jasaWebConfig } from '@jasaweb/config';
+
 interface EnvironmentConfig {
   NODE_ENV: string;
   MODE: string;
@@ -30,6 +32,7 @@ interface EnvironmentConfig {
 export class EnvConfigService {
   private static instance: EnvConfigService;
   private readonly config: EnvironmentConfig;
+  private readonly unifiedConfig = jasaWebConfig.getConfig();
 
   private constructor() {
     this.config = this.buildConfig();
@@ -46,267 +49,141 @@ export class EnvConfigService {
    * Build environment-aware API base URL with dynamic port handling
    */
   private getApiBaseUrl(): string {
-    // Check for explicit API URL configuration first
-    const explicitApiUrl = this.getEnv('PUBLIC_API_URL', '');
-    if (explicitApiUrl && explicitApiUrl !== 'undefined') {
-      return explicitApiUrl;
-    }
-
-    // Build dynamic URL based on environment
-    const isBuildTime = this.isBuildLikeEnvironment();
-    const apiHost = this.getEnv('API_HOST', 'localhost');
-    const apiPort = this.getNumber('API_PORT', 3000);
-
-    if (isBuildTime) {
-      // During build time, use a placeholder or known default
-      return 'http://localhost:3000';
-    }
-
-    const protocol = this.getEnv('API_PROTOCOL', 'http');
-    return `${protocol}://${apiHost}:${apiPort}`;
+    return this.unifiedConfig.api.PUBLIC_API_URL;
   }
 
+  /**
+   * Build environment-aware WebSocket URL
+   */
   private getWebSocketUrl(): string {
-    // Check for explicit WebSocket URL
-    const explicitWsUrl = this.getEnv('WS_URL', '');
-    if (explicitWsUrl && explicitWsUrl !== 'undefined') {
-      return explicitWsUrl;
+    if (!this.unifiedConfig.api.WS_ENABLED) {
+      return '';
     }
-
-    // Derive from API URL
-    const apiBaseUrl = this.getApiBaseUrl();
-    return apiBaseUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+    return this.unifiedConfig.api.WS_URL;
   }
 
-  private buildConfig(): EnvironmentConfig {
-    // Determine if we're in a build-like environment
-    this.isBuildLikeEnvironment();
-    const apiBaseUrl = this.getApiBaseUrl();
-    const wsUrl = this.getWebSocketUrl();
-
-    return {
-      // Basic environment info
-      NODE_ENV: this.getEnv('NODE_ENV', 'development'),
-      MODE: this.getEnv('MODE', 'development'),
-      DEV: this.isDev(),
-      PROD: this.isProd(),
-
-      // API Configuration with safe fallbacks
-      PUBLIC_API_URL: apiBaseUrl,
-      API_PREFIX: this.getEnv('API_PREFIX', 'api'),
-      API_TIMEOUT: this.getNumber('API_TIMEOUT', 30000),
-      API_RETRIES: this.getNumber('API_RETRIES', 3),
-      API_RETRY_DELAY: this.getNumber('API_RETRY_DELAY', 1000),
-
-      // WebSocket Configuration
-      WS_ENABLED: this.getBoolean('WS_ENABLED', true),
-      WS_URL: wsUrl,
-      WS_RECONNECT_ATTEMPTS: this.getNumber('WS_RECONNECT_ATTEMPTS', 5),
-      WS_RECONNECT_DELAY: this.getNumber('WS_RECONNECT_DELAY', 1000),
-      WS_HEARTBEAT_INTERVAL: this.getNumber('WS_HEARTBEAT_INTERVAL', 30000),
-
-      // Rate Limiting Configuration
-      API_RATE_LIMIT_ENABLED: this.getBoolean('API_RATE_LIMIT_ENABLED', true),
-      API_RATE_LIMIT_WINDOW: this.getNumber('API_RATE_LIMIT_WINDOW', 60000),
-      API_RATE_LIMIT_MAX: this.getNumber('API_RATE_LIMIT_MAX', 100),
-      API_RATE_LIMIT_SKIP_SUCCESS: this.getBoolean(
-        'API_RATE_LIMIT_SKIP_SUCCESS',
-        false
-      ),
-      API_RATE_LIMIT_SKIP_FAILED: this.getBoolean(
-        'API_RATE_LIMIT_SKIP_FAILED',
-        true
-      ),
-
-      // Application Configuration
-      APP_VERSION: this.getEnv('APP_VERSION', '1.0.0'),
-      SITE_NAME: this.getEnv('SITE_NAME', 'JasaWeb'),
-    };
-  }
-
-  private isBuildLikeEnvironment(): boolean {
-    // Multiple strategies to detect build-time environments
-    return (
-      import.meta.env.MODE === 'build' ||
-      import.meta.env.MODE === 'development' ||
-      import.meta.env.DEV ||
-      // Check if we're in a Node.js environment (SSR/build time)
-      typeof window === 'undefined' ||
-      // Check for specific build conditions
-      (typeof process === 'undefined' && typeof window === 'undefined')
-    );
-  }
-
-  private isDev(): boolean {
-    return (
-      this.isBuildLikeEnvironment() ||
-      import.meta.env.DEV ||
-      import.meta.env.MODE === 'development'
-    );
-  }
-
-  private isProd(): boolean {
-    return (
-      !this.isDev() &&
-      (import.meta.env.MODE === 'production' || import.meta.env.PROD)
-    );
-  }
-
+  /**
+   * Get environment variable with fallback (safe for build time)
+   */
   private getEnv(key: string, fallback: string): string {
-    // Security: Use safe property access to prevent object injection
-    return Object.prototype.hasOwnProperty.call(import.meta.env, key)
-      ? import.meta.env[key] || fallback
-      : fallback;
-  }
-
-  private getNumber(key: string, fallback: number): number {
-    // Security: Use safe property access to prevent object injection
-    const value = Object.prototype.hasOwnProperty.call(import.meta.env, key)
-      ? import.meta.env[key]
-      : undefined;
-
-    if (!value) return fallback;
-
-    const num = parseInt(value, 10);
-    return isNaN(num) ? fallback : num;
-  }
-
-  private getBoolean(key: string, fallback: boolean): boolean {
-    // Security: Validate key before accessing environment
-    const ALLOWED_BOOLEAN_KEYS = [
-      'DEV',
-      'PROD',
-      'WS_ENABLED',
-      'ENABLE_ANALYTICS',
-      'ENABLE_SENTRY',
-      'API_RATE_LIMIT_ENABLED',
-      'API_RATE_LIMIT_SKIP_SUCCESS',
-      'API_RATE_LIMIT_SKIP_FAILED',
-    ];
-
-    if (!ALLOWED_BOOLEAN_KEYS.includes(key)) {
-      throw new Error(`Boolean key '${key}' is not allowed`);
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+      return (import.meta as any).env[key] || fallback;
     }
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env[key] || fallback;
+    }
+    return fallback;
+  }
 
-    const value = import.meta.env[key];
-    if (!value) return fallback;
+  /**
+   * Get environment variable as number with fallback
+   */
+  private getEnvNumber(key: string, fallback: number): number {
+    const value = this.getEnv(key, String(fallback));
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? fallback : parsed;
+  }
+
+  /**
+   * Get environment variable as boolean with fallback
+   */
+  private getEnvBoolean(key: string, fallback: boolean): boolean {
+    const value = this.getEnv(key, String(fallback));
     return value.toLowerCase() === 'true';
   }
 
-  private getRequiredWithFallback(
-    key: string,
-    fallback: string,
-    useFallback: boolean
-  ): string {
-    // Security: Use safe property access
-    const value = Object.prototype.hasOwnProperty.call(import.meta.env, key)
-      ? import.meta.env[key]
-      : undefined;
+  /**
+   * Build complete configuration using unified config
+   */
+  private buildConfig(): EnvironmentConfig {
+    const config = this.unifiedConfig;
 
-    if (!value) {
-      if (useFallback || this.isBuildLikeEnvironment()) {
-        console.warn(
-          `⚠️ Environment variable ${key} not set, using fallback: ${fallback}`
-        );
-        return fallback;
-      }
-
-      throw new Error(
-        `Required environment variable ${key} is not set in production environment. ` +
-          `Please configure your deployment environment properly.`
-      );
-    }
-
-    return value;
-  }
-
-  // Getters
-  public get envConfig(): EnvironmentConfig {
-    return this.config;
-  }
-
-  public get(key: keyof EnvironmentConfig): string | number | boolean {
-    // Security: Use safe property access to prevent object injection
-    return Object.prototype.hasOwnProperty.call(this.config, key)
-      ? this.config[key]
-      : ('' as string | number | boolean); // Default fallback
-  }
-
-  public isProduction(): boolean {
-    return this.config.PROD && !this.isBuildLikeEnvironment();
-  }
-
-  public isDevelopment(): boolean {
-    return this.config.DEV || this.isBuildLikeEnvironment();
-  }
-
-  public getConfigSummary(): Record<string, unknown> {
     return {
-      environment: {
-        nodeEnv: this.config.NODE_ENV,
-        mode: this.config.MODE,
-        isDev: this.config.DEV,
-        isProd: this.config.PROD,
-      },
-      api: {
-        baseUrl: this.config.PUBLIC_API_URL,
-        prefix: this.config.API_PREFIX,
-        timeout: this.config.API_TIMEOUT,
-        retries: this.config.API_RETRIES,
-      },
-      websocket: {
-        enabled: this.config.WS_ENABLED,
-        url: this.config.WS_URL,
-        reconnectAttempts: this.config.WS_RECONNECT_ATTEMPTS,
-      },
-      rateLimit: {
-        enabled: this.config.API_RATE_LIMIT_ENABLED,
-        window: this.config.API_RATE_LIMIT_WINDOW,
-        maxRequests: this.config.API_RATE_LIMIT_MAX,
-      },
-      application: {
-        version: this.config.APP_VERSION,
-        siteName: this.config.SITE_NAME,
-      },
+      NODE_ENV: config.base.NODE_ENV,
+      MODE: config.base.NODE_ENV,
+      DEV: config.base.NODE_ENV === 'development',
+      PROD: config.base.NODE_ENV === 'production',
+      PUBLIC_API_URL: config.api.PUBLIC_API_URL,
+      API_PREFIX: config.api.API_PREFIX,
+      API_TIMEOUT: config.api.API_TIMEOUT,
+      API_RETRIES: config.api.API_RETRIES,
+      API_RETRY_DELAY: config.api.API_RETRY_DELAY,
+      WS_ENABLED: config.api.WS_ENABLED,
+      WS_URL: config.api.WS_URL,
+      WS_RECONNECT_ATTEMPTS: config.api.WS_RECONNECT_ATTEMPTS,
+      WS_RECONNECT_DELAY: config.api.WS_RECONNECT_DELAY,
+      WS_HEARTBEAT_INTERVAL: config.api.WS_HEARTBEAT_INTERVAL,
+      API_RATE_LIMIT_ENABLED: config.api.API_RATE_LIMIT_ENABLED,
+      API_RATE_LIMIT_WINDOW: config.api.API_RATE_LIMIT_WINDOW,
+      API_RATE_LIMIT_MAX: config.api.API_RATE_LIMIT_MAX,
+      API_RATE_LIMIT_SKIP_SUCCESS: config.api.API_RATE_LIMIT_SKIP_SUCCESS,
+      API_RATE_LIMIT_SKIP_FAILED: config.api.API_RATE_LIMIT_SKIP_FAILED,
+      APP_VERSION: config.base.APP_VERSION,
+      SITE_NAME: config.base.SITE_NAME,
     };
   }
 
-  // Validation for runtime (not during build)
-  public validateConfig(): { isValid: boolean; errors: string[] } {
-    if (this.isBuildLikeEnvironment()) {
-      return {
-        isValid: true,
-        errors: [],
-      };
-    }
+  public getConfig(): EnvironmentConfig {
+    return this.config;
+  }
 
-    const errors: string[] = [];
+  public get<K extends keyof EnvironmentConfig>(key: K): EnvironmentConfig[K] {
+    return this.config[key];
+  }
 
-    // Validate URLs only when not in build mode
-    try {
-      new URL(this.config.PUBLIC_API_URL);
-    } catch {
-      errors.push(`Invalid PUBLIC_API_URL: ${this.config.PUBLIC_API_URL}`);
-    }
+  public getApiUrl(): string {
+    return this.config.PUBLIC_API_URL;
+  }
 
-    if (this.config.WS_ENABLED) {
-      try {
-        // WebSocket URLs don't follow the URL constructor rules precisely, so use regex
-        const wsRegex = /^(wss?):\/\/.+/;
-        if (!wsRegex.test(this.config.WS_URL)) {
-          errors.push(`Invalid WS_URL: ${this.config.WS_URL}`);
-        }
-      } catch {
-        errors.push(`Invalid WS_URL: ${this.config.WS_URL}`);
-      }
-    }
+  public isDevelopment(): boolean {
+    return this.config.DEV;
+  }
 
+  public isProduction(): boolean {
+    return this.config.PROD;
+  }
+
+  public isWebSocketEnabled(): boolean {
+    return this.config.WS_ENABLED && !!this.config.WS_URL;
+  }
+
+  public getWebSocketConfig() {
     return {
-      isValid: errors.length === 0,
-      errors,
+      enabled: this.config.WS_ENABLED,
+      url: this.config.WS_URL,
+      reconnectAttempts: this.config.WS_RECONNECT_ATTEMPTS,
+      reconnectDelay: this.config.WS_RECONNECT_DELAY,
+      heartbeatInterval: this.config.WS_HEARTBEAT_INTERVAL,
+    };
+  }
+
+  public getRateLimitConfig() {
+    return {
+      enabled: this.config.API_RATE_LIMIT_ENABLED,
+      window: this.config.API_RATE_LIMIT_WINDOW,
+      max: this.config.API_RATE_LIMIT_MAX,
+      skipSuccess: this.config.API_RATE_LIMIT_SKIP_SUCCESS,
+      skipFailed: this.config.API_RATE_LIMIT_SKIP_FAILED,
+    };
+  }
+
+  public getTimeoutConfig() {
+    return {
+      timeout: this.config.API_TIMEOUT,
+      retries: this.config.API_RETRIES,
+      retryDelay: this.config.API_RETRY_DELAY,
+    };
+  }
+
+  public getAppMeta() {
+    return {
+      name: this.config.SITE_NAME,
+      version: this.config.APP_VERSION,
+      environment: this.config.NODE_ENV,
     };
   }
 }
 
 export const envConfig = EnvConfigService.getInstance();
 export type { EnvironmentConfig };
+export default envConfig;

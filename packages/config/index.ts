@@ -48,6 +48,11 @@ export {
   unifiedConfig,
 } from './src/unified-config.service';
 
+export {
+  JasaWebConfigService,
+  jasaWebConfig,
+} from './src/jasaweb-config.service';
+
 export type {
   JasaWebConfig,
   ConfigSection,
@@ -55,6 +60,15 @@ export type {
   ConfigValidationResult,
   ConfigSummaryOptions,
 } from './src/unified-config.service';
+
+export type {
+  INetworkConfig,
+  IDatabaseConfig,
+  IEmailConfig,
+  ISecurityConfig,
+  ICacheConfig,
+  IFileUploadConfig,
+} from './src/jasaweb-config.types';
 
 // Export dynamic storage configuration
 export {
