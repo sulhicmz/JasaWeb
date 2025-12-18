@@ -167,12 +167,10 @@ class LocalStorageAdapter extends BaseStorageAdapter {
  * S3 Storage Adapter (Placeholder for future implementation)
  */
 class S3StorageAdapter extends BaseStorageAdapter {
-  private region: string;
   private bucket: string;
 
   constructor(config: S3StorageConfig) {
     super();
-    this.region = config.region || 'us-east-1';
     this.bucket = config.bucket;
   }
 
@@ -180,7 +178,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     data: Buffer,
     options: StorageUploadOptions
   ): Promise<StorageUploadResult> {
-    // TODO: Implement S3 upload logic
+    // Simulated S3 upload - requires actual AWS SDK implementation
     this.logger.log(`S3 upload simulated: ${options.key}`);
 
     return {
@@ -191,18 +189,18 @@ class S3StorageAdapter extends BaseStorageAdapter {
   }
 
   async download(key: string): Promise<Buffer> {
-    // TODO: Implement S3 download logic
+    // Simulated S3 download - requires actual AWS SDK implementation
     this.logger.log(`S3 download simulated: ${key}`);
     return Buffer.from('mock file content');
   }
 
   async delete(key: string): Promise<void> {
-    // TODO: Implement S3 delete logic
+    // Simulated S3 delete - requires actual AWS SDK implementation
     this.logger.log(`S3 delete simulated: ${key}`);
   }
 
-  async exists(key: string): Promise<boolean> {
-    // TODO: Implement S3 exists logic
+  async exists(_key: string): Promise<boolean> {
+    // Simulated S3 exists check - requires actual AWS SDK implementation
     return false;
   }
 
@@ -210,7 +208,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     _key: string,
     _expiresIn: number
   ): Promise<string> {
-    // TODO: Implement S3 signed URL logic
+    // Simulated S3 signed URL - requires actual AWS SDK implementation
     return `https://s3-signed-url-placeholder/placeholder?expires=3600`;
   }
 }

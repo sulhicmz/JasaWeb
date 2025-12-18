@@ -1,8 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CacheService } from '../src/common/services/cache.service';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { ConfigService } from '@nestjs/config';
+import { CacheService } from '../common/services/cache.service';
 
 describe('CacheService', () => {
   let service: CacheService;
@@ -11,19 +8,19 @@ describe('CacheService', () => {
 
   beforeEach(async () => {
     mockCacheManager = {
-      get: vi.fn(),
-      set: vi.fn(),
-      del: vi.fn(),
-      reset: vi.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      reset: jest.fn(),
       store: {
-        keys: vi.fn(),
-        clear: vi.fn(),
-        getStats: vi.fn(),
+        keys: jest.fn(),
+        clear: jest.fn(),
+        getStats: jest.fn(),
       },
     };
 
     mockConfigService = {
-      get: vi.fn((key: string, defaultValue?: any) => {
+      get: jest.fn((key: string, defaultValue?: any) => {
         const defaults = {
           ENABLE_CACHE: true,
           CACHE_TTL: 3600,
@@ -38,11 +35,11 @@ describe('CacheService', () => {
       providers: [
         CacheService,
         {
-          provide: CACHE_MANAGER,
+          provide: 'CACHE_MANAGER',
           useValue: mockCacheManager,
         },
         {
-          provide: ConfigService,
+          provide: 'ConfigService',
           useValue: mockConfigService,
         },
       ],

@@ -439,88 +439,8 @@ export type UserWithMemberships = User & {
 };
 
 // ============================================================================
-// LEGACY COMPATIBILITY TYPES (Maintained for backward compatibility)
+// UTILITY TYPES
 // ============================================================================
-
-/**
- * Legacy Project interface - maintained for compatibility
- * @deprecated Use ProjectWithRelations or ProjectWithMetrics instead
- */
-export interface Project {
-  id: string;
-  name: string;
-  status: string;
-  startDate?: Date;
-  endDate?: Date;
-  milestones?: Milestone[];
-  tickets?: Ticket[];
-  createdAt: Date;
-  updatedAt: Date;
-  organizationId: string;
-}
-
-/**
- * Legacy Milestone interface
- * @deprecated Use Prisma Milestone type instead
- */
-export interface Milestone {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  dueDate?: Date;
-  projectId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * Legacy Ticket interface
- * @deprecated Use Prisma Ticket type instead
- */
-export interface Ticket {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  projectId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-/**
- * Legacy ProjectWithMetrics interface - extended for compatibility
- * @deprecated Use the new ProjectWithMetrics interface above
- */
-export interface ProjectWithMetricsLegacy extends Project {
-  progress: number;
-  totalMilestones: number;
-  completedMilestones: number;
-  openTickets: number;
-  highPriorityTickets: number;
-  completionRate?: number;
-  daysRemaining?: number;
-  isOverdue?: boolean;
-}
-
-/**
- * Legacy DashboardStats interface - maintained for compatibility
- * @deprecated Use the new DashboardStats interface above
- */
-export interface DashboardStatsLegacy {
-  totalProjects: number;
-  activeProjects: number;
-  completedProjects: number;
-  totalTickets: number;
-  openTickets: number;
-  resolvedTickets: number;
-  totalMilestones: number;
-  completedMilestones: number;
-  totalInvoices: number;
-  paidInvoices: number;
-  overdueInvoices: number;
-}
 
 // ============================================================================
 // NOTIFICATION AND CHART TYPES (Preserved from original)

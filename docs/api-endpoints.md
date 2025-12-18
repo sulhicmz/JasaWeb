@@ -6,17 +6,19 @@ Complete API reference for the JasaWeb Enterprise Client Management System.
 
 - [Base URL](#base-url)
 - [Authentication](#authentication)
-- [Organizations](#organizations)
-- [Users & Memberships](#users--memberships)
+- [Users](#users)
 - [Projects](#projects)
+- [Tasks](#tasks)
 - [Milestones](#milestones)
 - [Files](#files)
 - [Approvals](#approvals)
-- [Tasks](#tasks)
 - [Tickets](#tickets)
 - [Invoices](#invoices)
-- [Audit Logs](#audit-logs)
+- [Knowledge Base](#knowledge-base)
+- [Analytics](#analytics)
+- [Dashboard](#dashboard)
 - [Health Check](#health-check)
+- [Security](#security)
 
 ---
 
@@ -50,20 +52,24 @@ Register a new user account.
 }
 ```
 
-**Response (201):**
+**Response:**
 
 ```json
 {
-  "id": "clx1234567890",
-  "email": "user@example.com",
-  "name": "John Doe",
-  "createdAt": "2025-01-06T10:00:00Z"
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  "accessToken": "jwt-token",
+  "refreshToken": "refresh-token"
 }
 ```
 
 ### POST /auth/login
 
-Authenticate and receive access tokens.
+Authenticate user and return tokens.
 
 **Request Body:**
 
@@ -74,17 +80,17 @@ Authenticate and receive access tokens.
 }
 ```
 
-**Response (200):**
+**Response:**
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
-    "id": "clx1234567890",
+    "id": "uuid",
     "email": "user@example.com",
     "name": "John Doe"
-  }
+  },
+  "accessToken": "jwt-token",
+  "refreshToken": "refresh-token"
 }
 ```
 
@@ -96,293 +102,122 @@ Refresh access token using refresh token.
 
 ```json
 {
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "refreshToken": "refresh-token"
 }
 ```
 
 ### POST /auth/logout
 
-Invalidate current session.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "Logged out successfully"
-}
-```
-
----
-
-## Organizations
-
-### GET /organizations
-
-List all organizations for the current user.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "org-123",
-    "name": "Acme Corporation",
-    "billingEmail": "billing@acme.com",
-    "plan": "enterprise",
-    "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2025-01-06T10:00:00Z"
-  }
-]
-```
-
-### POST /organizations
-
-Create a new organization.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Logout user and invalidate tokens.
 
 **Request Body:**
 
 ```json
 {
-  "name": "New Company",
-  "billingEmail": "billing@newcompany.com",
-  "plan": "professional"
+  "refreshToken": "refresh-token"
 }
 ```
 
-**Response (201):**
+### GET /auth/profile
+
+Get current authenticated user profile.
+
+**Response:**
 
 ```json
 {
-  "id": "org-456",
-  "name": "New Company",
-  "billingEmail": "billing@newcompany.com",
-  "plan": "professional",
-  "createdAt": "2025-01-06T10:00:00Z"
+  "id": "uuid",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "user",
+  "organizationId": "uuid",
+  "createdAt": "2024-01-01T00:00:00.000Z"
 }
 ```
-
-### GET /organizations/:id
-
-Get organization details.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "org-123",
-  "name": "Acme Corporation",
-  "billingEmail": "billing@acme.com",
-  "plan": "enterprise",
-  "settings": {
-    "timezone": "Asia/Jakarta",
-    "language": "id"
-  },
-  "createdAt": "2025-01-01T00:00:00Z",
-  "updatedAt": "2025-01-06T10:00:00Z"
-}
-```
-
-### PATCH /organizations/:id
-
-Update organization details.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-
-```json
-{
-  "name": "Acme Corp Updated",
-  "settings": {
-    "timezone": "Asia/Jakarta",
-    "language": "id",
-    "notifications": {
-      "email": true,
-      "inApp": true
-    }
-  }
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "org-123",
-  "name": "Acme Corp Updated",
-  "billingEmail": "billing@acme.com",
-  "plan": "enterprise",
-  "settings": {
-    "timezone": "Asia/Jakarta",
-    "language": "id",
-    "notifications": {
-      "email": true,
-      "inApp": true
-    }
-  },
-  "updatedAt": "2025-01-06T11:00:00Z"
-}
-```
-
-### DELETE /organizations/:id
-
-Delete an organization (owner only).
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (204):**
-No content
 
 ---
 
-## Users & Memberships
+## Users
 
-### GET /organizations/:orgId/members
+### GET /users
 
-List organization members.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+List all users (requires admin role).
 
 **Query Parameters:**
 
-- `role` (optional): Filter by role (owner, admin, finance, reviewer, member, guest)
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10)
+- `search`: Search by name or email
+- `role`: Filter by role
 
-**Response (200):**
+**Response:**
 
 ```json
-[
-  {
-    "id": "membership-123",
-    "role": "admin",
-    "user": {
-      "id": "user-123",
-      "email": "admin@acme.com",
-      "name": "Jane Admin",
-      "profilePicture": "https://..."
-    },
-    "createdAt": "2025-01-01T00:00:00Z"
-  }
-]
+{
+  "data": [
+    {
+      "id": "uuid",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "user",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "total": 100,
+  "page": 1,
+  "limit": 10
+}
 ```
 
-### POST /organizations/:orgId/invitations
+### POST /users
 
-Invite a user to the organization.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Create a new user (requires admin role).
 
 **Request Body:**
 
 ```json
 {
   "email": "newuser@example.com",
-  "role": "reviewer",
-  "message": "Welcome to our project!"
+  "password": "Password123!",
+  "name": "New User",
+  "role": "user"
 }
 ```
 
-**Response (201):**
+### GET /users/:id
+
+Get user by ID.
+
+**Response:**
 
 ```json
 {
-  "id": "invitation-789",
-  "email": "newuser@example.com",
-  "role": "reviewer",
-  "status": "pending",
-  "expiresAt": "2025-01-13T10:00:00Z",
-  "createdAt": "2025-01-06T10:00:00Z"
+  "id": "uuid",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "user",
+  "organizationId": "uuid",
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
 }
 ```
 
-### PATCH /memberships/:id
+### PATCH /users/:id
 
-Update member role.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Update user information.
 
 **Request Body:**
 
 ```json
 {
+  "name": "John Updated",
   "role": "admin"
 }
 ```
 
-**Response (200):**
+### DELETE /users/:id
 
-```json
-{
-  "id": "membership-123",
-  "role": "admin",
-  "updatedAt": "2025-01-06T11:00:00Z"
-}
-```
-
-### DELETE /memberships/:id
-
-Remove a member from organization.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (204):**
-No content
+Delete user (requires admin role).
 
 ---
 
@@ -390,51 +225,35 @@ No content
 
 ### GET /projects
 
-List all projects for the current organization.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+List all projects for the authenticated user's organization.
 
 **Query Parameters:**
 
-- `view` (optional): `summary` (default) or `detail`
-- `status` (optional): Filter by status (draft, progress, review, completed, paused, cancelled)
-- `page` (optional): Page number (default: 1)
-- `limit` (optional): Items per page (default: 20)
+- `status`: Filter by status (active, completed, on_hold)
+- ` clientId`: Filter by client ID
+- `page`: Page number
+- `limit`: Items per page
 
-**Response (200) - Summary View:**
+**Response:**
 
 ```json
 {
-  "items": [
+  "data": [
     {
-      "id": "project-123",
-      "name": "School Website Redesign",
-      "status": "progress",
-      "startAt": "2025-01-01T00:00:00Z",
-      "dueAt": "2025-03-01T00:00:00Z",
-      "organizationId": "org-123",
-      "createdAt": "2025-01-01T00:00:00Z",
-      "updatedAt": "2025-01-06T10:00:00Z",
-      "_count": {
-        "milestones": 5,
-        "files": 24,
-        "approvals": 3,
-        "tasks": 15,
-        "tickets": 2,
-        "invoices": 1
-      }
+      "id": "uuid",
+      "name": "Website Development",
+      "description": "Company website development",
+      "status": "active",
+      "clientId": "uuid",
+      "startDate": "2024-01-01",
+      "endDate": "2024-06-01",
+      "budget": 50000,
+      "createdAt": "2024-01-01T00:00:00.000Z"
     }
   ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 45,
-    "totalPages": 3
-  }
+  "total": 25,
+  "page": 1,
+  "limit": 10
 }
 ```
 
@@ -442,594 +261,286 @@ Authorization: Bearer {accessToken}
 
 Create a new project.
 
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
 **Request Body:**
 
 ```json
 {
-  "name": "News Portal Redesign",
-  "status": "draft",
-  "startAt": "2025-02-01T00:00:00Z",
-  "dueAt": "2025-04-01T00:00:00Z"
-}
-```
-
-**Response (201):**
-
-```json
-{
-  "id": "project-789",
-  "name": "News Portal Redesign",
-  "status": "draft",
-  "startAt": "2025-02-01T00:00:00Z",
-  "dueAt": "2025-04-01T00:00:00Z",
-  "organizationId": "org-123",
-  "createdAt": "2025-01-06T10:00:00Z",
-  "updatedAt": "2025-01-06T10:00:00Z"
+  "name": "Website Development",
+  "description": "Company website development",
+  "clientId": "uuid",
+  "startDate": "2024-01-01",
+  "endDate": "2024-06-01",
+  "budget": 50000
 }
 ```
 
 ### GET /projects/:id
 
-Get project details.
+Get project details by ID.
 
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
+**Response:**
 
 ```json
 {
-  "id": "project-123",
-  "name": "School Website Redesign",
-  "status": "progress",
-  "startAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-03-01T00:00:00Z",
-  "organizationId": "org-123",
-  "createdAt": "2025-01-01T00:00:00Z",
-  "updatedAt": "2025-01-06T10:00:00Z",
-  "milestones": [...],
-  "files": [...],
-  "approvals": [...],
-  "tasks": [...],
-  "tickets": [...],
-  "invoices": [...]
-}
-```
-
-### GET /projects/:id/stats
-
-Get project statistics.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-{
-  "milestoneCount": 5,
-  "completedMilestones": 3,
-  "fileCount": 24,
-  "pendingApprovals": 2,
-  "taskCount": 15,
-  "completedTasks": 10,
-  "progress": 60
+  "id": "uuid",
+  "name": "Website Development",
+  "description": "Company website development",
+  "status": "active",
+  "clientId": "uuid",
+  "client": {
+    "id": "uuid",
+    "name": "Client Company"
+  },
+  "startDate": "2024-01-01",
+  "endDate": "2024-06-01",
+  "budget": 50000,
+  "progress": 45,
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z"
 }
 ```
 
 ### PATCH /projects/:id
 
-Update project details.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Update project information.
 
 **Request Body:**
 
 ```json
 {
-  "name": "School Website Redesign v2",
-  "status": "review",
-  "dueAt": "2025-03-15T00:00:00Z"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "project-123",
-  "name": "School Website Redesign v2",
-  "status": "review",
-  "startAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-03-15T00:00:00Z",
-  "updatedAt": "2025-01-06T11:00:00Z"
+  "name": "Updated Project Name",
+  "status": "completed",
+  "endDate": "2024-05-15"
 }
 ```
 
 ### DELETE /projects/:id
 
-Delete a project.
+Delete project.
 
-**Headers:**
+### GET /projects/:id/stats
 
-```http
-Authorization: Bearer {accessToken}
-```
+Get project statistics.
 
-**Response (204):**
-No content
-
----
-
-## Milestones
-
-### GET /projects/:projectId/milestones
-
-List project milestones.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Query Parameters:**
-
-- `status` (optional): Filter by status (todo, in-progress, completed, overdue)
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "milestone-123",
-    "projectId": "project-123",
-    "title": "Design Phase Complete",
-    "dueAt": "2025-01-15T00:00:00Z",
-    "status": "completed",
-    "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2025-01-15T10:00:00Z"
-  }
-]
-```
-
-### POST /projects/:projectId/milestones
-
-Create a milestone.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
+**Response:**
 
 ```json
 {
-  "title": "Development Phase Complete",
-  "dueAt": "2025-02-15T00:00:00Z",
-  "status": "todo"
+  "totalTasks": 25,
+  "completedTasks": 18,
+  "overdueTasks": 2,
+  "totalMilestones": 5,
+  "completedMilestones": 3,
+  "totalFiles": 15,
+  "totalApprovals": 8,
+  "pendingApprovals": 2
 }
-```
-
-**Response (201):**
-
-```json
-{
-  "id": "milestone-456",
-  "projectId": "project-123",
-  "title": "Development Phase Complete",
-  "dueAt": "2025-02-15T00:00:00Z",
-  "status": "todo",
-  "createdAt": "2025-01-06T10:00:00Z"
-}
-```
-
-### PATCH /milestones/:id
-
-Update milestone.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-
-```json
-{
-  "status": "completed"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "milestone-456",
-  "status": "completed",
-  "updatedAt": "2025-02-15T10:00:00Z"
-}
-```
-
-### DELETE /milestones/:id
-
-Delete a milestone.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (204):**
-No content
-
----
-
-## Files
-
-### GET /projects/:projectId/files
-
-List project files.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Query Parameters:**
-
-- `folder` (optional): Filter by folder path
-- `version` (optional): Filter by version
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "file-123",
-    "projectId": "project-123",
-    "filename": "homepage-design.png",
-    "folder": "designs/homepage",
-    "version": "2.0",
-    "size": 2048576,
-    "checksum": "sha256:abc123...",
-    "uploadedBy": {
-      "id": "user-123",
-      "name": "John Doe"
-    },
-    "createdAt": "2025-01-06T10:00:00Z"
-  }
-]
-```
-
-### POST /projects/:projectId/files
-
-Upload a file.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-Content-Type: multipart/form-data
-```
-
-**Form Data:**
-
-- `file`: File binary
-- `folder` (optional): Folder path
-- `version` (optional): Version string
-
-**Response (201):**
-
-```json
-{
-  "id": "file-456",
-  "projectId": "project-123",
-  "filename": "logo.svg",
-  "folder": "assets/branding",
-  "version": "1.0",
-  "size": 15360,
-  "checksum": "sha256:def456...",
-  "uploadedById": "user-123",
-  "createdAt": "2025-01-06T11:00:00Z"
-}
-```
-
-### GET /files/:id/download
-
-Download a file.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-Binary file content with appropriate Content-Type header
-
-### DELETE /files/:id
-
-Delete a file.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (204):**
-No content
-
----
-
-## Approvals
-
-### GET /projects/:projectId/approvals
-
-List project approvals.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Query Parameters:**
-
-- `status` (optional): Filter by status (pending, approved, rejected)
-- `itemType` (optional): Filter by type (design, content, feature, page, deployment)
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "approval-123",
-    "projectId": "project-123",
-    "itemType": "design",
-    "itemId": "homepage-mockup-v2",
-    "status": "pending",
-    "note": "Please review the updated homepage design",
-    "decidedBy": null,
-    "decidedAt": null,
-    "createdAt": "2025-01-06T10:00:00Z"
-  }
-]
-```
-
-### POST /projects/:projectId/approvals
-
-Request approval.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-
-```json
-{
-  "itemType": "design",
-  "itemId": "homepage-mockup-v2",
-  "note": "Please review the updated homepage design"
-}
-```
-
-**Response (201):**
-
-```json
-{
-  "id": "approval-456",
-  "projectId": "project-123",
-  "itemType": "design",
-  "itemId": "homepage-mockup-v2",
-  "status": "pending",
-  "note": "Please review the updated homepage design",
-  "createdAt": "2025-01-06T10:00:00Z"
-}
-```
-
-### PATCH /approvals/:id
-
-Approve or reject.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-
-```json
-{
-  "status": "approved",
-  "note": "Looks great! Approved for implementation."
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "approval-456",
-  "status": "approved",
-  "decidedById": "user-789",
-  "decidedAt": "2025-01-06T14:00:00Z",
-  "note": "Looks great! Approved for implementation.",
-  "updatedAt": "2025-01-06T14:00:00Z"
-}
-```
-
-### GET /approvals/:id/history
-
-Get approval history.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-[
-  {
-    "action": "created",
-    "actor": "John Doe",
-    "timestamp": "2025-01-06T10:00:00Z",
-    "note": "Please review the updated homepage design"
-  },
-  {
-    "action": "approved",
-    "actor": "Jane Admin",
-    "timestamp": "2025-01-06T14:00:00Z",
-    "note": "Looks great! Approved for implementation."
-  }
-]
 ```
 
 ---
 
 ## Tasks
 
-### GET /projects/:projectId/tasks
+### GET /tasks
 
-List project tasks.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+List all tasks.
 
 **Query Parameters:**
 
-- `status` (optional): Filter by status (todo, in-progress, review, completed)
-- `assigneeId` (optional): Filter by assignee
+- `projectId`: Filter by project ID
+- `status`: Filter by status
+- `assignedTo`: Filter by assignee ID
+- `priority`: Filter by priority
+- `page`: Page number
+- `limit`: Items per page
 
-**Response (200):**
+### POST /tasks
 
-```json
-[
-  {
-    "id": "task-123",
-    "projectId": "project-123",
-    "title": "Implement contact form",
-    "assignee": {
-      "id": "user-123",
-      "name": "John Doe"
-    },
-    "status": "in-progress",
-    "dueAt": "2025-01-20T00:00:00Z",
-    "labels": ["frontend", "high-priority"],
-    "createdAt": "2025-01-06T10:00:00Z"
-  }
-]
-```
-
-### POST /projects/:projectId/tasks
-
-Create a task.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Create a new task.
 
 **Request Body:**
 
 ```json
 {
-  "title": "Implement contact form",
-  "assigneeId": "user-123",
-  "status": "todo",
-  "dueAt": "2025-01-20T00:00:00Z",
-  "labels": ["frontend", "high-priority"]
+  "title": "Implement feature X",
+  "description": "Detailed description of the task",
+  "projectId": "uuid",
+  "assignedTo": "uuid",
+  "priority": "high",
+  "dueDate": "2024-02-01",
+  "estimatedHours": 16
 }
 ```
 
-**Response (201):**
+### GET /tasks/:id
 
-```json
-{
-  "id": "task-456",
-  "projectId": "project-123",
-  "title": "Implement contact form",
-  "assigneeId": "user-123",
-  "status": "todo",
-  "dueAt": "2025-01-20T00:00:00Z",
-  "labels": ["frontend", "high-priority"],
-  "createdAt": "2025-01-06T10:00:00Z"
-}
-```
+Get task by ID.
 
 ### PATCH /tasks/:id
 
 Update task.
 
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
 **Request Body:**
 
 ```json
 {
-  "status": "completed"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "task-456",
   "status": "completed",
-  "updatedAt": "2025-01-20T15:00:00Z"
+  "actualHours": 18,
+  "notes": "Task completed with additional testing"
 }
 ```
 
 ### DELETE /tasks/:id
 
-Delete a task.
+Delete task.
 
-**Headers:**
+### GET /tasks/status/:status
 
-```http
-Authorization: Bearer {accessToken}
+Find tasks by status.
+
+### GET /tasks/assignee/:assignedTo
+
+Find tasks by assignee.
+
+---
+
+## Milestones
+
+### GET /milestones
+
+List all milestones.
+
+**Query Parameters:**
+
+- `projectId`: Filter by project ID
+- `status`: Filter by status
+- `page`: Page number
+- `limit`: Items per page
+
+### POST /milestones
+
+Create a new milestone.
+
+**Request Body:**
+
+```json
+{
+  "title": "Phase 1 Complete",
+  "description": "Complete initial design and development",
+  "projectId": "uuid",
+  "dueDate": "2024-03-01",
+  "deliverables": ["Design mockups", "Core functionality"]
+}
 ```
 
-**Response (204):**
-No content
+### GET /milestones/:id
+
+Get milestone by ID.
+
+### PATCH /milestones/:id
+
+Update milestone.
+
+### DELETE /milestones/:id
+
+Delete milestone.
+
+---
+
+## Files
+
+### POST /files
+
+Upload file.
+
+**Request:** multipart/form-data
+
+- `file`: File to upload
+- `projectId`: Project ID
+- `description`: File description
+
+**Response:**
+
+```json
+{
+  "id": "uuid",
+  "filename": "document.pdf",
+  "originalName": "project-document.pdf",
+  "size": 1048576,
+  "mimeType": "application/pdf",
+  "projectId": "uuid",
+  "uploadedBy": "uuid",
+  "createdAt": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### GET /files/download/:id
+
+Download file by ID.
+
+### DELETE /files/:id
+
+Delete file.
+
+---
+
+## Approvals
+
+### GET /approvals
+
+List all approvals.
+
+**Query Parameters:**
+
+- `projectId`: Filter by project ID
+- `status`: Filter by status (pending, approved, rejected)
+- `requesterId`: Filter by requester ID
+- `reviewerId`: Filter by reviewer ID
+
+### POST /approvals
+
+Create approval request.
+
+**Request Body:**
+
+```json
+{
+  "title": "Design Review",
+  "description": "Please review the attached design mockups",
+  "projectId": "uuid",
+  "reviewerId": "uuid",
+  "attachments": ["file-uuid-1", "file-uuid-2"],
+  "dueDate": "2024-02-15"
+}
+```
+
+### GET /approvals/:id
+
+Get approval by ID.
+
+### POST /approvals/:id/approve
+
+Approve request.
+
+**Request Body:**
+
+```json
+{
+  "comments": "Looks good, approved with minor suggestions"
+}
+```
+
+### POST /approvals/:id/reject
+
+Reject request.
+
+**Request Body:**
+
+```json
+{
+  "comments": "Needs revisions before approval"
+}
+```
 
 ---
 
@@ -1037,169 +548,42 @@ No content
 
 ### GET /tickets
 
-List tickets for the current organization.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+List all tickets.
 
 **Query Parameters:**
 
-- `status` (optional): Filter by status (open, in-progress, in-review, resolved, closed)
-- `priority` (optional): Filter by priority (low, medium, high, critical)
-- `type` (optional): Filter by type (bug, feature, improvement, question, task)
-- `projectId` (optional): Filter by project
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "ticket-123",
-    "organizationId": "org-123",
-    "projectId": "project-123",
-    "type": "bug",
-    "priority": "high",
-    "status": "open",
-    "title": "Login page not loading",
-    "assignee": null,
-    "slaDueAt": "2025-01-06T18:00:00Z",
-    "createdAt": "2025-01-06T14:00:00Z"
-  }
-]
-```
+- `status`: Filter by status
+- `priority`: Filter by priority
+- `assignedTo`: Filter by assignee
+- `clientId`: Filter by client
 
 ### POST /tickets
 
-Create a ticket.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Create new ticket.
 
 **Request Body:**
 
 ```json
 {
-  "type": "bug",
+  "title": "Login Issue",
+  "description": "User unable to login to dashboard",
   "priority": "high",
-  "title": "Login page not loading",
-  "description": "Users cannot access the login page. Error 500 displayed.",
-  "projectId": "project-123"
-}
-```
-
-**Response (201):**
-
-```json
-{
-  "id": "ticket-456",
-  "organizationId": "org-123",
-  "projectId": "project-123",
-  "type": "bug",
-  "priority": "high",
-  "status": "open",
-  "title": "Login page not loading",
-  "slaDueAt": "2025-01-06T18:00:00Z",
-  "createdAt": "2025-01-06T14:00:00Z"
+  "clientId": "uuid",
+  "categoryId": "uuid"
 }
 ```
 
 ### GET /tickets/:id
 
-Get ticket details.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "ticket-456",
-  "organizationId": "org-123",
-  "projectId": "project-123",
-  "type": "bug",
-  "priority": "high",
-  "status": "in-progress",
-  "title": "Login page not loading",
-  "description": "Users cannot access the login page. Error 500 displayed.",
-  "assignee": {
-    "id": "user-789",
-    "name": "Support Agent"
-  },
-  "slaDueAt": "2025-01-06T18:00:00Z",
-  "createdAt": "2025-01-06T14:00:00Z",
-  "updatedAt": "2025-01-06T15:00:00Z"
-}
-```
+Get ticket by ID.
 
 ### PATCH /tickets/:id
 
 Update ticket.
 
-**Headers:**
+### DELETE /tickets/:id
 
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-
-```json
-{
-  "status": "in-progress",
-  "assigneeId": "user-789"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "ticket-456",
-  "status": "in-progress",
-  "assigneeId": "user-789",
-  "updatedAt": "2025-01-06T15:00:00Z"
-}
-```
-
-### PATCH /tickets/:id/resolve
-
-Resolve a ticket.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Request Body:**
-
-```json
-{
-  "resolution": "Fixed authentication service configuration. Issue resolved.",
-  "status": "resolved"
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "ticket-456",
-  "status": "resolved",
-  "resolution": "Fixed authentication service configuration. Issue resolved.",
-  "updatedAt": "2025-01-06T16:00:00Z"
-}
-```
+Delete ticket.
 
 ---
 
@@ -1207,263 +591,198 @@ Authorization: Bearer {accessToken}
 
 ### GET /invoices
 
-List invoices for the current organization.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+List all invoices.
 
 **Query Parameters:**
 
-- `status` (optional): Filter by status (draft, issued, paid, overdue, cancelled)
-- `projectId` (optional): Filter by project
-
-**Response (200):**
-
-```json
-[
-  {
-    "id": "invoice-123",
-    "organizationId": "org-123",
-    "projectId": "project-123",
-    "amount": 5000000,
-    "currency": "IDR",
-    "issuedAt": "2025-01-01T00:00:00Z",
-    "dueAt": "2025-01-15T00:00:00Z",
-    "status": "paid",
-    "createdAt": "2025-01-01T00:00:00Z"
-  }
-]
-```
+- `projectId`: Filter by project ID
+- `status`: Filter by status (draft, sent, paid, overdue)
+- `clientId`: Filter by client ID
 
 ### POST /invoices
 
-Create an invoice.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Create new invoice.
 
 **Request Body:**
 
 ```json
 {
-  "projectId": "project-123",
-  "amount": 5000000,
-  "currency": "IDR",
-  "issuedAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-01-15T00:00:00Z",
-  "status": "issued"
-}
-```
-
-**Response (201):**
-
-```json
-{
-  "id": "invoice-456",
-  "organizationId": "org-123",
-  "projectId": "project-123",
-  "amount": 5000000,
-  "currency": "IDR",
-  "issuedAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-01-15T00:00:00Z",
-  "status": "issued",
-  "createdAt": "2025-01-06T10:00:00Z"
+  "projectId": "uuid",
+  "clientId": "uuid",
+  "dueDate": "2024-02-15",
+  "items": [
+    {
+      "description": "Development work",
+      "quantity": 40,
+      "rate": 100,
+      "total": 4000
+    }
+  ],
+  "notes": "Payment terms: 30 days"
 }
 ```
 
 ### GET /invoices/:id
 
-Get invoice details.
+Get invoice by ID.
 
-**Headers:**
+### PUT /invoices/:id/pay
 
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-
-```json
-{
-  "id": "invoice-456",
-  "organizationId": "org-123",
-  "projectId": "project-123",
-  "amount": 5000000,
-  "currency": "IDR",
-  "issuedAt": "2025-01-01T00:00:00Z",
-  "dueAt": "2025-01-15T00:00:00Z",
-  "status": "issued",
-  "createdAt": "2025-01-06T10:00:00Z",
-  "updatedAt": "2025-01-06T10:00:00Z"
-}
-```
-
-### POST /invoices/:id/payments
-
-Record a payment.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
+Mark invoice as paid.
 
 **Request Body:**
 
 ```json
 {
-  "amount": 5000000,
-  "gateway": "bank_transfer",
-  "reference": "TRX-20250105-001",
-  "paidAt": "2025-01-05T10:30:00Z"
+  "paymentDate": "2024-02-10",
+  "paymentMethod": "bank_transfer",
+  "transactionId": "TXN123456"
 }
 ```
 
-**Response (201):**
+### PATCH /invoices/:id
 
-```json
-{
-  "id": "payment-789",
-  "invoiceId": "invoice-456",
-  "amount": 5000000,
-  "gateway": "bank_transfer",
-  "reference": "TRX-20250105-001",
-  "paidAt": "2025-01-05T10:30:00Z",
-  "createdAt": "2025-01-05T10:30:00Z"
-}
-```
+Update invoice.
 
-### GET /invoices/:id/download
+### DELETE /invoices/:id
 
-Download invoice PDF.
-
-**Headers:**
-
-```http
-Authorization: Bearer {accessToken}
-```
-
-**Response (200):**
-PDF file with Content-Type: application/pdf
+Delete invoice.
 
 ---
 
-## Audit Logs
+## Knowledge Base
 
-### GET /audit-logs
+### POST /knowledge-base/categories
 
-Query audit logs.
+Create category.
 
-**Headers:**
+### GET /knowledge-base/categories
 
-```http
-Authorization: Bearer {accessToken}
-```
+List categories.
 
-**Query Parameters:**
+### GET /knowledge-base/categories/:id
 
-- `action` (optional): Filter by action type
-- `actorId` (optional): Filter by actor
-- `startDate` (optional): Filter by start date (ISO 8601)
-- `endDate` (optional): Filter by end date (ISO 8601)
-- `page` (optional): Page number
-- `limit` (optional): Items per page
+Get category.
 
-**Response (200):**
+### PATCH /knowledge-base/categories/:id
 
-```json
-{
-  "items": [
-    {
-      "id": "log-123",
-      "organizationId": "org-123",
-      "actorId": "user-123",
-      "actor": {
-        "id": "user-123",
-        "name": "John Doe"
-      },
-      "action": "file_upload",
-      "target": "File",
-      "meta": {
-        "fileId": "file-456",
-        "filename": "logo.svg",
-        "projectId": "project-123"
-      },
-      "createdAt": "2025-01-06T11:00:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 50,
-    "total": 234,
-    "totalPages": 5
-  }
-}
-```
+Update category.
 
-### GET /audit-logs/user/:userId
+### DELETE /knowledge-base/categories/:id
 
-Get user activity logs.
+Delete category.
 
-**Headers:**
+### POST /knowledge-base/tags
 
-```http
-Authorization: Bearer {accessToken}
-```
+Create tag.
 
-**Response (200):**
+### GET /knowledge-base/tags
 
-```json
-[
-  {
-    "id": "log-123",
-    "action": "user_login",
-    "target": "User",
-    "meta": {
-      "ipAddress": "192.168.1.1",
-      "userAgent": "Mozilla/5.0..."
-    },
-    "createdAt": "2025-01-06T09:00:00Z"
-  }
-]
-```
+List tags.
 
-### GET /audit-logs/organization/:orgId
+### POST /knowledge-base/articles
 
-Get organization activity logs.
+Create article.
 
-**Headers:**
+### GET /knowledge-base/articles
 
-```http
-Authorization: Bearer {accessToken}
-```
+List articles.
 
-**Response (200):**
+### GET /knowledge-base/articles/:id
 
-```json
-[
-  {
-    "id": "log-456",
-    "actorId": "user-123",
-    "actor": {
-      "name": "John Doe"
-    },
-    "action": "project_created",
-    "target": "Project",
-    "meta": {
-      "projectId": "project-789",
-      "projectName": "News Portal Redesign"
-    },
-    "createdAt": "2025-01-06T10:00:00Z"
-  }
-]
-```
+Get article.
+
+### GET /knowledge-base/articles/slug/:slug
+
+Get article by slug.
+
+### PATCH /knowledge-base/articles/:id
+
+Update article.
+
+### DELETE /knowledge-base/articles/:id
+
+Delete article.
+
+### POST /knowledge-base/search
+
+Search articles.
+
+### POST /knowledge-base/articles/:id/feedback
+
+Add feedback.
+
+### GET /knowledge-base/analytics
+
+Get analytics.
+
+---
+
+## Analytics
+
+### GET /analytics/projects
+
+Project analytics.
+
+### GET /analytics/team-performance
+
+Team performance analytics.
+
+### GET /analytics/financial
+
+Financial analytics.
+
+### GET /analytics/client-insights
+
+Client insights analytics.
+
+### GET /analytics/activity-trends
+
+Activity trends.
+
+### GET /analytics/overview
+
+Overview analytics.
+
+---
+
+## Dashboard
+
+### GET /dashboard/stats
+
+Dashboard statistics.
+
+### GET /dashboard/recent-activity
+
+Recent activity feed.
+
+### GET /dashboard/projects-overview
+
+Projects overview.
+
+### POST /dashboard/notify-update
+
+Notify dashboard update.
+
+### POST /dashboard/refresh-cache
+
+Refresh cache.
+
+### GET /dashboard/analytics/trends
+
+Analytics trends.
+
+### GET /dashboard/analytics/performance
+
+Performance metrics.
+
+### GET /dashboard/analytics/forecast
+
+Forecast analytics.
+
+### GET /dashboard/analytics/predictive
+
+Predictive analytics.
 
 ---
 
@@ -1471,44 +790,75 @@ Authorization: Bearer {accessToken}
 
 ### GET /health
 
-Check API health status.
+Comprehensive health check.
 
-**Response (200):**
+**Response:**
 
 ```json
 {
-  "status": "ok",
-  "timestamp": "2025-01-06T12:00:00Z",
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00.000Z",
   "uptime": 86400,
-  "database": {
-    "status": "connected",
-    "responseTime": 5
-  },
-  "redis": {
-    "status": "connected",
-    "responseTime": 2
+  "checks": {
+    "database": "healthy",
+    "redis": "healthy",
+    "storage": "healthy"
   }
 }
 ```
+
+### GET /health/database
+
+Database health check.
+
+### GET /health/http
+
+HTTP connectivity check.
+
+---
+
+## Security
+
+### POST /security/scan
+
+Security vulnerability scan.
+
+### GET /security/report/latest
+
+Latest security report.
+
+### GET /security/report/history
+
+Security report history.
+
+### GET /security/package/check
+
+Package security check.
+
+### GET /security/status
+
+Security status overview.
+
+### GET /security/metrics
+
+Security metrics.
 
 ---
 
 ## Error Responses
 
-All endpoints may return the following error responses:
+All endpoints may return these common error responses:
 
 ### 400 Bad Request
 
 ```json
 {
-  "statusCode": 400,
-  "message": "Validation failed",
-  "errors": [
-    {
-      "field": "email",
-      "message": "Invalid email format"
-    }
-  ]
+  "error": "Bad Request",
+  "message": "Invalid input data",
+  "details": {
+    "field": "email",
+    "reason": "Invalid email format"
+  }
 }
 ```
 
@@ -1516,8 +866,8 @@ All endpoints may return the following error responses:
 
 ```json
 {
-  "statusCode": 401,
-  "message": "Invalid credentials"
+  "error": "Unauthorized",
+  "message": "Authentication required"
 }
 ```
 
@@ -1525,7 +875,7 @@ All endpoints may return the following error responses:
 
 ```json
 {
-  "statusCode": 403,
+  "error": "Forbidden",
   "message": "Insufficient permissions"
 }
 ```
@@ -1534,17 +884,8 @@ All endpoints may return the following error responses:
 
 ```json
 {
-  "statusCode": 404,
+  "error": "Not Found",
   "message": "Resource not found"
-}
-```
-
-### 429 Too Many Requests
-
-```json
-{
-  "statusCode": 429,
-  "message": "Too many requests. Please try again later."
 }
 ```
 
@@ -1552,8 +893,8 @@ All endpoints may return the following error responses:
 
 ```json
 {
-  "statusCode": 500,
-  "message": "Internal server error"
+  "error": "Internal Server Error",
+  "message": "An unexpected error occurred"
 }
 ```
 
@@ -1561,75 +902,28 @@ All endpoints may return the following error responses:
 
 ## Rate Limiting
 
-API requests are rate-limited to prevent abuse:
+API endpoints are rate limited:
 
-- **Default**: 100 requests per minute per IP
-- **Authenticated**: 1000 requests per minute per user
-- **File Upload**: 10 requests per minute per user
+- **Free tier**: 100 requests per hour
+- **Pro tier**: 1000 requests per hour
+- **Enterprise**: 10000 requests per hour
 
-Rate limit headers are included in all responses:
-
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1704542400
-```
-
----
-
-## Pagination
-
-List endpoints support pagination with the following query parameters:
-
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 20, max: 100)
-- `sortBy`: Field to sort by
-- `sortOrder`: `asc` or `desc` (default: `desc`)
-
-Paginated responses include:
-
-```json
-{
-  "items": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "totalPages": 8
-  }
-}
-```
-
----
-
-## Filtering
-
-Many list endpoints support filtering via query parameters. Common filters include:
-
-- `status`: Filter by status
-- `type`: Filter by type
-- `priority`: Filter by priority
-- `startDate`: Filter by start date
-- `endDate`: Filter by end date
-
-Example:
+Rate limit headers are included in responses:
 
 ```http
-GET /api/tickets?status=open&priority=high&type=bug
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200
 ```
 
 ---
 
-## Swagger Documentation
+## Versioning
 
-Interactive API documentation is available at:
+API version is included in the URL:
 
-- Development: http://localhost:3000/api/docs
-- Staging: https://staging-api.jasaweb.com/api/docs
-- Production: https://api.jasaweb.com/api/docs
+```
+https://api.jasaweb.com/api/v1/...
+```
 
----
-
-**Last Updated**: 2025-01-06
-**Version**: 1.0.0
-**Maintained by**: JasaWeb Team
+Current version: **v1**

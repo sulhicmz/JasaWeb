@@ -1465,7 +1465,7 @@ export class DashboardController {
 
   private async getProjectPredictions(
     organizationId: string,
-    forecastDate: Date,
+    _forecastDate: Date,
     confidenceLevel: number
   ) {
     // Historical data for the last 90 days
@@ -1864,7 +1864,7 @@ export class DashboardController {
   }
 
   private predictCompletionDate(
-    project: ProjectWithRelations,
+    _project: ProjectWithRelations,
     milestoneProgress: number,
     avgDuration: number
   ): Date {
@@ -2011,7 +2011,7 @@ export class DashboardController {
   }
 
   private predictRiskTrend(
-    currentRisk: number,
+    _currentRisk: number,
     criticalTickets: number,
     overdueMilestones: number
   ): string {
@@ -2072,7 +2072,7 @@ export class DashboardController {
   }
 
   private calculateBurnoutRisk(
-    currentUtilization: number,
+    _currentUtilization: number,
     projectedUtilization: number
   ): string {
     if (projectedUtilization > 90) return 'high';
