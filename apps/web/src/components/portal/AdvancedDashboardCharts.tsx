@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-object-injection */
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/apiClient';
 
@@ -18,34 +17,71 @@ interface AdvancedDashboardChartsProps {
   organizationId: string;
 }
 
+interface TrendData {
+  trend: number;
+  change: number;
+  changePercent: number;
+  daily?: number[];
+  weekly?: number[];
+  monthly?: number[];
+}
+
 interface AnalyticsTrends {
   period: string;
   startDate: string;
   endDate: string;
   trends: {
-    projects: any;
-    tickets: any;
-    milestones: any;
-    invoices: any;
+    projects: TrendData;
+    tickets: TrendData;
+    milestones: TrendData;
+    invoices: TrendData;
   };
+}
+
+interface PerformanceMetric {
+  efficiency: number;
+  quality: number;
+  timeliness: number;
+  cost: number;
+  onTimeCompletionRate?: number;
+  slaComplianceRate?: number;
+  overdueRate?: number;
+  totalProjects?: number;
+  completedProjects?: number;
+  averageResolutionTime?: number;
+  resolvedTickets?: number;
+  totalInvoices?: number;
 }
 
 interface PerformanceMetrics {
   period: string;
-  projectPerformance: any;
-  ticketResolution: any;
-  milestoneCompletion: any;
-  invoiceMetrics: any;
+  projectPerformance: PerformanceMetric;
+  ticketResolution: PerformanceMetric;
+  milestoneCompletion: PerformanceMetric;
+  invoiceMetrics: PerformanceMetric;
+}
+
+interface Prediction {
+  value: number;
+  confidence: number;
+  timeframe: string;
+  predictedCompletions?: number;
+  highRiskProjects?: number;
+  currentMonthlyAverage?: number;
+  predictedRevenue?: number;
+  revenueGrowthRate?: number;
+  riskLevel?: number;
+  overallRiskScore?: number;
 }
 
 interface PredictiveData {
   horizon: string;
   confidenceLevel: number;
   predictions: {
-    projects: any;
-    revenue: any;
-    risks: any;
-    capacity: any;
+    projects: Prediction;
+    revenue: Prediction;
+    risks: Prediction;
+    capacity: Prediction;
   };
   recommendations: string[];
 }

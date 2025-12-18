@@ -26,7 +26,15 @@ import { CacheInvalidationService } from './cache-invalidation.service';
           };
         }
 
-        const redisConfig: any = {
+        const redisConfig: {
+          host: string;
+          port: number;
+          ttl: number;
+          password?: string;
+          retryDelayOnFailover?: number;
+          enableReadyCheck?: boolean;
+          maxRetriesPerRequest?: number;
+        } = {
           host: redisHost,
           port: redisPort,
           ttl: cacheTTL, // TTL in seconds

@@ -15,6 +15,14 @@ export interface ConnectionMetrics {
   lastHealthCheck: Date;
 }
 
+interface PrismaQueryEvent {
+  query: string;
+  params: string;
+  duration: number;
+  timestamp: Date;
+  target: string;
+}
+
 @Injectable()
 export class DatabaseMonitorService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseMonitorService.name);
@@ -39,7 +47,10 @@ export class DatabaseMonitorService implements OnModuleInit, OnModuleDestroy {
     );
 
     // Monitor query performance
-    (this.prisma.$on as any)('query', (e: any) => {
+    const prismaClient = this.prisma as unknown as {
+      $on: (event: 'query', callback: (e: PrismaQueryEvent) => void) => void;
+    };
+    prismaClient.$on('query', (e: PrismaQueryEvent) => {
       this.recordQueryTime(e.duration);
 
       if (e.duration > 1000) {

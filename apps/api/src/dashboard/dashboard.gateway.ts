@@ -22,7 +22,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import type {
   AuthenticatedSocket,
   DashboardUpdatePayload,
-  RecentActivity,
 } from './types/dashboard.types';
 
 @WebSocketGateway({

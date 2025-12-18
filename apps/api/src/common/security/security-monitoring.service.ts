@@ -25,6 +25,13 @@ export interface SecurityReport {
   recommendations: string[];
 }
 
+// Define allowed paths for security
+const ALLOWED_PATHS = [path.join(process.cwd(), 'security-reports')];
+
+function isValidPath(filePath: string): boolean {
+  return ALLOWED_PATHS.some((allowedPath) => filePath.startsWith(allowedPath));
+}
+
 @Injectable()
 export class SecurityMonitoringService {
   private readonly logger = new Logger(SecurityMonitoringService.name);
@@ -35,6 +42,9 @@ export class SecurityMonitoringService {
   }
 
   private ensureReportsDirectory() {
+    if (!isValidPath(this.reportsPath)) {
+      throw new Error('Invalid reports path detected');
+    }
     if (!fs.existsSync(this.reportsPath)) {
       fs.mkdirSync(this.reportsPath, { recursive: true });
     }
@@ -59,34 +69,10 @@ export class SecurityMonitoringService {
     }
   }
 
-  async generateSecurityReport(): Promise<SecurityReport> {
-    const auditOutput = await this.runSecurityAudit();
-    const vulnerabilities = this.parseAuditResults(auditOutput);
-
-    const criticalVulns = vulnerabilities.filter(
-      (v) => v.severity === 'critical'
-    );
-    const highVulns = vulnerabilities.filter((v) => v.severity === 'high');
-    const moderateVulns = vulnerabilities.filter(
-      (v) => v.severity === 'moderate'
-    );
-
-    return {
-      id: `security-${Date.now()}`,
-      timestamp: new Date(),
-      totalVulnerabilities: vulnerabilities.length,
-      severityBreakdown: this.calculateSeverityBreakdown(vulnerabilities),
-      criticalVulnerabilities: criticalVulns,
-      highVulnerabilities: highVulns,
-      moderateVulnerabilities: moderateVulns,
-      recommendations: this.generateRecommendations(vulnerabilities),
-    };
-  }
-
-  private async runSecurityAudit(): Promise<string> {
+  private async runVulnerabilityAudit(): Promise<string> {
     try {
-      // Use pnpm for audit since it's the package manager for this project
       const auditOutput = execSync('pnpm audit --json', {
+        cwd: process.cwd(),
         encoding: 'utf-8',
         stdio: 'pipe',
       });
@@ -94,7 +80,7 @@ export class SecurityMonitoringService {
     } catch (error) {
       // pnpm audit returns non-zero exit code when vulnerabilities are found
       // We still want to get the output in that case
-      const errorWithStdout = error as any;
+      const errorWithStdout = error as { stdout?: string; message?: string };
       return (
         errorWithStdout.stdout || errorWithStdout.message || 'Audit failed'
       );
@@ -144,83 +130,84 @@ export class SecurityMonitoringService {
 
   private generatePackageRecommendation(
     packageName: string,
-    vulnData: {
-      fixAvailable?: { version?: string };
-      patched_versions?: string;
-    }
+    vulnData: { severity?: string; fixAvailable?: { version?: string } }
   ): string {
-    if (vulnData.fixAvailable && vulnData.fixAvailable.version) {
-      return `Upgrade ${packageName} to ${vulnData.fixAvailable.version}`;
-    } else if (vulnData.patched_versions) {
-      return `Update ${packageName} to a patched version: ${vulnData.patched_versions}`;
-    } else {
-      return `Monitor ${packageName} for security updates. Consider alternatives if no fix is available.`;
+    if (vulnData.fixAvailable?.version) {
+      return `Update ${packageName} to version ${vulnData.fixAvailable.version}`;
     }
+
+    if (vulnData.severity === 'critical') {
+      return `Immediate action required for ${packageName} - check alternative packages`;
+    }
+
+    return `Review ${packageName} for alternatives or patches`;
   }
 
-  private calculateSeverityBreakdown(
-    vulnerabilities: VulnerabilityAlert[]
-  ): Record<string, number> {
-    return vulnerabilities.reduce((acc: Record<string, number>, vuln) => {
-      acc[vuln.severity] = (acc[vuln.severity] || 0) + 1;
-      return acc;
-    }, {});
+  private async generateSecurityReport(): Promise<SecurityReport> {
+    const auditOutput = await this.runVulnerabilityAudit();
+    const vulnerabilities = this.parseAuditResults(auditOutput);
+
+    const reportId = `report-${Date.now()}`;
+    const severityBreakdown: Record<string, number> = {};
+
+    vulnerabilities.forEach((vuln) => {
+      severityBreakdown[vuln.severity] =
+        (severityBreakdown[vuln.severity] || 0) + 1;
+    });
+
+    return {
+      id: reportId,
+      timestamp: new Date(),
+      totalVulnerabilities: vulnerabilities.length,
+      severityBreakdown,
+      criticalVulnerabilities: vulnerabilities.filter(
+        (v) => v.severity === 'critical'
+      ),
+      highVulnerabilities: vulnerabilities.filter((v) => v.severity === 'high'),
+      moderateVulnerabilities: vulnerabilities.filter(
+        (v) => v.severity === 'moderate'
+      ),
+      recommendations: this.generateOverallRecommendations(vulnerabilities),
+    };
   }
 
-  private generateRecommendations(
+  private generateOverallRecommendations(
     vulnerabilities: VulnerabilityAlert[]
   ): string[] {
     const recommendations: string[] = [];
-
-    // Critical vulnerabilities
     const criticalCount = vulnerabilities.filter(
       (v) => v.severity === 'critical'
     ).length;
-    if (criticalCount > 0) {
-      recommendations.push(
-        `URGENT: Fix ${criticalCount} critical vulnerabilities immediately`
-      );
-    }
-
-    // High vulnerabilities
     const highCount = vulnerabilities.filter(
       (v) => v.severity === 'high'
     ).length;
+
+    if (criticalCount > 0) {
+      recommendations.push(
+        `Immediate attention required: ${criticalCount} critical vulnerabilities`
+      );
+    }
+
     if (highCount > 0) {
       recommendations.push(
-        `HIGH: Address ${highCount} high-severity vulnerabilities within 7 days`
+        `High priority: ${highCount} high severity vulnerabilities to address`
       );
     }
 
-    // Moderate vulnerabilities
-    const moderateCount = vulnerabilities.filter(
-      (v) => v.severity === 'moderate'
-    ).length;
-    if (moderateCount > 0) {
-      recommendations.push(
-        `MODERATE: Review and fix ${moderateCount} moderate vulnerabilities in the next sprint`
-      );
-    }
-
-    // Dependency updates
-    recommendations.push(
-      'Implement automated dependency updates in CI/CD pipeline'
-    );
-    recommendations.push(
-      'Add automated security scanning to pull request checks'
-    );
-    recommendations.push(
-      'Consider using Dependabot for automatic dependency management'
-    );
+    recommendations.push('Regular dependency updates recommended');
+    recommendations.push('Consider implementing automated security scanning');
 
     return recommendations;
   }
 
-  private async saveReport(report: SecurityReport): Promise<void> {
+  async saveReport(report: SecurityReport): Promise<void> {
     const filename = `security-report-${report.id}.json`;
     const filepath = path.join(this.reportsPath, filename);
 
     try {
+      if (!isValidPath(filepath)) {
+        throw new Error('Invalid file path for saving report');
+      }
       fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
       this.logger.log(`Security report saved: ${filename}`);
     } catch (error: unknown) {
@@ -251,17 +238,15 @@ export class SecurityMonitoringService {
           `HIGH: ${vuln.package} - ${vuln.title} | Fix: ${vuln.recommendation}`
         );
       });
-
-      // In a real implementation, this would trigger:
-      // - Email notifications
-      // - Slack/Discord alerts
-      // - PagerDuty incidents for critical issues
-      // - JIRA ticket creation
     }
   }
 
   async getLatestReport(): Promise<SecurityReport | null> {
     try {
+      if (!isValidPath(this.reportsPath)) {
+        throw new Error('Invalid reports path for getLatestReport');
+      }
+
       const files = fs
         .readdirSync(this.reportsPath)
         .filter(
@@ -277,6 +262,11 @@ export class SecurityMonitoringService {
 
       const latestFile = files[0];
       const filepath = path.join(this.reportsPath, latestFile!);
+
+      if (!isValidPath(filepath)) {
+        throw new Error('Invalid file path detected');
+      }
+
       const fileContent = fs.readFileSync(filepath, 'utf-8');
 
       return JSON.parse(fileContent);
@@ -288,6 +278,10 @@ export class SecurityMonitoringService {
 
   async getReportHistory(limit: number = 10): Promise<SecurityReport[]> {
     try {
+      if (!isValidPath(this.reportsPath)) {
+        throw new Error('Invalid reports path for getReportHistory');
+      }
+
       const files = fs
         .readdirSync(this.reportsPath)
         .filter(
@@ -303,40 +297,23 @@ export class SecurityMonitoringService {
       for (const file of files) {
         try {
           const filepath = path.join(this.reportsPath, file);
+
+          if (!isValidPath(filepath)) {
+            this.logger.warn(`Skipping invalid file path: ${filepath}`);
+            continue;
+          }
+
           const fileContent = fs.readFileSync(filepath, 'utf-8');
           const report = JSON.parse(fileContent);
           reports.push(report);
         } catch (error) {
-          this.logger.warn(`Failed to parse report file ${file}:`, error);
+          this.logger.error(`Failed to parse report file ${file}:`, error);
         }
       }
 
       return reports;
     } catch (error) {
-      this.logger.error('Failed to retrieve security report history:', error);
-      return [];
-    }
-  }
-
-  async checkPackageSecurity(
-    packageName: string
-  ): Promise<VulnerabilityAlert[]> {
-    try {
-      const auditOutput = execSync(
-        `pnpm audit --json --filter ${packageName}`,
-        {
-          encoding: 'utf-8',
-          stdio: 'pipe',
-        }
-      );
-
-      const vulnerabilities = this.parseAuditResults(auditOutput);
-      return vulnerabilities.filter((v) => v.package === packageName);
-    } catch (error) {
-      this.logger.error(
-        `Failed to check security for package ${packageName}:`,
-        error
-      );
+      this.logger.error('Failed to retrieve report history:', error);
       return [];
     }
   }

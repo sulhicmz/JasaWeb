@@ -33,10 +33,7 @@ export class TaskController {
 
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  async findAll(
-    @Query('projectId') projectId?: string,
-    @CurrentOrganizationId() organizationId: string = ''
-  ) {
+  async findAll(@Query('projectId') projectId?: string) {
     return this.taskService.findAll(projectId);
   }
 
@@ -46,7 +43,7 @@ export class TaskController {
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.taskService.findOne(id);
+    return this.taskService.findOne(id, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -57,7 +54,7 @@ export class TaskController {
     @Body() updateTaskDto: UpdateTaskDto,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.taskService.update(id, updateTaskDto);
+    return this.taskService.update(id, updateTaskDto, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
@@ -67,7 +64,7 @@ export class TaskController {
     @Param('id') id: string,
     @CurrentOrganizationId() organizationId: string
   ) {
-    return this.taskService.remove(id);
+    return this.taskService.remove(id, organizationId);
   }
 
   @Get('status/:status')

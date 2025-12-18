@@ -17,30 +17,11 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
-import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
+import { Milestone, Ticket, Invoice } from '@prisma/client';
 import type {
   ProjectWithRelations,
   DashboardStats,
   RecentActivity,
-  ProjectWithMetrics,
-  AnalyticsTrendsResponse,
-  PerformanceMetricsResponse,
-  ForecastAnalyticsResponse,
-  PredictiveAnalyticsResponse,
-  MetricTrend,
-  DailyDataPoint,
-  ProjectPerformanceMetrics,
-  TicketResolutionMetrics,
-  MilestoneCompletionMetrics,
-  InvoicePerformanceMetrics,
-  ProjectForecast,
-  MilestoneForecast,
-  InvoiceForecast,
-  ResourceForecast,
-  ProjectPredictions,
-  RevenuePredictions,
-  RiskPredictions,
-  CapacityPredictions,
 } from './types/dashboard.types';
 
 // Interface for the specific projects query result
@@ -600,15 +581,13 @@ export class DashboardController {
         startDate,
         endDate: new Date(),
         trends: (() => {
-          const result: Record<string, unknown> = {};
+          // Use safe object creation without prototype
+          const safeResult: Record<string, unknown> = Object.create(null);
           const forbiddenProps = new Set([
             '__proto__',
             'constructor',
             'prototype',
           ]);
-
-          // Use safe object creation without prototype
-          const safeResult = Object.create(null);
 
           trends.forEach((trend, index) => {
             const metric = selectedMetrics[index];
@@ -1233,11 +1212,12 @@ export class DashboardController {
           !forbiddenProps.has(dateKey) &&
           /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
-          // Security: Use Object.prototype.hasOwnProperty.call to prevent object injection
-          const currentValue = Object.prototype.hasOwnProperty.call(
+          // Security: Safe property access to prevent object injection
+          const hasProperty = Object.prototype.hasOwnProperty.call(
             dailyData,
             dateKey
-          )
+          );
+          const currentValue = hasProperty
             ? (dailyData as Record<string, number>)[dateKey]
             : 0;
           // Security: Use Object.defineProperty to prevent object injection
