@@ -297,6 +297,8 @@ model KbArticle {
   @@index([categoryId])
   @@index([publishedAt])
   @@index([featured])
+  @@index([categoryId, status, featured]) // Composite index for category browsing
+  @@index([viewCount]) // For popular_articles queries
 }
 
 model KbTag {
@@ -320,6 +322,7 @@ model KbFeedback {
 
   @@index([articleId])
   @@index([userId])
+  @@index([rating]) // For analytics queries
 }
 
 model KbSearchLog {
@@ -335,4 +338,6 @@ model KbSearchLog {
 
   @@index([query])
   @@index([createdAt])
+  @@index([results]) // For analytics filtering
+  @@index([userId, createdAt]) // For user search history
 }

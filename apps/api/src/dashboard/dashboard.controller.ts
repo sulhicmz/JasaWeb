@@ -8,7 +8,7 @@ import {
   Inject,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { CACHE_KEYS } from '../common/config/constants';
+import { CACHE_KEYS, CACHE_CONFIG } from '../common/config/constants';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -81,8 +81,12 @@ export class DashboardController {
       milestones: milestonesStats,
     };
 
-    // Cache for 5 minutes (300 seconds)
-    await this.cacheManager.set(cacheKey, stats, 300000);
+    // Cache for 10 minutes using improved TTL from config
+    await this.cacheManager.set(
+      cacheKey,
+      stats,
+      CACHE_CONFIG.DASHBOARD_STATS_TTL * 1000
+    );
 
     return stats;
   }
@@ -158,32 +162,57 @@ export class DashboardController {
       take: limitNum,
     })) as unknown as ProjectQueryResult[];
 
-    // Get milestone counts for each project
-    const milestoneCounts = await Promise.all(
-      projects.map(async (project) => {
-        const [total, completed] = await Promise.all([
-          this.multiTenantPrisma.milestone.count({
-            where: { projectId: project.id },
-          }),
-          this.multiTenantPrisma.milestone.count({
-            where: {
-              projectId: project.id,
-              status: 'completed',
-            },
-          }),
-        ]);
+    // Get milestone counts for all projects in optimized single queries (N+1 fix)
+    const projectIds = projects.map((p: { id: string }) => p.id);
 
-        return {
-          projectId: project.id,
-          totalMilestones: total,
-          completedMilestones: completed,
-          progress: total > 0 ? Math.round((completed / total) * 100) : 0,
-        };
+    // Fetch all milestones once and aggregate in memory (more efficient than multiple count queries)
+    const [allMilestones, completedMilestones] = await Promise.all([
+      this.multiTenantPrisma.milestone.findMany({
+        where: { projectId: { in: projectIds } },
+        select: { projectId: true, id: true },
+      }),
+      this.multiTenantPrisma.milestone.findMany({
+        where: {
+          projectId: { in: projectIds },
+          status: 'completed',
+        },
+        select: { projectId: true, id: true },
+      }),
+    ]);
+
+    // Aggregate counts by projectId in memory
+    const totalMap = new Map<string, number>();
+    const completedMap = new Map<string, number>();
+
+    allMilestones.forEach((milestone: { projectId: string }) => {
+      totalMap.set(
+        milestone.projectId,
+        (totalMap.get(milestone.projectId) || 0) + 1
+      );
+    });
+
+    completedMilestones.forEach((milestone: { projectId: string }) => {
+      completedMap.set(
+        milestone.projectId,
+        (completedMap.get(milestone.projectId) || 0) + 1
+      );
+    });
+
+    // Create lookup map for efficient O(1) access
+    const milestoneMap = new Map(
+      projectIds.map((projectId) => {
+        const total = totalMap.get(projectId) || 0;
+        const completed = completedMap.get(projectId) || 0;
+        return [
+          projectId,
+          {
+            totalMilestones: total,
+            completedMilestones: completed,
+            progress: total > 0 ? Math.round((completed / total) * 100) : 0,
+          },
+        ];
       })
     );
-
-    // Create lookup map for milestone counts
-    const milestoneMap = new Map(milestoneCounts.map((m) => [m.projectId, m]));
 
     // Calculate progress and additional metrics for each project
     const projectsWithMetrics = projects.map((project: ProjectQueryResult) => {

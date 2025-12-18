@@ -106,8 +106,10 @@ export const FILE_UPLOAD_CONFIG = {
  */
 export const CACHE_CONFIG = {
   DEFAULT_TTL: 300, // 5 minutes
-  DASHBOARD_STATS_TTL: 60, // 1 minute
+  DASHBOARD_STATS_TTL: 600, // 10 minutes (increased for better performance)
   PROJECT_CACHE_TTL: 180, // 3 minutes
+  KNOWLEDGE_BASE_TTL: 900, // 15 minutes
+  SEARCH_RESULTS_TTL: 300, // 5 minutes
 } as const;
 
 /**
@@ -120,6 +122,10 @@ export const CACHE_KEYS = {
     `project-overview-${organizationId}-${limit}`,
   RECENT_ACTIVITY: (organizationId: string, limit: string) =>
     `recent-activity-${organizationId}-${limit}`,
+  KNOWLEDGE_BASE_CATEGORIES: 'kb-categories',
+  KNOWLEDGE_BASE_ANALYTICS: 'kb-analytics',
+  SEARCH_RESULTS: (query: string, filters: string) =>
+    `search-${query}-${filters}`,
 } as const;
 
 /**
