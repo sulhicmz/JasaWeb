@@ -29,10 +29,17 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
 import { HealthModule } from './health/health.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { KnowledgeBaseModule } from './knowledge-base/knowledge-base.module';
-import { DashboardModule } from './dashboard/dashboard.module';
+// import { DashboardModule } from './dashboard/dashboard.module';
 import { OrganizationModule } from './common/services/organization.module';
 import { AppConfigModule } from './common/config/app.config.module';
-import { EnvironmentModule } from './common/config/environment.module';
+
+const parseEnvNumber = (
+  value: string | undefined,
+  fallback: number
+): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
 
 @Module({
   imports: [
@@ -42,11 +49,10 @@ import { EnvironmentModule } from './common/config/environment.module';
       validate: validateEnv,
     }),
     RedisCacheModule,
-    EnvironmentModule,
     ThrottlerModule.forRoot([
       {
-        ttl: 60, // Time window in seconds
-        limit: 10, // Max requests per window
+        ttl: parseEnvNumber(process.env.THROTTLE_TTL, 60), // Time window in seconds
+        limit: parseEnvNumber(process.env.THROTTLE_LIMIT, 10), // Max requests per window
       },
     ]),
     AuthModule,
@@ -66,7 +72,7 @@ import { EnvironmentModule } from './common/config/environment.module';
     HealthModule,
     AnalyticsModule,
     KnowledgeBaseModule,
-    DashboardModule,
+    // DashboardModule,
     PrismaModule,
     MultiTenantPrismaModule,
     OrganizationModule,

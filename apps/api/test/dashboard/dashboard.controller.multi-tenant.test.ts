@@ -3,9 +3,12 @@ import { DashboardController } from '../../src/dashboard/dashboard.controller';
 import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant-prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from '../../src/dashboard/dashboard.gateway';
+import { Role } from '../../src/common/decorators/roles.decorator';
 
 describe('DashboardController', () => {
   let controller: DashboardController;
+  let multiTenantPrisma: MultiTenantPrismaService;
+  let cacheManager: any;
 
   const mockMultiTenantPrisma = {
     project: {
@@ -56,6 +59,10 @@ describe('DashboardController', () => {
     }).compile();
 
     controller = module.get<DashboardController>(DashboardController);
+    multiTenantPrisma = module.get<MultiTenantPrismaService>(
+      MultiTenantPrismaService
+    );
+    cacheManager = module.get(CACHE_MANAGER);
   });
 
   it('should be defined', () => {

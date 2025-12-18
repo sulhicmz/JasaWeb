@@ -26,17 +26,7 @@ import { CacheInvalidationService } from './cache-invalidation.service';
           };
         }
 
-        interface RedisConfig {
-          host: string;
-          port: number;
-          ttl: number;
-          password?: string;
-          retryDelayOnFailover?: number;
-          enableReadyCheck?: boolean;
-          maxRetriesPerRequest?: number;
-        }
-
-        const redisConfig: RedisConfig = {
+        const redisConfig: any = {
           host: redisHost,
           port: redisPort,
           ttl: cacheTTL, // TTL in seconds
@@ -52,25 +42,9 @@ import { CacheInvalidationService } from './cache-invalidation.service';
         redisConfig.enableReadyCheck = true;
         redisConfig.maxRetriesPerRequest = 3;
 
-        // Add connection pooling configuration
         return {
           store: 'redis',
-          ttl: cacheTTL,
-          host: redisHost,
-          port: redisPort,
-          password: redisPassword,
-          retryDelayOnFailover: 100,
-          enableReadyCheck: true,
-          maxRetriesPerRequest: 3,
-          // Connection pooling options
-          family: 4,
-          keepAlive: 30000,
-          connectTimeout: 10000,
-          commandTimeout: 5000,
-          // Enable offline queue for better resilience
-          enableOfflineQueue: true,
-          // Lazy connect to avoid blocking startup
-          lazyConnect: true,
+          ...redisConfig,
         };
       },
     }),

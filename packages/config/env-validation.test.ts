@@ -7,6 +7,7 @@ import {
   getEnvNumber,
   getEnvBoolean,
 } from './env-validation';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('Environment Variable Validation', () => {
   beforeEach(() => {

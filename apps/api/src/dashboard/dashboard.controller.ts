@@ -17,7 +17,6 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
-import { EnhancedCacheService } from '../common/cache/enhanced-cache.service';
 import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
 
 // Type for Project with relations
@@ -26,26 +25,11 @@ type ProjectWithRelations = Project & {
   tickets?: Ticket[];
 };
 
-// Types for reduce function callbacks
-type MilestonesGroupCallback = (
-  acc: Record<string, Milestone[]>,
-  milestone: Milestone
-) => Record<string, Milestone[]>;
-
-type TicketsGroupCallback = (
-  acc: Record<string, Ticket[]>,
-  ticket: Ticket
-) => Record<string, Ticket[]>;
-
-type StatsReducerCallback<T> = (
-  acc: { [key: string]: number },
-  item: T
-) => { [key: string]: number };
-
-type FinancialReducerCallback<T> = (
-  acc: { sum: number; count: number },
-  item: T
-) => { sum: number; count: number };
+// Type definitions for project with relations
+type ProjectWithMilestonesAndTickets = Project & {
+  milestones?: Milestone[];
+  tickets?: Ticket[];
+};
 
 interface DashboardStats {
   projects: {
@@ -93,8 +77,7 @@ export class DashboardController {
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly dashboardGateway: DashboardGateway,
-    private readonly enhancedCache: EnhancedCacheService
+    private readonly dashboardGateway: DashboardGateway
   ) {}
 
   @Get('stats')
@@ -103,15 +86,11 @@ export class DashboardController {
     @CurrentOrganizationId() organizationId: string,
     @Query('refresh') refresh?: string
   ): Promise<DashboardStats> {
-    const cacheKey = EnhancedCacheService.generateStatsKey(
-      organizationId,
-      'dashboard'
-    );
+    const cacheKey = CACHE_KEYS.DASHBOARD_STATS(organizationId);
 
-    // Use enhanced cache with multi-level strategy
+    // Return cached data if available and not forcing refresh
     if (!refresh || refresh !== 'true') {
-      const cachedStats =
-        await this.enhancedCache.get<DashboardStats>(cacheKey);
+      const cachedStats = await this.cacheManager.get<DashboardStats>(cacheKey);
       if (cachedStats) {
         return cachedStats;
       }
@@ -133,8 +112,8 @@ export class DashboardController {
       milestones: milestonesStats,
     };
 
-    // Cache using enhanced service (5 minutes TTL)
-    await this.enhancedCache.set(cacheKey, stats, { ttl: 300 });
+    // Cache for 5 minutes (300 seconds)
+    await this.cacheManager.set(cacheKey, stats, 300000);
 
     return stats;
   }
@@ -192,6 +171,20 @@ export class DashboardController {
         stagingUrl: true,
         productionUrl: true,
         repositoryUrl: true,
+        milestones: {
+          select: {
+            id: true,
+            status: true,
+            dueAt: true,
+          },
+        },
+        tickets: {
+          select: {
+            id: true,
+            status: true,
+            priority: true,
+          },
+        },
         _count: {
           select: {
             milestones: true,
@@ -203,112 +196,50 @@ export class DashboardController {
       take: limitNum,
     });
 
-    // Fetch milestones and tickets separately to avoid N+1 queries
-    const projectIds = projects.map((p) => p.id);
-
-    const [milestones, tickets] = await Promise.all([
-      this.multiTenantPrisma.milestone.findMany({
-        where: { projectId: { in: projectIds } },
-        select: {
-          id: true,
-          projectId: true,
-          status: true,
-          dueAt: true,
-        },
-      }),
-      this.multiTenantPrisma.ticket.findMany({
-        where: { projectId: { in: projectIds } },
-        select: {
-          id: true,
-          projectId: true,
-          status: true,
-          priority: true,
-        },
-      }),
-    ]);
-
-    // Group related data by project with secure property access
-    const milestonesByProject = milestones.reduce(
-      ((acc: Record<string, Milestone[]>, milestone: Milestone) => {
-        const projectId = milestone.projectId;
-        // Validate projectId format to prevent injection
-        if (
-          projectId &&
-          typeof projectId === 'string' &&
-          /^[a-f0-9-]{36}$/.test(projectId)
-        ) {
-          if (!acc[projectId]) {
-            acc[projectId] = [];
-          }
-          acc[projectId].push(milestone);
-        }
-        return acc;
-      }) as MilestonesGroupCallback,
-      {} as Record<string, Milestone[]>
-    );
-
-    const ticketsByProject = tickets.reduce(
-      ((acc: Record<string, Ticket[]>, ticket: Ticket) => {
-        const projectId = ticket.projectId;
-        // Validate projectId format to prevent injection
-        if (
-          projectId &&
-          typeof projectId === 'string' &&
-          /^[a-f0-9-]{36}$/.test(projectId)
-        ) {
-          if (!acc[projectId]) {
-            acc[projectId] = [];
-          }
-          acc[projectId].push(ticket);
-        }
-        return acc;
-      }) as TicketsGroupCallback,
-      {} as Record<string, Ticket[]>
-    );
-
     // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map((project) => {
-      const projectMilestones = milestonesByProject[project.id] || [];
-      const projectTickets = ticketsByProject[project.id] || [];
+    const projectsWithMetrics = projects.map(
+      (project: ProjectWithMilestonesAndTickets) => {
+        const totalMilestones = project.milestones?.length || 0;
+        const completedMilestones =
+          project.milestones?.filter((m: Milestone) => m.status === 'completed')
+            .length || 0;
+        const progress =
+          totalMilestones > 0
+            ? Math.round((completedMilestones / totalMilestones) * 100)
+            : 0;
 
-      const totalMilestones = projectMilestones.length;
-      const completedMilestones = projectMilestones.filter(
-        (m: Milestone) => m.status === 'completed'
-      ).length;
-      const progress =
-        totalMilestones > 0
-          ? Math.round((completedMilestones / totalMilestones) * 100)
-          : 0;
+        const openTickets =
+          project.tickets?.filter(
+            (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
+          ).length || 0;
 
-      const openTickets = projectTickets.filter(
-        (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
-      ).length;
+        const highPriorityTickets =
+          project.tickets?.filter(
+            (t: Ticket) =>
+              (t.priority === 'high' || t.priority === 'critical') &&
+              (t.status === 'open' || t.status === 'in-progress')
+          ).length || 0;
 
-      const highPriorityTickets = projectTickets.filter(
-        (t: Ticket) =>
-          (t.priority === 'high' || t.priority === 'critical') &&
-          (t.status === 'open' || t.status === 'in-progress')
-      ).length;
-
-      return {
-        id: project.id,
-        name: project.name,
-        description: null, // Project model doesn't have description field
-        status: project.status,
-        progress,
-        totalMilestones,
-        completedMilestones,
-        openTickets,
-        highPriorityTickets,
-        createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
-        startAt: project.startAt,
-        dueAt: project.dueAt,
-        stagingUrl: project.stagingUrl,
-        productionUrl: project.productionUrl,
-        repositoryUrl: project.repositoryUrl,
-      };
-    });
+        return {
+          id: project.id,
+          name: project.name,
+          description: null, // Project model doesn't have description field
+          status: project.status,
+          progress,
+          totalMilestones,
+          completedMilestones,
+          openTickets,
+          highPriorityTickets,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          startAt: project.startAt,
+          dueAt: project.dueAt,
+          stagingUrl: project.stagingUrl,
+          productionUrl: project.productionUrl,
+          repositoryUrl: project.repositoryUrl,
+        };
+      }
+    );
 
     return projectsWithMetrics;
   }
@@ -368,13 +299,10 @@ export class DashboardController {
         new Date(i.dueAt) < new Date()
     ).length;
 
-    const totalAmount = invoices.reduce(
-      (sum: number, i: Invoice) => sum + (i.amount || 0),
-      0
-    );
+    const totalAmount = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
     const pendingAmount = invoices
       .filter((i) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum: number, i: Invoice) => sum + (i.amount || 0), 0);
+      .reduce((sum, i) => sum + (i.amount || 0), 0);
 
     return { total, pending, overdue, totalAmount, pendingAmount };
   }
@@ -613,6 +541,9 @@ export class DashboardController {
             'prototype',
           ]);
 
+          // Use safe object creation without prototype
+          const safeResult = Object.create(null);
+
           trends.forEach((trend, index) => {
             const metric = selectedMetrics[index];
             if (
@@ -621,12 +552,16 @@ export class DashboardController {
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
               !forbiddenProps.has(metric)
             ) {
-              // Security: Use Set-based approach to prevent object injection
-              const validatedMetric = metric;
-              result[validatedMetric] = trend;
+              // Use Object.defineProperty to prevent prototype pollution
+              Object.defineProperty(safeResult, metric, {
+                value: trend,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           });
-          return result;
+          return safeResult;
         })(),
       };
     } catch (error) {
@@ -870,10 +805,7 @@ export class DashboardController {
     return {
       total: invoices.length,
       daily: dailyData,
-      totalAmount: invoices.reduce(
-        (sum: number, inv: Invoice) => sum + (inv.amount || 0),
-        0
-      ),
+      totalAmount: invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
       paidRate:
         (invoices.filter((inv) => inv.status === 'paid').length /
           invoices.length) *
@@ -916,12 +848,12 @@ export class DashboardController {
       totalProjects: projects.length,
       averageMilestonesPerProject:
         projectsWithCounts.reduce(
-          (sum: number, p: any) => sum + (p._count?.milestones || 0),
+          (sum, p) => sum + (p._count?.milestones || 0),
           0
         ) / projects.length,
       averageTicketsPerProject:
         projectsWithCounts.reduce(
-          (sum: number, p: any) => sum + (p._count?.tickets || 0),
+          (sum, p) => sum + (p._count?.tickets || 0),
           0
         ) / projects.length,
       onTimeCompletionRate: this.calculateOnTimeCompletionRate(projects),
@@ -1012,13 +944,10 @@ export class DashboardController {
 
     return {
       totalInvoices: invoices.length,
-      totalAmount: invoices.reduce(
-        (sum: number, inv: Invoice) => sum + (inv.amount || 0),
-        0
-      ),
+      totalAmount: invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
       paidAmount: invoices
         .filter((inv) => inv.status === 'paid')
-        .reduce((sum: number, inv: Invoice) => sum + (inv.amount || 0), 0),
+        .reduce((sum, inv) => sum + (inv.amount || 0), 0),
       averagePaymentTime: this.calculateAveragePaymentTime(invoices),
       overdueRate:
         (invoices.filter(
@@ -1240,9 +1169,9 @@ export class DashboardController {
         ) {
           const currentValue =
             (dailyData as Record<string, number>)[dateKey] || 0;
-          // Security: Use validated date to prevent object injection
-          const dailyDataWithKey = dailyData as Record<string, number>;
-          dailyDataWithKey[dateKey] = currentValue + 1;
+          // Security-safe: DateKey is validated against prototype pollution
+          // eslint-disable-next-line security/detect-object-injection
+          (dailyData as Record<string, number>)[dateKey] = currentValue + 1;
         }
       }
     });

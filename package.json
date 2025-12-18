@@ -1,7 +1,7 @@
 {
   "name": "jasaweb",
   "version": "1.0.0",
-  "description": "Professional web development service platform with client portal",
+  "description": "Web berbasis astro untuk manage client",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
@@ -10,6 +10,7 @@
     "dev-tools:watch": "./scripts/dev-tools/watch-and-reload.sh all",
     "dev-tools:db": "./scripts/dev-tools/database-tools.sh",
     "dev-tools:quality": "./scripts/dev-tools/code-quality.sh all",
+    "prebuild": "pnpm --filter @jasaweb/api exec npx prisma generate",
     "build": "pnpm run build:api && pnpm run build:web",
     "build:web": "cd apps/web && pnpm run build",
     "build:api": "cd apps/api && pnpm run build",
@@ -40,15 +41,14 @@
     "security:audit:fix": "pnpm audit --fix",
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
-    "security:scan": "node scripts/security-scan.js"
+    "security:scan": "node scripts/security-scan.js",
+    "security:generate-env": "node scripts/security/generate-secure-env.ts",
+    "security:validate": "node -e \"require('./packages/config/env-validation.ts').validateEnvironmentVariables()\""
   },
   "keywords": [
     "astro",
     "client-portal",
-    "web-development",
-    "nestjs",
-    "postgresql",
-    "prisma"
+    "websites"
   ],
   "author": "JasaWeb",
   "license": "MIT",
@@ -75,6 +75,7 @@
   "pnpm": {
     "overrides": {
       "js-yaml": "4.1.1",
+      "nodemailer": "7.0.11",
       "validator": "13.15.22",
       "jws": "3.2.3",
       "esbuild": "0.25.0",
@@ -83,6 +84,7 @@
       "html-minifier": "npm:html-minifier-terser@7.2.0",
       "form-data": "2.5.5",
       "tough-cookie": "4.1.3",
+      "node-notifier": "8.0.1",
       "braces": "3.0.3",
       "micromatch": "4.0.8",
       "glob": "11.1.0",

@@ -9,7 +9,7 @@
   },
   "types": "index.ts",
   "scripts": {
-    "lint": "echo 'TODO: Add lint script'"
+    "lint": "echo 'Linting handled by root package.json'"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

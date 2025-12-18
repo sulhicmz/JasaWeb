@@ -33,27 +33,40 @@ export class TaskController {
 
   @Get()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  async findAll(@Query('projectId') projectId?: string) {
+  async findAll(
+    @Query('projectId') projectId?: string,
+    @CurrentOrganizationId() organizationId: string = ''
+  ) {
     return this.taskService.findAll(projectId);
   }
 
   @Get(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  async findOne(@Param('id') id: string) {
+  async findOne(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
     return this.taskService.findOne(id);
   }
 
   @UseGuards(ThrottlerGuard)
   @Patch(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @CurrentOrganizationId() organizationId: string
+  ) {
     return this.taskService.update(id, updateTaskDto);
   }
 
   @UseGuards(ThrottlerGuard)
   @Delete(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin)
-  async remove(@Param('id') id: string) {
+  async remove(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
     return this.taskService.remove(id);
   }
 
