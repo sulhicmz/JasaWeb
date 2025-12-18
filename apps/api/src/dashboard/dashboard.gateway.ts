@@ -19,32 +19,11 @@ import { JwtService } from '@nestjs/jwt';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-
-interface AuthenticatedSocket {
-  userId?: string;
-  organizationId?: string;
-  userRole?: Role;
-  handshake: {
-    auth: {
-      token?: string;
-    };
-    headers: {
-      authorization?: string;
-    };
-  };
-  id: string;
-  join: (room: string) => Promise<void>;
-  leave: (room: string) => Promise<void>;
-  emit: (event: string, data: unknown) => void;
-  disconnect: () => void;
-}
-
-interface DashboardUpdatePayload {
-  type: 'stats' | 'activity' | 'project' | 'ticket' | 'milestone' | 'invoice';
-  data: Record<string, unknown>;
-  timestamp: Date;
-  organizationId: string;
-}
+import type {
+  AuthenticatedSocket,
+  DashboardUpdatePayload,
+  RecentActivity,
+} from './types/dashboard.types';
 
 @WebSocketGateway({
   cors: {
@@ -351,21 +330,28 @@ export class DashboardGateway
 
     const total = invoices.length;
     const pending = invoices.filter(
-      (i: any) => i.status === 'draft' || i.status === 'issued'
+      (i: { status: string; dueAt: Date | null }) =>
+        i.status === 'draft' || i.status === 'issued'
     ).length;
     const overdue = invoices.filter(
-      (i: any) =>
+      (i: { status: string; dueAt: Date | null }) =>
         (i.status === 'issued' || i.status === 'overdue') &&
+        i.dueAt &&
         new Date(i.dueAt) < new Date()
     ).length;
 
     const totalAmount = invoices.reduce(
-      (sum: number, i: any) => sum + (i.amount || 0),
+      (sum: number, i: { amount: number | null }) => sum + (i.amount || 0),
       0
     );
     const pendingAmount = invoices
-      .filter((i: any) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum: number, i: any) => sum + (i.amount || 0), 0);
+      .filter(
+        (i: { status: string }) => i.status === 'draft' || i.status === 'issued'
+      )
+      .reduce(
+        (sum: number, i: { amount: number | null }) => sum + (i.amount || 0),
+        0
+      );
 
     return { total, pending, overdue, totalAmount, pendingAmount };
   }

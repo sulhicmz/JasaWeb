@@ -18,57 +18,45 @@ import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
 import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
+import type {
+  ProjectWithRelations,
+  DashboardStats,
+  RecentActivity,
+  ProjectWithMetrics,
+  AnalyticsTrendsResponse,
+  PerformanceMetricsResponse,
+  ForecastAnalyticsResponse,
+  PredictiveAnalyticsResponse,
+  MetricTrend,
+  DailyDataPoint,
+  ProjectPerformanceMetrics,
+  TicketResolutionMetrics,
+  MilestoneCompletionMetrics,
+  InvoicePerformanceMetrics,
+  ProjectForecast,
+  MilestoneForecast,
+  InvoiceForecast,
+  ResourceForecast,
+  ProjectPredictions,
+  RevenuePredictions,
+  RiskPredictions,
+  CapacityPredictions,
+} from './types/dashboard.types';
 
-// Type for Project with relations
-type ProjectWithRelations = Project & {
-  milestones?: Milestone[];
-  tickets?: Ticket[];
-};
-
-// Type definitions for project with relations
-type ProjectWithMilestonesAndTickets = Project & {
-  milestones?: Milestone[];
-  tickets?: Ticket[];
-};
-
-interface DashboardStats {
-  projects: {
-    total: number;
-    active: number;
-    completed: number;
-    onHold: number;
-  };
-  tickets: {
-    total: number;
-    open: number;
-    inProgress: number;
-    highPriority: number;
-    critical: number;
-  };
-  invoices: {
-    total: number;
-    pending: number;
-    overdue: number;
-    totalAmount: number;
-    pendingAmount: number;
-  };
-  milestones: {
-    total: number;
-    completed: number;
-    overdue: number;
-    dueThisWeek: number;
-  };
-}
-
-interface RecentActivity {
+// Interface for the specific projects query result
+interface ProjectQueryResult {
   id: string;
-  type: 'project' | 'ticket' | 'milestone' | 'invoice';
-  title: string;
-  description: string;
+  name: string;
   status: string;
+  startAt: Date | null;
+  dueAt: Date | null;
   createdAt: Date;
-  priority?: string;
-  dueDate?: Date;
+  updatedAt: Date;
+  stagingUrl: string | null;
+  productionUrl: string | null;
+  repositoryUrl: string | null;
+  milestones: Array<{ id: string }>;
+  tickets: Array<{ id: string; priority: string }>;
 }
 
 @Controller('dashboard')
@@ -158,7 +146,7 @@ export class DashboardController {
   ) {
     const limitNum = Math.min(parseInt(limit) || 6, 20);
 
-    const projects = await this.multiTenantPrisma.project.findMany({
+    const projects = (await this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       select: {
         id: true,
@@ -187,7 +175,7 @@ export class DashboardController {
       },
       orderBy: { updatedAt: 'desc' },
       take: limitNum,
-    });
+    })) as unknown as ProjectQueryResult[];
 
     // Get milestone counts for each project
     const milestoneCounts = await Promise.all(
@@ -217,7 +205,7 @@ export class DashboardController {
     const milestoneMap = new Map(milestoneCounts.map((m) => [m.projectId, m]));
 
     // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map((project: any) => {
+    const projectsWithMetrics = projects.map((project: ProjectQueryResult) => {
       const milestoneData = milestoneMap.get(project.id) || {
         totalMilestones: 0,
         completedMilestones: 0,
@@ -227,7 +215,8 @@ export class DashboardController {
       const openTickets = project.tickets?.length || 0;
       const highPriorityTickets =
         project.tickets?.filter(
-          (t: any) => t.priority === 'high' || t.priority === 'critical'
+          (t: { id: string; priority: string }) =>
+            t.priority === 'high' || t.priority === 'critical'
         ).length || 0;
 
       return {

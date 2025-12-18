@@ -110,9 +110,17 @@ export class SecurityMonitoringService {
         for (const [packageName, vulnData] of Object.entries(
           auditData.vulnerabilities
         )) {
-          const vuln = vulnData as any;
+          const vuln = vulnData as {
+            severity?: string;
+            title?: string;
+            url?: string;
+            patched_versions?: string;
+            fixAvailable?: { version?: string };
+          };
           const vulnerability: VulnerabilityAlert = {
-            severity: vuln.severity || 'unknown',
+            severity:
+              (vuln.severity as 'critical' | 'high' | 'moderate' | 'low') ||
+              'unknown',
             package: packageName,
             title: vuln.title || 'Unknown vulnerability',
             url: vuln.url,
@@ -128,7 +136,7 @@ export class SecurityMonitoringService {
       }
 
       return vulnerabilities;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to parse audit results:', error);
       return [];
     }
@@ -136,7 +144,10 @@ export class SecurityMonitoringService {
 
   private generatePackageRecommendation(
     packageName: string,
-    vulnData: any
+    vulnData: {
+      fixAvailable?: { version?: string };
+      patched_versions?: string;
+    }
   ): string {
     if (vulnData.fixAvailable && vulnData.fixAvailable.version) {
       return `Upgrade ${packageName} to ${vulnData.fixAvailable.version}`;
@@ -212,7 +223,7 @@ export class SecurityMonitoringService {
     try {
       fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
       this.logger.log(`Security report saved: ${filename}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logger.error('Failed to save security report:', error);
     }
   }

@@ -216,13 +216,13 @@ export class ApiConfigService {
   public getEndpoint(category: keyof ApiEndpoints, endpoint?: string): string {
     const endpoints = this.config.endpoints[category];
     if (endpoint && endpoint in endpoints) {
-      return (endpoints as any)[endpoint];
+      return endpoints[endpoint as keyof typeof endpoints];
     }
     // Return a sensible default based on category
     if ('list' in endpoints) {
-      return (endpoints as any).list;
+      return endpoints.list;
     }
-    return Object.values(endpoints)[0];
+    return Object.values(endpoints)[0] || '';
   }
 
   public buildUrl(path: string): string {
@@ -242,7 +242,7 @@ export class ApiConfigService {
     return envConfig.validateConfig();
   }
 
-  public getConfigSummary(): Record<string, any> {
+  public getConfigSummary(): Record<string, unknown> {
     const envSummary = envConfig.getConfigSummary();
 
     return {
