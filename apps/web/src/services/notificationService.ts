@@ -176,7 +176,7 @@ export class NotificationService {
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         // Max reconnection attempts reached
-        this.callbacks.onError?.(error);
+        this.callbacks.onError?.(error as Error | Record<string, unknown>);
       }
 
       this.callbacks.onError?.(error);
@@ -226,8 +226,11 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('connect_error', (error: unknown) => {
-      logger.error('Dashboard WebSocket connection error', error);
-      this.callbacks.onError?.(error);
+      logger.error(
+        'Dashboard WebSocket connection error',
+        error as Error | Record<string, unknown>
+      );
+      this.callbacks.onError?.(error as Error | Record<string, unknown>);
     });
 
     this.dashboardSocket.on('initial-data', (data: NotificationData) => {
@@ -250,7 +253,10 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('dashboard-update', (update: DashboardUpdate) => {
-      logger.debug('Dashboard update', update);
+      logger.debug(
+        'Dashboard update',
+        update as unknown as Record<string, unknown>
+      );
       this.callbacks.onDashboardUpdate?.(update);
 
       // Dispatch custom event for dashboard components
@@ -267,7 +273,10 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('personal-update', (data: DashboardUpdate) => {
-      logger.debug('Personal update', data);
+      logger.debug(
+        'Personal update',
+        data as unknown as Record<string, unknown>
+      );
 
       // Show personal notification
       this.showRealtimeNotification(
@@ -278,8 +287,11 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('error', (error: unknown) => {
-      logger.error('Dashboard WebSocket error', error);
-      this.callbacks.onError?.(error);
+      logger.error(
+        'Dashboard WebSocket error',
+        error as Error | Record<string, unknown>
+      );
+      this.callbacks.onError?.(error as Error | Record<string, unknown>);
       this.showRealtimeNotification('Connection error', 'error');
     });
   }
