@@ -46,7 +46,7 @@ export class SecurityMonitoringService {
       throw new Error('Invalid reports path detected');
     }
     if (!fs.existsSync(this.reportsPath)) {
-      fs.mkdirSync(this.reportsPath, { recursive: true });
+      fs.mkdirSync(this.reportsPath, { recursive: true, mode: 0o750 });
     }
   }
 

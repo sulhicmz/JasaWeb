@@ -58,11 +58,6 @@ export class ProjectController {
     const pageNum = Math.max(parseInt(page || '1') || 1, 1);
     const limitNum = Math.min(Math.max(parseInt(limit || '20') || 20, 1), 100); // Max 100 items per page
 
-    const filters = {
-      status: status?.split(',').filter(Boolean),
-      search: search?.trim(),
-    };
-
     return this.projectService.findAll(normalizedView, organizationId);
   }
 

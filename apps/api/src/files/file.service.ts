@@ -96,7 +96,7 @@ export class FileService {
     // Validate requested storage type if provided
     if (requestedStorageType) {
       const switchResult = storageConfigRegistry.switchStorageType(
-        requestedStorageType as any
+        requestedStorageType as 'local' | 's3' | 'minio' | 'gcs' | 'azure'
       );
       if (!switchResult.isValid) {
         throw new BadRequestException(
@@ -139,24 +139,21 @@ export class FileService {
       const fileKey = `organizations/${organizationId}/projects/${projectId}/${timestampedFilename}`;
 
       // Upload using dynamic storage service
-      const uploadResult = await this.dynamicFileStorageService.uploadFile(
-        file.buffer,
-        {
-          key: fileKey,
-          contentType: file.mimetype,
-          metadata: {
-            originalName: file.originalname,
-            size: file.size.toString(),
-            uploadedBy: uploadedById,
-            organizationId,
-            projectId,
-          },
-          bucket: storageConfig?.validation.bucketRequired
-            ? this.configService.get('S3_BUCKET') ||
-              this.configService.get('MINIO_BUCKET')
-            : undefined,
-        }
-      );
+      await this.dynamicFileStorageService.uploadFile(file.buffer, {
+        key: fileKey,
+        contentType: file.mimetype,
+        metadata: {
+          originalName: file.originalname,
+          size: file.size.toString(),
+          uploadedBy: uploadedById,
+          organizationId,
+          projectId,
+        },
+        bucket: storageConfig?.validation.bucketRequired
+          ? this.configService.get('S3_BUCKET') ||
+            this.configService.get('MINIO_BUCKET')
+          : undefined,
+      });
 
       // Save file record to database
       const createdFile = await this.multiTenantPrisma.file.create({

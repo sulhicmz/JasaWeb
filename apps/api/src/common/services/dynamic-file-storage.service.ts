@@ -42,9 +42,19 @@ abstract class BaseStorageAdapter implements StorageAdapter {
     throw new Error('Signed URLs not supported by this storage adapter');
   }
 
-  async list(prefix: string): Promise<any[]> {
+  async list(
+    prefix: string
+  ): Promise<{ key: string; size: number; lastModified: Date }[]> {
     throw new Error('List operation not supported by this storage adapter');
   }
+}
+
+interface S3StorageConfig {
+  region?: string;
+  bucket: string;
+  accessKey?: string;
+  secretKey?: string;
+  endpoint?: string;
 }
 
 /**
@@ -63,8 +73,13 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const fs = require('fs');
     const path = require('path');
 
+    // Validate path to prevent directory traversal
+    if (this.uploadPath.includes('..') || this.uploadPath.includes('~')) {
+      throw new Error('Invalid upload path detected');
+    }
+
     if (!fs.existsSync(this.uploadPath)) {
-      fs.mkdirSync(this.uploadPath, { recursive: true });
+      fs.mkdirSync(this.uploadPath, { recursive: true, mode: 0o750 });
     }
   }
 
@@ -80,10 +95,10 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const dirPath = path.dirname(filePath);
 
     // Ensure directory exists
-    await fs.mkdir(dirPath, { recursive: true });
+    await fs.mkdir(dirPath, { recursive: true, mode: 0o750 });
 
     // Write file
-    await fs.writeFile(filePath, data);
+    await fs.writeFile(filePath, data, { mode: 0o640 });
 
     // Calculate file hash for integrity
     const hash = crypto.createHash('sha256');
@@ -107,8 +122,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     try {
       return await fs.readFile(filePath);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      const fsError = error as NodeJS.ErrnoException;
+      if (fsError.code === 'ENOENT') {
         throw new Error(`File not found: ${key}`);
       }
       throw error;
@@ -124,8 +140,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     try {
       await fs.unlink(filePath);
       this.logger.log(`File deleted locally: ${key}`);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      const fsError = error as NodeJS.ErrnoException;
+      if (fsError.code === 'ENOENT') {
         this.logger.warn(`File not found for deletion: ${key}`);
         return;
       }
@@ -155,7 +172,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
   private region: string;
   private bucket: string;
 
-  constructor(config: any) {
+  constructor(config: S3StorageConfig) {
     super();
     this.region = config.region || 'us-east-1';
     this.bucket = config.bucket;

@@ -90,15 +90,11 @@ export class SecurityConfigurationService {
     ] as const;
 
     for (const key of validDirectiveKeys) {
-      // eslint-disable-next-line security/detect-object-injection
-      if (Object.prototype.hasOwnProperty.call(directives, key)) {
-        // eslint-disable-next-line security/detect-object-injection
-        const directiveValue = directives[key];
-        if (directiveValue && Array.isArray(directiveValue)) {
-          const filtered = directiveValue.filter(Boolean);
-          if (filtered.length > 0) {
-            safeDirectives[key] = filtered;
-          }
+      const directiveValue = directives[key];
+      if (directiveValue && Array.isArray(directiveValue)) {
+        const filtered = directiveValue.filter(Boolean);
+        if (filtered.length > 0) {
+          safeDirectives[key] = filtered;
         }
       }
     }

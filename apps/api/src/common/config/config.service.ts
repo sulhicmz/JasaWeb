@@ -118,11 +118,7 @@ export class ConfigService {
       ) {
         // Safely access nested property with safe key access
         const recordValue = value as Record<string, unknown>;
-        if (Object.prototype.hasOwnProperty.call(recordValue, key)) {
-          value = recordValue[key];
-        } else {
-          throw new Error(`Configuration path '${path}' not found`);
-        }
+        value = recordValue[key];
       } else {
         throw new Error(`Configuration path '${path}' not found`);
       }

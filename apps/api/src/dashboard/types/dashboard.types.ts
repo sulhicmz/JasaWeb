@@ -2,7 +2,6 @@ import {
   Project as PrismaProject,
   Milestone as PrismaMilestone,
   Ticket as PrismaTicket,
-  Invoice,
   User,
 } from '@prisma/client';
 

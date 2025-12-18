@@ -162,7 +162,7 @@ describe('NotificationService', () => {
   describe('dashboard integration', () => {
     it('should refresh dashboard stats when connected', () => {
       const mockEmit = vi.fn();
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.dashboardSocket = { connected: true, emit: mockEmit };
 
       vi.mocked(localStorage.getItem).mockReturnValue('org-123');
@@ -176,7 +176,7 @@ describe('NotificationService', () => {
 
     it('should subscribe to dashboard updates', () => {
       const mockEmit = vi.fn();
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.dashboardSocket = { connected: true, emit: mockEmit };
 
       notificationService.subscribeToDashboard('org-123');
@@ -187,7 +187,7 @@ describe('NotificationService', () => {
     });
 
     it('should get connection status', () => {
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.dashboardSocket = {
         connected: true,
         id: 'test-socket-id',
@@ -207,9 +207,9 @@ describe('NotificationService', () => {
       const mockDisconnect1 = vi.fn();
       const mockDisconnect2 = vi.fn();
 
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.socket = { disconnect: mockDisconnect1 };
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.dashboardSocket = { disconnect: mockDisconnect2 };
 
       notificationService.disconnect();
@@ -221,16 +221,16 @@ describe('NotificationService', () => {
     });
 
     it('should check connection status', () => {
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.socket = { connected: true };
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.dashboardSocket = { connected: true };
 
       expect(notificationService.isConnected()).toBe(true);
 
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.socket = { connected: false };
-      // @ts-expect-error
+      // @ts-expect-error - Mocking private property for testing
       notificationService.dashboardSocket = { connected: true };
 
       expect(notificationService.isConnected()).toBe(false);

@@ -387,7 +387,7 @@ export class TicketController {
       medium: 72, // 3 days
       low: 168, // 1 week
     };
-    const hoursToAdd = timeframes[safePriority] || 168; // Default to 1 week for low priority
+    const hoursToAdd = timeframes[safePriority] ?? 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

@@ -154,9 +154,7 @@ export class SecurityInterceptor implements NestInterceptor {
               (field: string) => lowerKey.includes(field)
             );
 
-            const value = Object.prototype.hasOwnProperty.call(obj, key)
-              ? (obj as Record<string, unknown>)[key]
-              : undefined;
+            const value = (obj as Record<string, unknown>)[key];
 
             if (hasSensitiveField) {
               Object.defineProperty(sanitized, key, {
