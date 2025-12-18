@@ -1,15 +1,56 @@
+<<<<<<< HEAD
+/// <reference types="@types/jest" />
+
+import { Test, TestingModule } from '@nestjs/testing';
+import { AnalyticsController } from './analytics.controller';
+import { AnalyticsService } from './analytics.service';
+=======
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 import { vi } from 'vitest';
+>>>>>>> origin/main
 
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
   let mockService: any;
 
   beforeEach(async () => {
+<<<<<<< HEAD
+    const mockService = {
+      getProjectAnalytics: jest.fn(),
+      getTeamPerformanceAnalytics: jest.fn(),
+      getFinancialAnalytics: jest.fn(),
+      getClientInsightsAnalytics: jest.fn(),
+      getActivityTrends: jest.fn(),
+      getOverviewAnalytics: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AnalyticsController],
+      providers: [
+        {
+          provide: AnalyticsService,
+          useValue: mockService,
+        },
+      ],
+    }).compile();
+
+    controller = module.get<AnalyticsController>(AnalyticsController);
+    service = module.get<AnalyticsService>(AnalyticsService);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+
+  describe('getProjectAnalytics', () => {
+    it('should return project analytics', async () => {
+      const mockAnalytics = {
+=======
     mockService = {
       getProjectAnalytics: vi.fn().mockResolvedValue({
+>>>>>>> origin/main
         summary: {
           totalProjects: 10,
           completedProjects: 5,

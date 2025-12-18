@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+/// <reference types="@types/jest" />
+
+=======
+>>>>>>> origin/main
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UserService } from '../users/user.service';
@@ -6,11 +11,24 @@ import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+<<<<<<< HEAD
+
+// Mock bcrypt
+jest.mock('bcrypt', () => ({
+  hash: jest.fn(),
+  compare: jest.fn(),
+}));
+
+// Mock UUID
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid-1234'),
+=======
 import { vi } from 'vitest';
 
 // UUID mock
 vi.mock('uuid', () => ({
   v4: vi.fn(() => 'mock-uuid-1234'),
+>>>>>>> origin/main
 }));
 
 describe('AuthService', () => {
@@ -31,19 +49,25 @@ describe('AuthService', () => {
     profilePicture: null,
   };
 
+<<<<<<< HEAD
+  const mockUsersService = {
+    findByEmail: jest.fn(),
+    create: jest.fn(),
+=======
   const mockUserService = {
     findByEmail: vi.fn(),
     create: vi.fn(),
     hashPassword: vi.fn(),
+>>>>>>> origin/main
   };
 
   const mockJwtService = {
-    sign: vi.fn(),
-    verify: vi.fn(),
+    sign: jest.fn(),
+    verify: jest.fn(),
   };
 
   const mockRefreshTokenService = {
-    createRefreshToken: vi.fn(),
+    createRefreshToken: jest.fn(),
   };
 
   const mockPasswordService = {
@@ -111,7 +135,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

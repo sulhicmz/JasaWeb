@@ -23,7 +23,7 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
     JwtModule.register({
       secret: getRequiredEnv('JWT_SECRET'),
       signOptions: {
-        expiresIn: '60m',
+        expiresIn: 86400, // 24 hours in seconds
       },
     }),
     MultiTenantPrismaModule,

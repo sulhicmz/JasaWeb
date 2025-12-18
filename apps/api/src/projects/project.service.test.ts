@@ -15,7 +15,6 @@ import {
 
 describe('ProjectService', () => {
   let service: ProjectService;
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockProject = createTestProject({
     id: '1',
@@ -62,9 +61,6 @@ describe('ProjectService', () => {
     }).compile();
 
     service = module.get<ProjectService>(ProjectService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
   });
 
   afterEach(() => {

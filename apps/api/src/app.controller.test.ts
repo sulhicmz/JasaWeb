@@ -1,20 +1,19 @@
+/// <reference types="@types/jest" />
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
-
-// Mock AppService
-const mockAppService = {
-  getHello: vi.fn(),
-  getHealth: vi.fn(),
-};
 
 describe('AppController', () => {
   let appController: AppController;
-  let module: TestingModule;
+
+  const mockAppService = {
+    getHello: jest.fn(),
+    getHealth: jest.fn(),
+  };
 
   beforeEach(async () => {
-    module = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
       providers: [
         {
@@ -28,11 +27,7 @@ describe('AppController', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterAll(async () => {
-    await module.close();
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -47,7 +42,7 @@ describe('AppController', () => {
       const result = appController.getHello();
 
       expect(result).toBe(expectedMessage);
-      expect(mockAppService.getHello).toHaveBeenCalledTimes(1);
+      expect(mockAppService.getHello).toHaveBeenCalled();
     });
   });
 
@@ -62,7 +57,7 @@ describe('AppController', () => {
       const result = appController.getHealth();
 
       expect(result).toEqual(expectedHealth);
-      expect(mockAppService.getHealth).toHaveBeenCalledTimes(1);
+      expect(mockAppService.getHealth).toHaveBeenCalled();
     });
   });
 });

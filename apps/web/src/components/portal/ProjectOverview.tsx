@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface Project {
   id: string;
@@ -37,22 +38,16 @@ const ProjectOverview: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        'http://localhost:3001/dashboard/projects-overview?limit=6',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+      const limit = import.meta.env.DEFAULT_QUERY_LIMIT || '6';
+      const response = await apiClient.get(
+        `/dashboard/projects-overview?limit=${limit}`
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch projects overview');
+      if (response.error || !response.data) {
+        throw new Error(response.error || 'Failed to fetch projects overview');
       }
 
-      const projectsData = await response.json();
+      const projectsData = response.data as Project[];
       setProjects(projectsData);
     } catch (error) {
       if (import.meta.env.DEV) {

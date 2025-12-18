@@ -241,9 +241,31 @@ export class SecurityConfigurationService {
       }
 
       return true;
+<<<<<<< HEAD
+    }
+
+    const isAllowed = allowedOrigins.includes(origin);
+
+    if (!isAllowed) {
+      logger.security('Unauthorized CORS attempt', { origin, allowedOrigins });
+    }
+
+    return isAllowed;
+  }
+
+  // Method to log security events
+  logSecurityEvent(event: string, details: Record<string, unknown>): void {
+    logger.security(event, details);
+
+    // In production, this could send to a SIEM or security monitoring service
+    if (this.appConfig.isProduction()) {
+      // TODO: Integrate with security monitoring service
+      // Example: Send to Sentry, Datadog, or custom security endpoint
+=======
     } catch (error) {
       logger.error('Security configuration validation failed:', error);
       return false;
+>>>>>>> origin/main
     }
   }
 

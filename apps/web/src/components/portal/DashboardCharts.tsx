@@ -2,6 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../services/apiClient';
 
+// Theme configuration from environment variables
+const THEME = {
+  primary: import.meta.env.PRIMARY_COLOR || '#3B82F6',
+  secondary: import.meta.env.SECONDARY_COLOR || '#10B981',
+  success: import.meta.env.SUCCESS_COLOR || '#059669',
+  warning: import.meta.env.WARNING_COLOR || '#D97706',
+  error: import.meta.env.ERROR_COLOR || '#DC2626',
+} as const;
+
 interface ChartData {
   labels: string[];
   datasets: {
@@ -10,6 +19,20 @@ interface ChartData {
     backgroundColor?: string[];
     borderColor?: string[];
   }[];
+}
+
+interface DashboardStats {
+  projects: {
+    active: number;
+    completed: number;
+    onHold: number;
+  };
+  tickets: {
+    open: number;
+    inProgress: number;
+    highPriority: number;
+    critical: number;
+  };
 }
 
 interface DashboardChartsProps {
@@ -42,7 +65,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         throw new Error(response.error || 'Failed to fetch dashboard stats');
       }
 
-      const stats = response.data as any;
+      const stats = response.data as DashboardStats;
 
       // Transform data for charts
       const projectChartData: ChartData = {
@@ -55,8 +78,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
               stats.projects.completed,
               stats.projects.onHold,
             ],
-            backgroundColor: ['#3B82F6', '#10B981', '#F59E0B'],
-            borderColor: ['#2563EB', '#059669', '#D97706'],
+            backgroundColor: [THEME.primary, THEME.secondary, THEME.warning],
+            borderColor: [THEME.primary, THEME.success, THEME.warning],
           },
         ],
       };
@@ -72,8 +95,8 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
               stats.tickets.highPriority,
               stats.tickets.critical,
             ],
-            backgroundColor: ['#6B7280', '#F59E0B', '#EF4444', '#991B1B'],
-            borderColor: ['#4B5563', '#D97706', '#DC2626', '#7F1D1D'],
+            backgroundColor: ['#6B7280', THEME.warning, THEME.error, '#991B1B'],
+            borderColor: ['#4B5563', THEME.warning, THEME.error, '#7F1D1D'],
           },
         ],
       };

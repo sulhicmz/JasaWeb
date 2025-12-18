@@ -1,18 +1,6 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-// Simple logger fallback for web app
-const logger = {
-  debug: (message: string, data?: any) =>
-    console.debug(`[DEBUG] ${message}`, data),
-  info: (message: string, data?: any) =>
-    console.info(`[INFO] ${message}`, data),
-  warn: (message: string, data?: any) =>
-    console.warn(`[WARN] ${message}`, data),
-  error: (message: string, error?: any) =>
-    console.error(`[ERROR] ${message}`, error),
-  performance: (metric: string, value: number, details?: any) =>
-    console.info(`[PERF] ${metric}: ${value}ms`, details),
-};
+import { logger } from '@jasaweb/config';
 
 export type NotificationType =
   | 'info'
@@ -73,8 +61,10 @@ export class NotificationService {
   public dashboardSocket: Socket | null = null;
   public callbacks: NotificationServiceCallbacks = {};
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
+  private maxReconnectAttempts = parseInt(
+    import.meta.env.MAX_RECONNECT_ATTEMPTS || '5'
+  );
+  private reconnectDelay = parseInt(import.meta.env.RECONNECT_DELAY || '1000');
   public notificationQueue: LocalNotification[] = [];
   private isVisible = true;
 
@@ -117,7 +107,7 @@ export class NotificationService {
         token: token,
       },
       transports: ['websocket', 'polling'],
-      timeout: 20000,
+      timeout: parseInt(import.meta.env.NOTIFICATION_TIMEOUT || '20000'),
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,
@@ -144,7 +134,7 @@ export class NotificationService {
         token: token,
       },
       transports: ['websocket', 'polling'],
-      timeout: 20000,
+      timeout: parseInt(import.meta.env.NOTIFICATION_TIMEOUT || '20000'),
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: this.reconnectDelay,

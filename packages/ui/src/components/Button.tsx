@@ -1,11 +1,10 @@
 import type { ButtonHTMLAttributes, DetailedHTMLProps } from 'react';
 import React from 'react';
 
-export interface ButtonProps
-  extends DetailedHTMLProps<
-    ButtonHTMLAttributes<HTMLButtonElement>,
-    HTMLButtonElement
-  > {
+export interface ButtonProps extends DetailedHTMLProps<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  HTMLButtonElement
+> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
@@ -37,6 +36,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        // eslint-disable-next-line security/detect-object-injection
         className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}

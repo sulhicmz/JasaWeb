@@ -15,16 +15,21 @@ import { Roles, Role } from '../common/decorators/roles.decorator';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('projects')
 @UseGuards(RolesGuard) // Use the roles guard
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
+<<<<<<< HEAD
+  @UseGuards(ThrottlerGuard)
+  @Post()
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only these roles can create projects
+=======
   @Post()
   @UseGuards(ThrottlerGuard)
   @Roles(Role.OrgOwner, Role.OrgAdmin) // Only admin roles can create
+>>>>>>> origin/main
   create(
     @Body() createProjectDto: CreateProjectDto,
     @CurrentOrganizationId() organizationId: string
@@ -33,22 +38,26 @@ export class ProjectController {
   }
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer)
-  async findAll(
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
+  findAll(
+    @CurrentOrganizationId() organizationId: string,
     @Query('view') view?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('organizationId') organizationId?: string,
-    @Query('_status') _status?: string,
-    @Query('_search') _search?: string
+    @Query('status') status?: string,
+    @Query('search') search?: string
   ) {
     const normalizedView =
       view?.toLowerCase() === 'detail' ? 'detail' : 'summary';
 
-    // Parse pagination parameters with defaults (currently unused but ready for future pagination)
-    Math.max(parseInt(page || '1') || 1, 1);
-    Math.min(Math.max(parseInt(limit || '20') || 20, 1), 100); // Max 100 items per page
+    // Parse pagination parameters with defaults
+    const pageNum = Math.max(parseInt(page || '1') || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit || '20') || 20, 1), 100); // Max 100 items per page
+
+    const filters = {
+      status: status?.split(',').filter(Boolean),
+      search: search?.trim(),
+    };
 
     return this.projectService.findAll(normalizedView, organizationId);
   }

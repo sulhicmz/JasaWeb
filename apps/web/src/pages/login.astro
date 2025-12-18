@@ -1,8 +1,12 @@
 ---
 // src/pages/login.astro
 import Layout from '../layouts/Layout.astro';
+import webConfig from '../config/webConfig';
 
 const pageTitle = 'Login ke Portal Klien - JasaWeb';
+
+// Pass configuration to client-side script
+const API_BASE_URL = webConfig.apiUrl;
 ---
 
 <Layout title="Login ke Portal Klien">
@@ -100,9 +104,9 @@ const pageTitle = 'Login ke Portal Klien - JasaWeb';
   <!-- Error/Success Messages -->
   <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
 
-  <script client:load>
-    // API configuration
-    const API_BASE_URL = 'http://localhost:3001';
+  <script is:inline>
+    // API configuration using environment variables
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || import.meta.env.API_URL || 'http://localhost:3000';
 
     // Check if user is already logged in
     document.addEventListener('DOMContentLoaded', function() {

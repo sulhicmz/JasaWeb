@@ -5,27 +5,23 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-jasaweb}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-jasaweb}',
-        ]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
     networks:
       - jasaweb-network
     security_opt:
       - no-new-privileges:true
+    read_only: true
     tmpfs:
       - /tmp
       - /var/run/postgresql
@@ -39,11 +35,10 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
     networks:
       - jasaweb-network
     security_opt:
@@ -66,7 +61,6 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-      start_period: 30s
     networks:
       - jasaweb-network
     security_opt:
