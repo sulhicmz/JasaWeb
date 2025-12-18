@@ -12,8 +12,6 @@ import { vi } from 'vitest';
 
 describe('InvoiceController', () => {
   let controller: InvoiceController;
-  let multiTenantPrisma: MultiTenantPrismaService;
-  let emailService: EmailService;
 
   const mockPrisma = {
     invoice: {

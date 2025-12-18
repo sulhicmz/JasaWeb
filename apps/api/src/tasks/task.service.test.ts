@@ -3,17 +3,14 @@ import { TaskService } from './task.service';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CreateTaskDto, TaskStatus } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { vi } from 'vitest';
 import {
   createMockMultiTenantPrismaService,
   createTestTask,
   createTestProject,
-  clearAllMocks,
 } from '../../test/test-helpers';
 
 describe('TaskService', () => {
   let service: TaskService;
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockPrisma = createMockMultiTenantPrismaService();
 

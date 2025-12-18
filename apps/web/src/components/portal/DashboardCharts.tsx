@@ -16,6 +16,20 @@ interface DashboardChartsProps {
   organizationId: string;
 }
 
+interface DashboardStats {
+  projects: {
+    active: number;
+    completed: number;
+    onHold: number;
+  };
+  tickets: {
+    open: number;
+    inProgress: number;
+    highPriority: number;
+    critical: number;
+  };
+}
+
 const DashboardCharts: React.FC<DashboardChartsProps> = ({
   organizationId,
 }) => {
@@ -42,7 +56,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
         throw new Error(response.error || 'Failed to fetch dashboard stats');
       }
 
-      const stats = response.data as any;
+      const stats = response.data as DashboardStats;
 
       // Transform data for charts
       const projectChartData: ChartData = {

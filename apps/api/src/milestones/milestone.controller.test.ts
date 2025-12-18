@@ -10,7 +10,6 @@ import { vi } from 'vitest';
 
 describe('MilestoneController', () => {
   let controller: MilestoneController;
-  let service: MilestoneService;
 
   const mockMilestoneService = {
     create: vi.fn(),

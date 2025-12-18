@@ -71,15 +71,37 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   private ensureDirectoryExists(): void {
     const fs = require('fs');
+    const path = require('path');
 
-    // Validate path to prevent directory traversal
-    if (this.uploadPath.includes('..') || this.uploadPath.includes('~')) {
-      throw new Error('Invalid upload path detected');
+    // Define allowed base directories for security
+    const allowedBases = ['./uploads', '/tmp/uploads'];
+
+    // Sanitize and validate path to prevent directory traversal
+    const normalizedPath = path.normalize(this.uploadPath);
+    const isAllowed = allowedBases.some((base) =>
+      normalizedPath.startsWith(base)
+    );
+
+    if (!isAllowed) {
+      throw new Error(
+        'Invalid upload path detected - must be within allowed directories'
+      );
     }
 
-    if (!fs.existsSync(this.uploadPath)) {
-      fs.mkdirSync(this.uploadPath, { recursive: true, mode: 0o750 });
+    // Additional security checks
+    if (normalizedPath.includes('..') || normalizedPath.includes('~')) {
+      throw new Error('Potentially dangerous path detected');
     }
+
+    // Validate the path is literal and safe
+    if (!/^[a-zA-Z0-9\-_/\.]+$/.test(normalizedPath)) {
+      throw new Error('Invalid characters in upload path');
+    }
+
+    if (!fs.existsSync(normalizedPath)) {
+      fs.mkdirSync(normalizedPath, { recursive: true, mode: 0o750 });
+    }
+    this.uploadPath = normalizedPath;
   }
 
   async upload(
@@ -90,24 +112,40 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const path = require('path');
     const crypto = require('crypto');
 
-    const filePath = path.join(this.uploadPath, options.key);
-    const dirPath = path.dirname(filePath);
+    // Sanitize the key to prevent path traversal
+    const sanitizedKey = options.key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = path.normalize(filePath);
 
-    // Ensure directory exists
-    await fs.mkdir(dirPath, { recursive: true, mode: 0o750 });
+    // Ensure file stays within allowed directory
+    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
+      throw new Error('Path traversal attempt detected in file upload');
+    }
 
-    // Write file
-    await fs.writeFile(filePath, data, { mode: 0o640 });
+    const dirPath = path.dirname(normalizedPath);
+
+    // Ensure directory exists with validation
+    const normalizedDirPath = path.normalize(dirPath);
+    if (!normalizedDirPath.startsWith(path.normalize(this.uploadPath))) {
+      throw new Error('Invalid directory path detected');
+    }
+    if (!/^[a-zA-Z0-9\-_/\.]+$/.test(normalizedDirPath)) {
+      throw new Error('Invalid characters in directory path');
+    }
+    await fs.mkdir(normalizedDirPath, { recursive: true, mode: 0o750 });
+
+    // Write file with secure permissions
+    await fs.writeFile(normalizedPath, data, { mode: 0o640 });
 
     // Calculate file hash for integrity
     const hash = crypto.createHash('sha256');
     hash.update(data);
     const etag = hash.digest('hex');
 
-    this.logger.log(`File uploaded locally: ${options.key}`);
+    this.logger.log(`File uploaded locally: ${sanitizedKey}`);
 
     return {
-      key: options.key,
+      key: sanitizedKey,
       size: data.length,
       etag,
     };
@@ -117,14 +155,22 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const fs = require('fs').promises;
     const path = require('path');
 
-    const filePath = path.join(this.uploadPath, key);
+    // Sanitize key to prevent path traversal
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = path.normalize(filePath);
+
+    // Ensure file stays within allowed directory
+    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
+      throw new Error('Path traversal attempt detected in file download');
+    }
 
     try {
-      return await fs.readFile(filePath);
+      return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
       if (fsError.code === 'ENOENT') {
-        throw new Error(`File not found: ${key}`);
+        throw new Error(`File not found: ${sanitizedKey}`);
       }
       throw error;
     }
@@ -134,15 +180,23 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const fs = require('fs').promises;
     const path = require('path');
 
-    const filePath = path.join(this.uploadPath, key);
+    // Sanitize key to prevent path traversal
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = path.normalize(filePath);
+
+    // Ensure file stays within allowed directory
+    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
+      throw new Error('Path traversal attempt detected in file deletion');
+    }
 
     try {
-      await fs.unlink(filePath);
-      this.logger.log(`File deleted locally: ${key}`);
+      await fs.unlink(normalizedPath);
+      this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
       if (fsError.code === 'ENOENT') {
-        this.logger.warn(`File not found for deletion: ${key}`);
+        this.logger.warn(`File not found for deletion: ${sanitizedKey}`);
         return;
       }
       throw error;
@@ -151,11 +205,20 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async exists(key: string): Promise<boolean> {
     const fs = require('fs').promises;
+    const path = require('path');
 
-    const filePath = require('path').join(this.uploadPath, key);
+    // Sanitize key to prevent path traversal
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = path.normalize(filePath);
+
+    // Ensure file stays within allowed directory
+    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
+      return false; // Treat suspicious paths as non-existent
+    }
 
     try {
-      await fs.access(filePath);
+      await fs.access(normalizedPath);
       return true;
     } catch {
       return false;

@@ -7,7 +7,6 @@ import { vi } from 'vitest';
 
 describe('TaskController', () => {
   let controller: TaskController;
-  let service: TaskService;
 
   const mockTaskService = {
     create: vi.fn(),

@@ -38,6 +38,11 @@ interface AnalyticsTrends {
   };
 }
 
+interface DailyDataPoint {
+  date: string;
+  count: number;
+}
+
 interface PerformanceMetric {
   efficiency: number;
   quality: number;
@@ -528,11 +533,12 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
             <div key={key}>
               {renderLineChart(
                 {
-                  labels: data.daily?.map((d: any) => d.date) || [],
+                  labels: data.daily?.map((d: DailyDataPoint) => d.date) || [],
                   datasets: [
                     {
                       label: key.charAt(0).toUpperCase() + key.slice(1),
-                      data: data.daily?.map((d: any) => d.count) || [],
+                      data:
+                        data.daily?.map((d: DailyDataPoint) => d.count) || [],
                       backgroundColor: ['#3B82F6'],
                       borderColor: ['#2563EB'],
                       tension: 0.4,

@@ -45,8 +45,12 @@ export class SecurityMonitoringService {
     if (!isValidPath(this.reportsPath)) {
       throw new Error('Invalid reports path detected');
     }
-    if (!fs.existsSync(this.reportsPath)) {
-      fs.mkdirSync(this.reportsPath, { recursive: true, mode: 0o750 });
+    const normalizedPath = path.normalize(this.reportsPath);
+    if (!isValidPath(normalizedPath)) {
+      throw new Error('Invalid normalized reports path detected');
+    }
+    if (!fs.existsSync(normalizedPath)) {
+      fs.mkdirSync(normalizedPath, { recursive: true, mode: 0o750 });
     }
   }
 
@@ -201,14 +205,21 @@ export class SecurityMonitoringService {
   }
 
   async saveReport(report: SecurityReport): Promise<void> {
-    const filename = `security-report-${report.id}.json`;
+    // Sanitize report ID to prevent path traversal
+    const sanitizedId = report.id.replace(/[^a-zA-Z0-9\-_]/g, '');
+    const filename = `security-report-${sanitizedId}.json`;
     const filepath = path.join(this.reportsPath, filename);
+    const normalizedPath = path.normalize(filepath);
 
     try {
-      if (!isValidPath(filepath)) {
+      if (!isValidPath(normalizedPath)) {
         throw new Error('Invalid file path for saving report');
       }
-      fs.writeFileSync(filepath, JSON.stringify(report, null, 2), {
+      // Ensure file stays within allowed directory
+      if (!normalizedPath.startsWith(path.normalize(this.reportsPath))) {
+        throw new Error('File path traversal attempt detected');
+      }
+      fs.writeFileSync(normalizedPath, JSON.stringify(report, null, 2), {
         mode: 0o640,
       });
       this.logger.log(`Security report saved: ${filename}`);
@@ -249,12 +260,21 @@ export class SecurityMonitoringService {
         throw new Error('Invalid reports path for getLatestReport');
       }
 
+      const normalizedReportsPath = path.normalize(this.reportsPath);
+      if (!isValidPath(normalizedReportsPath)) {
+        throw new Error('Invalid normalized reports path');
+      }
+
       const files = fs
-        .readdirSync(this.reportsPath, { encoding: 'utf8' })
-        .filter(
-          (file) =>
-            file.startsWith('security-report-') && file.endsWith('.json')
-        )
+        .readdirSync(normalizedReportsPath, { encoding: 'utf8' })
+        .filter((file) => {
+          // Validate file name to prevent injection
+          return (
+            /^[a-zA-Z0-9\-_\.]+$/.test(file) &&
+            file.startsWith('security-report-') &&
+            file.endsWith('.json')
+          );
+        })
         .sort()
         .reverse();
 
@@ -263,15 +283,26 @@ export class SecurityMonitoringService {
       }
 
       const latestFile = files[0];
-      const filepath = path.join(this.reportsPath, latestFile!);
+      if (!latestFile) {
+        return null;
+      }
+      const filepath = path.join(normalizedReportsPath, latestFile);
+      const normalizedFilepath = path.normalize(filepath);
 
-      if (!isValidPath(filepath)) {
+      if (!isValidPath(normalizedFilepath)) {
         throw new Error('Invalid file path detected');
       }
 
-      const fileContent = fs.readFileSync(filepath, 'utf-8');
+      // Ensure file stays within allowed directory
+      if (!normalizedFilepath.startsWith(normalizedReportsPath)) {
+        throw new Error('File path traversal attempt detected');
+      }
 
-      return JSON.parse(fileContent);
+      const fileContent = fs.readFileSync(normalizedFilepath, 'utf-8');
+
+      // Safe JSON parsing with validation
+      const parsed = JSON.parse(fileContent);
+      return this.validateSecurityReport(parsed);
     } catch (error) {
       this.logger.error('Failed to retrieve latest security report:', error);
       return null;
@@ -318,12 +349,21 @@ export class SecurityMonitoringService {
         throw new Error('Invalid reports path for getReportHistory');
       }
 
+      const normalizedReportsPath = path.normalize(this.reportsPath);
+      if (!isValidPath(normalizedReportsPath)) {
+        throw new Error('Invalid normalized reports path');
+      }
+
       const files = fs
-        .readdirSync(this.reportsPath, { encoding: 'utf8' })
-        .filter(
-          (file) =>
-            file.startsWith('security-report-') && file.endsWith('.json')
-        )
+        .readdirSync(normalizedReportsPath, { encoding: 'utf8' })
+        .filter((file) => {
+          // Validate file name to prevent injection
+          return (
+            /^[a-zA-Z0-9\-_\.]+$/.test(file) &&
+            file.startsWith('security-report-') &&
+            file.endsWith('.json')
+          );
+        })
         .sort()
         .reverse()
         .slice(0, limit);
@@ -332,16 +372,30 @@ export class SecurityMonitoringService {
 
       for (const file of files) {
         try {
-          const filepath = path.join(this.reportsPath, file);
+          const filepath = path.join(normalizedReportsPath, file);
+          const normalizedFilepath = path.normalize(filepath);
 
-          if (!isValidPath(filepath)) {
-            this.logger.warn(`Skipping invalid file path: ${filepath}`);
+          if (!isValidPath(normalizedFilepath)) {
+            this.logger.warn(
+              `Skipping invalid file path: ${normalizedFilepath}`
+            );
             continue;
           }
 
-          const fileContent = fs.readFileSync(filepath, { encoding: 'utf-8' });
-          const report = JSON.parse(fileContent);
-          reports.push(report);
+          // Ensure file stays within allowed directory
+          if (!normalizedFilepath.startsWith(normalizedReportsPath)) {
+            this.logger.warn(
+              `Skipping file outside allowed directory: ${file}`
+            );
+            continue;
+          }
+
+          const fileContent = fs.readFileSync(normalizedFilepath, {
+            encoding: 'utf-8',
+          });
+          const parsed = JSON.parse(fileContent);
+          const validatedReport = this.validateSecurityReport(parsed);
+          reports.push(validatedReport);
         } catch (error) {
           this.logger.error(`Failed to parse report file ${file}:`, error);
         }
@@ -352,5 +406,81 @@ export class SecurityMonitoringService {
       this.logger.error('Failed to retrieve report history:', error);
       return [];
     }
+  }
+
+  private validateSecurityReport(data: unknown): SecurityReport {
+    // Create safe object with null prototype to prevent prototype pollution
+    const report = Object.create(null) as SecurityReport;
+
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid security report data');
+    }
+
+    const obj = data as Record<string, unknown>;
+
+    // Validate and safely assign properties
+    report.id = typeof obj.id === 'string' ? obj.id : 'unknown';
+    report.timestamp = new Date((obj.timestamp as string) || Date.now());
+    report.totalVulnerabilities =
+      typeof obj.totalVulnerabilities === 'number'
+        ? obj.totalVulnerabilities
+        : 0;
+    report.severityBreakdown = this.validateSeverityBreakdown(
+      obj.severityBreakdown
+    );
+    report.criticalVulnerabilities = this.validateVulnerabilityArray(
+      obj.criticalVulnerabilities
+    );
+    report.highVulnerabilities = this.validateVulnerabilityArray(
+      obj.highVulnerabilities
+    );
+    report.moderateVulnerabilities = this.validateVulnerabilityArray(
+      obj.moderateVulnerabilities
+    );
+    report.recommendations = this.validateRecommendations(obj.recommendations);
+
+    return report;
+  }
+
+  private validateSeverityBreakdown(data: unknown): Record<string, number> {
+    const breakdown = Object.create(null) as Record<string, number>;
+
+    if (!data || typeof data !== 'object') {
+      return breakdown;
+    }
+
+    const obj = data as Record<string, unknown>;
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof key === 'string' && typeof value === 'number') {
+        breakdown[key] = value;
+      }
+    }
+
+    return breakdown;
+  }
+
+  private validateVulnerabilityArray(data: unknown): VulnerabilityAlert[] {
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.filter((item): item is VulnerabilityAlert => {
+      if (!item || typeof item !== 'object') return false;
+
+      const vuln = item as Record<string, unknown>;
+      return (
+        typeof vuln.package === 'string' &&
+        typeof vuln.severity === 'string' &&
+        ['critical', 'high', 'moderate', 'low'].includes(vuln.severity)
+      );
+    });
+  }
+
+  private validateRecommendations(data: unknown): string[] {
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.filter((item): item is string => typeof item === 'string');
   }
 }

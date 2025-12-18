@@ -10,7 +10,6 @@ import { vi } from 'vitest';
 
 describe('MilestoneService', () => {
   let service: MilestoneService;
-  let multiTenantPrisma: MultiTenantPrismaService;
 
   const mockPrisma = {
     project: {

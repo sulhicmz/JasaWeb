@@ -2,16 +2,19 @@ import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 // Simple logger fallback for web app
 const logger = {
-  debug: (message: string, data?: any) =>
+  debug: (message: string, data?: Record<string, unknown>) =>
     console.debug(`[DEBUG] ${message}`, data),
-  info: (message: string, data?: any) =>
+  info: (message: string, data?: Record<string, unknown>) =>
     console.info(`[INFO] ${message}`, data),
-  warn: (message: string, data?: any) =>
+  warn: (message: string, data?: Record<string, unknown>) =>
     console.warn(`[WARN] ${message}`, data),
-  error: (message: string, error?: any) =>
+  error: (message: string, error?: Error | Record<string, unknown>) =>
     console.error(`[ERROR] ${message}`, error),
-  performance: (metric: string, value: number, details?: any) =>
-    console.info(`[PERF] ${metric}: ${value}ms`, details),
+  performance: (
+    metric: string,
+    value: number,
+    details?: Record<string, unknown>
+  ) => console.info(`[PERF] ${metric}: ${value}ms`, details),
 };
 
 export type NotificationType =

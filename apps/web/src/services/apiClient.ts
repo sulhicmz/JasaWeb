@@ -13,6 +13,12 @@ interface ApiResponse<T = unknown> {
   status: number;
 }
 
+interface ErrorResponse {
+  message?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
 interface RequestOptions extends RequestInit {
   retries?: number;
   timeout?: number;
@@ -84,7 +90,7 @@ class ApiClient {
       if (!response.ok) {
         return {
           error: data
-            ? (data as any).message || response.statusText
+            ? (data as ErrorResponse).message || response.statusText
             : response.statusText,
           status: response.status,
         };

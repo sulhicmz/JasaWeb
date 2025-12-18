@@ -10,8 +10,6 @@ import { vi } from 'vitest';
 
 describe('AuthService - Multi-tenant Integration', () => {
   let service: AuthService;
-  let multiTenantPrisma: MultiTenantPrismaService;
-  let usersService: UsersService;
 
   const mockMultiTenantPrisma = {
     user: {

@@ -50,7 +50,7 @@ describe('DashboardController Integration Tests', () => {
     broadcastDashboardUpdate: jest.fn(),
   };
 
-  const mockGuard = {
+  {
     canActivate: (context: ExecutionContext) => {
       const request = context.switchToHttp().getRequest();
       request.user = { id: mockUserId, organizationId: mockOrganizationId };
@@ -106,13 +106,14 @@ describe('DashboardController Integration Tests', () => {
 
   describe('GET /dashboard/stats', () => {
     it('should return dashboard statistics for organization', async () => {
-      const mockStats = {
-        projects: { total: 5, active: 3, completed: 2, onHold: 0 },
-        tickets: {
-          total: 12,
-          open: 8,
-          inProgress: 3,
-          highPriority: 2,
+      {
+        const _mockStats = {
+          projects: { total: 5, active: 3, completed: 2, onHold: 0 },
+          tickets: {
+            total: 12,
+            open: 8,
+            inProgress: 3,
+            highPriority: 2,
           critical: 1,
         },
         invoices: {
