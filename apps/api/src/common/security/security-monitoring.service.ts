@@ -276,6 +276,40 @@ export class SecurityMonitoringService {
     }
   }
 
+  async checkPackageSecurity(
+    packageName: string
+  ): Promise<VulnerabilityAlert[]> {
+    try {
+      this.logger.log(`Checking security for package: ${packageName}`);
+
+      const auditOutput = execSync(
+        `pnpm audit --json --filter ${packageName}`,
+        {
+          cwd: process.cwd(),
+          encoding: 'utf-8',
+          stdio: 'pipe',
+        }
+      );
+
+      const allVulnerabilities = this.parseAuditResults(auditOutput);
+      const packageVulnerabilities = allVulnerabilities.filter(
+        (vuln) => vuln.package === packageName
+      );
+
+      this.logger.log(
+        `Found ${packageVulnerabilities.length} vulnerabilities for ${packageName}`
+      );
+
+      return packageVulnerabilities;
+    } catch (error) {
+      this.logger.error(
+        `Failed to check package security for ${packageName}:`,
+        error
+      );
+      return [];
+    }
+  }
+
   async getReportHistory(limit: number = 10): Promise<SecurityReport[]> {
     try {
       if (!isValidPath(this.reportsPath)) {

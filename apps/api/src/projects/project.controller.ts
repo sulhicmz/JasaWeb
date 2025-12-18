@@ -63,11 +63,7 @@ export class ProjectController {
       search: search?.trim(),
     };
 
-    return this.projectService.findAll(normalizedView, organizationId, {
-      page: pageNum,
-      limit: limitNum,
-      filters,
-    });
+    return this.projectService.findAll(normalizedView, organizationId);
   }
 
   @Get(':id')
