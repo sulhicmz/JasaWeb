@@ -43,8 +43,6 @@ import { EnvironmentModule } from './common/config/environment.module';
     }),
     RedisCacheModule,
     EnvironmentModule,
-    EnvironmentModule,
-    RedisCacheModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60, // Time window in seconds
@@ -72,7 +70,6 @@ import { EnvironmentModule } from './common/config/environment.module';
     PrismaModule,
     MultiTenantPrismaModule,
     OrganizationModule,
-    EnvironmentModule,
     AppConfigModule,
   ],
   controllers: [AppController],

@@ -26,6 +26,27 @@ type ProjectWithRelations = Project & {
   tickets?: Ticket[];
 };
 
+// Types for reduce function callbacks
+type MilestonesGroupCallback = (
+  acc: Record<string, Milestone[]>,
+  milestone: Milestone
+) => Record<string, Milestone[]>;
+
+type TicketsGroupCallback = (
+  acc: Record<string, Ticket[]>,
+  ticket: Ticket
+) => Record<string, Ticket[]>;
+
+type StatsReducerCallback<T> = (
+  acc: { [key: string]: number },
+  item: T
+) => { [key: string]: number };
+
+type FinancialReducerCallback<T> = (
+  acc: { sum: number; count: number },
+  item: T
+) => { sum: number; count: number };
+
 interface DashboardStats {
   projects: {
     total: number;
@@ -208,7 +229,7 @@ export class DashboardController {
 
     // Group related data by project with secure property access
     const milestonesByProject = milestones.reduce(
-      (acc, milestone) => {
+      ((acc: Record<string, Milestone[]>, milestone: Milestone) => {
         const projectId = milestone.projectId;
         // Validate projectId format to prevent injection
         if (
@@ -222,12 +243,12 @@ export class DashboardController {
           acc[projectId].push(milestone);
         }
         return acc;
-      },
-      {} as Record<string, typeof milestones>
+      }) as MilestonesGroupCallback,
+      {} as Record<string, Milestone[]>
     );
 
     const ticketsByProject = tickets.reduce(
-      (acc, ticket) => {
+      ((acc: Record<string, Ticket[]>, ticket: Ticket) => {
         const projectId = ticket.projectId;
         // Validate projectId format to prevent injection
         if (
@@ -241,8 +262,8 @@ export class DashboardController {
           acc[projectId].push(ticket);
         }
         return acc;
-      },
-      {} as Record<string, typeof tickets>
+      }) as TicketsGroupCallback,
+      {} as Record<string, Ticket[]>
     );
 
     // Calculate progress and additional metrics for each project
@@ -347,10 +368,13 @@ export class DashboardController {
         new Date(i.dueAt) < new Date()
     ).length;
 
-    const totalAmount = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
+    const totalAmount = invoices.reduce(
+      (sum: number, i: Invoice) => sum + (i.amount || 0),
+      0
+    );
     const pendingAmount = invoices
       .filter((i) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum, i) => sum + (i.amount || 0), 0);
+      .reduce((sum: number, i: Invoice) => sum + (i.amount || 0), 0);
 
     return { total, pending, overdue, totalAmount, pendingAmount };
   }
@@ -846,7 +870,10 @@ export class DashboardController {
     return {
       total: invoices.length,
       daily: dailyData,
-      totalAmount: invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
+      totalAmount: invoices.reduce(
+        (sum: number, inv: Invoice) => sum + (inv.amount || 0),
+        0
+      ),
       paidRate:
         (invoices.filter((inv) => inv.status === 'paid').length /
           invoices.length) *
@@ -889,12 +916,12 @@ export class DashboardController {
       totalProjects: projects.length,
       averageMilestonesPerProject:
         projectsWithCounts.reduce(
-          (sum, p) => sum + (p._count?.milestones || 0),
+          (sum: number, p: any) => sum + (p._count?.milestones || 0),
           0
         ) / projects.length,
       averageTicketsPerProject:
         projectsWithCounts.reduce(
-          (sum, p) => sum + (p._count?.tickets || 0),
+          (sum: number, p: any) => sum + (p._count?.tickets || 0),
           0
         ) / projects.length,
       onTimeCompletionRate: this.calculateOnTimeCompletionRate(projects),
@@ -985,10 +1012,13 @@ export class DashboardController {
 
     return {
       totalInvoices: invoices.length,
-      totalAmount: invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
+      totalAmount: invoices.reduce(
+        (sum: number, inv: Invoice) => sum + (inv.amount || 0),
+        0
+      ),
       paidAmount: invoices
         .filter((inv) => inv.status === 'paid')
-        .reduce((sum, inv) => sum + (inv.amount || 0), 0),
+        .reduce((sum: number, inv: Invoice) => sum + (inv.amount || 0), 0),
       averagePaymentTime: this.calculateAveragePaymentTime(invoices),
       overdueRate:
         (invoices.filter(

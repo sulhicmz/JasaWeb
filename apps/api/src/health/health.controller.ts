@@ -1,4 +1,4 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get, Logger, Inject } from '@nestjs/common';
 import {
   HealthCheck,
   HealthCheckService,
@@ -6,6 +6,10 @@ import {
 } from '@nestjs/terminus';
 import { PrismaHealthIndicator } from './prisma.health';
 import { Public } from '../common/decorators/public.decorator';
+import {
+  DatabaseMonitorService,
+  ConnectionMetrics,
+} from '../common/services/database-monitor.service';
 
 @Controller('health')
 export class HealthController {
@@ -14,7 +18,8 @@ export class HealthController {
   constructor(
     private health: HealthCheckService,
     private http: HttpHealthIndicator,
-    private prismaHealthIndicator: PrismaHealthIndicator
+    private prismaHealthIndicator: PrismaHealthIndicator,
+    private databaseMonitor: DatabaseMonitorService
   ) {}
 
   @Get()
@@ -62,6 +67,26 @@ export class HealthController {
     } catch (error: unknown) {
       const message = this.getErrorMessage(error);
       this.logger.error(`HTTP health check failed: ${message}`);
+      throw error;
+    }
+  }
+
+  @Get('database/metrics')
+  @Public()
+  async getDatabaseMetrics() {
+    try {
+      const metrics = await this.databaseMonitor.getConnectionPoolInfo();
+      const suggestions = await this.databaseMonitor.optimizeDatabase();
+
+      return {
+        status: 'ok',
+        metrics,
+        suggestions,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error: unknown) {
+      const message = this.getErrorMessage(error);
+      this.logger.error(`Database metrics check failed: ${message}`);
       throw error;
     }
   }

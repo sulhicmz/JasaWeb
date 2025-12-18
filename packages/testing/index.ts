@@ -1,6 +1,6 @@
 // Testing utilities and helpers for JasaWeb
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Module } from '@nestjs/common';
 
 /**
  * Creates a test application instance for testing
@@ -20,12 +20,12 @@ export const createTestApp = async (
  * Creates a testing module with common providers
  */
 export const createTestingModule = (
-  imports: unknown[],
+  imports: Module[],
   providers: unknown[] = []
 ): Promise<TestingModule> => {
   return Test.createTestingModule({
-    imports: imports as any[],
-    providers: providers as any[],
+    imports,
+    providers,
   }).compile();
 };
 
