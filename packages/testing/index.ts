@@ -2,6 +2,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 
+// Export Vitest configurations
+export {
+  baseVitestConfig,
+  apiVitestConfig,
+  webVitestConfig,
+  packageVitestConfig,
+} from './vitest.base.config';
+
 /**
  * Creates a test application instance for testing
  */

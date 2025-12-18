@@ -1,14 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   getRequiredEnv,
   getOptionalEnv,
   getEnvNumber,
-} from '../../../../../packages/config/env-validation';
-import { logger } from '../../../../../packages/config/logger';
+  getSiteConfig,
+  getEmailConfig,
+  getSecurityConfig,
+  getNetworkConfig,
+  getCacheConfig,
+  isEnvProduction,
+  BusinessConfig,
+  SiteConfig,
+  EmailConfig,
+  SecurityConfig,
+  NetworkConfig,
+  CacheConfig,
+} from '@jasaweb/config';
 import { DEFAULT_DATABASE_CONFIG, APP_URLS } from './constants';
 
 @Injectable()
 export class AppConfigService {
+  private readonly logger = new Logger(AppConfigService.name);
   private readonly nodeEnv: string;
   private readonly apiBaseUrl: string;
   private readonly apiPort: number;
@@ -26,6 +38,7 @@ export class AppConfigService {
   private readonly websocketOrigin: string;
 
   constructor() {
+    this.logger.log('Application configuration service initialized');
     this.nodeEnv = getOptionalEnv('NODE_ENV', 'development')!;
     const isDevelopment = this.nodeEnv === 'development';
 
@@ -197,6 +210,182 @@ export class AppConfigService {
     return this.corsOrigins.includes(origin);
   }
 
+  // Business Configuration Methods (from unified config)
+
+  /**
+   * Get site configuration
+   */
+  getSiteConfig(): SiteConfig {
+    return getSiteConfig();
+  }
+
+  /**
+   * Get email configuration
+   */
+  getEmailConfig(): EmailConfig {
+    return getEmailConfig();
+  }
+
+  /**
+   * Get security configuration
+   */
+  getSecurityConfig(): SecurityConfig {
+    return getSecurityConfig();
+  }
+
+  /**
+   * Get network configuration
+   */
+  getNetworkConfig(): NetworkConfig {
+    return getNetworkConfig();
+  }
+
+  /**
+   * Get cache configuration
+   */
+  getCacheConfig(): CacheConfig {
+    return getCacheConfig();
+  }
+
+  /**
+   * Get full configuration
+   */
+  getAllConfig(): BusinessConfig {
+    return {
+      site: this.getSiteConfig(),
+      emails: this.getEmailConfig(),
+      security: this.getSecurityConfig(),
+      network: this.getNetworkConfig(),
+      cache: this.getCacheConfig(),
+    };
+  }
+
+  /**
+   * Get configuration value by dot notation path
+   */
+  get<T = unknown>(path: string): T {
+    const config = this.getAllConfig();
+    const keys = path.split('.');
+    let value: unknown = config;
+
+    // Define allowed keys for security
+    const allowedKeys = new Set([
+      'site',
+      'emails',
+      'security',
+      'network',
+      'cache',
+      'name',
+      'description',
+      'contact',
+      'urls',
+      'api',
+      'production',
+      'maxFileUploadSize',
+      'maxLoginAttempts',
+      'bcryptRounds',
+      'rateLimit',
+      'windowMs',
+      'maxRequests',
+      'defaultTtl',
+      'dashboardTtl',
+    ]);
+
+    for (const key of keys) {
+      if (!allowedKeys.has(key)) {
+        throw new Error(`Configuration key '${key}' is not allowed`);
+      }
+      if (
+        value &&
+        typeof value === 'object' &&
+        value !== null &&
+        Object.prototype.hasOwnProperty.call(value, key)
+      ) {
+        // Safely access nested property with safe key access
+        const recordValue = value as Record<string, unknown>;
+        const safeKeys = Object.freeze([
+          'database',
+          'redis',
+          'storage',
+          'auth',
+          'security',
+          'application',
+          'aws',
+          's3',
+          'minio',
+        ]);
+
+        if (!safeKeys.includes(key as string)) {
+          throw new Error(`Unauthorized configuration key access: ${key}`);
+        }
+
+        value = recordValue[key];
+      } else {
+        throw new Error(`Configuration path '${path}' not found`);
+      }
+    }
+
+    return value as T;
+  }
+
+  /**
+   * Check if service is healthy (config is loaded and valid)
+   */
+  isHealthy(): boolean {
+    try {
+      // Basic validation
+      const siteConfig = this.getSiteConfig();
+      const emailConfig = this.getEmailConfig();
+
+      return !!(
+        siteConfig.name &&
+        siteConfig.description &&
+        emailConfig.contact
+      );
+    } catch (error) {
+      this.logger.error('Configuration health check failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get configuration summary for monitoring
+   */
+  getConfigSummary(): Record<string, unknown> {
+    return {
+      site: {
+        name: this.get('site.name'),
+        environment: this.nodeEnv,
+        urls: {
+          api: this.get('site.urls.api'),
+          production: this.get('site.urls.production'),
+        },
+      },
+      security: {
+        maxFileUploadSize: this.get('security.maxFileUploadSize'),
+        maxLoginAttempts: this.get('security.maxLoginAttempts'),
+        bcryptRounds: this.get('security.bcryptRounds'),
+      },
+      network: {
+        rateLimit: {
+          windowMs: this.get('network.rateLimit.windowMs'),
+          maxRequests: this.get('network.rateLimit.maxRequests'),
+        },
+      },
+      cache: {
+        defaultTtl: this.get('cache.defaultTtl'),
+        dashboardTtl: this.get('cache.dashboardTtl'),
+      },
+    };
+  }
+
+  /**
+   * Get production status
+   */
+  get isProductionMode(): boolean {
+    return isEnvProduction();
+  }
+
   // Debug method to log configuration (without secrets)
   logConfiguration(): void {
     const config = {
@@ -211,6 +400,6 @@ export class AppConfigService {
       corsOrigins: this.corsOrigins,
     };
 
-    logger.debug('Application configuration loaded', config);
+    this.logger.debug('Application configuration loaded', config);
   }
 }
