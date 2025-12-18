@@ -173,6 +173,13 @@ export const ENV_SCHEMA: Record<string, EnvSchema> = {
   },
 
   // File Storage Configuration (S3/MinIO)
+  STORAGE_TYPE: {
+    type: 'string',
+    required: false,
+    pattern: /^(local|s3)$/,
+    defaultValue: 'local',
+    description: 'Storage type: local or s3',
+  },
   S3_ENDPOINT: {
     type: 'string',
     required: false,
@@ -433,14 +440,23 @@ export function validateEnvironmentVariables(): void {
       /minioadmin/i,
       /redis_password/i,
       /^test$/, // Exact match for "test"
+      /CHANGE_THIS/,
+      /GENERATE_.*HERE/,
+      /your-.*-key/,
+      /default/,
+      /placeholder/i,
     ];
 
-    // Additional check for test database name (only warn in development)
+    // Additional check for insecure database names (only warn in development)
     if (
-      process.env.POSTGRES_DB === 'test' &&
+      (process.env.POSTGRES_DB === 'test' ||
+        process.env.POSTGRES_DB === 'prod' ||
+        process.env.POSTGRES_DB === 'production') &&
       process.env.NODE_ENV === 'development'
     ) {
-      warnings.push('Using test database name in development environment');
+      warnings.push(
+        `Using potentially database name in development environment: ${process.env.POSTGRES_DB}`
+      );
     }
 
     const checkWeakPassword = (value: string | undefined, name: string) => {
@@ -529,14 +545,6 @@ export function getRequiredEnv(key: string): string {
     );
   }
 
-  // Security: Additional key validation
-  const allowedKeys = new Set(Object.keys(ENV_SCHEMA));
-  if (!allowedKeys.has(key)) {
-    throw new EnvValidationError(
-      `Unauthorized environment variable access: ${key}`
-    );
-  }
-
   const value = process.env[key];
   if (!value) {
     throw new EnvValidationError(
@@ -555,11 +563,10 @@ export function getOptionalEnv(
     throw new EnvValidationError(`Invalid environment variable key: ${key}`);
   }
 
-  // Security: Additional key validation with Set
-  const allowedKeys = new Set(Object.keys(ENV_SCHEMA));
-  if (!allowedKeys.has(key)) {
+  // Double validation against allowed keys
+  if (!Object.prototype.hasOwnProperty.call(ENV_SCHEMA, key)) {
     throw new EnvValidationError(
-      `Unauthorized environment variable access: ${key}`
+      `Environment variable ${key} is not in schema`
     );
   }
 

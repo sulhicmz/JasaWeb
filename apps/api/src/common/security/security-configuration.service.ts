@@ -69,34 +69,44 @@ export class SecurityConfigurationService {
       ...(isProduction && { upgradeInsecureRequests: [] }),
     };
 
-    // Security: Safe iteration using explicit allowed keys
-    const directiveEntries: Array<[string, string[]]> = [];
-    const allowedKeys = new Set([
+    // Filter out undefined values using safe Object.keys iteration
+    const validDirectiveKeys = [
       'defaultSrc',
       'scriptSrc',
       'styleSrc',
       'imgSrc',
-      'fontSrc',
       'connectSrc',
-      'mediaSrc',
+      'fontSrc',
       'objectSrc',
-      'childSrc',
+      'mediaSrc',
       'frameSrc',
+      'childSrc',
       'workerSrc',
       'manifestSrc',
       'upgradeInsecureRequests',
-    ]);
+    ] as const;
 
-    // Security: Use Set for secure iteration to prevent object injection
-    for (const key of Object.keys(directives)) {
-      if (allowedKeys.has(key)) {
-        const directiveValue = directives[key as keyof typeof directives];
+    // Create a new object to safely handle directives without prototype pollution
+    const safeDirectives = Object.create(null);
+
+    for (const key of validDirectiveKeys) {
+      if (Object.prototype.hasOwnProperty.call(directives, key)) {
+        const directiveValue = directives[key];
         if (directiveValue && Array.isArray(directiveValue)) {
-          directiveEntries.push([key, [...directiveValue]]);
+          const filtered = directiveValue.filter(Boolean);
+          if (filtered.length > 0) {
+            Object.defineProperty(safeDirectives, key, {
+              value: filtered,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
+          }
         }
       }
     }
 
+<<<<<<< HEAD
     // Security: Use safe object creation with validated keys
     const filteredDirectives: Record<string, string[]> = {};
     const validKeys = new Set([
@@ -142,8 +152,10 @@ export class SecurityConfigurationService {
       }
     }
 
+=======
+>>>>>>> 946a7a49b31f0dbd2631030128cac0a50ca324d6
     return {
-      directives,
+      directives: safeDirectives,
       reportOnly: isDevelopment, // Use report-only in development
     };
   }
@@ -246,7 +258,7 @@ export class SecurityConfigurationService {
 
     // In production, this could send to a SIEM or security monitoring service
     if (this.appConfig.isProduction()) {
-      // TODO: Integrate with security monitoring service
+      // Security monitoring service integration to be implemented
       // Example: Send to Sentry, Datadog, or custom security endpoint
     }
   }

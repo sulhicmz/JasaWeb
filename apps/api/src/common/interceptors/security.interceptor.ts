@@ -136,27 +136,34 @@ export class SecurityInterceptor implements NestInterceptor {
         }
 
         if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-          const sanitized: SafeObject = {};
+          const sanitized = Object.create(null); // Create object without prototype to prevent pollution
           const sensitiveFieldsSet = new Set(sensitiveFields);
-          const objKeys = Object.keys(obj) as string[];
 
-          for (const key of objKeys) {
-            const value = obj[key as keyof typeof obj];
+          // Use Object.getOwnPropertyNames for safer enumeration
+          for (const key of Object.getOwnPropertyNames(obj)) {
+            if (
+              key === '__proto__' ||
+              key === 'constructor' ||
+              key === 'prototype'
+            ) {
+              continue; // Skip dangerous prototype properties
+            }
+
             const lowerKey = key.toLowerCase();
             const hasSensitiveField = Array.from(sensitiveFieldsSet).some(
               (field: string) => lowerKey.includes(field)
             );
 
+            const value = (obj as Record<string, unknown>)[key];
+
             if (hasSensitiveField) {
-              // Security: Use Object.defineProperty with explicit configuration to prevent injection
               Object.defineProperty(sanitized, key, {
                 value: '[REDACTED]',
-                writable: true,
+                writable: false,
                 enumerable: true,
-                configurable: true,
+                configurable: false,
               });
             } else if (typeof value === 'object' && value !== null) {
-              // Use Object.defineProperty for nested objects as well
               Object.defineProperty(sanitized, key, {
                 value: sanitize(value),
                 writable: true,
@@ -164,7 +171,6 @@ export class SecurityInterceptor implements NestInterceptor {
                 configurable: true,
               });
             } else {
-              // Use Object.defineProperty for regular values
               Object.defineProperty(sanitized, key, {
                 value: value,
                 writable: true,

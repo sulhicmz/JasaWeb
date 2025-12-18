@@ -771,7 +771,7 @@ Use our [PR template](../.github/pull_request_template.md) which includes:
 
 ### Bug Reports
 
-Use our [bug report template](../.github/ISSUE_TEMPLATE/bug_report.yml) and include:
+When creating bug reports, include:
 
 - Clear description of the bug
 - Steps to reproduce
@@ -781,7 +781,7 @@ Use our [bug report template](../.github/ISSUE_TEMPLATE/bug_report.yml) and incl
 
 ### Feature Requests
 
-Use our [feature request template](../.github/ISSUE_TEMPLATE/feature_request.yml) and include:
+When submitting feature requests, include:
 
 - Problem statement
 - Proposed solution

@@ -23,50 +23,18 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   if (src) {
-    // Security: Validate className to prevent injection
-    const allowedClasses = new Set(['rounded-full', 'object-cover']);
-    const sanitizedClassName = className
-      .split(' ')
-      .filter(
-        (cls) =>
-          allowedClasses.has(cls) ||
-          cls.startsWith('w-') ||
-          cls.startsWith('h-')
-      )
-      .join(' ');
-
     return (
       <img
         src={src}
         alt={alt || 'Avatar'}
-        className={`rounded-full object-cover ${sizeClasses[size]} ${sanitizedClassName}`}
+        className={`rounded-full object-cover ${sizeClasses[size]} ${className}`}
       />
     );
   }
 
-  // Security: Validate className to prevent injection
-  const allowedClasses = new Set([
-    'rounded-full',
-    'bg-gradient-to-br',
-    'from-blue-500',
-    'to-indigo-600',
-    'flex',
-    'items-center',
-    'justify-center',
-    'text-white',
-    'font-medium',
-  ]);
-  const sanitizedClassName = className
-    .split(' ')
-    .filter(
-      (cls) =>
-        allowedClasses.has(cls) || cls.startsWith('w-') || cls.startsWith('h-')
-    )
-    .join(' ');
-
   return (
     <div
-      className={`rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium ${sizeClasses[size]} ${sanitizedClassName}`}
+      className={`rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-medium ${sizeClasses[size]} ${className}`}
     >
       {fallback || '?'}
     </div>

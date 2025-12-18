@@ -18,7 +18,7 @@
     "start:api": "cd apps/api && pnpm start:prod",
     "test": "cd apps/api && pnpm test",
     "test:api": "cd apps/api && pnpm test",
-    "test:web": "vitest run apps/web",
+    "test:web": "cd apps/web && pnpm test",
     "lint": "pnpm exec eslint . --max-warnings 500",
     "lint:fix": "pnpm exec eslint . --fix",
     "format": "prettier --write .",
@@ -38,9 +38,14 @@
     "quick-start": "./scripts/quick-start.sh",
     "security:audit": "pnpm audit --audit-level moderate",
     "security:audit:fix": "pnpm audit --fix",
+    "security:audit:json": "pnpm audit --audit-level moderate --json > audit-results.json || true",
+    "security:audit:high": "pnpm audit --audit-level high",
     "security:check": "pnpm security:audit && pnpm security:outdated",
     "security:outdated": "pnpm outdated",
-    "security:scan": "node scripts/security-scan.js"
+    "security:scan": "node scripts/security-scan.js",
+    "security:scan:ci": "node scripts/security-scan.js && pnpm security:audit:high && pnpm security:audit:json",
+    "security:vulnerability:scan": "node scripts/vulnerability-scanner.js",
+    "security:vulnerability:fix": "node scripts/vulnerability-scanner.js --fix"
   },
   "keywords": [
     "astro",

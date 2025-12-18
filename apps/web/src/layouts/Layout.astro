@@ -193,7 +193,7 @@ const { title } = Astro.props;
         addEventListener('beforeunload', () => {
           if (Object.keys(vitals).length > 0) {
             console.log('Core Web Vitals:', vitals);
-            // TODO: Send to analytics service
+            // Analytics service integration will be implemented
           }
         });
       }

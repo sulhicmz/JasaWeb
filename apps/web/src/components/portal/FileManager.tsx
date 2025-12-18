@@ -87,6 +87,8 @@ const FileManager: React.FC<FileManagerProps> = ({
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
+        if (!file) continue; // Skip undefined files
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('projectId', projectId);
@@ -167,10 +169,9 @@ const FileManager: React.FC<FileManagerProps> = ({
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return 'Unknown size';
 
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'] as const;
+    const sizes: ReadonlyArray<string> = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    const validIndex = Math.min(i, sizes.length - 1);
-    return `${Math.round((bytes / Math.pow(1024, i)) * 100) / 100} ${sizes[validIndex]}`;
+    return `${Math.round((bytes / Math.pow(1024, i)) * 100) / 100} ${sizes[i]}`;
   };
 
   const getFileIcon = (filename: string) => {

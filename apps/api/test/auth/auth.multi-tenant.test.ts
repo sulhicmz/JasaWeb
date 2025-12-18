@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { UserService } from '../users/user.service';
+import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from './refresh-token.service';
 import { PasswordService } from './password.service';
@@ -16,7 +16,7 @@ jest.mock('uuid', () => ({
 
 describe('AuthService - Multi-tenant Authentication', () => {
   let service: AuthService;
-  let usersService: UserService;
+  let usersService: UsersService;
   let jwtService: JwtService;
   let refreshTokenService: RefreshTokenService;
   let passwordService: PasswordService;
@@ -53,7 +53,7 @@ describe('AuthService - Multi-tenant Authentication', () => {
   };
 
   beforeEach(async () => {
-    const mockUserService = {
+    const mockUsersService = {
       findByEmail: jest.fn(),
       create: jest.fn(),
       updatePasswordHash: jest.fn(),
@@ -98,8 +98,8 @@ describe('AuthService - Multi-tenant Authentication', () => {
       providers: [
         AuthService,
         {
-          provide: UserService,
-          useValue: mockUserService,
+          provide: UsersService,
+          useValue: mockUsersService,
         },
         {
           provide: JwtService,
@@ -121,7 +121,7 @@ describe('AuthService - Multi-tenant Authentication', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    usersService = module.get<UserService>(UserService);
+    usersService = module.get<UsersService>(UsersService);
     jwtService = module.get<JwtService>(JwtService);
     refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
     passwordService = module.get<PasswordService>(PasswordService);

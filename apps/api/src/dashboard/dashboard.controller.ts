@@ -17,53 +17,46 @@ import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from './dashboard.gateway';
-import { EnhancedCacheService } from '../common/cache/enhanced-cache.service';
 import { Project, Milestone, Ticket, Invoice } from '@prisma/client';
+import type {
+  ProjectWithRelations,
+  DashboardStats,
+  RecentActivity,
+  ProjectWithMetrics,
+  AnalyticsTrendsResponse,
+  PerformanceMetricsResponse,
+  ForecastAnalyticsResponse,
+  PredictiveAnalyticsResponse,
+  MetricTrend,
+  DailyDataPoint,
+  ProjectPerformanceMetrics,
+  TicketResolutionMetrics,
+  MilestoneCompletionMetrics,
+  InvoicePerformanceMetrics,
+  ProjectForecast,
+  MilestoneForecast,
+  InvoiceForecast,
+  ResourceForecast,
+  ProjectPredictions,
+  RevenuePredictions,
+  RiskPredictions,
+  CapacityPredictions,
+} from './types/dashboard.types';
 
-// Type for Project with relations
-type ProjectWithRelations = Project & {
-  milestones?: Milestone[];
-  tickets?: Ticket[];
-};
-
-interface DashboardStats {
-  projects: {
-    total: number;
-    active: number;
-    completed: number;
-    onHold: number;
-  };
-  tickets: {
-    total: number;
-    open: number;
-    inProgress: number;
-    highPriority: number;
-    critical: number;
-  };
-  invoices: {
-    total: number;
-    pending: number;
-    overdue: number;
-    totalAmount: number;
-    pendingAmount: number;
-  };
-  milestones: {
-    total: number;
-    completed: number;
-    overdue: number;
-    dueThisWeek: number;
-  };
-}
-
-interface RecentActivity {
+// Interface for the specific projects query result
+interface ProjectQueryResult {
   id: string;
-  type: 'project' | 'ticket' | 'milestone' | 'invoice';
-  title: string;
-  description: string;
+  name: string;
   status: string;
+  startAt: Date | null;
+  dueAt: Date | null;
   createdAt: Date;
-  priority?: string;
-  dueDate?: Date;
+  updatedAt: Date;
+  stagingUrl: string | null;
+  productionUrl: string | null;
+  repositoryUrl: string | null;
+  milestones: Array<{ id: string }>;
+  tickets: Array<{ id: string; priority: string }>;
 }
 
 @Controller('dashboard')
@@ -72,8 +65,7 @@ export class DashboardController {
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private readonly dashboardGateway: DashboardGateway,
-    private readonly enhancedCache: EnhancedCacheService
+    private readonly dashboardGateway: DashboardGateway
   ) {}
 
   @Get('stats')
@@ -82,15 +74,11 @@ export class DashboardController {
     @CurrentOrganizationId() organizationId: string,
     @Query('refresh') refresh?: string
   ): Promise<DashboardStats> {
-    const cacheKey = EnhancedCacheService.generateStatsKey(
-      organizationId,
-      'dashboard'
-    );
+    const cacheKey = CACHE_KEYS.DASHBOARD_STATS(organizationId);
 
-    // Use enhanced cache with multi-level strategy
+    // Return cached data if available and not forcing refresh
     if (!refresh || refresh !== 'true') {
-      const cachedStats =
-        await this.enhancedCache.get<DashboardStats>(cacheKey);
+      const cachedStats = await this.cacheManager.get<DashboardStats>(cacheKey);
       if (cachedStats) {
         return cachedStats;
       }
@@ -112,8 +100,8 @@ export class DashboardController {
       milestones: milestonesStats,
     };
 
-    // Cache using enhanced service (5 minutes TTL)
-    await this.enhancedCache.set(cacheKey, stats, { ttl: 300 });
+    // Cache for 5 minutes (300 seconds)
+    await this.cacheManager.set(cacheKey, stats, 300000);
 
     return stats;
   }
@@ -158,7 +146,7 @@ export class DashboardController {
   ) {
     const limitNum = Math.min(parseInt(limit) || 6, 20);
 
-    const projects = await this.multiTenantPrisma.project.findMany({
+    const projects = (await this.multiTenantPrisma.project.findMany({
       where: { organizationId },
       select: {
         id: true,
@@ -171,146 +159,74 @@ export class DashboardController {
         stagingUrl: true,
         productionUrl: true,
         repositoryUrl: true,
-        _count: {
+        milestones: {
+          where: { status: 'completed' },
           select: {
-            milestones: true,
-            tickets: true,
+            id: true,
+          },
+        },
+        tickets: {
+          where: { status: { in: ['open', 'in-progress'] } },
+          select: {
+            id: true,
+            priority: true,
           },
         },
       },
       orderBy: { updatedAt: 'desc' },
       take: limitNum,
-    });
+    })) as unknown as ProjectQueryResult[];
 
-    // Fetch milestones and tickets separately to avoid N+1 queries
-    const projectIds = projects.map((p) => p.id);
+    // Get milestone counts for each project
+    const milestoneCounts = await Promise.all(
+      projects.map(async (project) => {
+        const [total, completed] = await Promise.all([
+          this.multiTenantPrisma.milestone.count({
+            where: { projectId: project.id },
+          }),
+          this.multiTenantPrisma.milestone.count({
+            where: {
+              projectId: project.id,
+              status: 'completed',
+            },
+          }),
+        ]);
 
-    const [milestones, tickets] = await Promise.all([
-      this.multiTenantPrisma.milestone.findMany({
-        where: { projectId: { in: projectIds } },
-        select: {
-          id: true,
-          projectId: true,
-          status: true,
-          dueAt: true,
-        },
-      }),
-      this.multiTenantPrisma.ticket.findMany({
-        where: { projectId: { in: projectIds } },
-        select: {
-          id: true,
-          projectId: true,
-          status: true,
-          priority: true,
-        },
-      }),
-    ]);
-
-    // Group related data by project with secure property access
-    const milestonesByProject = milestones.reduce(
-      (acc, milestone) => {
-        const projectId = milestone.projectId;
-        // Validate projectId format to prevent injection
-        if (
-          projectId &&
-          typeof projectId === 'string' &&
-          /^[a-f0-9-]{36}$/.test(projectId)
-        ) {
-          if (!Object.prototype.hasOwnProperty.call(acc, projectId)) {
-            Object.defineProperty(acc, projectId, {
-              value: [],
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            });
-          }
-          const currentArray = Object.prototype.hasOwnProperty.call(
-            acc,
-            projectId
-          )
-            ? (acc[projectId] as typeof milestones)
-            : [];
-          currentArray.push(milestone);
-          Object.defineProperty(acc, projectId, {
-            value: currentArray,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
-        }
-        return acc;
-      },
-      {} as Record<string, typeof milestones>
+        return {
+          projectId: project.id,
+          totalMilestones: total,
+          completedMilestones: completed,
+          progress: total > 0 ? Math.round((completed / total) * 100) : 0,
+        };
+      })
     );
 
-    const ticketsByProject = tickets.reduce(
-      (acc, ticket) => {
-        const projectId = ticket.projectId;
-        // Validate projectId format to prevent injection
-        if (
-          projectId &&
-          typeof projectId === 'string' &&
-          /^[a-f0-9-]{36}$/.test(projectId)
-        ) {
-          if (!Object.prototype.hasOwnProperty.call(acc, projectId)) {
-            Object.defineProperty(acc, projectId, {
-              value: [],
-              writable: true,
-              enumerable: true,
-              configurable: true,
-            });
-          }
-          const currentArray = Object.prototype.hasOwnProperty.call(
-            acc,
-            projectId
-          )
-            ? (acc[projectId] as typeof tickets)
-            : [];
-          currentArray.push(ticket);
-          Object.defineProperty(acc, projectId, {
-            value: currentArray,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
-        }
-        return acc;
-      },
-      {} as Record<string, typeof tickets>
-    );
+    // Create lookup map for milestone counts
+    const milestoneMap = new Map(milestoneCounts.map((m) => [m.projectId, m]));
 
     // Calculate progress and additional metrics for each project
-    const projectsWithMetrics = projects.map((project) => {
-      const projectMilestones = milestonesByProject[project.id] || [];
-      const projectTickets = ticketsByProject[project.id] || [];
+    const projectsWithMetrics = projects.map((project: ProjectQueryResult) => {
+      const milestoneData = milestoneMap.get(project.id) || {
+        totalMilestones: 0,
+        completedMilestones: 0,
+        progress: 0,
+      };
 
-      const totalMilestones = projectMilestones.length;
-      const completedMilestones = projectMilestones.filter(
-        (m: Milestone) => m.status === 'completed'
-      ).length;
-      const progress =
-        totalMilestones > 0
-          ? Math.round((completedMilestones / totalMilestones) * 100)
-          : 0;
-
-      const openTickets = projectTickets.filter(
-        (t: Ticket) => t.status === 'open' || t.status === 'in-progress'
-      ).length;
-
-      const highPriorityTickets = projectTickets.filter(
-        (t: Ticket) =>
-          (t.priority === 'high' || t.priority === 'critical') &&
-          (t.status === 'open' || t.status === 'in-progress')
-      ).length;
+      const openTickets = project.tickets?.length || 0;
+      const highPriorityTickets =
+        project.tickets?.filter(
+          (t: { id: string; priority: string }) =>
+            t.priority === 'high' || t.priority === 'critical'
+        ).length || 0;
 
       return {
         id: project.id,
         name: project.name,
         description: null, // Project model doesn't have description field
         status: project.status,
-        progress,
-        totalMilestones,
-        completedMilestones,
+        progress: milestoneData.progress,
+        totalMilestones: milestoneData.totalMilestones,
+        completedMilestones: milestoneData.completedMilestones,
         openTickets,
         highPriorityTickets,
         createdAt: project.createdAt,
@@ -327,64 +243,118 @@ export class DashboardController {
   }
 
   private async getProjectsStats(organizationId: string) {
-    const projects = await this.multiTenantPrisma.project.findMany({
-      where: { organizationId },
-      select: { status: true },
-    });
-
-    const total = projects.length;
-    const active = projects.filter(
-      (p) => p.status === 'active' || p.status === 'in-progress'
-    ).length;
-    const completed = projects.filter((p) => p.status === 'completed').length;
-    const onHold = projects.filter((p) => p.status === 'on-hold').length;
+    const [total, active, completed, onHold] = await Promise.all([
+      this.multiTenantPrisma.project.count({
+        where: { organizationId },
+      }),
+      this.multiTenantPrisma.project.count({
+        where: {
+          organizationId,
+          status: { in: ['active', 'in-progress'] },
+        },
+      }),
+      this.multiTenantPrisma.project.count({
+        where: {
+          organizationId,
+          status: 'completed',
+        },
+      }),
+      this.multiTenantPrisma.project.count({
+        where: {
+          organizationId,
+          status: 'on-hold',
+        },
+      }),
+    ]);
 
     return { total, active, completed, onHold };
   }
 
   private async getTicketsStats(organizationId: string) {
-    const tickets = await this.multiTenantPrisma.ticket.findMany({
-      where: { organizationId },
-      select: { status: true, priority: true },
-    });
-
-    const total = tickets.length;
-    const open = tickets.filter((t) => t.status === 'open').length;
-    const inProgress = tickets.filter((t) => t.status === 'in-progress').length;
-    const highPriority = tickets.filter(
-      (t) =>
-        (t.priority === 'high' || t.priority === 'critical') &&
-        (t.status === 'open' || t.status === 'in-progress')
-    ).length;
-    const critical = tickets.filter(
-      (t) =>
-        t.priority === 'critical' &&
-        (t.status === 'open' || t.status === 'in-progress')
-    ).length;
+    const [total, open, inProgress, highPriority, critical] = await Promise.all(
+      [
+        this.multiTenantPrisma.ticket.count({
+          where: { organizationId },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            status: 'open',
+          },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            status: 'in-progress',
+          },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            priority: { in: ['high', 'critical'] },
+            status: { in: ['open', 'in-progress'] },
+          },
+        }),
+        this.multiTenantPrisma.ticket.count({
+          where: {
+            organizationId,
+            priority: 'critical',
+            status: { in: ['open', 'in-progress'] },
+          },
+        }),
+      ]
+    );
 
     return { total, open, inProgress, highPriority, critical };
   }
 
   private async getInvoicesStats(organizationId: string) {
-    const invoices = await this.multiTenantPrisma.invoice.findMany({
-      where: { organizationId },
-      select: { status: true, amount: true, dueAt: true },
-    });
+    const now = new Date();
 
-    const total = invoices.length;
-    const pending = invoices.filter(
-      (i) => i.status === 'draft' || i.status === 'issued'
-    ).length;
-    const overdue = invoices.filter(
-      (i) =>
-        (i.status === 'issued' || i.status === 'overdue') &&
-        new Date(i.dueAt) < new Date()
-    ).length;
+    const [
+      total,
+      pending,
+      overdue,
+      totalAmountInvoices,
+      pendingAmountInvoices,
+    ] = await Promise.all([
+      this.multiTenantPrisma.invoice.count({
+        where: { organizationId },
+      }),
+      this.multiTenantPrisma.invoice.count({
+        where: {
+          organizationId,
+          status: { in: ['draft', 'issued'] },
+        },
+      }),
+      this.multiTenantPrisma.invoice.count({
+        where: {
+          organizationId,
+          status: { in: ['issued', 'overdue'] },
+          dueAt: { lt: now },
+        },
+      }),
+      this.multiTenantPrisma.invoice.findMany({
+        where: { organizationId },
+        select: { amount: true },
+      }),
+      this.multiTenantPrisma.invoice.findMany({
+        where: {
+          organizationId,
+          status: { in: ['draft', 'issued'] },
+        },
+        select: { amount: true },
+      }),
+    ]);
 
-    const totalAmount = invoices.reduce((sum, i) => sum + (i.amount || 0), 0);
-    const pendingAmount = invoices
-      .filter((i) => i.status === 'draft' || i.status === 'issued')
-      .reduce((sum, i) => sum + (i.amount || 0), 0);
+    const totalAmount = totalAmountInvoices.reduce(
+      (sum, inv) => sum + (inv.amount || 0),
+      0
+    );
+    const pendingAmount = pendingAmountInvoices.reduce(
+      (sum, inv) => sum + (inv.amount || 0),
+      0
+    );
 
     return { total, pending, overdue, totalAmount, pendingAmount };
   }
@@ -393,27 +363,41 @@ export class DashboardController {
     const now = new Date();
     const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const milestones = await this.multiTenantPrisma.milestone.findMany({
-      where: {
-        project: {
-          organizationId,
+    const [total, completed, overdue, dueThisWeek] = await Promise.all([
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
         },
-      },
-      select: { status: true, dueAt: true },
-    });
-
-    const total = milestones.length;
-    const completed = milestones.filter((m) => m.status === 'completed').length;
-    const overdue = milestones.filter(
-      (m) => m.status !== 'completed' && m.dueAt && new Date(m.dueAt) < now
-    ).length;
-    const dueThisWeek = milestones.filter(
-      (m) =>
-        m.status !== 'completed' &&
-        m.dueAt &&
-        new Date(m.dueAt) >= now &&
-        new Date(m.dueAt) <= weekFromNow
-    ).length;
+      }),
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
+          status: 'completed',
+        },
+      }),
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
+          status: { not: 'completed' },
+          dueAt: { lt: now },
+        },
+      }),
+      this.multiTenantPrisma.milestone.count({
+        where: {
+          project: {
+            organizationId,
+          },
+          status: { not: 'completed' },
+          dueAt: { gte: now, lte: weekFromNow },
+        },
+      }),
+    ]);
 
     return { total, completed, overdue, dueThisWeek };
   }
@@ -623,6 +607,9 @@ export class DashboardController {
             'prototype',
           ]);
 
+          // Use safe object creation without prototype
+          const safeResult = Object.create(null);
+
           trends.forEach((trend, index) => {
             const metric = selectedMetrics[index];
             if (
@@ -631,8 +618,8 @@ export class DashboardController {
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
               !forbiddenProps.has(metric)
             ) {
-              // Security: Use Set-based approach to prevent object injection
-              Object.defineProperty(result, metric, {
+              // Security: Prevent prototype pollution and object injection
+              Object.defineProperty(safeResult, metric, {
                 value: trend,
                 writable: true,
                 enumerable: true,
@@ -640,7 +627,7 @@ export class DashboardController {
               });
             }
           });
-          return result;
+          return safeResult;
         })(),
       };
     } catch (error) {
@@ -1246,6 +1233,7 @@ export class DashboardController {
           !forbiddenProps.has(dateKey) &&
           /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
+          // Security: Use Object.prototype.hasOwnProperty.call to prevent object injection
           const currentValue = Object.prototype.hasOwnProperty.call(
             dailyData,
             dateKey

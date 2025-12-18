@@ -162,7 +162,7 @@ describe('NotificationService', () => {
   describe('dashboard integration', () => {
     it('should refresh dashboard stats when connected', () => {
       const mockEmit = vi.fn();
-      // @ts-expect-error - Accessing private property for testing dashboard socket connection
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true, emit: mockEmit };
 
       vi.mocked(localStorage.getItem).mockReturnValue('org-123');
@@ -176,7 +176,7 @@ describe('NotificationService', () => {
 
     it('should subscribe to dashboard updates', () => {
       const mockEmit = vi.fn();
-      // @ts-expect-error - Accessing private property for testing dashboard socket subscription
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true, emit: mockEmit };
 
       notificationService.subscribeToDashboard('org-123');
@@ -187,7 +187,7 @@ describe('NotificationService', () => {
     });
 
     it('should get connection status', () => {
-      // @ts-expect-error - Accessing private property for testing connection status
+      // @ts-expect-error
       notificationService.dashboardSocket = {
         connected: true,
         id: 'test-socket-id',
@@ -207,9 +207,9 @@ describe('NotificationService', () => {
       const mockDisconnect1 = vi.fn();
       const mockDisconnect2 = vi.fn();
 
-      // @ts-expect-error - Accessing private property for testing socket disconnection
+      // @ts-expect-error
       notificationService.socket = { disconnect: mockDisconnect1 };
-      // @ts-expect-error - Accessing private property for testing dashboard socket disconnection
+      // @ts-expect-error
       notificationService.dashboardSocket = { disconnect: mockDisconnect2 };
 
       notificationService.disconnect();
@@ -221,16 +221,16 @@ describe('NotificationService', () => {
     });
 
     it('should check connection status', () => {
-      // @ts-expect-error - Accessing private property for testing connection status check
+      // @ts-expect-error
       notificationService.socket = { connected: true };
-      // @ts-expect-error - Accessing private property for testing dashboard connection status check
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true };
 
       expect(notificationService.isConnected()).toBe(true);
 
-      // @ts-expect-error - Accessing private property for testing disconnected socket
+      // @ts-expect-error
       notificationService.socket = { connected: false };
-      // @ts-expect-error - Accessing private property for testing mixed connection states
+      // @ts-expect-error
       notificationService.dashboardSocket = { connected: true };
 
       expect(notificationService.isConnected()).toBe(false);
