@@ -324,6 +324,7 @@ export declare class JasaWebConfigService {
     getEnvironmentType(): EnvironmentType;
     getNetworkConfig(): NetworkConfig;
     private getDynamicCorsOrigins;
+    getDatabaseConfig(): DatabaseConfig;
     private buildDatabaseUrl;
     private extractHostFromUrl;
     private extractPortFromUrl;

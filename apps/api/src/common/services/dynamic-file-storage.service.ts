@@ -16,6 +16,7 @@ import {
   StorageUploadResult,
   StorageDownloadOptions,
   ValidationResult,
+  JasaWebConfig,
 } from '@jasaweb/config';
 
 /**
@@ -607,11 +608,10 @@ export class DynamicFileStorageService implements OnModuleInit {
 
     // Custom validation
     if (validation.customValidation) {
-      const customResult = validation.customValidation(
-        this.configService.get('NODE_ENV') === 'production'
-          ? this.configService.get('PRODUCTION_CONFIG') || {}
-          : {}
-      );
+      const config: JasaWebConfig =
+        (this.configService.get('PRODUCTION_CONFIG') as JasaWebConfig) ||
+        ({} as JasaWebConfig);
+      const customResult = validation.customValidation(config);
 
       if (!customResult.isValid) {
         throw new Error(

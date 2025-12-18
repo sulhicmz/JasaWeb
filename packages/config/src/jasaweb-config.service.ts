@@ -24,6 +24,13 @@ import {
   generateSecureSecret,
 } from './env-validation';
 
+/**
+ * Helper function to get optional environment variable with guaranteed string return
+ */
+function getEnvString(key: string, defaultValue: string): string {
+  return getEnvString(key, defaultValue) ?? defaultValue;
+}
+
 // Re-export types for external usage
 export type {
   INetworkConfig,
@@ -545,7 +552,7 @@ export class StorageConfigRegistry {
    */
   private initializeConfigurations(): void {
     const env = {
-      getString: getOptionalEnv,
+      getString: getEnvString,
       getNumber: getEnvNumber,
       getBoolean: getEnvBoolean,
     };
@@ -827,35 +834,32 @@ export class JasaWebConfigService {
   private buildConfig(): JasaWebConfig {
     return {
       base: {
-        NODE_ENV: getOptionalEnv('NODE_ENV', 'development') as EnvironmentType,
+        NODE_ENV: getEnvString('NODE_ENV', 'development') as EnvironmentType,
         PORT: getEnvNumber('PORT', 4321),
-        SITE_NAME: getOptionalEnv('SITE_NAME', 'JasaWeb'),
-        SITE_DESCRIPTION: getOptionalEnv(
+        SITE_NAME: getEnvString('SITE_NAME', 'JasaWeb'),
+        SITE_DESCRIPTION: getEnvString(
           'SITE_DESCRIPTION',
           'Professional Web Development Services'
         ),
-        SITE_AUTHOR: getOptionalEnv('SITE_AUTHOR', 'JasaWeb Team'),
-        SITE_URL: getOptionalEnv('SITE_URL', 'http://localhost:4321'),
-        APP_VERSION: getOptionalEnv('APP_VERSION', '1.0.0'),
+        SITE_AUTHOR: getEnvString('SITE_AUTHOR', 'JasaWeb Team'),
+        SITE_URL: getEnvString('SITE_URL', 'http://localhost:4321'),
+        APP_VERSION: getEnvString('APP_VERSION', '1.0.0'),
       },
 
       api: {
         API_PORT: getEnvNumber('API_PORT', 3000),
-        API_BASE_URL: getOptionalEnv('API_BASE_URL', 'http://localhost:3000'),
-        API_PREFIX: getOptionalEnv('API_PREFIX', 'api'),
-        PUBLIC_API_URL: getOptionalEnv(
-          'PUBLIC_API_URL',
-          'http://localhost:3000'
-        ),
-        WEB_BASE_URL: getOptionalEnv('WEB_BASE_URL', 'http://localhost:4321'),
-        FRONTEND_URL: getOptionalEnv('FRONTEND_URL', 'http://localhost:4321'),
+        API_BASE_URL: getEnvString('API_BASE_URL', 'http://localhost:3000')!,
+        API_PREFIX: getEnvString('API_PREFIX', 'api'),
+        PUBLIC_API_URL: getEnvString('PUBLIC_API_URL', 'http://localhost:3000'),
+        WEB_BASE_URL: getEnvString('WEB_BASE_URL', 'http://localhost:4321'),
+        FRONTEND_URL: getEnvString('FRONTEND_URL', 'http://localhost:4321'),
 
         API_TIMEOUT: getEnvNumber('API_TIMEOUT', 30000),
         API_RETRIES: getEnvNumber('API_RETRIES', 3),
         API_RETRY_DELAY: getEnvNumber('API_RETRY_DELAY', 1000),
 
         WS_ENABLED: getEnvBoolean('WS_ENABLED', true),
-        WS_URL: getOptionalEnv('WS_URL', 'ws://localhost:3000'),
+        WS_URL: getEnvString('WS_URL', 'ws://localhost:3000'),
         WS_RECONNECT_ATTEMPTS: getEnvNumber('WS_RECONNECT_ATTEMPTS', 5),
         WS_RECONNECT_DELAY: getEnvNumber('WS_RECONNECT_DELAY', 1000),
         WS_HEARTBEAT_INTERVAL: getEnvNumber('WS_HEARTBEAT_INTERVAL', 30000),
@@ -874,23 +878,23 @@ export class JasaWebConfigService {
       },
 
       database: {
-        POSTGRES_DB: getOptionalEnv('POSTGRES_DB', 'jasaweb'),
-        POSTGRES_USER: getOptionalEnv('POSTGRES_USER', 'postgres'),
-        POSTGRES_PASSWORD: getOptionalEnv('POSTGRES_PASSWORD', ''),
-        DATABASE_URL: getOptionalEnv('DATABASE_URL', ''),
-        DOCKER_DATABASE_URL: getOptionalEnv('DOCKER_DATABASE_URL', ''),
+        POSTGRES_DB: getEnvString('POSTGRES_DB', 'jasaweb'),
+        POSTGRES_USER: getEnvString('POSTGRES_USER', 'postgres'),
+        POSTGRES_PASSWORD: getEnvString('POSTGRES_PASSWORD', ''),
+        DATABASE_URL: getEnvString('DATABASE_URL', ''),
+        DOCKER_DATABASE_URL: getEnvString('DOCKER_DATABASE_URL', ''),
       },
 
       security: {
-        JWT_SECRET: getOptionalEnv('JWT_SECRET', ''),
-        JWT_EXPIRES_IN: getOptionalEnv('JWT_EXPIRES_IN', '1d'),
-        JWT_REFRESH_SECRET: getOptionalEnv('JWT_REFRESH_SECRET', ''),
-        JWT_REFRESH_EXPIRES_IN: getOptionalEnv('JWT_REFRESH_EXPIRES_IN', '7d'),
+        JWT_SECRET: getEnvString('JWT_SECRET', ''),
+        JWT_EXPIRES_IN: getEnvString('JWT_EXPIRES_IN', '1d'),
+        JWT_REFRESH_SECRET: getEnvString('JWT_REFRESH_SECRET', ''),
+        JWT_REFRESH_EXPIRES_IN: getEnvString('JWT_REFRESH_EXPIRES_IN', '7d'),
 
-        SESSION_SECRET: getOptionalEnv('SESSION_SECRET', ''),
+        SESSION_SECRET: getEnvString('SESSION_SECRET', ''),
         SESSION_MAX_AGE: getEnvNumber('SESSION_MAX_AGE', 86400000),
 
-        ENCRYPTION_KEY: getOptionalEnv('ENCRYPTION_KEY', ''),
+        ENCRYPTION_KEY: getEnvString('ENCRYPTION_KEY', ''),
 
         BCRYPT_ROUNDS: getEnvNumber('BCRYPT_ROUNDS', 12),
         ARGON2_MEMORY: getEnvNumber('ARGON2_MEMORY', 65536),
@@ -907,57 +911,54 @@ export class JasaWebConfigService {
         MAX_LOGIN_ATTEMPTS: getEnvNumber('MAX_LOGIN_ATTEMPTS', 5),
         LOCKOUT_DURATION: getEnvNumber('LOCKOUT_DURATION', 900000),
 
-        CORS_ORIGIN: getOptionalEnv('CORS_ORIGIN', 'http://localhost:4321'),
+        CORS_ORIGIN: getEnvString('CORS_ORIGIN', 'http://localhost:4321'),
       },
 
       storage: {
-        STORAGE_TYPE: getOptionalEnv('STORAGE_TYPE', 'local') as 'local' | 's3',
+        STORAGE_TYPE: getEnvString('STORAGE_TYPE', 'local') as 'local' | 's3',
 
-        AWS_REGION: getOptionalEnv('AWS_REGION', 'us-east-1'),
-        AWS_ACCESS_KEY_ID: getOptionalEnv('AWS_ACCESS_KEY_ID', ''),
-        AWS_SECRET_ACCESS_KEY: getOptionalEnv('AWS_SECRET_ACCESS_KEY', ''),
-        S3_BUCKET: getOptionalEnv('S3_BUCKET', 'jasaweb-storage'),
-        S3_REGION: getOptionalEnv('S3_REGION', 'us-east-1'),
+        AWS_REGION: getEnvString('AWS_REGION', 'us-east-1'),
+        AWS_ACCESS_KEY_ID: getEnvString('AWS_ACCESS_KEY_ID', ''),
+        AWS_SECRET_ACCESS_KEY: getEnvString('AWS_SECRET_ACCESS_KEY', ''),
+        S3_BUCKET: getEnvString('S3_BUCKET', 'jasaweb-storage'),
+        S3_REGION: getEnvString('S3_REGION', 'us-east-1'),
 
-        MINIO_ENDPOINT: getOptionalEnv(
-          'MINIO_ENDPOINT',
-          'http://localhost:9000'
-        ),
-        MINIO_ACCESS_KEY: getOptionalEnv('MINIO_ACCESS_KEY', ''),
-        MINIO_SECRET_KEY: getOptionalEnv('MINIO_SECRET_KEY', ''),
-        MINIO_BUCKET: getOptionalEnv('MINIO_BUCKET', 'jasaweb-storage'),
-        MINIO_ROOT_USER: getOptionalEnv('MINIO_ROOT_USER', ''),
-        MINIO_ROOT_PASSWORD: getOptionalEnv('MINIO_ROOT_PASSWORD', ''),
-        DOCKER_MINIO_ENDPOINT: getOptionalEnv(
+        MINIO_ENDPOINT: getEnvString('MINIO_ENDPOINT', 'http://localhost:9000'),
+        MINIO_ACCESS_KEY: getEnvString('MINIO_ACCESS_KEY', ''),
+        MINIO_SECRET_KEY: getEnvString('MINIO_SECRET_KEY', ''),
+        MINIO_BUCKET: getEnvString('MINIO_BUCKET', 'jasaweb-storage'),
+        MINIO_ROOT_USER: getEnvString('MINIO_ROOT_USER', ''),
+        MINIO_ROOT_PASSWORD: getEnvString('MINIO_ROOT_PASSWORD', ''),
+        DOCKER_MINIO_ENDPOINT: getEnvString(
           'DOCKER_MINIO_ENDPOINT',
           'http://minio:9000'
         ),
       },
 
       redis: {
-        REDIS_HOST: getOptionalEnv('REDIS_HOST', 'localhost'),
+        REDIS_HOST: getEnvString('REDIS_HOST', 'localhost'),
         REDIS_PORT: getEnvNumber('REDIS_PORT', 6379),
-        REDIS_PASSWORD: getOptionalEnv('REDIS_PASSWORD', ''),
-        DOCKER_REDIS_HOST: getOptionalEnv('DOCKER_REDIS_HOST', 'redis'),
+        REDIS_PASSWORD: getEnvString('REDIS_PASSWORD', ''),
+        DOCKER_REDIS_HOST: getEnvString('DOCKER_REDIS_HOST', 'redis'),
         DOCKER_REDIS_PORT: getEnvNumber('DOCKER_REDIS_PORT', 6379),
       },
 
       email: {
-        SMTP_HOST: getOptionalEnv('SMTP_HOST', 'smtp.gmail.com'),
+        SMTP_HOST: getEnvString('SMTP_HOST', 'smtp.gmail.com'),
         SMTP_PORT: getEnvNumber('SMTP_PORT', 587),
         SMTP_SECURE: getEnvBoolean('SMTP_SECURE', false),
-        SMTP_USER: getOptionalEnv('SMTP_USER', ''),
-        SMTP_PASS: getOptionalEnv('SMTP_PASS', ''),
-        EMAIL_FROM: getOptionalEnv(
+        SMTP_USER: getEnvString('SMTP_USER', ''),
+        SMTP_PASS: getEnvString('SMTP_PASS', ''),
+        EMAIL_FROM: getEnvString(
           'EMAIL_FROM',
           '"JasaWeb" <noreply@jasaweb.com>'
         ),
-        CONTACT_EMAIL: getOptionalEnv('CONTACT_EMAIL', 'contact@jasaweb.com'),
+        CONTACT_EMAIL: getEnvString('CONTACT_EMAIL', 'contact@jasaweb.com'),
       },
 
       logging: {
-        LOG_LEVEL: getOptionalEnv('LOG_LEVEL', 'info'),
-        LOG_FILE_PATH: getOptionalEnv('LOG_FILE_PATH', './logs'),
+        LOG_LEVEL: getEnvString('LOG_LEVEL', 'info'),
+        LOG_FILE_PATH: getEnvString('LOG_FILE_PATH', './logs'),
         ENABLE_AUDIT_LOG: getEnvBoolean('ENABLE_AUDIT_LOG', true),
         ENABLE_VERBOSE_LOGGING: getEnvBoolean('ENABLE_VERBOSE_LOGGING', false),
         DEBUG: getEnvBoolean('DEBUG', false),
@@ -971,7 +972,7 @@ export class JasaWebConfigService {
 
       fileUpload: {
         MAX_FILE_SIZE: getEnvNumber('MAX_FILE_SIZE', 10485760),
-        ALLOWED_FILE_TYPES: getOptionalEnv(
+        ALLOWED_FILE_TYPES: getEnvString(
           'ALLOWED_FILE_TYPES',
           'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx'
         ),
@@ -990,33 +991,33 @@ export class JasaWebConfigService {
       },
 
       analytics: {
-        GOOGLE_ANALYTICS_ID: getOptionalEnv('GOOGLE_ANALYTICS_ID', ''),
-        GOOGLE_TAG_MANAGER_ID: getOptionalEnv('GOOGLE_TAG_MANAGER_ID', ''),
-        PUBLIC_GA_ID: getOptionalEnv('PUBLIC_GA_ID', ''),
-        PUBLIC_GTM_ID: getOptionalEnv('PUBLIC_GTM_ID', ''),
+        GOOGLE_ANALYTICS_ID: getEnvString('GOOGLE_ANALYTICS_ID', ''),
+        GOOGLE_TAG_MANAGER_ID: getEnvString('GOOGLE_TAG_MANAGER_ID', ''),
+        PUBLIC_GA_ID: getEnvString('PUBLIC_GA_ID', ''),
+        PUBLIC_GTM_ID: getEnvString('PUBLIC_GTM_ID', ''),
       },
 
       seo: {
-        META_TITLE: getOptionalEnv(
+        META_TITLE: getEnvString(
           'META_TITLE',
           'JasaWeb - Professional Web Development Services'
         ),
-        META_DESCRIPTION: getOptionalEnv(
+        META_DESCRIPTION: getEnvString(
           'META_DESCRIPTION',
           'Professional web development services for schools, news portals, and company profiles'
         ),
-        META_KEYWORDS: getOptionalEnv(
+        META_KEYWORDS: getEnvString(
           'META_KEYWORDS',
           'web development, website design, school website, news portal, company profile'
         ),
-        OG_IMAGE: getOptionalEnv('OG_IMAGE', '/images/og-image.jpg'),
+        OG_IMAGE: getEnvString('OG_IMAGE', '/images/og-image.jpg'),
       },
 
       social: {
-        FACEBOOK_URL: getOptionalEnv('FACEBOOK_URL', ''),
-        TWITTER_URL: getOptionalEnv('TWITTER_URL', ''),
-        INSTAGRAM_URL: getOptionalEnv('INSTAGRAM_URL', ''),
-        LINKEDIN_URL: getOptionalEnv('LINKEDIN_URL', ''),
+        FACEBOOK_URL: getEnvString('FACEBOOK_URL', ''),
+        TWITTER_URL: getEnvString('TWITTER_URL', ''),
+        INSTAGRAM_URL: getEnvString('INSTAGRAM_URL', ''),
+        LINKEDIN_URL: getEnvString('LINKEDIN_URL', ''),
       },
 
       featureFlags: {
@@ -1031,12 +1032,12 @@ export class JasaWebConfigService {
       compliance: {
         GDPR_COMPLIANCE_ENABLED: getEnvBoolean('GDPR_COMPLIANCE_ENABLED', true),
         CCPA_COMPLIANCE_ENABLED: getEnvBoolean('CCPA_COMPLIANCE_ENABLED', true),
-        WCAG_COMPLIANCE_LEVEL: getOptionalEnv('WCAG_COMPLIANCE_LEVEL', 'AA'),
+        WCAG_COMPLIANCE_LEVEL: getEnvString('WCAG_COMPLIANCE_LEVEL', 'AA'),
       },
 
       i18n: {
-        DEFAULT_LOCALE: getOptionalEnv('DEFAULT_LOCALE', 'en'),
-        SUPPORTED_LOCALES: getOptionalEnv('SUPPORTED_LOCALES', 'en,id,es,fr'),
+        DEFAULT_LOCALE: getEnvString('DEFAULT_LOCALE', 'en'),
+        SUPPORTED_LOCALES: getEnvString('SUPPORTED_LOCALES', 'en,id,es,fr'),
       },
 
       mobile: {
@@ -1047,34 +1048,18 @@ export class JasaWebConfigService {
       },
 
       opencode: {
-        IFLOW_API_KEY: getOptionalEnv('IFLOW_API_KEY', ''),
-        IFLOW_MODEL: getOptionalEnv('IFLOW_MODEL', 'iflowcn/qwen3-max'),
+        IFLOW_API_KEY: getEnvString('IFLOW_API_KEY', ''),
+        IFLOW_MODEL: getEnvString('IFLOW_MODEL', 'iflowcn/qwen3-max'),
         OPENCODE_DEBUG: getEnvBoolean('OPENCODE_DEBUG', false),
       },
 
       github: {
-        GH_TOKEN: getOptionalEnv('GH_TOKEN', ''),
+        GH_TOKEN: getEnvString('GH_TOKEN', ''),
       },
     };
   }
 
   // Core configuration getters
-
-  /**
-   * Get database configuration
-   */
-  public getDatabaseConfig(): DatabaseConfig {
-    return {
-      url: this.config.database.DATABASE_URL || this.buildDatabaseUrl(),
-      host:
-        this.extractHostFromUrl(this.config.database.DATABASE_URL) ||
-        'localhost',
-      port: this.extractPortFromUrl(this.config.database.DATABASE_URL) || 5432,
-      name: this.config.database.POSTGRES_DB || 'jasaweb',
-      user: this.config.database.POSTGRES_USER || 'postgres',
-      ssl: this.isProduction(),
-    };
-  }
 
   /**
    * Get specific configuration section

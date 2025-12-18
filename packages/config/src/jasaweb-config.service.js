@@ -13,6 +13,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.jasaWebConfig = exports.JasaWebConfigService = exports.storageConfigRegistry = exports.StorageConfigRegistry = void 0;
 const common_1 = require("@nestjs/common");
 const env_validation_1 = require("./env-validation");
+function getEnvString(key, defaultValue) {
+    return getEnvString(key, defaultValue) ?? defaultValue;
+}
 function getEnvArray(key, defaultValue = []) {
     const value = process.env[key];
     if (!value)
@@ -115,7 +118,7 @@ class StorageConfigRegistry {
     }
     initializeConfigurations() {
         const env = {
-            getString: env_validation_1.getOptionalEnv,
+            getString: getEnvString,
             getNumber: env_validation_1.getEnvNumber,
             getBoolean: env_validation_1.getEnvBoolean,
         };
@@ -330,26 +333,26 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
     buildConfig() {
         return {
             base: {
-                NODE_ENV: (0, env_validation_1.getOptionalEnv)('NODE_ENV', 'development'),
+                NODE_ENV: getEnvString('NODE_ENV', 'development'),
                 PORT: (0, env_validation_1.getEnvNumber)('PORT', 4321),
-                SITE_NAME: (0, env_validation_1.getOptionalEnv)('SITE_NAME', 'JasaWeb'),
-                SITE_DESCRIPTION: (0, env_validation_1.getOptionalEnv)('SITE_DESCRIPTION', 'Professional Web Development Services'),
-                SITE_AUTHOR: (0, env_validation_1.getOptionalEnv)('SITE_AUTHOR', 'JasaWeb Team'),
-                SITE_URL: (0, env_validation_1.getOptionalEnv)('SITE_URL', 'http://localhost:4321'),
-                APP_VERSION: (0, env_validation_1.getOptionalEnv)('APP_VERSION', '1.0.0'),
+                SITE_NAME: getEnvString('SITE_NAME', 'JasaWeb'),
+                SITE_DESCRIPTION: getEnvString('SITE_DESCRIPTION', 'Professional Web Development Services'),
+                SITE_AUTHOR: getEnvString('SITE_AUTHOR', 'JasaWeb Team'),
+                SITE_URL: getEnvString('SITE_URL', 'http://localhost:4321'),
+                APP_VERSION: getEnvString('APP_VERSION', '1.0.0'),
             },
             api: {
                 API_PORT: (0, env_validation_1.getEnvNumber)('API_PORT', 3000),
-                API_BASE_URL: (0, env_validation_1.getOptionalEnv)('API_BASE_URL', 'http://localhost:3000'),
-                API_PREFIX: (0, env_validation_1.getOptionalEnv)('API_PREFIX', 'api'),
-                PUBLIC_API_URL: (0, env_validation_1.getOptionalEnv)('PUBLIC_API_URL', 'http://localhost:3000'),
-                WEB_BASE_URL: (0, env_validation_1.getOptionalEnv)('WEB_BASE_URL', 'http://localhost:4321'),
-                FRONTEND_URL: (0, env_validation_1.getOptionalEnv)('FRONTEND_URL', 'http://localhost:4321'),
+                API_BASE_URL: getEnvString('API_BASE_URL', 'http://localhost:3000'),
+                API_PREFIX: getEnvString('API_PREFIX', 'api'),
+                PUBLIC_API_URL: getEnvString('PUBLIC_API_URL', 'http://localhost:3000'),
+                WEB_BASE_URL: getEnvString('WEB_BASE_URL', 'http://localhost:4321'),
+                FRONTEND_URL: getEnvString('FRONTEND_URL', 'http://localhost:4321'),
                 API_TIMEOUT: (0, env_validation_1.getEnvNumber)('API_TIMEOUT', 30000),
                 API_RETRIES: (0, env_validation_1.getEnvNumber)('API_RETRIES', 3),
                 API_RETRY_DELAY: (0, env_validation_1.getEnvNumber)('API_RETRY_DELAY', 1000),
                 WS_ENABLED: (0, env_validation_1.getEnvBoolean)('WS_ENABLED', true),
-                WS_URL: (0, env_validation_1.getOptionalEnv)('WS_URL', 'ws://localhost:3000'),
+                WS_URL: getEnvString('WS_URL', 'ws://localhost:3000'),
                 WS_RECONNECT_ATTEMPTS: (0, env_validation_1.getEnvNumber)('WS_RECONNECT_ATTEMPTS', 5),
                 WS_RECONNECT_DELAY: (0, env_validation_1.getEnvNumber)('WS_RECONNECT_DELAY', 1000),
                 WS_HEARTBEAT_INTERVAL: (0, env_validation_1.getEnvNumber)('WS_HEARTBEAT_INTERVAL', 30000),
@@ -360,20 +363,20 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
                 API_RATE_LIMIT_SKIP_FAILED: (0, env_validation_1.getEnvBoolean)('API_RATE_LIMIT_SKIP_FAILED', true),
             },
             database: {
-                POSTGRES_DB: (0, env_validation_1.getOptionalEnv)('POSTGRES_DB', 'jasaweb'),
-                POSTGRES_USER: (0, env_validation_1.getOptionalEnv)('POSTGRES_USER', 'postgres'),
-                POSTGRES_PASSWORD: (0, env_validation_1.getOptionalEnv)('POSTGRES_PASSWORD', ''),
-                DATABASE_URL: (0, env_validation_1.getOptionalEnv)('DATABASE_URL', ''),
-                DOCKER_DATABASE_URL: (0, env_validation_1.getOptionalEnv)('DOCKER_DATABASE_URL', ''),
+                POSTGRES_DB: getEnvString('POSTGRES_DB', 'jasaweb'),
+                POSTGRES_USER: getEnvString('POSTGRES_USER', 'postgres'),
+                POSTGRES_PASSWORD: getEnvString('POSTGRES_PASSWORD', ''),
+                DATABASE_URL: getEnvString('DATABASE_URL', ''),
+                DOCKER_DATABASE_URL: getEnvString('DOCKER_DATABASE_URL', ''),
             },
             security: {
-                JWT_SECRET: (0, env_validation_1.getOptionalEnv)('JWT_SECRET', ''),
-                JWT_EXPIRES_IN: (0, env_validation_1.getOptionalEnv)('JWT_EXPIRES_IN', '1d'),
-                JWT_REFRESH_SECRET: (0, env_validation_1.getOptionalEnv)('JWT_REFRESH_SECRET', ''),
-                JWT_REFRESH_EXPIRES_IN: (0, env_validation_1.getOptionalEnv)('JWT_REFRESH_EXPIRES_IN', '7d'),
-                SESSION_SECRET: (0, env_validation_1.getOptionalEnv)('SESSION_SECRET', ''),
+                JWT_SECRET: getEnvString('JWT_SECRET', ''),
+                JWT_EXPIRES_IN: getEnvString('JWT_EXPIRES_IN', '1d'),
+                JWT_REFRESH_SECRET: getEnvString('JWT_REFRESH_SECRET', ''),
+                JWT_REFRESH_EXPIRES_IN: getEnvString('JWT_REFRESH_EXPIRES_IN', '7d'),
+                SESSION_SECRET: getEnvString('SESSION_SECRET', ''),
                 SESSION_MAX_AGE: (0, env_validation_1.getEnvNumber)('SESSION_MAX_AGE', 86400000),
-                ENCRYPTION_KEY: (0, env_validation_1.getOptionalEnv)('ENCRYPTION_KEY', ''),
+                ENCRYPTION_KEY: getEnvString('ENCRYPTION_KEY', ''),
                 BCRYPT_ROUNDS: (0, env_validation_1.getEnvNumber)('BCRYPT_ROUNDS', 12),
                 ARGON2_MEMORY: (0, env_validation_1.getEnvNumber)('ARGON2_MEMORY', 65536),
                 ARGON2_ITERATIONS: (0, env_validation_1.getEnvNumber)('ARGON2_ITERATIONS', 3),
@@ -386,42 +389,42 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
                 THROTTLE_LIMIT: (0, env_validation_1.getEnvNumber)('THROTTLE_LIMIT', 10),
                 MAX_LOGIN_ATTEMPTS: (0, env_validation_1.getEnvNumber)('MAX_LOGIN_ATTEMPTS', 5),
                 LOCKOUT_DURATION: (0, env_validation_1.getEnvNumber)('LOCKOUT_DURATION', 900000),
-                CORS_ORIGIN: (0, env_validation_1.getOptionalEnv)('CORS_ORIGIN', 'http://localhost:4321'),
+                CORS_ORIGIN: getEnvString('CORS_ORIGIN', 'http://localhost:4321'),
             },
             storage: {
-                STORAGE_TYPE: (0, env_validation_1.getOptionalEnv)('STORAGE_TYPE', 'local'),
-                AWS_REGION: (0, env_validation_1.getOptionalEnv)('AWS_REGION', 'us-east-1'),
-                AWS_ACCESS_KEY_ID: (0, env_validation_1.getOptionalEnv)('AWS_ACCESS_KEY_ID', ''),
-                AWS_SECRET_ACCESS_KEY: (0, env_validation_1.getOptionalEnv)('AWS_SECRET_ACCESS_KEY', ''),
-                S3_BUCKET: (0, env_validation_1.getOptionalEnv)('S3_BUCKET', 'jasaweb-storage'),
-                S3_REGION: (0, env_validation_1.getOptionalEnv)('S3_REGION', 'us-east-1'),
-                MINIO_ENDPOINT: (0, env_validation_1.getOptionalEnv)('MINIO_ENDPOINT', 'http://localhost:9000'),
-                MINIO_ACCESS_KEY: (0, env_validation_1.getOptionalEnv)('MINIO_ACCESS_KEY', ''),
-                MINIO_SECRET_KEY: (0, env_validation_1.getOptionalEnv)('MINIO_SECRET_KEY', ''),
-                MINIO_BUCKET: (0, env_validation_1.getOptionalEnv)('MINIO_BUCKET', 'jasaweb-storage'),
-                MINIO_ROOT_USER: (0, env_validation_1.getOptionalEnv)('MINIO_ROOT_USER', ''),
-                MINIO_ROOT_PASSWORD: (0, env_validation_1.getOptionalEnv)('MINIO_ROOT_PASSWORD', ''),
-                DOCKER_MINIO_ENDPOINT: (0, env_validation_1.getOptionalEnv)('DOCKER_MINIO_ENDPOINT', 'http://minio:9000'),
+                STORAGE_TYPE: getEnvString('STORAGE_TYPE', 'local'),
+                AWS_REGION: getEnvString('AWS_REGION', 'us-east-1'),
+                AWS_ACCESS_KEY_ID: getEnvString('AWS_ACCESS_KEY_ID', ''),
+                AWS_SECRET_ACCESS_KEY: getEnvString('AWS_SECRET_ACCESS_KEY', ''),
+                S3_BUCKET: getEnvString('S3_BUCKET', 'jasaweb-storage'),
+                S3_REGION: getEnvString('S3_REGION', 'us-east-1'),
+                MINIO_ENDPOINT: getEnvString('MINIO_ENDPOINT', 'http://localhost:9000'),
+                MINIO_ACCESS_KEY: getEnvString('MINIO_ACCESS_KEY', ''),
+                MINIO_SECRET_KEY: getEnvString('MINIO_SECRET_KEY', ''),
+                MINIO_BUCKET: getEnvString('MINIO_BUCKET', 'jasaweb-storage'),
+                MINIO_ROOT_USER: getEnvString('MINIO_ROOT_USER', ''),
+                MINIO_ROOT_PASSWORD: getEnvString('MINIO_ROOT_PASSWORD', ''),
+                DOCKER_MINIO_ENDPOINT: getEnvString('DOCKER_MINIO_ENDPOINT', 'http://minio:9000'),
             },
             redis: {
-                REDIS_HOST: (0, env_validation_1.getOptionalEnv)('REDIS_HOST', 'localhost'),
+                REDIS_HOST: getEnvString('REDIS_HOST', 'localhost'),
                 REDIS_PORT: (0, env_validation_1.getEnvNumber)('REDIS_PORT', 6379),
-                REDIS_PASSWORD: (0, env_validation_1.getOptionalEnv)('REDIS_PASSWORD', ''),
-                DOCKER_REDIS_HOST: (0, env_validation_1.getOptionalEnv)('DOCKER_REDIS_HOST', 'redis'),
+                REDIS_PASSWORD: getEnvString('REDIS_PASSWORD', ''),
+                DOCKER_REDIS_HOST: getEnvString('DOCKER_REDIS_HOST', 'redis'),
                 DOCKER_REDIS_PORT: (0, env_validation_1.getEnvNumber)('DOCKER_REDIS_PORT', 6379),
             },
             email: {
-                SMTP_HOST: (0, env_validation_1.getOptionalEnv)('SMTP_HOST', 'smtp.gmail.com'),
+                SMTP_HOST: getEnvString('SMTP_HOST', 'smtp.gmail.com'),
                 SMTP_PORT: (0, env_validation_1.getEnvNumber)('SMTP_PORT', 587),
                 SMTP_SECURE: (0, env_validation_1.getEnvBoolean)('SMTP_SECURE', false),
-                SMTP_USER: (0, env_validation_1.getOptionalEnv)('SMTP_USER', ''),
-                SMTP_PASS: (0, env_validation_1.getOptionalEnv)('SMTP_PASS', ''),
-                EMAIL_FROM: (0, env_validation_1.getOptionalEnv)('EMAIL_FROM', '"JasaWeb" <noreply@jasaweb.com>'),
-                CONTACT_EMAIL: (0, env_validation_1.getOptionalEnv)('CONTACT_EMAIL', 'contact@jasaweb.com'),
+                SMTP_USER: getEnvString('SMTP_USER', ''),
+                SMTP_PASS: getEnvString('SMTP_PASS', ''),
+                EMAIL_FROM: getEnvString('EMAIL_FROM', '"JasaWeb" <noreply@jasaweb.com>'),
+                CONTACT_EMAIL: getEnvString('CONTACT_EMAIL', 'contact@jasaweb.com'),
             },
             logging: {
-                LOG_LEVEL: (0, env_validation_1.getOptionalEnv)('LOG_LEVEL', 'info'),
-                LOG_FILE_PATH: (0, env_validation_1.getOptionalEnv)('LOG_FILE_PATH', './logs'),
+                LOG_LEVEL: getEnvString('LOG_LEVEL', 'info'),
+                LOG_FILE_PATH: getEnvString('LOG_FILE_PATH', './logs'),
                 ENABLE_AUDIT_LOG: (0, env_validation_1.getEnvBoolean)('ENABLE_AUDIT_LOG', true),
                 ENABLE_VERBOSE_LOGGING: (0, env_validation_1.getEnvBoolean)('ENABLE_VERBOSE_LOGGING', false),
                 DEBUG: (0, env_validation_1.getEnvBoolean)('DEBUG', false),
@@ -433,7 +436,7 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
             },
             fileUpload: {
                 MAX_FILE_SIZE: (0, env_validation_1.getEnvNumber)('MAX_FILE_SIZE', 10485760),
-                ALLOWED_FILE_TYPES: (0, env_validation_1.getOptionalEnv)('ALLOWED_FILE_TYPES', 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx'),
+                ALLOWED_FILE_TYPES: getEnvString('ALLOWED_FILE_TYPES', 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx'),
             },
             development: {
                 DEV_MODE: (0, env_validation_1.getEnvBoolean)('DEV_MODE', true),
@@ -444,22 +447,22 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
                 COVERAGE_THRESHOLD: (0, env_validation_1.getEnvNumber)('COVERAGE_THRESHOLD', 80),
             },
             analytics: {
-                GOOGLE_ANALYTICS_ID: (0, env_validation_1.getOptionalEnv)('GOOGLE_ANALYTICS_ID', ''),
-                GOOGLE_TAG_MANAGER_ID: (0, env_validation_1.getOptionalEnv)('GOOGLE_TAG_MANAGER_ID', ''),
-                PUBLIC_GA_ID: (0, env_validation_1.getOptionalEnv)('PUBLIC_GA_ID', ''),
-                PUBLIC_GTM_ID: (0, env_validation_1.getOptionalEnv)('PUBLIC_GTM_ID', ''),
+                GOOGLE_ANALYTICS_ID: getEnvString('GOOGLE_ANALYTICS_ID', ''),
+                GOOGLE_TAG_MANAGER_ID: getEnvString('GOOGLE_TAG_MANAGER_ID', ''),
+                PUBLIC_GA_ID: getEnvString('PUBLIC_GA_ID', ''),
+                PUBLIC_GTM_ID: getEnvString('PUBLIC_GTM_ID', ''),
             },
             seo: {
-                META_TITLE: (0, env_validation_1.getOptionalEnv)('META_TITLE', 'JasaWeb - Professional Web Development Services'),
-                META_DESCRIPTION: (0, env_validation_1.getOptionalEnv)('META_DESCRIPTION', 'Professional web development services for schools, news portals, and company profiles'),
-                META_KEYWORDS: (0, env_validation_1.getOptionalEnv)('META_KEYWORDS', 'web development, website design, school website, news portal, company profile'),
-                OG_IMAGE: (0, env_validation_1.getOptionalEnv)('OG_IMAGE', '/images/og-image.jpg'),
+                META_TITLE: getEnvString('META_TITLE', 'JasaWeb - Professional Web Development Services'),
+                META_DESCRIPTION: getEnvString('META_DESCRIPTION', 'Professional web development services for schools, news portals, and company profiles'),
+                META_KEYWORDS: getEnvString('META_KEYWORDS', 'web development, website design, school website, news portal, company profile'),
+                OG_IMAGE: getEnvString('OG_IMAGE', '/images/og-image.jpg'),
             },
             social: {
-                FACEBOOK_URL: (0, env_validation_1.getOptionalEnv)('FACEBOOK_URL', ''),
-                TWITTER_URL: (0, env_validation_1.getOptionalEnv)('TWITTER_URL', ''),
-                INSTAGRAM_URL: (0, env_validation_1.getOptionalEnv)('INSTAGRAM_URL', ''),
-                LINKEDIN_URL: (0, env_validation_1.getOptionalEnv)('LINKEDIN_URL', ''),
+                FACEBOOK_URL: getEnvString('FACEBOOK_URL', ''),
+                TWITTER_URL: getEnvString('TWITTER_URL', ''),
+                INSTAGRAM_URL: getEnvString('INSTAGRAM_URL', ''),
+                LINKEDIN_URL: getEnvString('LINKEDIN_URL', ''),
             },
             featureFlags: {
                 ENABLE_AUTOMATION: (0, env_validation_1.getEnvBoolean)('ENABLE_AUTOMATION', true),
@@ -472,34 +475,23 @@ let JasaWebConfigService = JasaWebConfigService_1 = class JasaWebConfigService {
             compliance: {
                 GDPR_COMPLIANCE_ENABLED: (0, env_validation_1.getEnvBoolean)('GDPR_COMPLIANCE_ENABLED', true),
                 CCPA_COMPLIANCE_ENABLED: (0, env_validation_1.getEnvBoolean)('CCPA_COMPLIANCE_ENABLED', true),
-                WCAG_COMPLIANCE_LEVEL: (0, env_validation_1.getOptionalEnv)('WCAG_COMPLIANCE_LEVEL', 'AA'),
+                WCAG_COMPLIANCE_LEVEL: getEnvString('WCAG_COMPLIANCE_LEVEL', 'AA'),
             },
             i18n: {
-                DEFAULT_LOCALE: (0, env_validation_1.getOptionalEnv)('DEFAULT_LOCALE', 'en'),
-                SUPPORTED_LOCALES: (0, env_validation_1.getOptionalEnv)('SUPPORTED_LOCALES', 'en,id,es,fr'),
+                DEFAULT_LOCALE: getEnvString('DEFAULT_LOCALE', 'en'),
+                SUPPORTED_LOCALES: getEnvString('SUPPORTED_LOCALES', 'en,id,es,fr'),
             },
             mobile: {
                 MOBILE_RESPONSIVE_ENABLED: (0, env_validation_1.getEnvBoolean)('MOBILE_RESPONSIVE_ENABLED', true),
             },
             opencode: {
-                IFLOW_API_KEY: (0, env_validation_1.getOptionalEnv)('IFLOW_API_KEY', ''),
-                IFLOW_MODEL: (0, env_validation_1.getOptionalEnv)('IFLOW_MODEL', 'iflowcn/qwen3-max'),
+                IFLOW_API_KEY: getEnvString('IFLOW_API_KEY', ''),
+                IFLOW_MODEL: getEnvString('IFLOW_MODEL', 'iflowcn/qwen3-max'),
                 OPENCODE_DEBUG: (0, env_validation_1.getEnvBoolean)('OPENCODE_DEBUG', false),
             },
             github: {
-                GH_TOKEN: (0, env_validation_1.getOptionalEnv)('GH_TOKEN', ''),
+                GH_TOKEN: getEnvString('GH_TOKEN', ''),
             },
-        };
-    }
-    getDatabaseConfig() {
-        return {
-            url: this.config.database.DATABASE_URL || this.buildDatabaseUrl(),
-            host: this.extractHostFromUrl(this.config.database.DATABASE_URL) ||
-                'localhost',
-            port: this.extractPortFromUrl(this.config.database.DATABASE_URL) || 5432,
-            name: this.config.database.POSTGRES_DB || 'jasaweb',
-            user: this.config.database.POSTGRES_USER || 'postgres',
-            ssl: this.isProduction(),
         };
     }
     getSection(section) {
