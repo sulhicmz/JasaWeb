@@ -7,6 +7,6 @@ import { MultiTenantPrismaModule } from '../common/database/multi-tenant-prisma.
   imports: [MultiTenantPrismaModule],
   controllers: [ProjectController],
   providers: [ProjectService],
-  exports: [ProjectService],
+  exports: [ProjectService, ProjectController],
 })
 export class ProjectModule {}

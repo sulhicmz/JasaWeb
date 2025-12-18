@@ -62,6 +62,9 @@ describe('ProjectService', () => {
     }).compile();
 
     service = module.get<ProjectService>(ProjectService);
+    multiTenantPrisma = module.get<MultiTenantPrismaService>(
+      MultiTenantPrismaService
+    );
   });
 
   afterEach(() => {

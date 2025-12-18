@@ -3,6 +3,7 @@ import { UserService } from './user.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PasswordService } from '../auth/password.service';
 import { vi } from 'vitest';
 
 // Note: bcrypt is mocked in setup.ts
@@ -22,12 +23,20 @@ describe('UserService', () => {
 
   const mockPrismaService = {
     user: {
-      create: vi.fn(),
       findMany: vi.fn(),
       findUnique: vi.fn(),
+      create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
+  };
+
+  const mockPasswordService = {
+    hashPassword: vi.fn().mockResolvedValue({
+      hash: 'hashed-password',
+      version: 'argon2id',
+    }),
+    verifyPassword: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -38,10 +47,18 @@ describe('UserService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: PasswordService,
+          useValue: mockPasswordService,
+        },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
+
+    // Manually set the private dependencies due to injection issues
+    (service as any).prisma = mockPrismaService;
+    (service as any).passwordService = mockPasswordService;
   });
 
   afterEach(() => {
