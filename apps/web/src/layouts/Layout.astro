@@ -3,7 +3,7 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { ClientRouter } from 'astro:transitions';
+import ScrollToTop from '../components/ScrollToTop.astro';
 
 export interface Props {
   title?: string;
@@ -131,7 +131,6 @@ const { title } = Astro.props;
     <!-- DNS prefetch for external resources -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
-    <ClientRouter />
   </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-white overflow-x-hidden">
     <!-- Background Effects (optimized) -->
@@ -145,14 +144,15 @@ const { title } = Astro.props;
       Skip to main content
     </a>
 
-    <Header />
+<Header />
     <main id="main-content" class="flex-grow">
       <slot />
     </main>
     <Footer />
+    <ScrollToTop />
 
     <!-- Performance optimization script -->
-    <script>
+    <script type="module">
       // Register Service Worker for PWA capabilities
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -163,79 +163,6 @@ const { title } = Astro.props;
             .catch((registrationError) => {
               console.log('SW registration failed: ', registrationError);
             });
-        });
-      }
-
-      // Monitor Core Web Vitals and send to analytics
-      if ('PerformanceObserver' in window) {
-        const vitals = {};
-        const observer = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            if (entry.entryType === 'largest-contentful-paint') {
-              vitals.LCP = entry.startTime;
-            }
-            if (entry.entryType === 'first-input') {
-              vitals.FID = entry.processingStart - entry.startTime;
-            }
-            if (entry.entryType === 'layout-shift') {
-              if (!entry.hadRecentInput) {
-                vitals.CLS = (vitals.CLS || 0) + entry.value;
-              }
-            }
-            if (entry.entryType === 'paint') {
-              vitals[entry.name] = entry.startTime;
-            }
-          }
-        });
-        observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift', 'paint'] });
-        
-        // Report vitals when page unloads
-        addEventListener('beforeunload', () => {
-          if (Object.keys(vitals).length > 0) {
-            console.log('Core Web Vitals:', vitals);
-            // Analytics service integration will be implemented
-          }
-        });
-      }
-
-      // Enhanced lazy loading for images and iframes
-      if ('IntersectionObserver' in window) {
-        const lazyObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              const element = entry.target;
-              if (element.dataset.src) {
-                element.src = element.dataset.src;
-                element.classList.remove('lazy');
-                lazyObserver.unobserve(element);
-              }
-              if (element.dataset.poster) {
-                element.poster = element.dataset.poster;
-              }
-            }
-          });
-        }, {
-          rootMargin: '50px 0px',
-          threshold: 0.01
-        });
-
-        // Observe all lazy elements
-        document.querySelectorAll('img[data-src], iframe[data-src]').forEach(element => {
-          lazyObserver.observe(element);
-        });
-      }
-
-      // Preload critical resources
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          // Preload next page resources
-          const preloadLinks = document.querySelectorAll('link[rel="preload"]');
-          preloadLinks.forEach(link => {
-            const resource = link.href;
-            if (resource) {
-              fetch(resource, { priority: 'low' });
-            }
-          });
         });
       }
 
