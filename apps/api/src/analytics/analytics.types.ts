@@ -1,7 +1,7 @@
 import { Prisma, AuditLog } from '@prisma/client';
 
 // Project-related types
-export interface ProjectWithRelations extends Prisma.ProjectGetPayload<{
+export type ProjectWithRelations = Prisma.ProjectGetPayload<{
   include: {
     milestones: true;
     tasks: true;
@@ -9,10 +9,10 @@ export interface ProjectWithRelations extends Prisma.ProjectGetPayload<{
     tickets: true;
     invoices: true;
   };
-}> {}
+}>;
 
 // User-related types
-export interface UserWithRelations extends Prisma.UserGetPayload<{
+export type UserWithRelations = Prisma.UserGetPayload<{
   include: {
     memberships: {
       where: { organizationId: string };
@@ -37,22 +37,22 @@ export interface UserWithRelations extends Prisma.UserGetPayload<{
       };
     };
   };
-}> {}
+}>;
 
 // Invoice-related types
-export interface InvoiceWithProject extends Prisma.InvoiceGetPayload<{
+export type InvoiceWithProject = Prisma.InvoiceGetPayload<{
   include: {
     project: true;
   };
-}> {}
+}>;
 
 // Ticket-related types
-export interface TicketWithRelations extends Prisma.TicketGetPayload<{
+export type TicketWithRelations = Prisma.TicketGetPayload<{
   include: {
     assignee: true;
     project: true;
   };
-}> {}
+}>;
 
 // Audit Log types
 export interface AuditLogWithAction extends AuditLog {

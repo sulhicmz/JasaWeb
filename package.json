@@ -108,5 +108,7 @@
       "astro": "5.15.9"
     }
   },
-  "dependencies": {}
+  "dependencies": {
+    "jiti": "^2.6.1"
+  }
 }

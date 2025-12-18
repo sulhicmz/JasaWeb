@@ -79,7 +79,9 @@ export class AnalyticsService {
     );
     const completedMilestones = projects.reduce(
       (sum: number, p) =>
-        sum + p.milestones.filter((m) => m.status === 'completed').length,
+        sum +
+        p.milestones.filter((m: { status: string }) => m.status === 'completed')
+          .length,
       0
     );
 
@@ -90,7 +92,9 @@ export class AnalyticsService {
     );
     const completedTasks = projects.reduce(
       (sum: number, p) =>
-        sum + p.tasks.filter((t) => t.status === 'completed').length,
+        sum +
+        p.tasks.filter((t: { status: string }) => t.status === 'completed')
+          .length,
       0
     );
 
@@ -208,15 +212,16 @@ export class AnalyticsService {
     return users.map((user) => {
       const totalTasks = user.assignedTasks.length;
       const completedTasks = user.assignedTasks.filter(
-        (t) => t.status === 'completed'
+        (t: { status: string }) => t.status === 'completed'
       ).length;
       const totalApprovals = user.approvals.length;
       const completedApprovals = user.approvals.filter(
-        (a) => a.status !== 'pending'
+        (a: { status: string }) => a.status !== 'pending'
       ).length;
       const totalTickets = user.tickets.length;
       const resolvedTickets = user.tickets.filter(
-        (t) => t.status === 'resolved' || t.status === 'closed'
+        (t: { status: string }) =>
+          t.status === 'resolved' || t.status === 'closed'
       ).length;
 
       return {
@@ -473,7 +478,10 @@ export class AnalyticsService {
 
     // Group by time period
     const trends = auditLogs.reduce(
-      (acc: Map<string, ActivityTrendData>, log) => {
+      (
+        acc: Map<string, ActivityTrendData>,
+        log: { action: string; createdAt: Date }
+      ) => {
         let key: string;
         const date = DateTime.fromJSDate(log.createdAt);
 

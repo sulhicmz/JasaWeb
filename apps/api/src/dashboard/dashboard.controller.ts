@@ -616,7 +616,7 @@ export class DashboardController {
           ]);
 
           trends.forEach((trend, index) => {
-            const metric = selectedMetrics[index];
+            const metric = String(selectedMetrics[index]);
             if (
               metric &&
               typeof metric === 'string' &&
@@ -624,7 +624,7 @@ export class DashboardController {
               !forbiddenProps.has(metric)
             ) {
               // Security: Safe property assignment using Object.defineProperty
-              Object.defineProperty(safeResult, metric, {
+              Object.defineProperty(safeResult, metric as string, {
                 value: trend,
                 writable: true,
                 enumerable: true,

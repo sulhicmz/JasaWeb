@@ -188,10 +188,16 @@ export class DatabasePerformanceService {
     if (
       !forbiddenKeys.has(queryType) &&
       typeof queryType === 'string' &&
-      queryType in this.stats.queryTypes
+      this.stats.queryTypes &&
+      typeof this.stats.queryTypes === 'object' &&
+      Object.prototype.hasOwnProperty.call(this.stats.queryTypes, queryType)
     ) {
-      const current = this.stats.queryTypes[queryType] || 0;
-      this.stats.queryTypes[queryType] = current + 1;
+      const current =
+        this.stats.queryTypes[
+          queryType as keyof typeof this.stats.queryTypes
+        ] || 0;
+      this.stats.queryTypes[queryType as keyof typeof this.stats.queryTypes] =
+        current + 1;
     }
   }
 
@@ -235,13 +241,14 @@ export class DatabasePerformanceService {
       const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
       // Secure property access to prevent Object Injection Sink
       if (!forbiddenKeys.has(operation) && typeof operation === 'string') {
-        const current = Object.prototype.hasOwnProperty.call(
+        const hasKey = Object.prototype.hasOwnProperty.call(
           patterns,
           operation
-        )
-          ? (patterns[operation] as number)
+        );
+        const current = hasKey
+          ? (patterns[operation as keyof typeof patterns] as number)
           : 0;
-        patterns[operation] = current + 1;
+        (patterns as Record<string, number>)[operation] = current + 1;
       }
 
       const tables = this.extractTables(metric.query);
