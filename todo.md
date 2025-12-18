@@ -43,7 +43,7 @@ Source: `AGENTS.md` + `/docs/` directory. This checklist unifies tooling (pnpm, 
 
 - [x] Unit tests with Vitest (critical coverage target ≥ 80%)
 - [ ] API contracts (`apps/api/tests/contracts`) and stable snapshots
-- [x] Add targeted test commands (e.g. `pnpm vitest run apps/api/example.test.ts`) in CI before merge to prevent Vitest from running thousands of dependency files
+- [x] Add targeted test commands (e.g. `pnpm vitest run apps/api/auth/auth.service.spec.ts`) in CI before merge to prevent Vitest from running thousands of dependency files
 
 ## 6) Security & Compliance
 

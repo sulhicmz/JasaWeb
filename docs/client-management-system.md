@@ -1,53 +1,20 @@
-# 🏢 Enterprise Client Management System Documentation
+# 🏢 JasaWeb Client Management System
 
-## 📋 Table of Contents
+## 🎯 Purpose
 
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
-- [Core Features](#core-features)
-- [User Roles & Permissions](#user-roles--permissions)
-- [Data Models](#data-models)
-- [API Reference](#api-reference)
-- [Client Portal Features](#client-portal-features)
-- [Security & Compliance](#security--compliance)
-- [Performance Optimization](#performance-optimization)
-- [Deployment Guide](#deployment-guide)
-- [Best Practices](#best-practices)
+A unified platform for managing web development services (School Websites, News Portals, Company Profiles) with integrated client portal for streamlined collaboration.
+
+> **⚠️ NOTE**: This document complements `blueprint.md` which contains the detailed project roadmap and technical specifications. This document focuses on the client management aspects and user workflows.
 
 ---
 
-## 🎯 Overview
+## 📊 Success Metrics
 
-### Purpose
-
-The JasaWeb Enterprise Client Management System is a comprehensive platform designed to streamline web development service delivery for schools, news portals, and company profiles. It provides a unified solution for managing client relationships, projects, approvals, billing, and support.
-
-### Key Objectives
-
-- **Lead Generation**: Generate qualified leads with 5-8% conversion rate from landing page to contact form
-- **Client Collaboration**: Accelerate client collaboration through integrated Client Portal
-- **Standardized Delivery**: Reduce project cycle time to 8-10 weeks through standardized processes
-- **Client Satisfaction**: Achieve NPS score ≥ 8/10
-- **Support Excellence**: Maintain SLA response time ≤ 4 hours during business hours
-
-### Target Users
-
-#### External Users (Clients)
-
-- **Organization Owner**: Full access to organization resources
-- **Organization Admin**: Manage users and projects
-- **Finance**: Handle billing and payments
-- **Reviewer/Stakeholder**: Review and approve deliverables
-- **Guest**: Read-only access to specific resources
-
-#### Internal Users (Team)
-
-- **Project Manager**: Oversee project delivery
-- **Designer**: Create and manage design assets
-- **Developer**: Implement features and fixes
-- **Support**: Handle client tickets and issues
-- **Finance**: Manage invoicing and payments
-- **Super Admin**: System-wide administration
+- **Landing → Lead**: 5-8% conversion
+- **Lead → Deal**: ≥ 30% conversion
+- **Project Duration**: 8-10 weeks average
+- **Client Satisfaction**: NPS ≥ 8/10
+- **Support SLA**: ≤ 4 hour response
 
 ---
 
