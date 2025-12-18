@@ -14,8 +14,7 @@ import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
-import type { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { EnhancedCacheService } from '../common/cache/enhanced-cache.service';
 import { DashboardGateway } from './dashboard.gateway';
 import { Milestone, Ticket, Invoice } from '@prisma/client';
 import type {
@@ -45,7 +44,7 @@ interface ProjectQueryResult {
 export class DashboardController {
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly enhancedCache: EnhancedCacheService,
     private readonly dashboardGateway: DashboardGateway
   ) {}
 
@@ -59,7 +58,8 @@ export class DashboardController {
 
     // Return cached data if available and not forcing refresh
     if (!refresh || refresh !== 'true') {
-      const cachedStats = await this.cacheManager.get<DashboardStats>(cacheKey);
+      const cachedStats =
+        await this.enhancedCache.get<DashboardStats>(cacheKey);
       if (cachedStats) {
         return cachedStats;
       }
@@ -82,11 +82,9 @@ export class DashboardController {
     };
 
     // Cache for 10 minutes using improved TTL from config
-    await this.cacheManager.set(
-      cacheKey,
-      stats,
-      CACHE_CONFIG.DASHBOARD_STATS_TTL * 1000
-    );
+    await this.enhancedCache.set(cacheKey, stats, {
+      ttl: CACHE_CONFIG.DASHBOARD_STATS_TTL,
+    });
 
     return stats;
   }
@@ -562,9 +560,9 @@ export class DashboardController {
     try {
       // Clear all dashboard-related cache keys for this organization
       await Promise.all([
-        this.cacheManager.del(CACHE_KEYS.DASHBOARD_STATS(organizationId)),
-        this.cacheManager.del(`dashboard-activity-${organizationId}`),
-        this.cacheManager.del(`dashboard-projects-${organizationId}`),
+        this.enhancedCache.del(CACHE_KEYS.DASHBOARD_STATS(organizationId)),
+        this.enhancedCache.del(`dashboard-activity-${organizationId}`),
+        this.enhancedCache.del(`dashboard-projects-${organizationId}`),
       ]);
 
       // Broadcast refresh event to all connected clients

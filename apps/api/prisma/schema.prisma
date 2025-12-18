@@ -31,6 +31,9 @@ model User {
   kbArticles          KbArticle[]
   kbFeedback          KbFeedback[]
   kbSearchLogs        KbSearchLog[]
+
+  @@index([createdAt])
+  @@index([email])
 }
 
 model Organization {
@@ -125,6 +128,11 @@ model File {
   uploadedBy   User     @relation(fields: [uploadedById], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([uploadedById])
+  @@index([projectId, folder])
+  @@index([createdAt])
 }
 
 model Approval {
@@ -140,6 +148,13 @@ model Approval {
   note        String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([decidedById])
+  @@index([projectId, status])
+  @@index([itemType, itemId])
+  @@index([createdAt])
 }
 
 model Task {
@@ -157,6 +172,15 @@ model Task {
   labels      String[]  @default([])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([createdById])
+  @@index([assignedTo])
+  @@index([status])
+  @@index([projectId, status])
+  @@index([assignedTo, status])
+  @@index([dueAt])
+  @@index([createdAt])
 }
 
 model Ticket {
