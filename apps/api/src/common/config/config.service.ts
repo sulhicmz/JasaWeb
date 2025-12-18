@@ -114,7 +114,7 @@ export class ConfigService {
         value &&
         typeof value === 'object' &&
         value !== null &&
-        key in value
+        Object.prototype.hasOwnProperty.call(value, key)
       ) {
         value = (value as Record<string, unknown>)[key];
       } else {

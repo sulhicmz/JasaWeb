@@ -216,10 +216,27 @@ export class DashboardController {
           typeof projectId === 'string' &&
           /^[a-f0-9-]{36}$/.test(projectId)
         ) {
-          if (!acc[projectId]) {
-            acc[projectId] = [];
+          if (!Object.prototype.hasOwnProperty.call(acc, projectId)) {
+            Object.defineProperty(acc, projectId, {
+              value: [],
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
           }
-          acc[projectId].push(milestone);
+          const currentArray = Object.prototype.hasOwnProperty.call(
+            acc,
+            projectId
+          )
+            ? (acc[projectId] as typeof milestones)
+            : [];
+          currentArray.push(milestone);
+          Object.defineProperty(acc, projectId, {
+            value: currentArray,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
         }
         return acc;
       },
@@ -235,10 +252,27 @@ export class DashboardController {
           typeof projectId === 'string' &&
           /^[a-f0-9-]{36}$/.test(projectId)
         ) {
-          if (!acc[projectId]) {
-            acc[projectId] = [];
+          if (!Object.prototype.hasOwnProperty.call(acc, projectId)) {
+            Object.defineProperty(acc, projectId, {
+              value: [],
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
           }
-          acc[projectId].push(ticket);
+          const currentArray = Object.prototype.hasOwnProperty.call(
+            acc,
+            projectId
+          )
+            ? (acc[projectId] as typeof tickets)
+            : [];
+          currentArray.push(ticket);
+          Object.defineProperty(acc, projectId, {
+            value: currentArray,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
         }
         return acc;
       },
@@ -598,8 +632,12 @@ export class DashboardController {
               !forbiddenProps.has(metric)
             ) {
               // Security: Use Set-based approach to prevent object injection
-              const validatedMetric = metric;
-              result[validatedMetric] = trend;
+              Object.defineProperty(result, metric, {
+                value: trend,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           });
           return result;
@@ -1208,11 +1246,19 @@ export class DashboardController {
           !forbiddenProps.has(dateKey) &&
           /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
-          const currentValue =
-            (dailyData as Record<string, number>)[dateKey] || 0;
-          // Security: Use validated date to prevent object injection
-          const dailyDataWithKey = dailyData as Record<string, number>;
-          dailyDataWithKey[dateKey] = currentValue + 1;
+          const currentValue = Object.prototype.hasOwnProperty.call(
+            dailyData,
+            dateKey
+          )
+            ? (dailyData as Record<string, number>)[dateKey]
+            : 0;
+          // Security: Use Object.defineProperty to prevent object injection
+          Object.defineProperty(dailyData, dateKey, {
+            value: currentValue + 1,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
         }
       }
     });

@@ -488,14 +488,16 @@ describe('ProjectController API Contract Tests', () => {
         'cancelled',
       ];
 
-      validStatuses.forEach((status) => {
-        const project = { ...mockProject, status };
-        mockProjectsService.findAll.mockResolvedValue([project]);
+      await Promise.all(
+        validStatuses.map(async (status) => {
+          const project = { ...mockProject, status };
+          mockProjectsService.findAll.mockResolvedValue([project]);
 
-        return expect(
-          controller.findAll('org1', 'summary')
-        ).resolves.toBeDefined();
-      });
+          await expect(
+            controller.findAll('org1', 'summary')
+          ).resolves.toBeDefined();
+        })
+      );
     });
 
     it('should handle invalid project ID format', async () => {

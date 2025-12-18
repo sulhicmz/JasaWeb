@@ -119,7 +119,12 @@ export class SecurityConfigurationService {
       if (validKeys.has(key) && Array.isArray(value)) {
         const filtered = value.filter(Boolean);
         if (filtered.length > 0) {
-          filteredDirectives[key] = filtered;
+          Object.defineProperty(filteredDirectives, key, {
+            value: filtered,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
         }
       }
     }
