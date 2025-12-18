@@ -270,7 +270,7 @@ export class SecurityMonitoringService {
         .filter((file) => {
           // Validate file name to prevent injection
           return (
-            /^[a-zA-Z0-9\-_\.]+$/.test(file) &&
+            /^[a-zA-Z0-9-._]+$/.test(file) &&
             file.startsWith('security-report-') &&
             file.endsWith('.json')
           );
@@ -359,7 +359,7 @@ export class SecurityMonitoringService {
         .filter((file) => {
           // Validate file name to prevent injection
           return (
-            /^[a-zA-Z0-9\-_\.]+$/.test(file) &&
+            /^[a-zA-Z0-9-._]+$/.test(file) &&
             file.startsWith('security-report-') &&
             file.endsWith('.json')
           );

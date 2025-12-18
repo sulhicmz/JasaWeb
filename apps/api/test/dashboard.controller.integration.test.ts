@@ -50,7 +50,7 @@ describe('DashboardController Integration Tests', () => {
     broadcastDashboardUpdate: jest.fn(),
   };
 
-  {
+  const mockRolesGuard = {
     canActivate: (context: ExecutionContext) => {
       const request = context.switchToHttp().getRequest();
       request.user = { id: mockUserId, organizationId: mockOrganizationId };
@@ -106,31 +106,6 @@ describe('DashboardController Integration Tests', () => {
 
   describe('GET /dashboard/stats', () => {
     it('should return dashboard statistics for organization', async () => {
-      {
-        const _mockStats = {
-          projects: { total: 5, active: 3, completed: 2, onHold: 0 },
-          tickets: {
-            total: 12,
-            open: 8,
-            inProgress: 3,
-            highPriority: 2,
-          critical: 1,
-        },
-        invoices: {
-          total: 8,
-          pending: 3,
-          overdue: 1,
-          totalAmount: 25000,
-          pendingAmount: 8000,
-        },
-        milestones: {
-          total: 15,
-          completed: 10,
-          overdue: 2,
-          dueThisWeek: 3,
-        },
-      };
-
       // Mock cache miss
       mockCacheManager.get.mockResolvedValue(null);
 
@@ -268,9 +243,10 @@ describe('DashboardController Integration Tests', () => {
       mockPrismaService.milestone.findMany.mockResolvedValue(mockMilestones);
       mockPrismaService.invoice.findMany.mockResolvedValue(mockInvoices);
 
-      const result = await controller.getRecentActivity(mockOrganizationId, {
-        limit: '10',
-      });
+      const result = await controller.getRecentActivity(
+        mockOrganizationId,
+        '10'
+      );
 
       expect(result).toHaveLength(4);
       expect(result[0].type).toBe('project'); // Most recent (updated 2023-12-10)
@@ -285,7 +261,7 @@ describe('DashboardController Integration Tests', () => {
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
       mockPrismaService.invoice.findMany.mockResolvedValue([]);
 
-      await controller.getRecentActivity(mockOrganizationId, { limit: '5' });
+      await controller.getRecentActivity(mockOrganizationId, '5');
 
       expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 2 }) // Math.ceil(5/4) = 2
@@ -295,10 +271,9 @@ describe('DashboardController Integration Tests', () => {
     it('should cap limit at 50', async () => {
       mockPrismaService.project.findMany.mockResolvedValue([]);
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findResolved([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
+      mockPrismaService.milestone.findMany.mockResolvedValue([]);
 
-      await controller.getRecentActivity(mockOrganizationId, { limit: '100' });
+      await controller.getRecentActivity(mockOrganizationId, '100');
 
       expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ take: 13 }) // Math.ceil(50/4) = 13
@@ -334,9 +309,10 @@ describe('DashboardController Integration Tests', () => {
 
       mockPrismaService.project.findMany.mockResolvedValue(mockProjects);
 
-      const result = await controller.getProjectsOverview(mockOrganizationId, {
-        limit: '6',
-      });
+      const result = await controller.getProjectsOverview(
+        mockOrganizationId,
+        '6'
+      );
 
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
@@ -459,10 +435,10 @@ describe('DashboardController Integration Tests', () => {
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
       mockPrismaService.invoice.findMany.mockResolvedValue([]);
 
-      const result = await controller.getAnalyticsTrends(mockOrganizationId, {
-        period: '30d',
-        metrics: 'projects,tickets',
-      });
+      const result = await controller.getAnalyticsTrends(
+        mockOrganizationId,
+        '30d'
+      );
 
       expect(result).toHaveProperty('period', '30d');
       expect(result).toHaveProperty('startDate');
@@ -478,7 +454,7 @@ describe('DashboardController Integration Tests', () => {
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
       mockPrismaService.invoice.findMany.mockResolvedValue([]);
 
-      await controller.getAnalyticsTrends(mockOrganizationId, {});
+      await controller.getAnalyticsTrends(mockOrganizationId, '7d');
 
       expect(mockPrismaService.project.findMany).toHaveBeenCalled();
       expect(mockPrismaService.ticket.findMany).toHaveBeenCalled();
@@ -519,9 +495,7 @@ describe('DashboardController Integration Tests', () => {
 
       const result = await controller.getPerformanceMetrics(
         mockOrganizationId,
-        {
-          period: '90d',
-        }
+        '90d'
       );
 
       expect(result).toHaveProperty('period', '90d');
@@ -554,9 +528,10 @@ describe('DashboardController Integration Tests', () => {
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
       mockPrismaService.invoice.findMany.mockResolvedValue([]);
 
-      const result = await controller.getForecastAnalytics(mockOrganizationId, {
-        horizon: '30d',
-      });
+      const result = await controller.getForecastAnalytics(
+        mockOrganizationId,
+        '30d'
+      );
 
       expect(result).toHaveProperty('horizon', '30d');
       expect(result).toHaveProperty('forecastDate');
@@ -610,10 +585,7 @@ describe('DashboardController Integration Tests', () => {
 
       const result = await controller.getPredictiveAnalytics(
         mockOrganizationId,
-        {
-          horizon: '90d',
-          confidence: '0.8',
-        }
+        '90d'
       );
 
       expect(result).toHaveProperty('horizon', '90d');
@@ -659,7 +631,7 @@ describe('DashboardController Integration Tests', () => {
       );
 
       await expect(
-        controller.getAnalyticsTrends(mockOrganizationId, { period: 'invalid' })
+        controller.getAnalyticsTrends(mockOrganizationId, 'invalid')
       ).rejects.toThrow('Invalid time range');
     });
   });
@@ -672,7 +644,7 @@ describe('DashboardController Integration Tests', () => {
       mockPrismaService.milestone.findMany.mockResolvedValue([]);
 
       await controller.getDashboardStats(mockOrganizationId);
-      await controller.getRecentActivity(mockOrganizationId, {});
+      await controller.getRecentActivity(mockOrganizationId, '10');
       await controller.getProjectsOverview(mockOrganizationId);
 
       expect(mockPrismaService.project.findMany).toHaveBeenCalledTimes(3);
@@ -680,11 +652,11 @@ describe('DashboardController Integration Tests', () => {
 
     it('should handle malformed input parameters', async () => {
       await expect(
-        controller.getRecentActivity(mockOrganizationId, { limit: '-1' })
+        controller.getRecentActivity(mockOrganizationId, '-1')
       ).resolves.toBeDefined(); // Should handle negative limits
 
       await expect(
-        controller.getAnalyticsTrends(mockOrganizationId, { period: 'abc' })
+        controller.getAnalyticsTrends(mockOrganizationId, 'abc')
       ).rejects.toThrow(); // Should throw on invalid period
     });
   });

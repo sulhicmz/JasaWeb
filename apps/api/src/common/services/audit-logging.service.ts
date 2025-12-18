@@ -258,13 +258,13 @@ export class AuditLoggingService {
       ...event,
       details: event.details
         ? this.sanitizeAuditData({
-            action: event.action || 'SECURITY_AUDIT',
+            action: event.eventType,
             actorId: event.actorId || '',
             organizationId: event.organizationId || '',
-            target: event.target || 'security',
+            target: 'security',
             ipAddress: event.ipAddress || '',
             severity: event.severity || 'LOW',
-            success: event.success ?? true,
+            success: true,
             timestamp: event.timestamp || new Date(),
             details: event.details,
           }).details

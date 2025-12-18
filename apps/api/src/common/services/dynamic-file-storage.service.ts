@@ -94,7 +94,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
 
     // Validate the path is literal and safe
-    if (!/^[a-zA-Z0-9\-_/\.]+$/.test(normalizedPath)) {
+    if (!/^[a-zA-Z0-9-._/]+$/.test(normalizedPath)) {
       throw new Error('Invalid characters in upload path');
     }
 
@@ -129,7 +129,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     if (!normalizedDirPath.startsWith(path.normalize(this.uploadPath))) {
       throw new Error('Invalid directory path detected');
     }
-    if (!/^[a-zA-Z0-9\-_/\.]+$/.test(normalizedDirPath)) {
+    if (!/^[a-zA-Z0-9-._/]+$/.test(normalizedDirPath)) {
       throw new Error('Invalid characters in directory path');
     }
     await fs.mkdir(normalizedDirPath, { recursive: true, mode: 0o750 });
