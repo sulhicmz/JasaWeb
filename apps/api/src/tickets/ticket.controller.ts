@@ -17,27 +17,13 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { EmailService } from '../common/services/email.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { CreateTicketDto } from './dto/create-ticket.dto';
+import { UpdateTicketDto } from './dto/update-ticket.dto';
 
-// Define DTO for ticket creation/update
-interface CreateTicketDto {
-  title: string;
-  description: string;
-  type: string; // bug, feature, improvement, question, task
-  priority: string; // low, medium, high, critical
-  projectId?: string;
-}
-
-interface UpdateTicketDto {
-  title?: string;
-  description?: string;
-  type?: string;
-  priority?: string;
-  status?: string; // open, in-progress, in-review, resolved, closed
-  assigneeId?: string;
-}
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('tickets')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(AuthGuard, RolesGuard) // Use authentication and roles guard
 export class TicketController {
   private readonly logger = new Logger(TicketController.name);
 

@@ -18,7 +18,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('projects')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(AuthGuard, RolesGuard) // Use authentication and roles guard
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -33,7 +33,6 @@ export class ProjectController {
   }
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer)
   async findAll(
     @Query('view') view?: string,
