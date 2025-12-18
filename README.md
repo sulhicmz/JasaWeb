@@ -69,19 +69,18 @@ This project has undergone significant cleanup and optimization:
 
 #### Repository Cleanup (Latest - December 2025)
 
-- **Removed**: Outdated documentation files (`plan.md`, `bug.md`, `task.md`) for cleaner repository structure
-- **Removed**: Duplicate security documentation (`apps/api/SECURITY_SETUP.md`)
-- **Removed**: Temporary migration scripts (`apps/api/convert-tests.js`)
-- **Removed**: Build artifacts and TypeScript build info files
-- **Consolidated**: Scattered documentation into organized `/docs/` directory structure
-- **Standardized**: File naming conventions and folder organization across monorepo
-- **Cleaned**: Deprecated scripts and configuration files
-- **Organized**: Core documentation in root, specialized docs in `/docs/`
-- **Migrated**: Testing framework from Jest to Vitest across all packages
-- **Removed**: Redundant Babel configuration in favor of native TypeScript
-- **Updated**: Documentation references to point to existing files in `/docs/` directory
-- **Verified**: TypeScript configuration consistency across all packages
-- **Audited**: Package.json dependencies for redundancy and cleanup opportunities
+- **Removed**: Temporary process files (`branch-cleanup-report.md`)
+- **Removed**: Redundant `.env.example` files from `apps/api/` and `apps/web/` directories
+- **Removed**: Duplicate security documentation (`SECURITY_CREDENTIALS.md`)
+- **Removed**: Redundant root ESLint configuration that referenced `packages/config/`
+- **Consolidated**: Moved `TEST_INFRASTRUCTURE.md` from `apps/api/test/` to `docs/testing/`
+- **Cleaned**: Removed duplicate functions in `scripts/dev-tools/watch-and-reload.sh`
+- **Fixed**: Carriage return issues in shell scripts for better cross-platform compatibility
+- **Previously**: Consolidated scattered documentation into organized `/docs/` directory
+- **Previously**: Standardized file naming conventions and folder organization across monorepo
+- **Previously**: Migrated testing framework from Jest to Vitest across all packages
+- **Previously**: Removed redundant Babel configuration in favor of native TypeScript
+- **Previously**: Verified TypeScript configuration consistency across all packages
 
 #### Tailwind CSS v4 Migration
 
@@ -135,12 +134,10 @@ The migration includes:
 4. **Environment setup**
 
    ```bash
-   # Copy environment templates
+   # Copy environment template from root
    cp .env.example .env
-   cp apps/api/.env.example apps/api/.env
-   cp apps/web/.env.example apps/web/.env
 
-   # Edit environment files with your configuration
+   # Edit environment file with your configuration
    # See Environment Configuration section below
    ```
 
@@ -237,7 +234,9 @@ S3_ACCESS_KEY=your-access-key
 S3_SECRET_KEY=your-secret-key
 ```
 
-#### API Environment (`apps/api/.env`)
+#### Extended Environment Variables
+
+The main `.env` file at the root can also include additional variables for specific applications:
 
 ```bash
 # API Configuration
@@ -254,11 +253,7 @@ RATE_LIMIT_MAX=100
 
 # CORS
 CORS_ORIGIN=http://localhost:4321
-```
 
-#### Web Environment (`apps/web/.env`)
-
-```bash
 # Site Configuration
 SITE_URL=http://localhost:4321
 SITE_NAME=JasaWeb
@@ -271,6 +266,8 @@ GOOGLE_TAG_MANAGER_ID=
 # Contact Form
 CONTACT_EMAIL=contact@jasaweb.com
 ```
+
+All environment variables should be configured in the single `.env` file for consistency across the monorepo.
 
 ## 🛠️ Development Commands
 
@@ -628,7 +625,7 @@ This repository follows strict hygiene standards with regular cleanup and organi
 - **File Naming**: Consistent kebab-case for files, PascalCase for components
 - **Regular Cleanup**: Temporary artifacts and obsolete documentation removed
 - **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
-- **Latest Cleanup**: December 2025 - removed redundant `TESTING.md` documentation, fixed broken issue template references in CONTRIBUTING.md, removed duplicate test files, standardized package script commands
+- **Latest Cleanup**: December 2025 - removed temporary process files, consolidated redundant configuration files, cleaned duplicate script functions, improved documentation structure
 
 ## 📄 License
 
