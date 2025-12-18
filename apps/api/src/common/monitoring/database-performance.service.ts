@@ -185,7 +185,11 @@ export class DatabasePerformanceService {
     // Safe property assignment to prevent object injection
     const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
     // Secure object property access to prevent Object Injection Sink
-    if (!forbiddenKeys.has(queryType) && typeof queryType === 'string') {
+    if (
+      !forbiddenKeys.has(queryType) &&
+      typeof queryType === 'string' &&
+      queryType in this.stats.queryTypes
+    ) {
       const current = this.stats.queryTypes[queryType] || 0;
       this.stats.queryTypes[queryType] = current + 1;
     }
@@ -231,7 +235,12 @@ export class DatabasePerformanceService {
       const forbiddenKeys = new Set(['__proto__', 'constructor', 'prototype']);
       // Secure property access to prevent Object Injection Sink
       if (!forbiddenKeys.has(operation) && typeof operation === 'string') {
-        const current = patterns[operation] || 0;
+        const current = Object.prototype.hasOwnProperty.call(
+          patterns,
+          operation
+        )
+          ? (patterns[operation] as number)
+          : 0;
         patterns[operation] = current + 1;
       }
 
@@ -244,7 +253,9 @@ export class DatabasePerformanceService {
           typeof table === 'string'
         ) {
           const key = `table:${table}`;
-          const current = patterns[key] || 0;
+          const current = Object.prototype.hasOwnProperty.call(patterns, key)
+            ? (patterns[key] as number)
+            : 0;
           patterns[key] = current + 1;
         }
       });

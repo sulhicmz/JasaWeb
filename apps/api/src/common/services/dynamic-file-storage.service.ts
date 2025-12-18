@@ -46,9 +46,7 @@ abstract class BaseStorageAdapter implements StorageAdapter {
     throw new Error('Signed URLs not supported by this storage adapter');
   }
 
-  async list(
-    _prefix: string
-  ): Promise<{ key: string; size: number; lastModified: Date }[]> {
+  async list(): Promise<{ key: string; size: number; lastModified: Date }[]> {
     throw new Error('List operation not supported by this storage adapter');
   }
 }
@@ -359,7 +357,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     this.logger.log(`S3 delete simulated: ${key}`);
   }
 
-  async exists(key: string): Promise<boolean> {
+  async exists(_key: string): Promise<boolean> {
     // TODO: Implement S3 exists logic
     return false;
   }

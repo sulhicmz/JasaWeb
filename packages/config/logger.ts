@@ -78,9 +78,9 @@ class Logger {
   }
 
   private sendToLogService(
-    level: string,
-    message: string,
-    data?: Record<string, unknown>
+    _level: string,
+    _message: string,
+    _data?: Record<string, unknown>
   ): void {
     // In production, send to centralized logging service
     // For now, we'll use a noop for production logs
@@ -92,17 +92,25 @@ class Logger {
   }
 
   // Performance-specific logging
-  performance(metric: string, value: number, details?: any): void {
+  performance(
+    metric: string,
+    value: number,
+    details?: Record<string, unknown>
+  ): void {
     this.info(`Performance: ${metric}`, { value, ...details });
   }
 
   // Security-specific logging
-  security(event: string, details?: any): void {
+  security(event: string, details?: Record<string, unknown>): void {
     this.warn(`Security Event: ${event}`, details);
   }
 
   // Audit logging for security events
-  audit(action: string, userId?: string, details?: any): void {
+  audit(
+    action: string,
+    userId?: string,
+    details?: Record<string, unknown>
+  ): void {
     this.info(`Audit: ${action}`, {
       userId,
       timestamp: new Date().toISOString(),

@@ -474,7 +474,7 @@ export class SecurityMonitoringService {
     // Secure object property access to prevent Object Injection Sink
     report.severityBreakdown = this.validateSeverityBreakdown(
       obj && typeof obj === 'object'
-        ? (obj as any).severityBreakdown
+        ? (obj as Record<string, unknown>).severityBreakdown
         : undefined
     );
     report.criticalVulnerabilities = this.validateVulnerabilityArray(

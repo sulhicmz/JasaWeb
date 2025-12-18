@@ -1,6 +1,12 @@
 // Testing utilities and helpers for JasaWeb
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import {
+  INestApplication,
+  Type,
+  DynamicModule,
+  ForwardReference,
+  Provider,
+} from '@nestjs/common';
 
 // Export Vitest configurations
 export {
@@ -28,8 +34,13 @@ export const createTestApp = async (
  * Creates a testing module with common providers
  */
 export const createTestingModule = (
-  imports: any[],
-  providers: any[] = []
+  imports: (
+    | Type<any>
+    | DynamicModule
+    | Promise<DynamicModule>
+    | ForwardReference<any>
+  )[],
+  providers: Provider[] = []
 ): Promise<TestingModule> => {
   return Test.createTestingModule({
     imports,

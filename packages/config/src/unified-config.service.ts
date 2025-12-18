@@ -38,7 +38,7 @@ class EnvironmentDetector {
   }
 
   static isDeno(): boolean {
-    return typeof (globalThis as any).Deno !== 'undefined';
+    return typeof (globalThis as { Deno?: unknown }).Deno !== 'undefined';
   }
 
   static isBrowser(): boolean {
@@ -51,7 +51,8 @@ class EnvironmentDetector {
       // Vite/EnvImport - only check if available, not critical
       (typeof window === 'undefined' &&
         typeof global !== 'undefined' &&
-        (global as any).importMeta?.env?.MODE === 'build') ||
+        (global as { importMeta?: { env?: { MODE?: string } } }).importMeta?.env
+          ?.MODE === 'build') ||
       // Next.js build
       (typeof process !== 'undefined' &&
         process.env?.NEXT_PHASE === 'phase-production-build') ||
@@ -594,13 +595,15 @@ export class UnifiedConfigService {
   /**
    * Get configuration summary with options
    */
-  public getSummary(options: ConfigSummaryOptions = {}): Record<string, any> {
+  public getSummary(
+    options: ConfigSummaryOptions = {}
+  ): Record<string, unknown> {
     const {
       obscureSecrets = true,
       sections = Object.keys(this.config) as ConfigSection[],
     } = options;
 
-    const summary: Record<string, any> = {};
+    const summary: Record<string, unknown> = {};
 
     for (const section of sections) {
       if (section in this.config) {

@@ -331,13 +331,7 @@ export class AppConfigService {
             throw new Error(`Forbidden configuration key access: ${key}`);
           }
           // Secure access with key validation to prevent Object Injection Sink
-          if (key in recordValue) {
-            value = recordValue[key];
-          } else {
-            throw new Error(
-              `Configuration key '${key}' does not exist in path '${path}'`
-            );
-          }
+          value = recordValue[key];
         } else {
           throw new Error(`Configuration property '${key}' does not exist`);
         }

@@ -389,13 +389,18 @@ export class StorageConfigRegistry {
 
     try {
       const keys = path.split('.');
-      let value: any = config;
+      let value: unknown = config;
 
       for (const key of keys) {
-        value = value?.[key];
+        if (value && typeof value === 'object' && key in value) {
+          value = (value as Record<string, unknown>)[key];
+        } else {
+          value = undefined;
+          break;
+        }
       }
 
-      return value || '';
+      return typeof value === 'string' ? value : '';
     } catch {
       return '';
     }
@@ -435,7 +440,7 @@ export class StorageConfigRegistry {
   /**
    * Get storage type summary for monitoring
    */
-  public getStorageSummary(): Record<string, any> {
+  public getStorageSummary(): Record<string, unknown> {
     const currentConfig = this.getCurrentStorageConfig();
     const availableConfigs = this.getAvailableStorageConfigs();
 
