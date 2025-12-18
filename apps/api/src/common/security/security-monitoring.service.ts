@@ -49,6 +49,8 @@ export class SecurityMonitoringService {
       fs.mkdirSync(this.reportsPath, { recursive: true, mode: 0o750 });
     }
   }
+    }
+  }
 
   @Cron('0 2 * * *') // Run daily at 2 AM
   async performDailySecurityScan(): Promise<SecurityReport> {
@@ -283,6 +285,10 @@ export class SecurityMonitoringService {
   ): Promise<VulnerabilityAlert[]> {
     try {
       this.logger.log(`Checking security for package: ${packageName}`);
+
+      if (!/^[a-zA-Z0-9@\/._-]+$/.test(packageName)) {
+        throw new Error('Invalid package name');
+      }
 
       const auditOutput = execSync(
         `pnpm audit --json --filter ${packageName}`,

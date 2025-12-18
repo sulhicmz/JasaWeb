@@ -65,6 +65,7 @@ jasaweb/
 
 ### 🔄 Recent Improvements
 
+<<<<<<< HEAD
 This project maintains strict repository hygiene with regular cleanup and optimization:
 
 #### Repository Cleanup (Latest - December 2025)
@@ -77,6 +78,25 @@ This project maintains strict repository hygiene with regular cleanup and optimi
 - **Code Quality**: Maintained zero TypeScript compilation errors and high code standards
 - **Security**: Preserved OWASP compliance and comprehensive audit logging
 - **Architecture**: Clean separation between apps, packages, and documentation with clear naming conventions
+=======
+This project has undergone significant cleanup and optimization:
+
+#### Repository Cleanup (Latest - December 2025)
+
+- **Removed**: Outdated documentation files (`plan.md`, `bug.md`, `task.md`) for cleaner repository structure
+- **Removed**: Duplicate security documentation (`apps/api/SECURITY_SETUP.md`)
+- **Removed**: Temporary migration scripts (`apps/api/convert-tests.js`)
+- **Removed**: Build artifacts and TypeScript build info files
+- **Consolidated**: Scattered documentation into organized `/docs/` directory structure
+- **Standardized**: File naming conventions and folder organization across monorepo
+- **Cleaned**: Deprecated scripts and configuration files
+- **Organized**: Core documentation in root, specialized docs in `/docs/`
+- **Migrated**: Testing framework from Jest to Vitest across all packages
+- **Removed**: Redundant Babel configuration in favor of native TypeScript
+- **Updated**: Documentation references to point to existing files in `/docs/` directory
+- **Verified**: TypeScript configuration consistency across all packages
+- **Audited**: Package.json dependencies for redundancy and cleanup opportunities
+>>>>>>> origin/main
 
 #### Tailwind CSS v4 Migration
 
@@ -621,7 +641,11 @@ This repository follows strict hygiene standards with regular cleanup and organi
 - **File Naming**: Consistent kebab-case for files, PascalCase for components
 - **Regular Cleanup**: Temporary artifacts and obsolete documentation removed
 - **Clean Architecture**: Monorepo structure with clear separation between apps, packages, and docs
+<<<<<<< HEAD
 - **Latest Cleanup**: December 2025 - removed temporary process files, consolidated redundant configuration files, cleaned duplicate script functions, improved documentation structure
+=======
+- **Latest Cleanup**: December 2025 - removed redundant `TESTING.md` documentation, fixed broken issue template references in CONTRIBUTING.md, removed duplicate test files, standardized package script commands
+>>>>>>> origin/main
 
 ## 📄 License
 

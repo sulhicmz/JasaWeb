@@ -5,18 +5,18 @@
  * with automatic failover, security validation, and comprehensive monitoring.
  */
 
+import {
+    StorageAdapter,
+    StorageConfig,
+    storageConfigRegistry,
+    StorageDownloadOptions,
+    StorageType,
+    StorageUploadOptions,
+    StorageUploadResult,
+    ValidationResult,
+} from '@jasaweb/config';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  storageConfigRegistry,
-  StorageType,
-  StorageConfig,
-  StorageAdapter,
-  StorageUploadOptions,
-  StorageUploadResult,
-  StorageDownloadOptions,
-  ValidationResult,
-} from '@jasaweb/config';
 
 /**
  * Storage provider interface implementation for different backends
@@ -82,6 +82,19 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
   }
 
+  private resolveSecurePath(key: string): string {
+    const path = require('path');
+    // Prevent directory traversal
+    if (key.includes('..') || key.includes('\0')) {
+      throw new Error('Invalid key: Path traversal detected');
+    }
+    const resolved = path.join(this.uploadPath, key);
+    if (!resolved.startsWith(path.resolve(this.uploadPath))) {
+      throw new Error('Invalid key: Access denied');
+    }
+    return resolved;
+  }
+
   async upload(
     data: Buffer,
     options: StorageUploadOptions
@@ -90,7 +103,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const path = require('path');
     const crypto = require('crypto');
 
-    const filePath = path.join(this.uploadPath, options.key);
+    const filePath = this.resolveSecurePath(options.key);
     const dirPath = path.dirname(filePath);
 
     // Ensure directory exists
@@ -115,9 +128,10 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async download(key: string): Promise<Buffer> {
     const fs = require('fs').promises;
-    const path = require('path');
+    const fs = require('fs').promises;
+    // path required but not used directly due to resolveSecurePath
 
-    const filePath = path.join(this.uploadPath, key);
+    const filePath = this.resolveSecurePath(key);
 
     try {
       return await fs.readFile(filePath);
@@ -132,9 +146,10 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async delete(key: string): Promise<void> {
     const fs = require('fs').promises;
-    const path = require('path');
+    const fs = require('fs').promises;
+    // path required but not used directly
 
-    const filePath = path.join(this.uploadPath, key);
+    const filePath = this.resolveSecurePath(key);
 
     try {
       await fs.unlink(filePath);
@@ -152,9 +167,8 @@ class LocalStorageAdapter extends BaseStorageAdapter {
   async exists(key: string): Promise<boolean> {
     const fs = require('fs').promises;
 
-    const filePath = require('path').join(this.uploadPath, key);
-
     try {
+      const filePath = this.resolveSecurePath(key);
       await fs.access(filePath);
       return true;
     } catch {

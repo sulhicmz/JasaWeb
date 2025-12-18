@@ -1,27 +1,27 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
-  Controller,
-  Get,
-  UseGuards,
-  Query,
-  Post,
-  Body,
-  Inject,
-  InternalServerErrorException,
+    Body,
+    Controller,
+    Get,
+    Inject,
+    InternalServerErrorException,
+    Post,
+    Query,
+    UseGuards,
 } from '@nestjs/common';
+import { Invoice, Milestone, Ticket } from '@prisma/client';
+import type { Cache } from 'cache-manager';
 import { CACHE_KEYS } from '../common/config/constants';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
-import type { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Role, Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { DashboardGateway } from './dashboard.gateway';
-import { Milestone, Ticket, Invoice } from '@prisma/client';
 import type {
-  ProjectWithRelations,
-  DashboardStats,
-  RecentActivity,
+    DashboardStats,
+    ProjectWithRelations,
+    RecentActivity,
 } from './types/dashboard.types';
 
 // Interface for the specific projects query result
