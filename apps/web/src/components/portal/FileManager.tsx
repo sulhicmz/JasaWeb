@@ -91,7 +91,7 @@ const FileManager: React.FC<FileManagerProps> = ({
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('projectId', projectId);
+        formData.append('projectId', String(projectId));
         if (folder) {
           formData.append('folder', folder);
         }

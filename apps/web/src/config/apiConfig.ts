@@ -215,14 +215,17 @@ export class ApiConfigService {
   // Utility methods
   public getEndpoint(category: keyof ApiEndpoints, endpoint?: string): string {
     const endpoints = this.config.endpoints[category];
-    if (endpoint && endpoint in endpoints) {
+    const validEndpoints = Object.keys(endpoints);
+
+    if (endpoint && validEndpoints.includes(endpoint)) {
       return endpoints[endpoint as keyof typeof endpoints];
     }
     // Return a sensible default based on category
     if ('list' in endpoints) {
       return endpoints.list;
     }
-    return Object.values(endpoints)[0] || '';
+    const firstValue = Object.values(endpoints)[0];
+    return typeof firstValue === 'string' ? firstValue : '';
   }
 
   public buildUrl(path: string): string {

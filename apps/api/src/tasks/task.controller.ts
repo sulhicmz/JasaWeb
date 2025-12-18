@@ -10,7 +10,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
-import type { CreateTaskDto, UpdateTaskDto } from './task.service';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';

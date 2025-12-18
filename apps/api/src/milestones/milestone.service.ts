@@ -1,19 +1,8 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-
-export interface CreateMilestoneDto {
-  projectId: string;
-  title: string;
-  dueAt?: Date;
-  description?: string;
-}
-
-export interface UpdateMilestoneDto {
-  title?: string;
-  dueAt?: Date;
-  status?: string; // todo, in-progress, completed, overdue
-  description?: string;
-}
+import { CreateMilestoneDto } from './dto/create-milestone.dto';
+import { UpdateMilestoneDto } from './dto/update-milestone.dto';
+import { MilestoneStatus } from './dto/create-milestone.dto';
 
 @Injectable()
 export class MilestoneService {
@@ -147,9 +136,9 @@ export class MilestoneService {
     if (
       updateMilestoneDto.dueAt &&
       new Date(updateMilestoneDto.dueAt) < new Date() &&
-      updateMilestoneDto.status !== 'completed'
+      updateMilestoneDto.status !== MilestoneStatus.COMPLETED
     ) {
-      updateData.status = 'overdue';
+      updateData.status = MilestoneStatus.OVERDUE;
     }
 
     return await this.multiTenantPrisma.milestone.update({

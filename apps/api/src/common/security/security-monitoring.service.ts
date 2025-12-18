@@ -208,7 +208,9 @@ export class SecurityMonitoringService {
       if (!isValidPath(filepath)) {
         throw new Error('Invalid file path for saving report');
       }
-      fs.writeFileSync(filepath, JSON.stringify(report, null, 2));
+      fs.writeFileSync(filepath, JSON.stringify(report, null, 2), {
+        mode: 0o640,
+      });
       this.logger.log(`Security report saved: ${filename}`);
     } catch (error: unknown) {
       this.logger.error('Failed to save security report:', error);
@@ -248,7 +250,7 @@ export class SecurityMonitoringService {
       }
 
       const files = fs
-        .readdirSync(this.reportsPath)
+        .readdirSync(this.reportsPath, { encoding: 'utf8' })
         .filter(
           (file) =>
             file.startsWith('security-report-') && file.endsWith('.json')
@@ -317,7 +319,7 @@ export class SecurityMonitoringService {
       }
 
       const files = fs
-        .readdirSync(this.reportsPath)
+        .readdirSync(this.reportsPath, { encoding: 'utf8' })
         .filter(
           (file) =>
             file.startsWith('security-report-') && file.endsWith('.json')
@@ -337,7 +339,7 @@ export class SecurityMonitoringService {
             continue;
           }
 
-          const fileContent = fs.readFileSync(filepath, 'utf-8');
+          const fileContent = fs.readFileSync(filepath, { encoding: 'utf-8' });
           const report = JSON.parse(fileContent);
           reports.push(report);
         } catch (error) {

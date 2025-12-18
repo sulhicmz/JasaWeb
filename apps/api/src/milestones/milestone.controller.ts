@@ -10,10 +10,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { MilestoneService } from './milestone.service';
-import type {
-  CreateMilestoneDto,
-  UpdateMilestoneDto,
-} from './milestone.service';
+import { CreateMilestoneDto } from './dto/create-milestone.dto';
+import { UpdateMilestoneDto } from './dto/update-milestone.dto';
 import { Roles, Role } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';

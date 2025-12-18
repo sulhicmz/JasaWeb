@@ -2,19 +2,30 @@
 import { vi } from 'vitest';
 
 // Ensure vitest globals are available
-global.describe = global.describe || describe;
-global.it = global.it || it;
-global.test = global.test || test;
-global.expect = global.expect || expect;
-global.beforeAll = global.beforeAll || beforeAll;
-global.afterAll = global.afterAll || afterAll;
-global.beforeEach = global.beforeEach || beforeEach;
-global.afterEach = global.afterEach || afterEach;
+const globalVitest = global as typeof globalThis & {
+  describe?: typeof describe;
+  it?: typeof it;
+  test?: typeof test;
+  expect?: typeof expect;
+  beforeAll?: typeof beforeAll;
+  afterAll?: typeof afterAll;
+  beforeEach?: typeof beforeEach;
+  afterEach?: typeof afterEach;
+};
+
+globalVitest.describe = globalVitest.describe || describe;
+globalVitest.it = globalVitest.it || it;
+globalVitest.test = globalVitest.test || test;
+globalVitest.expect = globalVitest.expect || expect;
+globalVitest.beforeAll = globalVitest.beforeAll || beforeAll;
+globalVitest.afterAll = globalVitest.afterAll || afterAll;
+globalVitest.beforeEach = globalVitest.beforeEach || beforeEach;
+globalVitest.afterEach = globalVitest.afterEach || afterEach;
 
 // Provide Jest compatibility for existing tests
 beforeAll(() => {
   // Create global jest object with vi methods
-  (global as any).jest = {
+  (global as Record<string, unknown>).jest = {
     fn: vi.fn,
     mock: vi.mock,
     spyOn: vi.spyOn,

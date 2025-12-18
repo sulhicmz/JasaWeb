@@ -1,22 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
-
-export interface CreateTaskDto {
-  projectId: string;
-  title: string;
-  description?: string;
-  status?: string; // todo, in-progress, completed
-  assignedTo?: string;
-  dueAt?: Date;
-}
-
-export interface UpdateTaskDto {
-  title?: string;
-  description?: string;
-  status?: string;
-  assignedTo?: string;
-  dueAt?: Date;
-}
+import { CreateTaskDto, TaskStatus } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TaskService {
@@ -43,7 +28,7 @@ export class TaskService {
               connect: { id: createTaskDto.assignedTo },
             }
           : undefined,
-        status: createTaskDto.status || 'todo',
+        status: createTaskDto.status || TaskStatus.TODO,
         dueAt: createTaskDto.dueAt,
         labels: [],
         createdBy: {

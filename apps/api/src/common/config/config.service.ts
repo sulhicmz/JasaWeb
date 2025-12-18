@@ -118,6 +118,22 @@ export class ConfigService {
       ) {
         // Safely access nested property with safe key access
         const recordValue = value as Record<string, unknown>;
+        const safeKeys = Object.freeze([
+          'database',
+          'redis',
+          'storage',
+          'auth',
+          'security',
+          'application',
+          'aws',
+          's3',
+          'minio',
+        ]);
+
+        if (!safeKeys.includes(key as string)) {
+          throw new Error(`Unauthorized configuration key access: ${key}`);
+        }
+
         value = recordValue[key];
       } else {
         throw new Error(`Configuration path '${path}' not found`);

@@ -18,25 +18,8 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { EmailService } from '../common/services/email.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
-
-// Define DTO for invoice creation/update
-interface CreateInvoiceDto {
-  projectId?: string;
-  amount: number;
-  currency: string; // USD, EUR, etc.
-  issuedAt: Date;
-  dueAt: Date;
-  description?: string;
-}
-
-interface UpdateInvoiceDto {
-  amount?: number;
-  currency?: string;
-  issuedAt?: Date;
-  dueAt?: Date;
-  status?: string; // draft, issued, paid, overdue, cancelled
-  description?: string;
-}
+import { CreateInvoiceDto, InvoiceStatus } from './dto/create-invoice.dto';
+import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 
 @Controller('invoices')
 @UseGuards(RolesGuard) // Use the roles guard
@@ -295,7 +278,7 @@ export class InvoiceController {
       where: { id },
       data: {
         ...updateInvoiceDto,
-        ...(updateInvoiceDto.status === 'paid' && { paidAt: new Date() }), // Set paidAt when status is paid
+        ...(updateInvoiceDto.status === 'PAID' && { paidAt: new Date() }), // Set paidAt when status is paid
       },
       include: {
         organization: {
@@ -323,8 +306,8 @@ export class InvoiceController {
 
     // Send notification if status changed to issued
     if (
-      updateInvoiceDto.status === 'issued' &&
-      existingInvoice.status !== 'issued'
+      updateInvoiceDto.status === 'SENT' &&
+      existingInvoice.status !== 'SENT'
     ) {
       const updatedInvoiceWithOrg = updatedInvoice as typeof updatedInvoice & {
         organization: { billingEmail: string };

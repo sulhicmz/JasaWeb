@@ -129,7 +129,7 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
         setPredictiveData(predictiveResponse.data as PredictiveData);
       }
     } catch (error) {
-      if ((import.meta as any).env.DEV) {
+      if (import.meta.env.DEV) {
         console.debug('Error loading analytics data:', error);
       }
       setError('Failed to load advanced analytics');
@@ -506,7 +506,9 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() =>
+                setActiveTab(tab.key as 'trends' | 'performance' | 'predictive')
+              }
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.key
                   ? 'border-blue-500 text-blue-600'

@@ -38,12 +38,12 @@ abstract class BaseStorageAdapter implements StorageAdapter {
 
   abstract exists(key: string): Promise<boolean>;
 
-  async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+  async getSignedUrl(_key: string, _expiresIn: number): Promise<string> {
     throw new Error('Signed URLs not supported by this storage adapter');
   }
 
   async list(
-    prefix: string
+    _prefix: string
   ): Promise<{ key: string; size: number; lastModified: Date }[]> {
     throw new Error('List operation not supported by this storage adapter');
   }
@@ -71,7 +71,6 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   private ensureDirectoryExists(): void {
     const fs = require('fs');
-    const path = require('path');
 
     // Validate path to prevent directory traversal
     if (this.uploadPath.includes('..') || this.uploadPath.includes('~')) {
@@ -152,9 +151,8 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async exists(key: string): Promise<boolean> {
     const fs = require('fs').promises;
-    const path = require('path');
 
-    const filePath = path.join(this.uploadPath, key);
+    const filePath = require('path').join(this.uploadPath, key);
 
     try {
       await fs.access(filePath);
@@ -208,9 +206,12 @@ class S3StorageAdapter extends BaseStorageAdapter {
     return false;
   }
 
-  override async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+  override async getSignedUrl(
+    _key: string,
+    _expiresIn: number
+  ): Promise<string> {
     // TODO: Implement S3 signed URL logic
-    return `https://s3-signed-url-placeholder/${key}?expires=${expiresIn}`;
+    return `https://s3-signed-url-placeholder/placeholder?expires=3600`;
   }
 }
 
@@ -497,7 +498,7 @@ export class DynamicFileStorageService implements OnModuleInit {
       name: string;
       priority: number;
     }>;
-    summary: any;
+    summary: Record<string, unknown>;
   }> {
     const health = await this.getHealthStatus();
     const available = this.storageRegistry.getAvailableStorageConfigs();
