@@ -257,6 +257,10 @@ export class AuditLoggingService {
     return {
       ...event,
       details: event.details
+<<<<<<< HEAD
+        ? this.sanitizeAuditData({ details: event.details } as AuditLogEntry)
+            .details
+=======
         ? this.sanitizeAuditData({
             action: 'TEMP_AUDIT',
             actorId: '',
@@ -268,6 +272,7 @@ export class AuditLoggingService {
             timestamp: new Date(),
             details: event.details,
           }).details
+>>>>>>> origin/main
         : undefined,
     };
   }

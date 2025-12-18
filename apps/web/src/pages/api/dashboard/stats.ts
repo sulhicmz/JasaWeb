@@ -5,7 +5,9 @@ export async function GET({ request }: { request: Request }) {
   try {
     // Forward the request to the backend API
     const apiBaseUrl =
-      import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3001';
+      import.meta.env.PUBLIC_API_URL ||
+      import.meta.env.API_URL ||
+      'http://localhost:3000';
     const backendUrl = `${apiBaseUrl}/dashboard/stats`;
 
     const response = await fetch(backendUrl, {

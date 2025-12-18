@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface Milestone {
   id: string;
@@ -53,32 +54,21 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem('authToken');
-      const url = editingMilestone
-        ? `http://localhost:3001/milestones/${editingMilestone.id}`
-        : 'http://localhost:3001/milestones';
-
-      const method = editingMilestone ? 'PATCH' : 'POST';
       const body = {
         title: formData.title,
         dueAt: formData.dueAt ? new Date(formData.dueAt).toISOString() : null,
         ...(editingMilestone ? {} : { projectId }),
       };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      const response = editingMilestone
+        ? await apiClient.patch(`/milestones/${editingMilestone.id}`, body)
+        : await apiClient.post('/milestones', body);
 
-      if (response.ok) {
+      if (!response.error) {
         closeModal();
         onMilestoneUpdate();
       } else {
-        throw new Error('Failed to save milestone');
+        throw new Error(response.error || 'Failed to save milestone');
       }
     } catch (error) {
       console.error('Error saving milestone:', error);
@@ -92,18 +82,9 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
     }
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `http://localhost:3001/milestones/${milestoneId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiClient.delete(`/milestones/${milestoneId}`);
 
-      if (response.ok) {
+      if (!response.error) {
         onMilestoneUpdate();
       } else {
         throw new Error('Failed to delete milestone');

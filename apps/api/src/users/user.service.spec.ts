@@ -1,8 +1,24 @@
+<<<<<<< HEAD:apps/api/src/users/users.service.spec.ts
+/// <reference types="@types/jest" />
+
+=======
+>>>>>>> origin/main:apps/api/src/users/user.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from '../common/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+<<<<<<< HEAD:apps/api/src/users/users.service.spec.ts
+
+// Mock bcrypt
+jest.mock('bcrypt', () => ({
+  hash: jest.fn(),
+}));
+
+describe('UsersService', () => {
+  let service: UsersService;
+  let prismaService: PrismaService;
+=======
 import { PasswordService } from '../auth/password.service';
 import { vi } from 'vitest';
 
@@ -10,6 +26,7 @@ import { vi } from 'vitest';
 
 describe('UserService', () => {
   let service: UserService;
+>>>>>>> origin/main:apps/api/src/users/user.service.spec.ts
 
   const mockUser = {
     id: '1',
@@ -23,11 +40,19 @@ describe('UserService', () => {
 
   const mockPrismaService = {
     user: {
+<<<<<<< HEAD:apps/api/src/users/users.service.spec.ts
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+=======
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+>>>>>>> origin/main:apps/api/src/users/user.service.spec.ts
     },
   };
 
@@ -62,7 +87,7 @@ describe('UserService', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

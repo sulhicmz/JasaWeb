@@ -56,7 +56,11 @@ export class TaskService {
     });
   }
 
+<<<<<<< HEAD
+  async findAll(projectId?: string, _organizationId: string = '') {
+=======
   async findAll(projectId?: string) {
+>>>>>>> origin/main
     if (projectId) {
       // Validate project exists and belongs to organization
       const project = await this.multiTenantPrisma.project.findUnique({
@@ -108,7 +112,34 @@ export class TaskService {
     }
   }
 
+<<<<<<< HEAD
+  async findOne(id: string, organizationId: string) {
+    // First find the task to get its projectId
+    const taskWithoutRelations = await this.multiTenantPrisma.task.findUnique({
+      where: { id },
+      select: { projectId: true, id: true },
+    });
+
+    if (!taskWithoutRelations) {
+      throw new BadRequestException('Task not found');
+    }
+
+    // Validate that the project belongs to the organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: taskWithoutRelations.projectId },
+      select: { id: true, name: true, organizationId: true },
+    });
+
+    if (!project || project.organizationId !== organizationId) {
+      throw new BadRequestException(
+        'Task not found or does not belong to your organization'
+      );
+    }
+
+    // Now get the full task with relations
+=======
   async findOne(id: string) {
+>>>>>>> origin/main
     const task = await this.multiTenantPrisma.task.findUnique({
       where: { id },
       include: {
@@ -128,22 +159,37 @@ export class TaskService {
       },
     });
 
-    if (!task) {
-      throw new BadRequestException(
-        'Task not found or does not belong to your organization'
-      );
-    }
-
     return task;
   }
 
+<<<<<<< HEAD
+  async update(
+    id: string,
+    updateTaskDto: UpdateTaskDto,
+    organizationId: string
+  ) {
+    // First find the task to get its projectId
+    const taskWithoutRelations = await this.multiTenantPrisma.task.findUnique({
+=======
   async update(id: string, updateTaskDto: UpdateTaskDto) {
     // Check if task exists
     const existingTask = await this.multiTenantPrisma.task.findUnique({
+>>>>>>> origin/main
       where: { id },
+      select: { projectId: true, id: true },
     });
 
-    if (!existingTask) {
+    if (!taskWithoutRelations) {
+      throw new BadRequestException('Task not found');
+    }
+
+    // Validate that the project belongs to the organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: taskWithoutRelations.projectId },
+      select: { id: true, organizationId: true },
+    });
+
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Task not found or does not belong to your organization'
       );
@@ -155,12 +201,29 @@ export class TaskService {
     });
   }
 
+<<<<<<< HEAD
+  async remove(id: string, organizationId: string) {
+    // First find the task to get its projectId
+    const taskWithoutRelations = await this.multiTenantPrisma.task.findUnique({
+=======
   async remove(id: string) {
     const task = await this.multiTenantPrisma.task.findUnique({
+>>>>>>> origin/main
       where: { id },
+      select: { projectId: true, id: true },
     });
 
-    if (!task) {
+    if (!taskWithoutRelations) {
+      throw new BadRequestException('Task not found');
+    }
+
+    // Validate that the project belongs to the organization
+    const project = await this.multiTenantPrisma.project.findUnique({
+      where: { id: taskWithoutRelations.projectId },
+      select: { id: true, organizationId: true },
+    });
+
+    if (!project || project.organizationId !== organizationId) {
       throw new BadRequestException(
         'Task not found or does not belong to your organization'
       );

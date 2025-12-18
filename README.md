@@ -70,18 +70,14 @@ This project has undergone significant cleanup and optimization:
 #### Repository Cleanup (Latest - December 2025)
 
 - **Removed**: Outdated documentation files (`plan.md`, `bug.md`, `task.md`) for cleaner repository structure
-- **Removed**: Duplicate security documentation (`apps/api/SECURITY_SETUP.md`)
-- **Removed**: Temporary migration scripts (`apps/api/convert-tests.js`)
-- **Removed**: Build artifacts and TypeScript build info files
 - **Consolidated**: Scattered documentation into organized `/docs/` directory structure
 - **Standardized**: File naming conventions and folder organization across monorepo
 - **Cleaned**: Deprecated scripts and configuration files
 - **Organized**: Core documentation in root, specialized docs in `/docs/`
 - **Migrated**: Testing framework from Jest to Vitest across all packages
 - **Removed**: Redundant Babel configuration in favor of native TypeScript
+- **Removed**: Build artifacts and temporary files from repository
 - **Updated**: Documentation references to point to existing files in `/docs/` directory
-- **Verified**: TypeScript configuration consistency across all packages
-- **Audited**: Package.json dependencies for redundancy and cleanup opportunities
 
 #### Tailwind CSS v4 Migration
 

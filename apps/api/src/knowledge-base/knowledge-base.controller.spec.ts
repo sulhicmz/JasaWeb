@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { KnowledgeBaseController } from './knowledge-base.controller';
 import { KnowledgeBaseService } from './knowledge-base.service';
-import { vi } from 'vitest';
-
 
 describe('KnowledgeBaseController', () => {
   let controller: KnowledgeBaseController;
@@ -10,22 +8,22 @@ describe('KnowledgeBaseController', () => {
 
   beforeEach(async () => {
     const mockService = {
-      createCategory: vi.fn(),
-      getCategories: vi.fn(),
-      getCategory: vi.fn(),
-      updateCategory: vi.fn(),
-      deleteCategory: vi.fn(),
-      createTag: vi.fn(),
-      getTags: vi.fn(),
-      createArticle: vi.fn(),
-      getArticles: vi.fn(),
-      getArticle: vi.fn(),
-      getArticleBySlug: vi.fn(),
-      updateArticle: vi.fn(),
-      deleteArticle: vi.fn(),
-      search: vi.fn(),
-      createFeedback: vi.fn(),
-      getAnalytics: vi.fn(),
+      createCategory: jest.fn(),
+      getCategories: jest.fn(),
+      getCategory: jest.fn(),
+      updateCategory: jest.fn(),
+      deleteCategory: jest.fn(),
+      createTag: jest.fn(),
+      getTags: jest.fn(),
+      createArticle: jest.fn(),
+      getArticles: jest.fn(),
+      getArticle: jest.fn(),
+      getArticleBySlug: jest.fn(),
+      updateArticle: jest.fn(),
+      deleteArticle: jest.fn(),
+      search: jest.fn(),
+      createFeedback: jest.fn(),
+      getAnalytics: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -121,7 +119,7 @@ describe('KnowledgeBaseController', () => {
         },
       };
 
-      vi.spyOn(service, 'search').mockResolvedValue(expectedResults as any);
+      jest.spyOn(service, 'search').mockResolvedValue(expectedResults as any);
 
       const result = await controller.search(searchDto, {
         user: { id: 'user-1' },

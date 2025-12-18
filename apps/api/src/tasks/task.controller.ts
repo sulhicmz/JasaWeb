@@ -1,20 +1,20 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Query,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
 } from '@nestjs/common';
-import { TaskService } from './task.service';
-import type { CreateTaskDto, UpdateTaskDto } from './task.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { Role, Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import type { CreateTaskDto, UpdateTaskDto } from './task.service';
+import { TaskService } from './task.service';
 
 @Controller('tasks')
 @UseGuards(RolesGuard)
@@ -39,22 +39,32 @@ export class TaskController {
 
   @Get(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  async findOne(@Param('id') id: string) {
-    return this.taskService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.taskService.findOne(id, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
   @Patch(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member)
-  async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.taskService.update(id, updateTaskDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.taskService.update(id, updateTaskDto, organizationId);
   }
 
   @UseGuards(ThrottlerGuard)
   @Delete(':id')
   @Roles(Role.OrgOwner, Role.OrgAdmin)
-  async remove(@Param('id') id: string) {
-    return this.taskService.remove(id);
+  async remove(
+    @Param('id') id: string,
+    @CurrentOrganizationId() organizationId: string
+  ) {
+    return this.taskService.remove(id, organizationId);
   }
 
   @Get('status/:status')

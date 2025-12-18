@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
+import apiClient from '../../services/apiClient';
 
 interface Project {
   id: string;
@@ -45,42 +46,42 @@ const StatusWidgets: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
 
-      const response = await fetch('http://localhost:3001/dashboard/stats', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await apiClient.get('/dashboard/stats');
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
+      if (response.error || !response.data) {
+        throw new Error(response.error || 'Failed to fetch dashboard stats');
       }
 
-      const stats = await response.json();
+      const stats = response.data;
 
       // Transform the stats data to match the expected interface
+      const typedStats = stats as any;
       setStatusData({
-        projects: Array(stats.projects.total)
+        projects: Array(typedStats.projects?.total || 0)
           .fill(null)
           .map((_, i) => ({
             id: `project-${i}`,
-            status: i < stats.projects.active ? 'active' : 'completed',
+            status: i < typedStats.projects?.active ? 'active' : 'completed',
           })),
-        tickets: Array(stats.tickets.open + stats.tickets.inProgress)
+        tickets: Array(
+          (typedStats.tickets?.open || 0) +
+            (typedStats.tickets?.inProgress || 0)
+        )
           .fill(null)
           .map((_, i) => ({
             id: `ticket-${i}`,
-            status: i < stats.tickets.open ? 'open' : 'in-progress',
-            priority: i < stats.tickets.highPriority ? 'high' : 'medium',
+            status: i < typedStats.tickets?.open ? 'open' : 'in-progress',
+            priority: i < typedStats.tickets?.highPriority ? 'high' : 'medium',
           })),
-        invoices: Array(stats.invoices.pending)
+        invoices: Array(typedStats.invoices?.pending || 0)
           .fill(null)
           .map((_, i) => ({
             id: `invoice-${i}`,
             status: 'pending',
             amount:
               Math.floor(
-                stats.invoices.pendingAmount / stats.invoices.pending
+                (typedStats.invoices?.pendingAmount || 0) /
+                  (typedStats.invoices?.pending || 1)
               ) || 0,
           })),
       });

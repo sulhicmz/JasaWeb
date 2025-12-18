@@ -24,8 +24,11 @@ import { DEFAULT_EMAIL_CONFIG } from '../config/constants';
         },
         defaults: {
           from: configService.get<string>(
-            'EMAIL_FROM',
-            '"JasaWeb" <noreply@jasaweb.com>'
+            'SYSTEM_EMAIL_FROM',
+            configService.get<string>(
+              'SMTP_FROM',
+              '"JasaWeb" <noreply@jasaweb.com>'
+            )
           ),
         },
         template: {

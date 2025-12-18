@@ -28,13 +28,17 @@ class Logger {
     return this.isDevelopment && level >= this.currentLevel;
   }
 
-  private formatMessage(level: string, message: string, data?: any): string {
+  private formatMessage(
+    level: string,
+    message: string,
+    data?: unknown
+  ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data)}` : '';
     return `[${timestamp}] [${level}] ${message}${dataStr}`;
   }
 
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     if (this.shouldLog(LOG_LEVELS.DEBUG)) {
       // Use dev-only logging
       if (this.isDevelopment) {
@@ -43,7 +47,7 @@ class Logger {
     }
   }
 
-  info(message: string, data?: any): void {
+  info(message: string, data?: unknown): void {
     if (this.shouldLog(LOG_LEVELS.INFO)) {
       if (this.isDevelopment) {
         console.info(this.formatMessage('INFO', message, data));
@@ -53,7 +57,7 @@ class Logger {
     }
   }
 
-  warn(message: string, data?: any): void {
+  warn(message: string, data?: unknown): void {
     if (this.shouldLog(LOG_LEVELS.WARN)) {
       if (this.isDevelopment) {
         console.warn(this.formatMessage('WARN', message, data));
@@ -62,7 +66,7 @@ class Logger {
     }
   }
 
-  error(message: string, error?: Error | any): void {
+  error(message: string, error?: Error | unknown): void {
     if (this.shouldLog(LOG_LEVELS.ERROR)) {
       if (this.isDevelopment) {
         console.error(this.formatMessage('ERROR', message, error));
@@ -71,7 +75,11 @@ class Logger {
     }
   }
 
-  private sendToLogService(level: string, message: string, data?: any): void {
+  private sendToLogService(
+    level: string,
+    message: string,
+    data?: unknown
+  ): void {
     // In production, send to centralized logging service
     // For now, we'll use a noop for production logs
     if (this.isDevelopment) return;
@@ -82,17 +90,25 @@ class Logger {
   }
 
   // Performance-specific logging
-  performance(metric: string, value: number, details?: any): void {
+  performance(
+    metric: string,
+    value: number,
+    details?: Record<string, unknown>
+  ): void {
     this.info(`Performance: ${metric}`, { value, ...details });
   }
 
   // Security-specific logging
-  security(event: string, details?: any): void {
+  security(event: string, details?: unknown): void {
     this.warn(`Security Event: ${event}`, details);
   }
 
   // Audit logging for security events
-  audit(action: string, userId?: string, details?: any): void {
+  audit(
+    action: string,
+    userId?: string,
+    details?: Record<string, unknown>
+  ): void {
     this.info(`Audit: ${action}`, {
       userId,
       timestamp: new Date().toISOString(),

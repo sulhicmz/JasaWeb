@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-const SITE_URL = 'https://jasaweb.id';
+const SITE_URL = import.meta.env.SITE_URL || 'https://jasaweb.id';
 
 export const GET: APIRoute = () => {
   const pages = [
