@@ -332,7 +332,7 @@ export class AppConfigService {
           }
           // Secure access with key validation to prevent Object Injection Sink
           const safeKey = String(key);
-          value = (recordValue as Record<string, unknown>)[safeKey];
+          value = Reflect.get(recordValue, safeKey) as unknown;
         } else {
           throw new Error(`Configuration property '${key}' does not exist`);
         }

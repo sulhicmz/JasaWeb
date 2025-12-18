@@ -17,6 +17,13 @@ build/
 .vercel/
 .astro/
 
+# Compiled JavaScript/TypeScript files in packages
+packages/**/*.js
+packages/**/*.js.map
+packages/**/*.d.ts
+!packages/**/*.ts
+!packages/**/*.tsx
+
 # TypeScript build info
 *.tsbuildinfo
 **/*.tsbuildinfo

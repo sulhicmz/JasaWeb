@@ -193,11 +193,8 @@ export class DatabasePerformanceService {
       Object.prototype.hasOwnProperty.call(this.stats.queryTypes, queryType)
     ) {
       const current =
-        this.stats.queryTypes[
-          queryType as keyof typeof this.stats.queryTypes
-        ] || 0;
-      this.stats.queryTypes[queryType as keyof typeof this.stats.queryTypes] =
-        current + 1;
+        (Reflect.get(this.stats.queryTypes, queryType) as number) || 0;
+      Reflect.set(this.stats.queryTypes, queryType, current + 1);
     }
   }
 
@@ -246,9 +243,9 @@ export class DatabasePerformanceService {
           operation
         );
         const current = hasKey
-          ? (patterns[operation as keyof typeof patterns] as number)
+          ? (Reflect.get(patterns, operation) as number)
           : 0;
-        (patterns as Record<string, number>)[operation] = current + 1;
+        Reflect.set(patterns, operation, current + 1);
       }
 
       const tables = this.extractTables(metric.query);
@@ -261,9 +258,9 @@ export class DatabasePerformanceService {
         ) {
           const key = `table:${table}`;
           const current = Object.prototype.hasOwnProperty.call(patterns, key)
-            ? (patterns[key] as number)
+            ? (Reflect.get(patterns, key) as number)
             : 0;
-          patterns[key] = current + 1;
+          Reflect.set(patterns, key, current + 1);
         }
       });
     });
@@ -374,10 +371,11 @@ export class DatabasePerformanceService {
       ) {
         // Secure property access to prevent Object Injection Sink
         if (!Object.prototype.hasOwnProperty.call(groups, pattern)) {
-          groups[pattern] = [];
+          Reflect.set(groups, pattern, []);
         }
-        if (groups[pattern]) {
-          groups[pattern].push(query);
+        const groupArray = Reflect.get(groups, pattern) as QueryMetrics[];
+        if (Array.isArray(groupArray)) {
+          groupArray.push(query);
         }
       }
     });

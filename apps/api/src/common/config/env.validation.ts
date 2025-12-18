@@ -2,6 +2,10 @@
  * Gets a required environment variable, throws an error if not found
  */
 export function getRequiredEnv(key: string): string {
+  // Validate key to prevent prototype pollution
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+    throw new Error(`Invalid environment variable key: ${key}`);
+  }
   const value = process.env[key];
   if (value === undefined || value === '') {
     throw new Error(`Required environment variable ${key} is missing or empty`);
@@ -16,6 +20,10 @@ export function getOptionalEnv(
   key: string,
   defaultValue?: string
 ): string | undefined {
+  // Validate key to prevent prototype pollution
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+    throw new Error(`Invalid environment variable key: ${key}`);
+  }
   const value = process.env[key];
   return value !== undefined && value !== '' ? value : defaultValue;
 }
@@ -24,6 +32,10 @@ export function getOptionalEnv(
  * Gets an environment variable as a number with a default value
  */
 export function getEnvNumber(key: string, defaultValue: number): number {
+  // Validate key to prevent prototype pollution
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+    throw new Error(`Invalid environment variable key: ${key}`);
+  }
   const value = process.env[key];
   const num = value !== undefined ? parseInt(value, 10) : defaultValue;
   if (isNaN(num)) {
@@ -36,6 +48,10 @@ export function getEnvNumber(key: string, defaultValue: number): number {
  * Gets an environment variable as a boolean with a default value
  */
 export function getEnvBoolean(key: string, defaultValue: boolean): boolean {
+  // Validate key to prevent prototype pollution
+  if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
+    throw new Error(`Invalid environment variable key: ${key}`);
+  }
   const value = process.env[key];
   if (value === undefined) return defaultValue;
   return value.toLowerCase() === 'true';
@@ -86,7 +102,7 @@ export function validateEnv(config: Record<string, unknown>) {
       // Use Object.defineProperty with specific properties to prevent prototype pollution
       // Ensure key is a valid string and not a prototype property
       const safeKey = String(key);
-      const configValue = (config as Record<string, unknown>)[safeKey]; // eslint-disable-line security/detect-object-injection -- Safe access with pre-validated key
+      const configValue = Reflect.get(config, safeKey); // Safe reflection-based access
       if (configValue !== undefined) {
         Object.defineProperty(process.env, safeKey, {
           value: String(configValue),

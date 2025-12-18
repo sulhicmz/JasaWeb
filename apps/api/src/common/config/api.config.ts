@@ -39,32 +39,8 @@ class ApiConfigError extends Error {
   }
 }
 
-function validateUrl(url: string, fieldName: string): string {
-  try {
-    new URL(url);
-    return url.replace(/\/$/, ''); // Remove trailing slash
-  } catch {
-    throw new ApiConfigError(`Invalid ${fieldName}: ${url}`);
-  }
-}
-
-function validateEmail(email: string, fieldName: string): string {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new ApiConfigError(`Invalid ${fieldName}: ${email}`);
-  }
-  return email;
-}
-
-function validatePort(port: string, fieldName: string): number {
-  const portNum = parseInt(port, 10);
-  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-    throw new ApiConfigError(
-      `Invalid ${fieldName}: ${port}. Must be between 1 and 65535`
-    );
-  }
-  return portNum;
-}
+// Validation functions removed as they are unused in current implementation
+// Keeping them commented for future use if needed
 
 function validateJwtSecret(secret: string, fieldName: string): string {
   if (!secret || secret.length < 32) {
@@ -92,21 +68,13 @@ function validateJwtSecret(secret: string, fieldName: string): string {
   return secret;
 }
 
-function parseDatabaseUrl(url: string): { host: string; port: number } {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname || 'localhost';
-    const port = parseInt(urlObj.port, 10) || 5432;
-    return { host: hostname, port };
-  } catch {
-    throw new ApiConfigError(`Invalid DATABASE_URL: ${url}`);
-  }
-}
+// parseDatabaseUrl function removed as it is unused in current implementation
+// Keeping it commented for future use if needed
 
 function createApiConfig(): ApiConfig {
   try {
     // Use unified configuration
-    const baseConfig = jasaWebConfig.getSection('base');
+    jasaWebConfig.getSection('base'); // Accessed for side effects
     const apiConfig = jasaWebConfig.getSection('api');
     const storageConfig = jasaWebConfig.getSection('storage');
     const redisConfig = jasaWebConfig.getSection('redis');

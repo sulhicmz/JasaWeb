@@ -337,29 +337,33 @@ class S3StorageAdapter extends BaseStorageAdapter {
     _data: Buffer,
     options: StorageUploadOptions
   ): Promise<StorageUploadResult> {
-    // TODO: Implement S3 upload logic
+    // NOTE: S3 upload is not yet implemented - this is a mock implementation
+    // To implement: Add AWS SDK dependency and use PutObjectCommand
     this.logger.log(`S3 upload simulated: ${options.key}`);
 
     return {
       key: options.key,
-      size: 0, // Mock size since data is not used
+      size: _data.length,
       bucket: this.bucket,
     };
   }
 
   async download(key: string): Promise<Buffer> {
-    // TODO: Implement S3 download logic
+    // NOTE: S3 download is not yet implemented - this is a mock implementation
+    // To implement: Add AWS SDK dependency and use GetObjectCommand
     this.logger.log(`S3 download simulated: ${key}`);
-    return Buffer.from('mock file content');
+    throw new Error('S3 download not implemented yet');
   }
 
   async delete(key: string): Promise<void> {
-    // TODO: Implement S3 delete logic
+    // NOTE: S3 delete is not yet implemented - this is a mock implementation
+    // To implement: Add AWS SDK dependency and use DeleteObjectCommand
     this.logger.log(`S3 delete simulated: ${key}`);
   }
 
   async exists(_key: string): Promise<boolean> {
-    // TODO: Implement S3 exists logic
+    // NOTE: S3 exists check is not yet implemented - this is a mock implementation
+    // To implement: Add AWS SDK dependency and use HeadObjectCommand
     return false;
   }
 
@@ -368,7 +372,8 @@ class S3StorageAdapter extends BaseStorageAdapter {
     if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
       throw new Error('Invalid key format');
     }
-    // TODO: Implement S3 signed URL logic
+    // NOTE: S3 signed URL generation is not yet implemented - this is a mock implementation
+    // To implement: Add AWS SDK dependency and use getSignedUrl with GetObjectCommand
     return `https://s3-signed-url-placeholder/placeholder?expires=${expiresIn}`;
   }
 }
