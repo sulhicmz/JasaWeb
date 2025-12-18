@@ -1,117 +1,58 @@
-import { User, Project, Invoice, Ticket, AuditLog } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 // Project-related types
-export interface ProjectWithRelations extends Project {
-  milestones: Array<{
-    id: string;
-    status: string;
-    title: string;
-    dueAt?: Date;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  tasks: Array<{
-    id: string;
-    status: string;
-    title: string;
-    assigneeId?: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  approvals: Array<{
-    id: string;
-    status: string;
-    itemType: string;
-    itemId: string;
-    decidedById?: string;
-    decidedAt?: Date;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  tickets: Array<{
-    id: string;
-    status: string;
-    priority: string;
-    type: string;
-    assigneeId?: string;
-    slaDueAt?: Date;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  invoices: Array<{
-    id: string;
-    amount: number;
-    currency: string;
-    status: string;
-    issuedAt: Date;
-    dueAt: Date;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-}
+export interface ProjectWithRelations extends Prisma.ProjectGetPayload<{
+  include: {
+    milestones: true;
+    tasks: true;
+    approvals: true;
+    tickets: true;
+    invoices: true;
+  };
+}> {}
 
 // User-related types
-export interface UserWithRelations extends User {
-  memberships: Array<{
-    id: string;
-    organizationId: string;
-    role: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  assignedTasks: Array<{
-    id: string;
-    status: string;
-    title: string;
-    projectId: string;
-    assignedTo?: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  approvals: Array<{
-    id: string;
-    status: string;
-    itemType: string;
-    itemId: string;
-    projectId: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-  tickets: Array<{
-    id: string;
-    status: string;
-    priority: string;
-    type: string;
-    organizationId: string;
-    assigneeId?: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-}
+export interface UserWithRelations extends Prisma.UserGetPayload<{
+  include: {
+    memberships: {
+      where: { organizationId: string };
+    };
+    assignedTasks: {
+      where: {
+        project: {
+          organizationId: string;
+        };
+      };
+    };
+    approvals: {
+      where: {
+        project: {
+          organizationId: string;
+        };
+      };
+    };
+    tickets: {
+      where: {
+        organizationId: string;
+      };
+    };
+  };
+}> {}
 
 // Invoice-related types
-export interface InvoiceWithProject extends Invoice {
-  project: {
-    id: string;
-    name: string;
-    status: string;
-    organizationId: string;
+export interface InvoiceWithProject extends Prisma.InvoiceGetPayload<{
+  include: {
+    project: true;
   };
-}
+}> {}
 
 // Ticket-related types
-export interface TicketWithRelations extends Ticket {
-  assignee?: {
-    id: string;
-    name: string | null;
-    email: string;
+export interface TicketWithRelations extends Prisma.TicketGetPayload<{
+  include: {
+    assignee: true;
+    project: true;
   };
-  project: {
-    id: string;
-    name: string;
-    status: string;
-  };
-}
+}> {}
 
 // Audit Log types
 export interface AuditLogWithAction extends AuditLog {
@@ -147,40 +88,13 @@ export interface ActivityTrendsFilters extends DateRangeFilters {
 }
 
 // Prisma Where Clause types
-export interface ProjectWhereClause {
-  organizationId: string;
-  id?: string;
-  createdAt?: {
-    gte?: Date;
-    lte?: Date;
-  };
-}
+export type ProjectWhereClause = Prisma.ProjectWhereInput;
 
-export interface UserWhereClause {
-  id?: string;
-  memberships: {
-    some: {
-      organizationId: string;
-    };
-  };
-}
+export type UserWhereClause = Prisma.UserWhereInput;
 
-export interface InvoiceWhereClause {
-  organizationId: string;
-  projectId?: string;
-  issuedAt?: {
-    gte?: Date;
-    lte?: Date;
-  };
-}
+export type InvoiceWhereClause = Prisma.InvoiceWhereInput;
 
-export interface TicketWhereClause {
-  organizationId: string;
-  createdAt?: {
-    gte?: Date;
-    lte?: Date;
-  };
-}
+export type TicketWhereClause = Prisma.TicketWhereInput;
 
 // Analytics return types
 export interface ProjectAnalytics {
