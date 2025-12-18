@@ -44,7 +44,7 @@ export default defineConfig({
     // Environment setup
     environment: 'node',
     globals: true,
-    setupFiles: ['./env-validation.test.ts'],
+    setupFiles: [],
 
     // Minimal reporting for CI
     reporters: process.env.CI ? ['verbose'] : ['default'],
