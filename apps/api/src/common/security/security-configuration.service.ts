@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app.config.service';
+import { EnvironmentUrlValidator } from '../config/environment-url-validator';
 import { logger } from '../../../../../packages/config/logger';
 
 export interface SecurityPolicyConfig {
@@ -149,32 +150,46 @@ export class SecurityConfigurationService {
 
   // Helper method to get allowed origins based on environment
   private getAllowedOrigins(): string[] {
-    const isDevelopment = this.appConfig.isDevelopment();
-    const isProduction = this.appConfig.isProduction();
+    try {
+      // Use the unified configuration validator for dynamic CORS origins
+      const config = EnvironmentUrlValidator.buildEnvironmentUrls();
+      return config.corsOrigins;
+    } catch {
+      // Fallback to manually configured origins with environment awareness
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isProduction = process.env.NODE_ENV === 'production';
 
-    const origins: string[] = [
-      'http://localhost:3000',
-      'http://localhost:4321', // Astro default port
-      'https://jasaweb.com',
-      'https://www.jasaweb.com',
-      'https://app.jasaweb.com',
-    ];
+      const origins: string[] = [
+        // Production URLs
+        'https://jasaweb.com',
+        'https://www.jasaweb.com',
+        'https://app.jasaweb.com',
+      ];
 
-    if (isDevelopment) {
-      origins.push(
-        'http://localhost:8080',
-        'http://localhost:3001',
-        'http://localhost:3333'
-      );
+      if (isDevelopment) {
+        // Dynamic development origins based on configured ports
+        const webPort = process.env.WEB_PORT || process.env.PORT || 4321;
+        const apiPort = process.env.API_PORT || 3000;
+
+        origins.push(
+          `http://localhost:${apiPort}`,
+          `http://localhost:${webPort}`,
+          'http://localhost:8080',
+          'http://localhost:3001',
+          'http://localhost:3333',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:4321'
+        );
+      }
+
+      // Add organization-specific subdomains in production
+      if (isProduction) {
+        // This would be dynamically generated based on active organizations
+        origins.push('https://*.jasaweb.com');
+      }
+
+      return origins;
     }
-
-    // Add organization-specific subdomains in production
-    if (isProduction) {
-      // This would be dynamically generated based on active organizations
-      origins.push('https://*.jasaweb.com');
-    }
-
-    return origins;
   }
 
   // Security headers configuration

@@ -3,6 +3,8 @@
  * Centralized configuration values to eliminate hardcoded references
  */
 
+import { EnvironmentUrlValidator } from './environment-url-validator';
+
 /**
  * Default Port Configuration
  */
@@ -15,16 +17,23 @@ export const DEFAULT_PORTS = {
 } as const;
 
 /**
- * Default CORS Origins for Development
+ * Dynamic CORS Origins - Built from environment configuration
+ * This replaces hardcoded localhost references with environment-aware defaults
  */
-export const DEFAULT_CORS_ORIGINS = [
-  `http://localhost:${DEFAULT_PORTS.WEB}`,
-  `http://localhost:${DEFAULT_PORTS.API}`,
-  `http://localhost:3001`,
-  'http://127.0.0.1:4321',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001',
-] as const;
+export const DEFAULT_CORS_ORIGINS = (() => {
+  try {
+    const config = EnvironmentUrlValidator.buildEnvironmentUrls();
+    return config.corsOrigins;
+  } catch {
+    // Fallback to safe defaults for build-time or test environments
+    return [
+      `http://localhost:${DEFAULT_PORTS.WEB}`,
+      `http://localhost:${DEFAULT_PORTS.API}`,
+      'http://127.0.0.1:4321',
+      'http://127.0.0.1:3000',
+    ];
+  }
+})() as readonly string[];
 
 /**
  * Default Database Configuration
@@ -41,21 +50,39 @@ export const DEFAULT_DATABASE_CONFIG = {
 
 /**
  * Default Email Configuration
+ * Host is now configurable, with localhost as development fallback
  */
 export const DEFAULT_EMAIL_CONFIG = {
-  HOST: 'localhost',
-  PORT: 587,
-  FROM: 'noreply@jasaweb.dev',
+  HOST:
+    process.env.SMTP_HOST ||
+    (process.env.NODE_ENV === 'production' ? undefined : 'localhost'),
+  PORT: Number(process.env.SMTP_PORT) || 587,
+  FROM: process.env.EMAIL_FROM || 'noreply@jasaweb.dev',
 } as const;
 
 /**
- * Application URLs
+ * Dynamic Application URLs - Built from environment configuration
+ * This replaces hardcoded localhost references with environment-aware values
  */
-export const APP_URLS = {
-  FRONTEND_URL:
-    process.env.FRONTEND_URL || `http://localhost:${DEFAULT_PORTS.WEB}`,
-  API_URL: process.env.API_URL || `http://localhost:${DEFAULT_PORTS.API}`,
-} as const;
+export const APP_URLS = (() => {
+  try {
+    const config = EnvironmentUrlValidator.buildEnvironmentUrls();
+    return {
+      FRONTEND_URL: config.frontendUrl,
+      API_URL: config.apiBaseUrl,
+    };
+  } catch {
+    // Fallback to environment variables with localhost defaults for safe operation
+    return {
+      FRONTEND_URL:
+        process.env.FRONTEND_URL || `http://localhost:${DEFAULT_PORTS.WEB}`,
+      API_URL:
+        process.env.API_BASE_URL ||
+        process.env.PUBLIC_API_URL ||
+        `http://localhost:${DEFAULT_PORTS.API}`,
+    };
+  }
+})();
 
 /**
  * File Upload Configuration

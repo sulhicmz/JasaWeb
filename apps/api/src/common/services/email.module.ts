@@ -9,33 +9,41 @@ import { DEFAULT_EMAIL_CONFIG } from '../config/constants';
   imports: [
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>(
-            'SMTP_HOST',
-            DEFAULT_EMAIL_CONFIG.HOST
-          ),
-          port: configService.get<number>('SMTP_PORT', 587),
-          secure: configService.get<string>('SMTP_SECURE', 'false') === 'true', // true for 465, false for other ports
-          auth: {
-            user: configService.get<string>('SMTP_USER'),
-            pass: configService.get<string>('SMTP_PASS'),
+      useFactory: async (configService: ConfigService) => {
+        const host =
+          configService.get<string>('SMTP_HOST') ?? DEFAULT_EMAIL_CONFIG.HOST;
+        const user = configService.get<string>('SMTP_USER');
+        const pass = configService.get<string>('SMTP_PASS');
+
+        return {
+          transport: {
+            host,
+            port: configService.get<number>('SMTP_PORT', 587),
+            secure:
+              configService.get<string>('SMTP_SECURE', 'false') === 'true',
+            auth:
+              user && pass
+                ? {
+                    user,
+                    pass,
+                  }
+                : undefined,
           },
-        },
-        defaults: {
-          from: configService.get<string>(
-            'EMAIL_FROM',
-            '"JasaWeb" <noreply@jasaweb.com>'
-          ),
-        },
-        template: {
-          dir: process.cwd() + '/templates/',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
+          defaults: {
+            from: configService.get<string>(
+              'EMAIL_FROM',
+              '"JasaWeb" <noreply@jasaweb.com>'
+            ),
           },
-        },
-      }),
+          template: {
+            dir: process.cwd() + '/templates/',
+            adapter: new HandlebarsAdapter(),
+            options: {
+              strict: true,
+            },
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],

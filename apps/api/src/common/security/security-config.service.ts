@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EnvironmentUrlValidator } from '../config/environment-url-validator';
 
 export interface SecurityConfig {
   jwt: {
@@ -158,23 +159,36 @@ export class SecurityConfigService {
   }
 
   private buildAllowedOrigins(isDevelopment: boolean): string[] {
-    if (isDevelopment) {
-      return [
-        'http://localhost:3000',
-        'http://localhost:4321',
-        'http://localhost:5173',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:4321',
-        'http://127.0.0.1:5173',
-      ];
-    }
+    try {
+      // Use the unified configuration validator for dynamic CORS origins
+      const config = EnvironmentUrlValidator.buildEnvironmentUrls();
+      return config.corsOrigins;
+    } catch {
+      // Fallback to manually configured origins with environment awareness
+      if (isDevelopment) {
+        const webPort = process.env.WEB_PORT || process.env.PORT || 4321;
+        const apiPort = process.env.API_PORT || 3000;
 
-    const productionOrigins = this.configService.get<string>('ALLOWED_ORIGINS');
-    if (productionOrigins) {
-      return productionOrigins.split(',').map((origin) => origin.trim());
-    }
+        return [
+          `http://localhost:${apiPort}`,
+          `http://localhost:${webPort}`,
+          'http://localhost:5173',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:4321',
+          'http://127.0.0.1:5173',
+        ];
+      }
 
-    return [];
+      const productionOrigins =
+        this.configService.get<string>('ALLOWED_ORIGINS');
+      if (productionOrigins) {
+        return productionOrigins
+          .split(',')
+          .map((origin: string) => origin.trim());
+      }
+
+      return [];
+    }
   }
 
   private buildCSP(isDevelopment: boolean): string {

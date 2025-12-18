@@ -42,9 +42,47 @@ export class EnvConfigService {
     return EnvConfigService.instance;
   }
 
+  /**
+   * Build environment-aware API base URL with dynamic port handling
+   */
+  private getApiBaseUrl(): string {
+    // Check for explicit API URL configuration first
+    const explicitApiUrl = this.getEnv('PUBLIC_API_URL', '');
+    if (explicitApiUrl && explicitApiUrl !== 'undefined') {
+      return explicitApiUrl;
+    }
+
+    // Build dynamic URL based on environment
+    const isBuildTime = this.isBuildLikeEnvironment();
+    const apiHost = this.getEnv('API_HOST', 'localhost');
+    const apiPort = this.getNumber('API_PORT', 3000);
+
+    if (isBuildTime) {
+      // During build time, use a placeholder or known default
+      return 'http://localhost:3000';
+    }
+
+    const protocol = this.getEnv('API_PROTOCOL', 'http');
+    return `${protocol}://${apiHost}:${apiPort}`;
+  }
+
+  private getWebSocketUrl(): string {
+    // Check for explicit WebSocket URL
+    const explicitWsUrl = this.getEnv('WS_URL', '');
+    if (explicitWsUrl && explicitWsUrl !== 'undefined') {
+      return explicitWsUrl;
+    }
+
+    // Derive from API URL
+    const apiBaseUrl = this.getApiBaseUrl();
+    return apiBaseUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+  }
+
   private buildConfig(): EnvironmentConfig {
     // Determine if we're in a build-like environment
     const isBuildLike = this.isBuildLikeEnvironment();
+    const apiBaseUrl = this.getApiBaseUrl();
+    const wsUrl = this.getWebSocketUrl();
 
     return {
       // Basic environment info
@@ -54,11 +92,7 @@ export class EnvConfigService {
       PROD: this.isProd(),
 
       // API Configuration with safe fallbacks
-      PUBLIC_API_URL: this.getRequiredWithFallback(
-        'PUBLIC_API_URL',
-        'http://localhost:3000',
-        isBuildLike
-      ),
+      PUBLIC_API_URL: apiBaseUrl,
       API_PREFIX: this.getEnv('API_PREFIX', 'api'),
       API_TIMEOUT: this.getNumber('API_TIMEOUT', 30000),
       API_RETRIES: this.getNumber('API_RETRIES', 3),
@@ -66,7 +100,7 @@ export class EnvConfigService {
 
       // WebSocket Configuration
       WS_ENABLED: this.getBoolean('WS_ENABLED', true),
-      WS_URL: this.getEnv('WS_URL', 'ws://localhost:3000'),
+      WS_URL: wsUrl,
       WS_RECONNECT_ATTEMPTS: this.getNumber('WS_RECONNECT_ATTEMPTS', 5),
       WS_RECONNECT_DELAY: this.getNumber('WS_RECONNECT_DELAY', 1000),
       WS_HEARTBEAT_INTERVAL: this.getNumber('WS_HEARTBEAT_INTERVAL', 30000),

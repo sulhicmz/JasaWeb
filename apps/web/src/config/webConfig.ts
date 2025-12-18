@@ -100,60 +100,60 @@ function getLogLevel(
 }
 
 function createWebConfig(): WebConfig {
-  const env = import.meta.env;
+  const env = process.env as Record<string, string>;
 
   try {
+    const nodeEnv = env.NODE_ENV || 'development';
+    const isProduction = nodeEnv === 'production';
+    const isDevelopment = nodeEnv === 'development';
+
+    // Get port configurations dynamically
+    const webPort = env.PORT || env.WEB_PORT || 4321;
+    const apiPort = env.API_PORT || 3000;
+    const webHost = env.WEB_HOST || 'localhost';
+    const apiHost = env.API_HOST || 'localhost';
+
+    // Build dynamic URLs
     const siteUrl = validateUrl(
-      getRequiredString(env, 'SITE_URL', 'http://localhost:4321'),
+      env.SITE_URL || env.WEB_BASE_URL || `http://${webHost}:${webPort}`,
       'SITE_URL'
     );
 
     const apiUrl = validateUrl(
-      getRequiredString(
-        env,
-        'PUBLIC_API_URL',
-        getRequiredString(env, 'API_URL', 'http://localhost:3000')
-      ),
+      env.PUBLIC_API_URL ||
+        env.API_BASE_URL ||
+        env.API_URL ||
+        `http://${apiHost}:${apiPort}`,
       'API_URL'
     );
 
     const contactEmail = validateEmail(
-      getRequiredString(env, 'CONTACT_EMAIL', 'contact@jasaweb.com'),
+      env.CONTACT_EMAIL || 'contact@jasaweb.com',
       'CONTACT_EMAIL'
     );
 
     return {
       siteUrl,
-      siteName: getRequiredString(env, 'SITE_NAME', 'JasaWeb'),
-      siteDescription: getRequiredString(
-        env,
-        'SITE_DESCRIPTION',
-        'Professional Web Development Services'
-      ),
-      siteAuthor: getRequiredString(env, 'SITE_AUTHOR', 'JasaWeb Team'),
+      siteName: env.SITE_NAME || 'JasaWeb',
+      siteDescription:
+        env.SITE_DESCRIPTION || 'Professional Web Development Services',
+      siteAuthor: env.SITE_AUTHOR || 'JasaWeb Team',
       apiUrl,
-      apiPrefix: getRequiredString(env, 'API_PREFIX', 'api'),
-      isDev: getBoolean(env, 'DEV_MODE', env.DEV),
+      apiPrefix: env.API_PREFIX || 'api',
+      isDev: isDevelopment,
       logLevel: getLogLevel(env),
       contactEmail,
       contactPhone: getOptionalString(env, 'CONTACT_PHONE'),
       contactAddress: getOptionalString(env, 'CONTACT_ADDRESS'),
-      metaTitle: getRequiredString(
-        env,
-        'META_TITLE',
-        'JasaWeb - Professional Web Development Services'
-      ),
-      metaDescription: getRequiredString(
-        env,
-        'META_DESCRIPTION',
-        'Professional web development services for schools, news portals, and company profiles'
-      ),
-      metaKeywords: getRequiredString(
-        env,
-        'META_KEYWORDS',
-        'web development, website design, school website, news portal, company profile'
-      ),
-      ogImage: getRequiredString(env, 'OG_IMAGE', '/images/og-image.jpg'),
+      metaTitle:
+        env.META_TITLE || 'JasaWeb - Professional Web Development Services',
+      metaDescription:
+        env.META_DESCRIPTION ||
+        'Professional web development services for schools, news portals, and company profiles',
+      metaKeywords:
+        env.META_KEYWORDS ||
+        'web development, website design, school website, news portal, company profile',
+      ogImage: env.OG_IMAGE || '/images/og-image.jpg',
       enableBlog: getBoolean(env, 'ENABLE_BLOG', true),
       enablePortfolio: getBoolean(env, 'ENABLE_PORTFOLIO', true),
       enableContactForm: getBoolean(env, 'ENABLE_CONTACT_FORM', true),
@@ -164,10 +164,10 @@ function createWebConfig(): WebConfig {
       instagramUrl: getOptionalString(env, 'INSTAGRAM_URL'),
       linkedinUrl: getOptionalString(env, 'LINKEDIN_URL'),
     };
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof WebConfigError) {
       console.error('Configuration failed:', error.message);
-      if (env.DEV) {
+      if (env.DEV || env.NODE_ENV === 'development') {
         throw error;
       }
       // In production, we should have better error handling
