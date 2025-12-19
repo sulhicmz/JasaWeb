@@ -12,6 +12,7 @@
     "lint": "echo 'Linting handled by root package.json'"
   },
   "devDependencies": {
+    "@jasaweb/testing": "workspace:*",
     "vitest": "^2.1.9"
   }
 }

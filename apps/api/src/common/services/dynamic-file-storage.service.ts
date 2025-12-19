@@ -314,10 +314,8 @@ class S3StorageAdapter extends BaseStorageAdapter {
       const s3Module = await import('@aws-sdk/client-s3');
       const presignerModule = await import('@aws-sdk/s3-request-presigner');
 
-      const S3Client =
-        s3Module.S3Client as typeof import('@aws-sdk/client-s3').S3Client;
-      const getSignedUrl =
-        presignerModule.getSignedUrl as typeof import('@aws-sdk/s3-request-presigner').getSignedUrl;
+      const { S3Client } = s3Module;
+      const { getSignedUrl } = presignerModule;
 
       // Create S3 client configuration
       const clientConfig: S3ClientConfig = {

@@ -236,12 +236,8 @@ export class BrowserConfigService {
   private readonly environment: EnvironmentType;
 
   private constructor() {
-    if (isServer) {
-      console.warn(
-        'BrowserConfigService should only be used in browser environment'
-      );
-    }
-
+    // BrowserConfigService primarily intended for browser use
+    // Server-side initialization with default config for build process
     this.config = buildConfig();
     this.environment = this.config.base.NODE_ENV;
   }

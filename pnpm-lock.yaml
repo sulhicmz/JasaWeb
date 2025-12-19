@@ -203,6 +203,9 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
     devDependencies:
+      '@jasaweb/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@nestjs/cli':
         specifier: ^11.0.10
         version: 11.0.14(@swc/core@1.15.7)(@types/node@25.0.3)(esbuild@0.25.0)
@@ -284,6 +287,9 @@ importers:
       '@jasaweb/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@jasaweb/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
       '@jasaweb/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -327,6 +333,9 @@ importers:
 
   packages/config:
     devDependencies:
+      '@jasaweb/testing':
+        specifier: workspace:*
+        version: link:../testing
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@25.0.3)(@vitest/ui@2.1.9)(jsdom@27.3.0)

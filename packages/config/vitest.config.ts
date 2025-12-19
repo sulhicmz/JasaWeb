@@ -1,3 +1,3 @@
-import { packageVitestConfig } from './vitest.base.config';
+import { packageVitestConfig } from '@jasaweb/testing';
 
 export default packageVitestConfig;

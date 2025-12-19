@@ -2,8 +2,8 @@
   "name": "@jasaweb/testing",
   "version": "1.0.0",
   "description": "Shared testing utilities and configurations for JasaWeb monorepo",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "prepublishOnly": "pnpm build",
     "build": "tsc",
@@ -11,6 +11,17 @@
     "test": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    },
+    "./vitest.base.config": {
+      "types": "./dist/src/vitest.base.config.d.ts",
+      "import": "./dist/src/vitest.base.config.js"
+    }
   },
   "keywords": [
     "testing",
