@@ -1,6 +1,6 @@
 /* eslint-disable security/detect-object-injection */
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 interface ChartData {
   labels: string[];
@@ -50,7 +50,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.get('/dashboard/stats');
+      const response = await api.get('/dashboard/stats');
 
       if (response.error || !response.data) {
         throw new Error(response.error || 'Failed to fetch dashboard stats');

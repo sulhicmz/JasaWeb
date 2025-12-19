@@ -75,7 +75,8 @@ export class SecureFileOperations {
     const validatedPath = this.validatePath(filePath, basePath);
 
     try {
-      // ESLint: Path is validated by validatePath function
+      // Path is validated by validatePath function above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       return readFileSync(validatedPath as string, encoding);
     } catch (error) {
       logger.error(
@@ -100,7 +101,8 @@ export class SecureFileOperations {
     // Ensure parent directory exists
     const parentDir = normalize(join(validatedPath, '..'));
     try {
-      // ESLint: Path is validated by validatePath function
+      // Path is validated by validatePath function above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       mkdirSync(parentDir as string, { recursive: true });
     } catch (error) {
       logger.error(
@@ -111,6 +113,8 @@ export class SecureFileOperations {
     }
 
     try {
+      // Path is validated by validatePath function above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       writeFileSync(validatedPath, content, options);
     } catch (error) {
       logger.error(
@@ -128,6 +132,8 @@ export class SecureFileOperations {
     const validatedPath = this.validatePath(dirPath, basePath);
 
     try {
+      // Path is validated by validatePath function above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       return readdirSync(validatedPath, { encoding: 'utf-8' });
     } catch (error) {
       logger.error(
@@ -149,6 +155,8 @@ export class SecureFileOperations {
     const validatedPath = this.validatePath(dirPath, basePath);
 
     try {
+      // Path is validated by validatePath function above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       mkdirSync(validatedPath, options);
     } catch (error) {
       logger.error(

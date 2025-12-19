@@ -66,8 +66,8 @@ export class EnvConfigService {
    * Get environment variable with fallback (safe for build time)
    */
   private getEnv(key: string, fallback: string): string {
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      return (import.meta as any).env[key] || fallback;
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      return import.meta.env[key] || fallback;
     }
     if (typeof process !== 'undefined' && process.env) {
       return process.env[key] || fallback;

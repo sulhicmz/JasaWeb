@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 interface FileItem {
   id: string;
@@ -96,7 +96,7 @@ const FileManager: React.FC<FileManagerProps> = ({
           formData.append('folder', folder);
         }
 
-        const response = await apiClient.upload(
+        const response = await api.upload(
           `/files/upload?projectId=${projectId}${folder ? `&folder=${folder}` : ''}`,
           file
         );
@@ -120,7 +120,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${apiClient.getConfig().baseUrl}/files/${fileId}/download`,
+        `${api.getConfig().baseUrl}/files/${fileId}/download`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -153,7 +153,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     }
 
     try {
-      const response = await apiClient.delete(`/files/${fileId}`);
+      const response = await api.delete(`/files/${fileId}`);
 
       if (!response.error) {
         onFileUpdate();

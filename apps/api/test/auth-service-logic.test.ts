@@ -32,8 +32,8 @@ class MockPasswordService {
     return { hash: 'hashed-password', version: 'argon2id' };
   }
 
-  async verifyPassword(_password: string, _hash: string) {
-    return { isValid: _password === 'correct-password', needsRehash: false };
+  async verifyPassword(password: string, _hash: string) {
+    return { isValid: password === 'correct-password', needsRehash: false };
   }
 }
 
@@ -78,7 +78,7 @@ class MockAuthService {
     );
     if (!isPasswordValid.isValid) return null;
 
-    const { password: _password, ...result } = user;
+    const { password, ...result } = user;
     return result;
   }
 

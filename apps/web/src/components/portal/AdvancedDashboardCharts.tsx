@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 interface ChartData {
   labels: string[];
@@ -119,9 +119,9 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
 
       const [trendsResponse, performanceResponse, predictiveResponse] =
         await Promise.all([
-          apiClient.get(`/dashboard/analytics/trends?period=${selectedPeriod}`),
-          apiClient.get('/dashboard/analytics/performance'),
-          apiClient.get('/dashboard/analytics/predictive'),
+          api.get(`/dashboard/analytics/trends?period=${selectedPeriod}`),
+          api.get('/dashboard/analytics/performance'),
+          api.get('/dashboard/analytics/predictive'),
         ]);
 
       if (trendsResponse.data && !trendsResponse.error) {

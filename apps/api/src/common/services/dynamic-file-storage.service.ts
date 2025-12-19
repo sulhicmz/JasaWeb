@@ -116,6 +116,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       );
       // Secure file existence check with validated path
       try {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        // Path is validated through security checks above to prevent directory traversal
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         return isAllowed && fs.existsSync(path);
       } catch (error) {
         this.logger.error('File existence check failed:', error);
@@ -134,6 +137,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       }
       // Secure directory creation with validated path
       try {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        // Path is validated through security checks above to prevent directory traversal
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         fs.mkdirSync(path, { recursive: true, mode: 0o750 });
       } catch (error) {
         this.logger.error('Directory creation failed:', error);
@@ -191,6 +197,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
     // Secure directory creation with validated path
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      // Path is validated through normalization and path checks above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.mkdir(normalizedDirPath, { recursive: true, mode: 0o750 });
     } catch (error) {
       this.logger.error('Directory creation failed:', error);
@@ -199,6 +208,8 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Write file with secure permissions
     try {
+      // Path is validated through normalization and path checks above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.writeFile(normalizedPath, data, { mode: 0o640 });
     } catch (error) {
       this.logger.error('File write failed:', error);
@@ -243,6 +254,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Secure file read with validated path
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      // Path is validated through normalization and path checks above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
@@ -277,6 +291,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Secure file deletion with validated path
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      // Path is validated through normalization and path checks above to prevent directory traversal
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.unlink(normalizedPath);
       this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {
@@ -312,6 +329,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
 
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.access(normalizedPath);
       return true;
     } catch {

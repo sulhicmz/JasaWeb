@@ -25,16 +25,48 @@ export default defineConfig({
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            ui: ['@jasaweb/ui'],
-            charts: ['chart.js', 'react-chartjs-2'],
+          manualChunks: (id) => {
+            // Core React ecosystem
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            // UI components library
+            if (id.includes('@jasaweb/ui')) {
+              return 'vendor-ui';
+            }
+            // Chart libraries
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'vendor-charts';
+            }
+            // API client and related utilities
+            if (id.includes('apiClient') || id.includes('apiConfig')) {
+              return 'vendor-api';
+            }
+            // Node.js polyfills and utilities
+            if (
+              id.includes('node_modules') &&
+              (id.includes('stream') ||
+                id.includes('util') ||
+                id.includes('buffer'))
+            ) {
+              return 'vendor-polyfills';
+            }
+            // Other third-party dependencies
+            if (id.includes('node_modules')) {
+              return 'vendor-other';
+            }
           },
         },
       },
+      // Increase chunk size warning limit for development
+      chunkSizeWarningLimit: 1000,
     },
     // Enable CSS code splitting
     cssCodeSplit: true,
+    // Optimize dependencies for server builds
+    ssr: {
+      external: ['stream', 'util', 'buffer'],
+    },
   },
   integrations: [react()],
   // Performance optimizations
