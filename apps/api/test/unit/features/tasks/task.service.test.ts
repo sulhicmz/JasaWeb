@@ -5,9 +5,9 @@ import { CreateTaskDto, TaskStatus, TaskPriority } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import {
   createMockMultiTenantPrismaService,
-  createTestTask,
-  createTestProject,
-} from '../../test/test-helpers';
+  TestUtils,
+  clearAllMocks,
+} from '@jasaweb/testing';
 
 describe('TaskService', () => {
   let service: TaskService;

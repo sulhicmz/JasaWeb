@@ -6,9 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   createMockMultiTenantPrismaService,
-  createTestTask,
-  createTestProject,
-} from '../test/test-helpers';
+  TestUtils,
+} from '@jasaweb/testing';
 
 // Create a mock TaskService class for testing
 class MockTaskService {
@@ -83,8 +82,8 @@ describe('TaskService Logic Tests', () => {
   describe('findAll', () => {
     it('should return tasks for project', async () => {
       const tasks = [
-        createTestTask({ id: '1', title: 'Task 1' }),
-        createTestTask({ id: '2', title: 'Task 2' }),
+        TestUtils.createTestTask({ id: '1', title: 'Task 1' }),
+        TestUtils.createTestTask({ id: '2', title: 'Task 2' }),
       ];
 
       mockPrisma.task.findMany.mockResolvedValue(tasks);
@@ -99,8 +98,8 @@ describe('TaskService Logic Tests', () => {
 
     it('should return all tasks when no projectId provided', async () => {
       const tasks = [
-        createTestTask({ id: '1', title: 'Task 1' }),
-        createTestTask({ id: '2', title: 'Task 2' }),
+        TestUtils.createTestTask({ id: '1', title: 'Task 1' }),
+        TestUtils.createTestTask({ id: '2', title: 'Task 2' }),
       ];
 
       mockPrisma.task.findMany.mockResolvedValue(tasks);
@@ -125,12 +124,12 @@ describe('TaskService Logic Tests', () => {
         priority: 'HIGH',
       };
 
-      const project = createTestProject({
+      const project = TestUtils.createTestProject({
         id: 'project-1',
         organizationId: 'org-1',
       });
 
-      const result = createTestTask({
+      const result = TestUtils.createTestTask({
         id: 'task-1',
         title: 'Test Task',
         status: 'TODO',
@@ -176,7 +175,7 @@ describe('TaskService Logic Tests', () => {
   describe('findByStatus', () => {
     it('should return tasks by status', async () => {
       const tasks = [
-        createTestTask({ id: '1', title: 'Task 1', status: 'TODO' }),
+        TestUtils.createTestTask({ id: '1', title: 'Task 1', status: 'TODO' }),
       ];
 
       mockPrisma.task.findMany.mockResolvedValue(tasks);
@@ -196,7 +195,11 @@ describe('TaskService Logic Tests', () => {
   describe('findByAssignee', () => {
     it('should return tasks by assignee', async () => {
       const tasks = [
-        createTestTask({ id: '1', title: 'Task 1', assignedUserId: 'user-1' }),
+        TestUtils.createTestTask({
+          id: '1',
+          title: 'Task 1',
+          assignedUserId: 'user-1',
+        }),
       ];
 
       mockPrisma.task.findMany.mockResolvedValue(tasks);

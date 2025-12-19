@@ -6,7 +6,7 @@ import {
   DatabaseTestHelper,
   ContractTestUtils,
   ContractTestFixtures,
-} from '../helpers/contract-test-helpers';
+} from '@jasaweb/testing';
 
 /**
  * API Contract Test Suite for Projects Endpoints

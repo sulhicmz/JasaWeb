@@ -20,6 +20,16 @@ export {
 // Export test config helper
 export { TestConfigHelper } from './test-config-helper';
 
+// Export contract test helpers
+export {
+  DatabaseTestHelper,
+  ContractTestUtils,
+  ContractTestFixtures,
+} from './contract-test-helpers';
+
+// Import NestJS module mocks (side effects for vi.mock)
+import './nestjs-mocks';
+
 /**
  * Creates a test application instance for testing
  */
@@ -201,7 +211,7 @@ export const createMockConfigService = (overrides = {}) => {
         SMTP_USER: 'test@example.com',
         SMTP_PASS: 'test-password',
       };
-      return defaults[key] || null;
+      return (defaults as Record<string, unknown>)[key] || null;
     }),
     isProduction: vi.fn().mockReturnValue(false),
     getCorsOrigins: vi.fn().mockReturnValue(['http://localhost:3000']),
@@ -469,4 +479,192 @@ export const TestUtils = {
 export const resetAllMocks = () => {
   vi.clearAllMocks();
   vi.resetAllMocks();
+};
+
+/**
+ * Clear all mocks (alias for consistency)
+ */
+export const clearAllMocks = () => {
+  vi.clearAllMocks();
+};
+
+/**
+ * Mock UserService for testing
+ */
+export const createMockUserService = (overrides = {}) => {
+  const defaultMock = {
+    findByEmail: vi.fn(),
+    findById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    findByOrganization: vi.fn(),
+    findWithMembership: vi.fn(),
+    updateLastActive: vi.fn(),
+    validatePassword: vi.fn(),
+  };
+
+  return { ...defaultMock, ...overrides };
+};
+
+/**
+ * Mock RefreshTokenService for testing
+ */
+export const createMockRefreshTokenService = (overrides = {}) => {
+  const defaultMock = {
+    createRefreshToken: vi.fn().mockResolvedValue({
+      token: 'mock-refresh-token',
+      refreshToken: 'mock-refresh-token-id',
+      expiresAt: new Date(),
+    }),
+    verifyRefreshToken: vi.fn().mockResolvedValue({
+      userId: 'test-user-id',
+      organizationId: 'test-org-id',
+    }),
+    revokeRefreshToken: vi.fn().mockResolvedValue(true),
+    revokeAllUserTokens: vi.fn().mockResolvedValue(true),
+    findValidRefreshToken: vi.fn().mockResolvedValue({
+      id: 'token-id',
+      userId: 'test-user-id',
+      organizationId: 'test-org-id',
+      expiresAt: new Date(),
+    }),
+  };
+
+  return { ...defaultMock, ...overrides };
+};
+
+/**
+ * Mock PasswordService for testing
+ */
+export const createMockPasswordService = (overrides = {}) => {
+  const defaultMock = {
+    hashPassword: vi.fn().mockResolvedValue({
+      hash: 'hashed-password',
+      version: 'argon2',
+    }),
+    verifyPassword: vi.fn().mockResolvedValue(true),
+    validatePasswordStrength: vi.fn().mockReturnValue({ isValid: true }),
+    needsRehash: vi.fn().mockReturnValue(false),
+  };
+
+  return { ...defaultMock, ...overrides };
+};
+
+/**
+ * Mock PrismaService for testing (legacy service)
+ */
+export const createMockPrismaService = (overrides = {}) => {
+  const defaultMock = {
+    user: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+    },
+    organization: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    membership: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    refreshToken: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    project: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    milestone: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    task: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    file: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    approval: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    ticket: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    invoice: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+    },
+    $connect: vi.fn().mockResolvedValue(true),
+    $disconnect: vi.fn().mockResolvedValue(true),
+    $transaction: vi
+      .fn()
+      .mockImplementation((callback) => callback(defaultMock)),
+    $queryRaw: vi.fn(),
+    $executeRaw: vi.fn(),
+  };
+
+  return { ...defaultMock, ...overrides };
+};
+
+/**
+ * Mock User factory
+ */
+export const createMockUser = (overrides = {}) => {
+  return TestUtils.createTestUser(overrides);
 };

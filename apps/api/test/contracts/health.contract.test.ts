@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import { ContractTestUtils } from '../helpers/contract-test-helpers';
+import { ContractTestUtils } from '@jasaweb/testing';
 
 /**
  * API Contract Test Suite for Health Endpoints

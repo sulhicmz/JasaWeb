@@ -6,8 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   createMockMultiTenantPrismaService,
-  createTestUser,
-} from '../test/test-helpers';
+  TestUtils,
+} from '@jasaweb/testing';
 
 // Mock UserService for dependencies
 class MockUserService {
@@ -165,7 +165,9 @@ describe('AuthService Logic Tests', () => {
 
   describe('validateUser', () => {
     it('should return user without password if credentials are valid', async () => {
-      const mockUser = createTestUser({ password: 'hashed-password' });
+      const mockUser = TestUtils.createTestUser({
+        password: 'hashed-password',
+      });
 
       mockPrisma.user.findFirst.mockResolvedValue(mockUser);
 
@@ -190,7 +192,9 @@ describe('AuthService Logic Tests', () => {
     });
 
     it('should return null if password is invalid', async () => {
-      const mockUser = createTestUser({ password: 'hashed-password' });
+      const mockUser = TestUtils.createTestUser({
+        password: 'hashed-password',
+      });
 
       mockPrisma.user.findFirst.mockResolvedValue(mockUser);
 
@@ -211,7 +215,7 @@ describe('AuthService Logic Tests', () => {
     };
 
     it('should successfully register a new user', async () => {
-      const mockUser = createTestUser();
+      const mockUser = TestUtils.createTestUser();
 
       mockPrisma.user.findFirst.mockResolvedValue(null);
       mockPrisma.user.create.mockResolvedValue(mockUser);
@@ -225,7 +229,7 @@ describe('AuthService Logic Tests', () => {
     });
 
     it('should throw error if user already exists', async () => {
-      const mockUser = createTestUser();
+      const mockUser = TestUtils.createTestUser();
       mockPrisma.user.findFirst.mockResolvedValue(mockUser);
 
       await expect(service.register(createUserDto)).rejects.toThrow(
@@ -241,7 +245,9 @@ describe('AuthService Logic Tests', () => {
     };
 
     it('should successfully login user', async () => {
-      const mockUser = createTestUser({ password: 'hashed-password' });
+      const mockUser = TestUtils.createTestUser({
+        password: 'hashed-password',
+      });
 
       mockPrisma.user.findFirst.mockResolvedValue(mockUser);
 
@@ -253,7 +259,9 @@ describe('AuthService Logic Tests', () => {
     });
 
     it('should throw error if password is invalid', async () => {
-      const mockUser = createTestUser({ password: 'hashed-password' });
+      const mockUser = TestUtils.createTestUser({
+        password: 'hashed-password',
+      });
 
       mockPrisma.user.findFirst.mockResolvedValue(mockUser);
 

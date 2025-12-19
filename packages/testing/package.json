@@ -15,8 +15,7 @@
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "import": "./dist/src/index.js"
     },
     "./vitest.base.config": {
       "types": "./dist/src/vitest.base.config.d.ts",
@@ -34,7 +33,13 @@
     "@jasaweb/config": "workspace:*"
   },
   "devDependencies": {
-    "@nestjs/testing": "^11.0.0"
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/testing": "^11.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/supertest": "^6.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "supertest": "^6.3.0"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.0.0",

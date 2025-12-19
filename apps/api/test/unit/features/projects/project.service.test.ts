@@ -7,9 +7,9 @@ import { NotFoundException } from '@nestjs/common';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createMockMultiTenantPrismaService,
-  createTestProject,
+  TestUtils,
   resetAllMocks,
-} from '../../test/test-helpers';
+} from '@jasaweb/testing';
 
 describe('ProjectService', () => {
   let service: ProjectService;
@@ -17,7 +17,7 @@ describe('ProjectService', () => {
     typeof createMockMultiTenantPrismaService
   >;
 
-  const mockProject = createTestProject({
+  const mockProject = TestUtils.createTestProject({
     id: '1',
     name: 'Test Project',
     status: 'active',

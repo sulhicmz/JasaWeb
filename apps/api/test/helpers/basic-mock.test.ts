@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createMockMultiTenantPrismaService } from '../test/test-helpers';
+import { createMockMultiTenantPrismaService } from '@jasaweb/testing';
 
 describe('Basic Mock Testing', () => {
   let mockPrisma: any;

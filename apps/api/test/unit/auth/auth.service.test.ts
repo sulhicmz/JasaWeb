@@ -15,7 +15,7 @@ import {
   createMockPrismaService,
   createMockUser,
   clearAllMocks,
-} from '../../test/test-helpers';
+} from '@jasaweb/testing';
 
 describe('AuthService', () => {
   let service: AuthService;
