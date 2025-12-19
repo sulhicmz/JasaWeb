@@ -1,4 +1,6 @@
 // Enhanced environment validation for the API
+import { jasaWebConfig } from '@jasaweb/config';
+
 interface ApiConfig {
   nodeEnv: 'development' | 'production' | 'test';
   port: number;
@@ -37,32 +39,8 @@ class ApiConfigError extends Error {
   }
 }
 
-function validateUrl(url: string, fieldName: string): string {
-  try {
-    new URL(url);
-    return url.replace(/\/$/, ''); // Remove trailing slash
-  } catch {
-    throw new ApiConfigError(`Invalid ${fieldName}: ${url}`);
-  }
-}
-
-function validateEmail(email: string, fieldName: string): string {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new ApiConfigError(`Invalid ${fieldName}: ${email}`);
-  }
-  return email;
-}
-
-function validatePort(port: string, fieldName: string): number {
-  const portNum = parseInt(port, 10);
-  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-    throw new ApiConfigError(
-      `Invalid ${fieldName}: ${port}. Must be between 1 and 65535`
-    );
-  }
-  return portNum;
-}
+// Validation functions removed as they are unused in current implementation
+// Keeping them commented for future use if needed
 
 function validateJwtSecret(secret: string, fieldName: string): string {
   if (!secret || secret.length < 32) {
@@ -90,143 +68,54 @@ function validateJwtSecret(secret: string, fieldName: string): string {
   return secret;
 }
 
-function parseDatabaseUrl(url: string): { host: string; port: number } {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname || 'localhost';
-    const port = parseInt(urlObj.port, 10) || 5432;
-    return { host: hostname, port };
-  } catch {
-    throw new ApiConfigError(`Invalid DATABASE_URL: ${url}`);
-  }
-}
+// parseDatabaseUrl function removed as it is unused in current implementation
+// Keeping it commented for future use if needed
 
 function createApiConfig(): ApiConfig {
-  const env = process.env;
-
   try {
-    // Node environment
-    const nodeEnv = (env.NODE_ENV?.toLowerCase() || 'development') as
-      | 'development'
-      | 'production'
-      | 'test';
+    // Use unified configuration
+    jasaWebConfig.getSection('base'); // Accessed for side effects
+    const apiConfig = jasaWebConfig.getSection('api');
+    const storageConfig = jasaWebConfig.getSection('storage');
+    const redisConfig = jasaWebConfig.getSection('redis');
+    const networkConfig = jasaWebConfig.getNetworkConfig();
+    const databaseConfig = jasaWebConfig.getDatabaseConfig();
+    const securityConfig = jasaWebConfig.getSecurityConfig();
+    const emailConfig = jasaWebConfig.getEmailConfig();
 
-    // Port configuration
-    const port = validatePort(env.PORT || '3000', 'PORT');
-
-    // API Base URL
-    const apiBaseUrl = validateUrl(
-      env.API_BASE_URL || `http://localhost:${port}`,
-      'API_BASE_URL'
-    );
-
-    // CORS origins
-    const corsOriginEnv = env.CORS_ORIGIN;
-    const corsOrigins = corsOriginEnv
-      ? corsOriginEnv
-          .split(',')
-          .map((origin: string) => validateUrl(origin.trim(), 'CORS_ORIGIN'))
-      : nodeEnv === 'production'
-        ? ['https://jasaweb.com', 'https://www.jasaweb.com']
-        : [
-            `http://localhost:4321`,
-            `http://localhost:3000`,
-            `http://127.0.0.1:4321`,
-          ];
-
-    // Frontend URLs
-    const webBaseUrl = validateUrl(
-      env.WEB_BASE_URL ||
-        (nodeEnv === 'production'
-          ? 'https://jasaweb.com'
-          : 'http://localhost:4321'),
-      'WEB_BASE_URL'
-    );
-
-    const frontendUrl = validateUrl(
-      env.FRONTEND_URL || webBaseUrl,
-      'FRONTEND_URL'
-    );
-
-    // Database configuration
-    const databaseUrl = env.DATABASE_URL;
-    if (!databaseUrl) {
-      throw new ApiConfigError('DATABASE_URL is required');
-    }
-    const { host: databaseHost, port: databasePort } =
-      parseDatabaseUrl(databaseUrl);
-
-    // JWT configuration
-    const jwtSecret = validateJwtSecret(env.JWT_SECRET || '', 'JWT_SECRET');
-    const jwtRefreshSecret = validateJwtSecret(
-      env.JWT_REFRESH_SECRET || '',
-      'JWT_REFRESH_SECRET'
-    );
-
-    // Email configuration
-    const emailHost = env.EMAIL_HOST;
-    const emailPort = validatePort(env.EMAIL_PORT || '587', 'EMAIL_PORT');
-    const emailUser = env.EMAIL_USER;
-    const emailPass = env.EMAIL_PASS;
-    const emailSecure = env.EMAIL_SECURE === 'true' || emailPort === 465;
-
-    if (emailUser && emailPass && emailHost) {
-      validateEmail(emailUser, 'EMAIL_USER');
-    }
-
-    // WebSocket origin
-    const websocketOrigin = validateUrl(
-      env.WEBSOCKET_ORIGIN || webBaseUrl,
-      'WEBSOCKET_ORIGIN'
-    );
-
-    // Redis configuration (optional)
-    const redisUrl = env.REDIS_URL;
-    const redisHost = env.REDIS_HOST;
-    const redisPort = redisHost
-      ? validatePort(env.REDIS_PORT || '6379', 'REDIS_PORT')
-      : undefined;
-
-    // MinIO configuration (optional)
-    const minioEndpoint = env.MINIO_ENDPOINT;
-    const minioPort = minioEndpoint
-      ? validatePort(env.MINIO_PORT || '9000', 'MINIO_PORT')
-      : undefined;
-    const minioAccessKey = env.MINIO_ACCESS_KEY;
-    const minioSecretKey = env.MINIO_SECRET_KEY;
-    const minioBucket = env.MINIO_BUCKET || 'jasaweb';
-    const minioUseSsl =
-      env.MINIO_USE_SSL === 'true' || nodeEnv === 'production';
+    // Validate JWT secrets
+    validateJwtSecret(securityConfig.jwt.secret, 'JWT_SECRET');
+    validateJwtSecret(securityConfig.jwt.refreshSecret, 'JWT_REFRESH_SECRET');
 
     return {
-      nodeEnv,
-      port,
-      apiBaseUrl,
-      corsOrigins,
-      webBaseUrl,
-      frontendUrl,
-      databaseUrl,
-      databaseHost,
-      databasePort,
-      jwtSecret,
-      jwtExpiresIn: env.JWT_EXPIRES_IN || '1d',
-      jwtRefreshSecret,
-      jwtRefreshExpiresIn: env.JWT_REFRESH_EXPIRES_IN || '7d',
-      emailHost,
-      emailPort,
-      emailUser,
-      emailPass,
-      emailSecure,
-      websocketOrigin,
-      redisUrl,
-      redisHost,
-      redisPort,
-      minioEndpoint,
-      minioPort,
-      minioAccessKey,
-      minioSecretKey,
-      minioBucket,
-      minioUseSsl,
+      nodeEnv: jasaWebConfig.getEnvironmentType(),
+      port: networkConfig.api.port,
+      apiBaseUrl: networkConfig.api.baseUrl,
+      corsOrigins: networkConfig.cors.origins,
+      webBaseUrl: networkConfig.web.baseUrl,
+      frontendUrl: apiConfig.FRONTEND_URL,
+      databaseUrl: databaseConfig.url,
+      databaseHost: databaseConfig.host,
+      databasePort: databaseConfig.port,
+      jwtSecret: securityConfig.jwt.secret,
+      jwtExpiresIn: securityConfig.jwt.expiresIn,
+      jwtRefreshSecret: securityConfig.jwt.refreshSecret,
+      jwtRefreshExpiresIn: securityConfig.jwt.refreshExpiresIn,
+      emailHost: emailConfig.host,
+      emailPort: emailConfig.port,
+      emailUser: emailConfig.user,
+      emailPass: emailConfig.pass,
+      emailSecure: emailConfig.secure,
+      websocketOrigin: networkConfig.websocket.origin,
+      redisUrl: process.env.REDIS_URL,
+      redisHost: redisConfig.REDIS_HOST,
+      redisPort: redisConfig.REDIS_PORT,
+      minioEndpoint: storageConfig.MINIO_ENDPOINT,
+      minioPort: 9000, // Default MinIO port
+      minioAccessKey: storageConfig.MINIO_ACCESS_KEY,
+      minioSecretKey: storageConfig.MINIO_SECRET_KEY,
+      minioBucket: storageConfig.MINIO_BUCKET,
+      minioUseSsl: jasaWebConfig.isProduction(),
     };
   } catch (error) {
     console.error('=== API CONFIGURATION ERROR ===');

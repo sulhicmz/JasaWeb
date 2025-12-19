@@ -38,6 +38,10 @@ export class CreateTicketDto {
   @IsEnum(TicketPriority)
   priority!: TicketPriority;
 
+  @IsEnum(TicketStatus)
+  @IsOptional()
+  status?: TicketStatus;
+
   @IsString()
   @IsOptional()
   projectId?: string;

@@ -6,6 +6,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -19,6 +21,8 @@ type AuthenticatedRequest = ExpressRequest & { user?: Omit<User, 'password'> };
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private authService: AuthService,
     private refreshTokenService: RefreshTokenService
@@ -83,11 +87,11 @@ export class AuthController {
           expiresAt: result.expiresAt,
         },
       };
-    } catch {
-      return {
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'Invalid refresh token',
-      };
+    } catch (error) {
+      this.logger.warn('Invalid refresh token provided during refresh', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
@@ -120,11 +124,12 @@ export class AuthController {
         statusCode: HttpStatus.OK,
         message: 'Logged out successfully',
       };
-    } catch {
-      return {
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'Invalid refresh token',
-      };
+    } catch (error) {
+      this.logger.warn('Failed to revoke refresh token during logout', {
+        tokenIdentifier: refreshToken.split('.')[0] || 'unknown',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 

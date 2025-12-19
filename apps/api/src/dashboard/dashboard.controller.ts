@@ -1,5 +1,6 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
+<<<<<<< HEAD
     Body,
     Controller,
     Get,
@@ -12,11 +13,26 @@ import {
 import { Invoice, Milestone, Ticket } from '@prisma/client';
 import type { Cache } from 'cache-manager';
 import { CACHE_KEYS } from '../common/config/constants';
+=======
+  Controller,
+  Get,
+  UseGuards,
+  Query,
+  Post,
+  Body,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { CACHE_KEYS, CACHE_CONFIG } from '../common/config/constants';
+>>>>>>> origin/dev
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
+<<<<<<< HEAD
 import { Role, Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
+=======
+import { EnhancedCacheService } from '../common/cache/enhanced-cache.service';
+>>>>>>> origin/dev
 import { DashboardGateway } from './dashboard.gateway';
 import type {
     DashboardStats,
@@ -45,7 +61,7 @@ interface ProjectQueryResult {
 export class DashboardController {
   constructor(
     private readonly multiTenantPrisma: MultiTenantPrismaService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly enhancedCache: EnhancedCacheService,
     private readonly dashboardGateway: DashboardGateway
   ) {}
 
@@ -59,7 +75,8 @@ export class DashboardController {
 
     // Return cached data if available and not forcing refresh
     if (!refresh || refresh !== 'true') {
-      const cachedStats = await this.cacheManager.get<DashboardStats>(cacheKey);
+      const cachedStats =
+        await this.enhancedCache.get<DashboardStats>(cacheKey);
       if (cachedStats) {
         return cachedStats;
       }
@@ -81,8 +98,10 @@ export class DashboardController {
       milestones: milestonesStats,
     };
 
-    // Cache for 5 minutes (300 seconds)
-    await this.cacheManager.set(cacheKey, stats, 300000);
+    // Cache for 10 minutes using improved TTL from config
+    await this.enhancedCache.set(cacheKey, stats, {
+      ttl: CACHE_CONFIG.DASHBOARD_STATS_TTL,
+    });
 
     return stats;
   }
@@ -158,32 +177,57 @@ export class DashboardController {
       take: limitNum,
     })) as unknown as ProjectQueryResult[];
 
-    // Get milestone counts for each project
-    const milestoneCounts = await Promise.all(
-      projects.map(async (project) => {
-        const [total, completed] = await Promise.all([
-          this.multiTenantPrisma.milestone.count({
-            where: { projectId: project.id },
-          }),
-          this.multiTenantPrisma.milestone.count({
-            where: {
-              projectId: project.id,
-              status: 'completed',
-            },
-          }),
-        ]);
+    // Get milestone counts for all projects in optimized single queries (N+1 fix)
+    const projectIds = projects.map((p: { id: string }) => p.id);
 
-        return {
-          projectId: project.id,
-          totalMilestones: total,
-          completedMilestones: completed,
-          progress: total > 0 ? Math.round((completed / total) * 100) : 0,
-        };
+    // Fetch all milestones once and aggregate in memory (more efficient than multiple count queries)
+    const [allMilestones, completedMilestones] = await Promise.all([
+      this.multiTenantPrisma.milestone.findMany({
+        where: { projectId: { in: projectIds } },
+        select: { projectId: true, id: true },
+      }),
+      this.multiTenantPrisma.milestone.findMany({
+        where: {
+          projectId: { in: projectIds },
+          status: 'completed',
+        },
+        select: { projectId: true, id: true },
+      }),
+    ]);
+
+    // Aggregate counts by projectId in memory
+    const totalMap = new Map<string, number>();
+    const completedMap = new Map<string, number>();
+
+    allMilestones.forEach((milestone: { projectId: string }) => {
+      totalMap.set(
+        milestone.projectId,
+        (totalMap.get(milestone.projectId) || 0) + 1
+      );
+    });
+
+    completedMilestones.forEach((milestone: { projectId: string }) => {
+      completedMap.set(
+        milestone.projectId,
+        (completedMap.get(milestone.projectId) || 0) + 1
+      );
+    });
+
+    // Create lookup map for efficient O(1) access
+    const milestoneMap = new Map(
+      projectIds.map((projectId) => {
+        const total = totalMap.get(projectId) || 0;
+        const completed = completedMap.get(projectId) || 0;
+        return [
+          projectId,
+          {
+            totalMilestones: total,
+            completedMilestones: completed,
+            progress: total > 0 ? Math.round((completed / total) * 100) : 0,
+          },
+        ];
       })
     );
-
-    // Create lookup map for milestone counts
-    const milestoneMap = new Map(milestoneCounts.map((m) => [m.projectId, m]));
 
     // Calculate progress and additional metrics for each project
     const projectsWithMetrics = projects.map((project: ProjectQueryResult) => {
@@ -533,9 +577,9 @@ export class DashboardController {
     try {
       // Clear all dashboard-related cache keys for this organization
       await Promise.all([
-        this.cacheManager.del(CACHE_KEYS.DASHBOARD_STATS(organizationId)),
-        this.cacheManager.del(`dashboard-activity-${organizationId}`),
-        this.cacheManager.del(`dashboard-projects-${organizationId}`),
+        this.enhancedCache.del(CACHE_KEYS.DASHBOARD_STATS(organizationId)),
+        this.enhancedCache.del(`dashboard-activity-${organizationId}`),
+        this.enhancedCache.del(`dashboard-projects-${organizationId}`),
       ]);
 
       // Broadcast refresh event to all connected clients
@@ -590,15 +634,20 @@ export class DashboardController {
           ]);
 
           trends.forEach((trend, index) => {
-            const metric = selectedMetrics[index];
+            const metric = String(selectedMetrics[index]);
             if (
               metric &&
               typeof metric === 'string' &&
               /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(metric) &&
               !forbiddenProps.has(metric)
             ) {
-              // Security: Safe property assignment with validation
-              safeResult[metric] = trend;
+              // Security: Safe property assignment using Object.defineProperty
+              Object.defineProperty(safeResult, metric as string, {
+                value: trend,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+              });
             }
           });
           return safeResult;
@@ -1208,9 +1257,22 @@ export class DashboardController {
           /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
         ) {
           // Security: Safe property assignment with validation
-          const currentValue =
-            (dailyData as Record<string, number>)[dateKey] || 0;
-          dailyData[dateKey] = currentValue + 1;
+          // Security: Safe property access to prevent object injection
+          const currentValue = Object.prototype.hasOwnProperty.call(
+            dailyData,
+            dateKey
+          )
+            ? (dailyData[dateKey] as number)
+            : 0;
+          // Additional check for date key validation
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+            Object.defineProperty(dailyData, dateKey, {
+              value: currentValue + 1,
+              writable: true,
+              enumerable: true,
+              configurable: true,
+            });
+          }
         }
       }
     });
@@ -1306,12 +1368,15 @@ export class DashboardController {
           priorityTickets.length > 0
             ? Math.round((resolved.length / priorityTickets.length) * 100)
             : 0;
-        Object.defineProperty(acc, priority, {
-          value,
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        });
+        // Ensure priority is a valid string before using as property key
+        if (typeof priority === 'string' && /^[a-z]+$/.test(priority)) {
+          Object.defineProperty(acc, priority, {
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        }
       }
       return acc;
     }, Object.create(null));

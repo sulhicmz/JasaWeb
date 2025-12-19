@@ -1,6 +1,121 @@
 ---
-// src/components/portal/DashboardHeader.astro
-import { DashboardHeader as DashboardHeaderComponent } from './DashboardHeader.tsx';
+// Props interface for usage
+export interface Props {
+  currentPage?: string;
+  userName?: string;
+  userRole?: string;
+}
+
+const { currentPage = 'dashboard', userName = 'John Doe', userRole = 'Organization Admin' } = Astro.props;
+
+const navigation = [
+  {
+    name: 'Dashboard',
+    href: '/portal',
+    current: currentPage === 'dashboard',
+  },
+  {
+    name: 'Projects',
+    href: '/portal/projects',
+    current: currentPage === 'projects',
+  },
+  {
+    name: 'Analytics',
+    href: '/portal/analytics',
+    current: currentPage === 'analytics',
+  },
+  {
+    name: 'Team',
+    href: '/portal/team-performance',
+    current: currentPage === 'team-performance',
+  },
+  {
+    name: 'Tickets',
+    href: '/portal/tickets',
+    current: currentPage === 'tickets',
+  },
+  {
+    name: 'Invoices',
+    href: '/portal/invoices',
+    current: currentPage === 'invoices',
+  },
+  {
+    name: 'Settings',
+    href: '/portal/settings',
+    current: currentPage === 'settings',
+  },
+];
+
+const getUserInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map((word) => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
 ---
 
-<DashboardHeaderComponent client:load {...Astro.props} />
+<header class="bg-white shadow-sm border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo and Portal Name -->
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <h1 class="text-xl font-bold text-indigo-600">
+            JasaWeb Portal
+          </h1>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex space-x-8">
+        {navigation.map((item) => (
+          <a
+            href={item.href}
+            class={`${
+              item.current
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-gray-500 hover:text-gray-900'
+            } px-3 py-2 text-sm font-medium transition-colors duration-200`}
+          >
+            {item.name}
+          </a>
+        ))}
+      </nav>
+
+      <!-- User Menu -->
+      <div class="flex items-center space-x-4">
+        <!-- User Profile -->
+        <div class="flex items-center space-x-3">
+          <div class="text-right hidden sm:block">
+            <p class="text-sm font-medium text-gray-900">{userName}</p>
+            <p class="text-xs text-gray-500">{userRole}</p>
+          </div>
+          <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center">
+            <span class="text-white text-sm font-medium">
+              {getUserInitials(userName)}
+            </span>
+          </div>
+        </div>
+
+        <!-- Mobile menu button -->
+        <button class="md:hidden text-gray-400 hover:text-gray-500 p-2">
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

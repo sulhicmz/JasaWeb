@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app.config.service';
-import { logger } from '../../../../../packages/config/logger';
+import { EnvironmentUrlValidator } from '../config/environment-url-validator';
+import { logger, UrlBuilder, getApiUrl } from '../../../../../packages/config';
 
 export interface SecurityPolicyConfig {
   csp: {
@@ -39,29 +40,41 @@ export class SecurityConfigurationService {
       scriptSrc: [
         "'self'",
         "'unsafe-inline'", // Temporary for development
-        'https://cdnjs.cloudflare.com',
-        'https://www.googletagmanager.com',
+        ...(process.env.CSP_SCRIPT_SRC?.split(',') || [
+          'https://cdnjs.cloudflare.com',
+          'https://www.googletagmanager.com',
+        ]),
         ...(isDevelopment ? ['ws://localhost:*'] : []),
       ].filter(Boolean) as string[],
       styleSrc: [
         "'self'",
         "'unsafe-inline'", // Required for Tailwind CSS
-        'https://fonts.googleapis.com',
+        ...(process.env.CSP_STYLE_SRC?.split(',') || [
+          'https://fonts.googleapis.com',
+        ]),
       ],
       imgSrc: [
         "'self'",
         'data:',
         'blob:',
-        'https://*.jasaweb.com',
-        'https://res.cloudinary.com',
+        ...(process.env.CSP_IMG_SRC?.split(',') || [
+          'https://*.jasaweb.com',
+          'https://res.cloudinary.com',
+        ]),
       ],
       connectSrc: [
         "'self'",
         'wss:', // WebSocket connections
-        'https://api.jasaweb.com',
+        getApiUrl(),
         isDevelopment && 'ws://localhost:*', // Development WebSocket
       ].filter(Boolean) as string[],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      fontSrc: [
+        "'self'",
+        ...(process.env.CSP_FONT_SRC?.split(',') || [
+          'https://fonts.gstatic.com',
+        ]),
+        'data:',
+      ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
@@ -90,11 +103,11 @@ export class SecurityConfigurationService {
     ] as const;
 
     for (const key of validDirectiveKeys) {
-      const directiveValue = directives[key];
+      const directiveValue = directives[key]; // eslint-disable-line security/detect-object-injection -- Safe access with pre-validated whitelist
       if (directiveValue && Array.isArray(directiveValue)) {
         const filtered = directiveValue.filter(Boolean);
         if (filtered.length > 0) {
-          safeDirectives[key] = filtered;
+          safeDirectives[key] = filtered; // eslint-disable-line security/detect-object-injection -- Safe assignment with validated key
         }
       }
     }
@@ -141,7 +154,7 @@ export class SecurityConfigurationService {
       ],
       exposedHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining'],
       credentials: true,
-      maxAge: 24 * 60 * 60, // 24 hours
+      maxAge: Number(process.env.CORS_MAX_AGE) || 24 * 60 * 60, // 24 hours
       preflightContinue: false,
       optionsSuccessStatus: 204,
     };
@@ -149,32 +162,37 @@ export class SecurityConfigurationService {
 
   // Helper method to get allowed origins based on environment
   private getAllowedOrigins(): string[] {
-    const isDevelopment = this.appConfig.isDevelopment();
-    const isProduction = this.appConfig.isProduction();
+    try {
+      // Use the unified configuration validator for dynamic CORS origins
+      const config = EnvironmentUrlValidator.buildEnvironmentUrls();
+      return config.corsOrigins;
+    } catch {
+      // Fallback to manually configured origins with environment awareness
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isProduction = process.env.NODE_ENV === 'production';
 
-    const origins: string[] = [
-      'http://localhost:3000',
-      'http://localhost:4321', // Astro default port
-      'https://jasaweb.com',
-      'https://www.jasaweb.com',
-      'https://app.jasaweb.com',
-    ];
+      const origins: string[] = process.env.CORS_ALLOWED_ORIGINS?.split(
+        ','
+      ) || [
+        // Production URLs
+        'https://jasaweb.com',
+        'https://www.jasaweb.com',
+        'https://app.jasaweb.com',
+      ];
 
-    if (isDevelopment) {
-      origins.push(
-        'http://localhost:8080',
-        'http://localhost:3001',
-        'http://localhost:3333'
-      );
+      if (isDevelopment) {
+        // Use dynamic origins from UrlBuilder
+        origins.push(...UrlBuilder.getAllowedOrigins());
+      }
+
+      // Add organization-specific subdomains in production
+      if (isProduction) {
+        // This would be dynamically generated based on active organizations
+        origins.push('https://*.jasaweb.com');
+      }
+
+      return origins;
     }
-
-    // Add organization-specific subdomains in production
-    if (isProduction) {
-      // This would be dynamically generated based on active organizations
-      origins.push('https://*.jasaweb.com');
-    }
-
-    return origins;
   }
 
   // Security headers configuration
@@ -243,7 +261,10 @@ export class SecurityConfigurationService {
       return true;
       return true;
     } catch (error) {
-      logger.error('Security configuration validation failed:', error);
+      logger.error(
+        'Security configuration validation failed:',
+        error as Error | Record<string, unknown>
+      );
       return false;
     }
     }

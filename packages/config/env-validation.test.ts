@@ -61,6 +61,8 @@ describe('Environment Variable Validation', () => {
       process.env.DATABASE_URL =
         'postgresql://validuser:ValidPassword123!@localhost:5432/test';
       process.env.JWT_SECRET = generateSecureSecret(32);
+      process.env.JWT_REFRESH_SECRET = generateSecureSecret(32);
+      process.env.SESSION_SECRET = generateSecureSecret(32);
       process.env.ENCRYPTION_KEY = generateSecureSecret(32);
 
       // Should not throw, but should log warning (we can't easily test logging here)
@@ -75,6 +77,8 @@ describe('Environment Variable Validation', () => {
       process.env.DATABASE_URL =
         'postgresql://jasaweb_user:JwS3cur3P@ss!2024@localhost:5432/jasaweb_dev';
       process.env.JWT_SECRET = generateSecureSecret(32);
+      process.env.JWT_REFRESH_SECRET = generateSecureSecret(32);
+      process.env.SESSION_SECRET = generateSecureSecret(32);
       process.env.ENCRYPTION_KEY = generateSecureSecret(32);
 
       expect(() => validateEnvironmentVariables()).not.toThrow();
@@ -123,6 +127,7 @@ describe('Environment Variable Validation', () => {
     it('should reject default JWT secret', () => {
       process.env.JWT_SECRET = 'your-super-secret-jwt-key-change-in-production';
       process.env.JWT_REFRESH_SECRET = generateSecureSecret(32);
+      process.env.SESSION_SECRET = generateSecureSecret(32);
       process.env.ENCRYPTION_KEY = generateSecureSecret(32);
 
       expect(() => validateEnvironmentVariables()).not.toThrow(); // Should warn, not throw
@@ -166,6 +171,7 @@ describe('Environment Variable Validation', () => {
     });
 
     it('should get required environment variable', () => {
+      delete process.env.TEST_STRING;
       expect(() => getRequiredEnv('TEST_STRING')).toThrow(EnvValidationError);
     });
 
@@ -193,6 +199,8 @@ describe('Environment Variable Validation', () => {
     it('should warn about wildcard CORS origin', () => {
       process.env.CORS_ORIGIN = '*';
       process.env.JWT_SECRET = generateSecureSecret(32);
+      process.env.JWT_REFRESH_SECRET = generateSecureSecret(32);
+      process.env.SESSION_SECRET = generateSecureSecret(32);
       process.env.ENCRYPTION_KEY = generateSecureSecret(32);
 
       // Should not throw, but log warning
@@ -202,6 +210,8 @@ describe('Environment Variable Validation', () => {
     it('should warn about insecure SMTP in production', () => {
       process.env.SMTP_SECURE = 'false';
       process.env.JWT_SECRET = generateSecureSecret(32);
+      process.env.JWT_REFRESH_SECRET = generateSecureSecret(32);
+      process.env.SESSION_SECRET = generateSecureSecret(32);
       process.env.ENCRYPTION_KEY = generateSecureSecret(32);
 
       // Should not throw, but log warning

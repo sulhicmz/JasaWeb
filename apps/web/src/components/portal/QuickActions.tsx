@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 const QuickActions: React.FC = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -30,7 +30,7 @@ const QuickActions: React.FC = () => {
     const description = formData.get('description') as string;
 
     try {
-      const response = await apiClient.post('/projects', {
+      const response = await api.post('/projects', {
         name,
         description,
         status: 'planning',
@@ -63,7 +63,7 @@ const QuickActions: React.FC = () => {
     const priority = formData.get('priority') as string;
 
     try {
-      const response = await apiClient.post('/tickets', {
+      const response = await api.post('/tickets', {
         title,
         description,
         priority,

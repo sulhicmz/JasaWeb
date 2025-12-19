@@ -1,6 +1,6 @@
 /* eslint-disable security/detect-object-injection */
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 // Theme configuration from environment variables
 const THEME = {
@@ -39,6 +39,20 @@ interface DashboardChartsProps {
   organizationId: string;
 }
 
+interface DashboardStats {
+  projects: {
+    active: number;
+    completed: number;
+    onHold: number;
+  };
+  tickets: {
+    open: number;
+    inProgress: number;
+    highPriority: number;
+    critical: number;
+  };
+}
+
 const DashboardCharts: React.FC<DashboardChartsProps> = ({
   organizationId,
 }) => {
@@ -59,7 +73,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.get('/dashboard/stats');
+      const response = await api.get('/dashboard/stats');
 
       if (response.error || !response.data) {
         throw new Error(response.error || 'Failed to fetch dashboard stats');

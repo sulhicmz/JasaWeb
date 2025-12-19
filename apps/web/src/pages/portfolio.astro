@@ -1,6 +1,7 @@
 ---
 // src/pages/portfolio.astro
 import Layout from '../layouts/Layout.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
 import { getCollection } from 'astro:content';
 
 const pageTitle = 'Portofolio - JasaWeb';
@@ -8,6 +9,24 @@ const projects = await getCollection('portfolio');
 
 // Sort projects by date (newest first)
 projects.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+// Generate placeholder images based on category
+const getProjectImage = (project: any) => {
+  if (project.data.image) return project.data.image;
+  
+  // Generate seed-based placeholder images
+  const seeds = {
+    'Website Sekolah': 'school',
+    'Portal Berita': 'news',
+    'Company Profile': 'business'
+  };
+  
+  const seed = Object.keys(seeds).find(key => 
+    project.data.category.includes(key)
+  ) || 'default';
+  
+  return `https://picsum.photos/seed/${seeds[seed as keyof typeof seeds]}-${project.slug}/400/300.jpg`;
+};
 ---
 
 <Layout title="Portofolio">
@@ -19,12 +38,16 @@ projects.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {projects.map((project) => (
           <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="h-48 bg-gray-200 flex items-center justify-center">
-              {project.data.image ? (
-                <img src={project.data.image} alt={project.data.title} class="w-full h-full object-cover" />
-              ) : (
-                <span class="text-gray-500">Gambar Proyek</span>
-              )}
+<div class="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
+              <OptimizedImage 
+                src={getProjectImage(project)} 
+                alt={project.data.title}
+                width={400}
+                height={192}
+                class="w-full h-full transition-transform duration-300 hover:scale-105"
+                loading="lazy"
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
             </div>
             <div class="p-6">
               <h3 class="text-xl font-bold mb-2">{project.data.title}</h3>

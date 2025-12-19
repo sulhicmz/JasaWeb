@@ -17,7 +17,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('projects')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(AuthGuard, RolesGuard) // Use authentication and roles guard
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -38,6 +38,7 @@ export class ProjectController {
   }
 
   @Get()
+<<<<<<< HEAD
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
   findAll(
     @CurrentOrganizationId() organizationId: string,
@@ -46,6 +47,14 @@ export class ProjectController {
     @Query('limit') limit?: string,
     @Query('status') status?: string,
     @Query('search') search?: string
+=======
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer)
+  async findAll(
+    @Query('view') view?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('organizationId') organizationId?: string
+>>>>>>> origin/dev
   ) {
     const normalizedView =
       view?.toLowerCase() === 'detail' ? 'detail' : 'summary';

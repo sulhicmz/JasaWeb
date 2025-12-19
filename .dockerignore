@@ -48,13 +48,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Testing
-test
-tests
-*.test.ts
-*.test.js
-*.spec.ts
-*.spec.js
 coverage
+.nyc_output
 
 # Temporary files
 tmp
@@ -72,8 +67,9 @@ Thumbs.db
 *.cert
 *.crt
 
-# Scripts (unless needed)
-scripts/
+# Scripts (exclude development-only scripts)
+scripts/dev-tools/
+scripts/security/
 
 # Docker
 docker-compose.yml

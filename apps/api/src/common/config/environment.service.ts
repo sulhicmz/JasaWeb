@@ -5,7 +5,8 @@ import {
   getEnvNumber,
   getEnvBoolean,
   generateSecureSecret,
-} from '@jasaweb/config/env-validation';
+  UrlBuilder,
+} from '@jasaweb/config';
 import { DEFAULT_PORTS, DEFAULT_CORS_ORIGINS } from './constants';
 
 @Injectable()
@@ -97,17 +98,11 @@ export class EnvironmentService {
 
   // Application URLs
   get frontendUrl(): string {
-    return getOptionalEnv(
-      'FRONTEND_URL',
-      `http://localhost:${DEFAULT_PORTS.WEB}`
-    )!;
+    return getOptionalEnv('FRONTEND_URL', UrlBuilder.getServiceUrl('web'))!;
   }
 
   get apiUrl(): string {
-    return getOptionalEnv(
-      'API_BASE_URL',
-      `http://localhost:${DEFAULT_PORTS.API}`
-    )!;
+    return getOptionalEnv('API_BASE_URL', UrlBuilder.getServiceUrl('api'))!;
   }
 
   // Email Configuration
@@ -137,7 +132,12 @@ export class EnvironmentService {
   }
 
   get redisHost(): string {
-    return getOptionalEnv('REDIS_HOST', 'localhost')!;
+    return getOptionalEnv(
+      'REDIS_HOST',
+      UrlBuilder.getServiceUrl('api', { host: 'localhost' })
+        .replace(/https?:\/\//, '')
+        .split(':')[0]
+    )!;
   }
 
   get redisPort(): number {

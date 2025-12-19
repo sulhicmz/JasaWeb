@@ -9,6 +9,14 @@
  * - Security compliance
  */
 
+import { getApiUrl, getWebUrl } from './url-config';
+import {
+  getEnvArray,
+  getEnvNumber,
+  getEnvNumberMin,
+  getEnvEmail,
+} from './env-validation';
+
 export interface SiteConfig {
   name: string;
   description: string;
@@ -105,12 +113,10 @@ export const BUSINESS_CONFIG: BusinessConfig = {
       process.env.SITE_META_DESCRIPTION ||
       'Professional web development services for schools, news portals, and company profiles',
     urls: {
-      production: process.env.PRODUCTION_SITE_URL || 'https://jasaweb.com',
-      development: process.env.DEV_SITE_URL || 'http://localhost:4321',
-      api:
-        process.env.API_URL ||
-        (isDevelopment ? 'http://localhost:3000' : 'https://api.jasaweb.com'),
-      cdn: process.env.CDN_URL || 'https://cdn.jasaweb.com',
+      production: process.env.PRODUCTION_SITE_URL || getWebUrl(),
+      development: process.env.DEV_SITE_URL || getWebUrl(),
+      api: process.env.API_URL || getApiUrl(),
+      cdn: process.env.CDN_URL || 'https://cdn.jasaweb.dev',
     },
     social: {
       instagram:
@@ -123,17 +129,17 @@ export const BUSINESS_CONFIG: BusinessConfig = {
   },
 
   emails: {
-    contact: process.env.CONTACT_EMAIL || 'contact@jasaweb.com',
-    info: process.env.INFO_EMAIL || 'info@jasaweb.com',
-    noreply: process.env.NOREPLY_EMAIL || 'noreply@jasaweb.com',
-    support: process.env.SUPPORT_EMAIL || 'support@jasaweb.com',
-    admin: process.env.ADMIN_EMAIL || 'admin@jasaweb.com',
+    contact: getEnvEmail('CONTACT_EMAIL') || 'contact@jasaweb.dev',
+    info: getEnvEmail('INFO_EMAIL') || 'info@jasaweb.dev',
+    noreply: getEnvEmail('NOREPLY_EMAIL') || 'noreply@jasaweb.dev',
+    support: getEnvEmail('SUPPORT_EMAIL') || 'support@jasaweb.dev',
+    admin: getEnvEmail('ADMIN_EMAIL') || 'admin@jasaweb.dev',
     fromName: process.env.EMAIL_FROM_NAME || 'JasaWeb',
   },
 
   security: {
-    maxFileUploadSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB
-    allowedMimeTypes: process.env.ALLOWED_FILE_TYPES?.split(',') || [
+    maxFileUploadSize: getEnvNumberMin('MAX_FILE_SIZE', 10485760, 1024), // 10MB min
+    allowedMimeTypes: getEnvArray('ALLOWED_FILE_TYPES') || [
       'image/jpeg',
       'image/png',
       'image/gif',
@@ -144,65 +150,67 @@ export const BUSINESS_CONFIG: BusinessConfig = {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ],
     uploadPath: process.env.UPLOAD_PATH || './uploads',
-    jwtSecretMinLength: parseInt(process.env.JWT_SECRET_MIN_LENGTH || '32'),
-    bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12'),
-    maxLoginAttempts: parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5'),
-    lockoutDuration: parseInt(process.env.LOCKOUT_DURATION_MS || '900000'), // 15 minutes
-    passwordMinLength: parseInt(process.env.PASSWORD_MIN_LENGTH || '8'),
-    passwordMaxAge: parseInt(process.env.PASSWORD_MAX_AGE || '90'), // days
-    passwordPreventReuse: parseInt(process.env.PASSWORD_PREVENT_REUSE || '5'),
+    jwtSecretMinLength: getEnvNumberMin('JWT_SECRET_MIN_LENGTH', 32, 16),
+    bcryptRounds: getEnvNumberMin('BCRYPT_ROUNDS', 12, 10),
+    maxLoginAttempts: getEnvNumberMin('MAX_LOGIN_ATTEMPTS', 5, 1),
+    lockoutDuration: getEnvNumberMin('LOCKOUT_DURATION_MS', 900000, 60000), // 15 minutes min
+    passwordMinLength: getEnvNumberMin('PASSWORD_MIN_LENGTH', 8, 6),
+    passwordMaxAge: getEnvNumberMin('PASSWORD_MAX_AGE', 90, 1), // days
+    passwordPreventReuse: getEnvNumberMin('PASSWORD_PREVENT_REUSE', 5, 0),
   },
 
   network: {
     ports: {
-      api: parseInt(process.env.API_PORT || '3000'),
-      web: parseInt(process.env.WEB_PORT || '4321'),
-      database: parseInt(process.env.DATABASE_PORT || '5432'),
-      redis: parseInt(process.env.REDIS_PORT || '6379'),
-      minio: parseInt(process.env.MINIO_PORT || '9000'),
+      api: getEnvNumber('API_PORT', 3000),
+      web: getEnvNumber('WEB_PORT', 4321),
+      database: getEnvNumber('DATABASE_PORT', 5432),
+      redis: getEnvNumber('REDIS_PORT', 6379),
+      minio: getEnvNumber('MINIO_PORT', 9000),
     },
     cors: {
-      maxAge: parseInt(
-        process.env.CORS_MAX_AGE || (isProduction ? '86400' : '3600')
-      ),
-      allowedOrigins: process.env.CORS_ALLOWED_ORIGINS?.split(',') || [
-        'http://localhost:4321',
-        'http://localhost:3000',
-        'https://jasaweb.com',
-        'https://www.jasaweb.com',
+      maxAge: getEnvNumber('CORS_MAX_AGE', isProduction ? 86400 : 3600),
+      allowedOrigins: getEnvArray('CORS_ALLOWED_ORIGINS') || [
+        getWebUrl(),
+        getApiUrl(),
       ],
     },
     rateLimit: {
-      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-      maxRequests: parseInt(
-        process.env.RATE_LIMIT_MAX_REQUESTS || (isProduction ? '100' : '1000')
+      windowMs: getEnvNumber('RATE_LIMIT_WINDOW_MS', 900000), // 15 minutes
+      maxRequests: getEnvNumber(
+        'RATE_LIMIT_MAX_REQUESTS',
+        isProduction ? 100 : 1000
       ),
     },
     csp: {
-      fontSrc: process.env.CSP_FONT_SRC?.split(',') || [
+      fontSrc: getEnvArray('CSP_FONT_SRC') || [
         "'self'",
         'https://fonts.googleapis.com',
         'https://fonts.gstatic.com',
       ],
-      scriptSrc: process.env.CSP_SCRIPT_SRC?.split(',') || ["'self'"],
-      styleSrc: process.env.CSP_STYLE_SRC?.split(',') || [
+      scriptSrc: getEnvArray('CSP_SCRIPT_SRC') || [
+        "'self'",
+        'https://cdnjs.cloudflare.com',
+        'https://www.googletagmanager.com',
+      ],
+      styleSrc: getEnvArray('CSP_STYLE_SRC') || [
         "'self'",
         "'unsafe-inline'",
         'https://fonts.googleapis.com',
       ],
-      imgSrc: process.env.CSP_IMG_SRC?.split(',') || [
+      imgSrc: getEnvArray('CSP_IMG_SRC') || [
         "'self'",
         'data:',
         'https:',
+        'https://res.cloudinary.com',
       ],
     },
   },
 
   cache: {
-    defaultTtl: parseInt(process.env.CACHE_DEFAULT_TTL || '300'), // 5 minutes
-    dashboardTtl: parseInt(process.env.CACHE_DASHBOARD_TTL || '60'), // 1 minute
-    projectTtl: parseInt(process.env.CACHE_PROJECT_TTL || '180'), // 3 minutes
-    sessionTtl: parseInt(process.env.CACHE_SESSION_TTL || '86400'), // 24 hours
+    defaultTtl: getEnvNumber('CACHE_DEFAULT_TTL', 300), // 5 minutes
+    dashboardTtl: getEnvNumber('CACHE_DASHBOARD_TTL', 60), // 1 minute
+    projectTtl: getEnvNumber('CACHE_PROJECT_TTL', 180), // 3 minutes
+    sessionTtl: getEnvNumber('CACHE_SESSION_TTL', 86400), // 24 hours
   },
 };
 

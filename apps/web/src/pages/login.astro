@@ -104,9 +104,15 @@ const API_BASE_URL = webConfig.apiUrl;
   <!-- Error/Success Messages -->
   <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
 
+<<<<<<< HEAD
   <script is:inline>
     // API configuration using environment variables
     const API_BASE_URL = import.meta.env.PUBLIC_API_URL || import.meta.env.API_URL || 'http://localhost:3000';
+=======
+  <script client:load>
+    // Dynamic API configuration from environment - following centralized config pattern
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3000';
+>>>>>>> origin/dev
 
     // Check if user is already logged in
     document.addEventListener('DOMContentLoaded', function() {

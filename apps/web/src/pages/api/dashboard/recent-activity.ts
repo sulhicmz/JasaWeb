@@ -1,16 +1,23 @@
 /* global fetch Response */
 
+import { getApiUrl } from '../../../config/api.js';
+
 // API endpoint for recent activity
 export async function GET({ request, url }: { request: Request; url: URL }) {
   try {
     // Get query parameters
     const limit = url.searchParams.get('limit') || '10';
 
+<<<<<<< HEAD
     // Forward the request to the backend API
     const apiBaseUrl =
       import.meta.env.PUBLIC_API_URL ||
       import.meta.env.API_URL ||
       'http://localhost:3000';
+=======
+    // Forward the request to the backend API using dynamic configuration
+    const apiBaseUrl = getApiUrl();
+>>>>>>> origin/dev
     const backendUrl = `${apiBaseUrl}/dashboard/recent-activity?limit=${limit}`;
 
     const response = await fetch(backendUrl, {

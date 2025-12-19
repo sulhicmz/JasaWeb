@@ -22,6 +22,7 @@ Active tasks and upcoming features for the JasaWeb platform. Completed work has 
 
 ### Operations & Security
 
+<<<<<<< HEAD
 - [ ] Daily DB backups + restore testing; data policies (PDP Law compliance)
 - [ ] Pipeline: lint → typecheck → test (unit/E2E) → build → prisma migrate
 - [ ] Deploy: Staging (preview) → Production; centralized environment variables
@@ -57,30 +58,40 @@ Active tasks and upcoming features for the JasaWeb platform. Completed work has 
 - [x] Validation & sanitization for uploads; antivirus (optional), max size
 - [x] Audit logs for critical actions + log retention
 - [ ] Daily DB backups + restore testing; data policies (PDP Law)
+=======
+- [x] Rate limit, strict CORS, CSRF for forms
+- [x] OWASP Top 10 compliance checks
+- [x] Multi-tenant data isolation
+- [x] Audit logging for critical actions
+- [x] Input validation and sanitization
+>>>>>>> origin/dev
 
-## 7) CI/CD & Operations
+## 7) Deployment & Infrastructure
 
-- [ ] Pipeline: lint → typecheck → test (unit/E2E) → build → prisma migrate
-- [ ] Deploy: Staging (preview) → Production; centralized environment variables
-- [ ] Observability: error tracking, logs, uptime; incident runbook
+- [x] Production-ready Docker configurations
+- [x] Environment configuration management
+- [x] Health checks and monitoring endpoints
+- [ ] Staging environment setup
+- [ ] Production deployment pipeline
 
-## 8) Acceptance Criteria (MVP)
+## 8) Current Tasks (ACTIVE)
 
-- [ ] Multi‑tenant login; users see only their organization's data
-- [ ] Projects: CRUD + ≥1 milestone; Files: upload/download; Approvals: 1 successful cycle
-- [ ] Tickets: create/update/status → email notifications sent
-- [ ] Invoices: manual PDF upload → status recorded → client can download
-- [ ] Dashboard: show active projects, open tickets, staging/prod links
-- [ ] Marketing site passes Lighthouse desktop ≥ 90 (all categories)
+- [x] Lighthouse performance optimization for marketing site
+- [x] Complete API contract testing setup
+- [x] Repository hygiene and configuration standardization
+- [ ] Set up staging environment
+- [ ] Finalize production deployment pipeline
 
-## 9) Timeline Overview (10–12 weeks)
+## 9) Known Issues & Technical Debt
 
-- [ ] Week 1–2: IA/wireframes, monorepo scaffold, basic CI/CD, DB + Prisma
-- [ ] Week 3–4: Design system, core Astro pages, Auth + basic RBAC
-- [ ] Week 5–8: Projects/Files/Approvals/Tickets/Invoices modules + E2E
-- [ ] Week 9: QA, security hardening, content, initial migration
-- [ ] Week 10: UAT pilot, fixes; 11–12: Launch, hypercare, documentation
+- [x] Resolve TODO comments in dynamic-file-storage.service.ts
+- [x] Optimize large bundle imports in frontend
+- [x] Complete TypeScript strict mode compliance
+- [x] Update outdated dependencies
+- [ ] Consolidate test helpers across packages
+- [ ] Standardize ESLint configurations across packages
 
+<<<<<<< HEAD
 ## Production Status
 
 The JasaWeb monorepo has achieved **PRODUCTION STABLE** status:
@@ -102,7 +113,16 @@ Recent repository hygiene improvements:
 - ✅ Removed deprecated types and unused code
 - ✅ Consolidated API documentation to match implementation
 - ✅ Enhanced security with proper validation
+=======
+## 10) Next Steps (FUTURE)
+
+- [ ] Online payment gateway integration
+- [ ] Automated SLA and reporting
+- [ ] Knowledge Base implementation
+- [ ] White-label portal and corporate SSO
+>>>>>>> origin/dev
 
 ---
 
-_Last updated: 2025-12-18_
+_Last updated: 2025-12-19_  
+_Status: MVP complete, repository hygiene completed, deployment in progress_

@@ -31,14 +31,22 @@ class Logger {
   private formatMessage(
     level: string,
     message: string,
+<<<<<<< HEAD
     data?: unknown
+=======
+    data?: Record<string, unknown>
+>>>>>>> origin/dev
   ): string {
     const timestamp = new Date().toISOString();
     const dataStr = data ? ` ${JSON.stringify(data)}` : '';
     return `[${timestamp}] [${level}] ${message}${dataStr}`;
   }
 
+<<<<<<< HEAD
   debug(message: string, data?: unknown): void {
+=======
+  debug(message: string, data?: Record<string, unknown>): void {
+>>>>>>> origin/dev
     if (this.shouldLog(LOG_LEVELS.DEBUG)) {
       // Use dev-only logging
       if (this.isDevelopment) {
@@ -47,7 +55,11 @@ class Logger {
     }
   }
 
+<<<<<<< HEAD
   info(message: string, data?: unknown): void {
+=======
+  info(message: string, data?: Record<string, unknown>): void {
+>>>>>>> origin/dev
     if (this.shouldLog(LOG_LEVELS.INFO)) {
       if (this.isDevelopment) {
         console.info(this.formatMessage('INFO', message, data));
@@ -57,7 +69,11 @@ class Logger {
     }
   }
 
+<<<<<<< HEAD
   warn(message: string, data?: unknown): void {
+=======
+  warn(message: string, data?: Record<string, unknown>): void {
+>>>>>>> origin/dev
     if (this.shouldLog(LOG_LEVELS.WARN)) {
       if (this.isDevelopment) {
         console.warn(this.formatMessage('WARN', message, data));
@@ -66,19 +82,31 @@ class Logger {
     }
   }
 
+<<<<<<< HEAD
   error(message: string, error?: Error | unknown): void {
+=======
+  error(message: string, error?: Error | Record<string, unknown>): void {
+>>>>>>> origin/dev
     if (this.shouldLog(LOG_LEVELS.ERROR)) {
       if (this.isDevelopment) {
-        console.error(this.formatMessage('ERROR', message, error));
+        console.error(
+          this.formatMessage('ERROR', message, error as Record<string, unknown>)
+        );
       }
-      this.sendToLogService('ERROR', message, error);
+      this.sendToLogService('ERROR', message, error as Record<string, unknown>);
     }
   }
 
   private sendToLogService(
+<<<<<<< HEAD
     level: string,
     message: string,
     data?: unknown
+=======
+    _level: string,
+    _message: string,
+    _data?: Record<string, unknown>
+>>>>>>> origin/dev
   ): void {
     // In production, send to centralized logging service
     // For now, we'll use a noop for production logs
@@ -99,7 +127,11 @@ class Logger {
   }
 
   // Security-specific logging
+<<<<<<< HEAD
   security(event: string, details?: unknown): void {
+=======
+  security(event: string, details?: Record<string, unknown>): void {
+>>>>>>> origin/dev
     this.warn(`Security Event: ${event}`, details);
   }
 

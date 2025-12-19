@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../common/database/prisma.service';
 import { v4 as uuidv4 } from 'uuid';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class RefreshTokenService {
@@ -27,7 +27,7 @@ export class RefreshTokenService {
     const expiresAt = this.parseExpiresIn(expiresIn);
 
     // Hash the actual refresh token before storing it for security
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const tokenHash = await argon2.hash(refreshToken);
 
     // Store the refresh token in the database
     await this.prisma.refreshToken.create({
@@ -163,9 +163,9 @@ export class RefreshTokenService {
     }
 
     // Compare the provided token with the stored hash
-    const tokenMatches = await bcrypt.compare(
-      actualToken,
-      storedToken.tokenHash
+    const tokenMatches = await argon2.verify(
+      storedToken.tokenHash,
+      actualToken
     );
     if (!tokenMatches) {
       this.logger.warn('Refresh token hash mismatch');
