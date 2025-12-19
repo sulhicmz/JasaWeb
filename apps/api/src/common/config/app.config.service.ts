@@ -8,6 +8,7 @@ import {
   getSecurityConfig,
   getNetworkConfig,
   getCacheConfig,
+  UrlBuilder,
   isEnvProduction,
   BusinessConfig,
   SiteConfig,
@@ -100,21 +101,7 @@ export class AppConfigService {
   }
 
   private getDefaultCorsOrigins(isDevelopment: boolean): string[] {
-    if (isDevelopment) {
-      return [
-        'http://localhost:4321',
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:4321',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001',
-      ];
-    }
-    return [
-      'https://jasaweb.com',
-      'https://www.jasaweb.com',
-      'https://api.jasaweb.com',
-    ];
+    return UrlBuilder.getAllowedOrigins();
   }
 
   // Public getters

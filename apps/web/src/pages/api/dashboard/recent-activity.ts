@@ -8,7 +8,7 @@ export async function GET({ request, url }: { request: Request; url: URL }) {
 
     // Forward the request to the backend API
     const apiBaseUrl =
-      import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3001';
+      import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3000';
     const backendUrl = `${apiBaseUrl}/dashboard/recent-activity?limit=${limit}`;
 
     const response = await fetch(backendUrl, {

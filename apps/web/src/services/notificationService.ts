@@ -113,7 +113,12 @@ export class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    const apiConfig = {
+      apiConfig: {
+        baseUrl: import.meta.env.PUBLIC_API_URL || 'http://localhost:3000',
+      },
+    };
+    const apiUrl = apiConfig.apiConfig.baseUrl;
 
     this.socket = io(`${apiUrl}/notifications`, {
       auth: {
@@ -140,7 +145,12 @@ export class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    const apiConfig = {
+      apiConfig: {
+        baseUrl: import.meta.env.PUBLIC_API_URL || 'http://localhost:3000',
+      },
+    };
+    const apiUrl = apiConfig.apiConfig.baseUrl;
 
     this.dashboardSocket = io(`${apiUrl}/dashboard`, {
       auth: {

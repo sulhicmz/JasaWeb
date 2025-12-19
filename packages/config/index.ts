@@ -114,5 +114,14 @@ export interface StorageListItem {
   etag?: string;
 }
 
+// Export environment-aware configuration
+export {
+  SERVICE_PORTS,
+  HOSTS,
+  UrlBuilder,
+  WebSocketUrlBuilder,
+  HEALTH_CHECKS,
+} from './src/environment-aware-config';
+
 // Default export for compatibility
 export { BUSINESS_CONFIG as default } from './src/business-config';

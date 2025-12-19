@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentUrlValidator } from '../config/environment-url-validator';
+import { UrlBuilder } from '@jasaweb/config';
 
 export interface SecurityConfig {
   jwt: {
@@ -166,17 +167,7 @@ export class SecurityConfigService {
     } catch {
       // Fallback to manually configured origins with environment awareness
       if (isDevelopment) {
-        const webPort = process.env.WEB_PORT || process.env.PORT || 4321;
-        const apiPort = process.env.API_PORT || 3000;
-
-        return [
-          `http://localhost:${apiPort}`,
-          `http://localhost:${webPort}`,
-          'http://localhost:5173',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:4321',
-          'http://127.0.0.1:5173',
-        ];
+        return UrlBuilder.getAllowedOrigins();
       }
 
       const productionOrigins =

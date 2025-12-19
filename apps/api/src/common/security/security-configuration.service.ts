@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app.config.service';
 import { EnvironmentUrlValidator } from '../config/environment-url-validator';
-import { logger } from '../../../../../packages/config/logger';
+import { logger, UrlBuilder } from '../../../../../packages/config';
 
 export interface SecurityPolicyConfig {
   csp: {
@@ -167,19 +167,8 @@ export class SecurityConfigurationService {
       ];
 
       if (isDevelopment) {
-        // Dynamic development origins based on configured ports
-        const webPort = process.env.WEB_PORT || process.env.PORT || 4321;
-        const apiPort = process.env.API_PORT || 3000;
-
-        origins.push(
-          `http://localhost:${apiPort}`,
-          `http://localhost:${webPort}`,
-          'http://localhost:8080',
-          'http://localhost:3001',
-          'http://localhost:3333',
-          'http://127.0.0.1:3000',
-          'http://127.0.0.1:4321'
-        );
+        // Use dynamic origins from UrlBuilder
+        origins.push(...UrlBuilder.getAllowedOrigins());
       }
 
       // Add organization-specific subdomains in production
