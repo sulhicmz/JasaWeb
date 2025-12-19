@@ -2,11 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
-import {
-  DatabaseTestHelper,
-  ContractTestUtils,
-  ContractTestFixtures,
-} from '../helpers/contract-test-helpers';
+import { ContractTestUtils } from '../helpers/contract-test-helpers';
 
 /**
  * API Contract Test Suite for Health Endpoints
@@ -73,7 +69,7 @@ describe('Health API Contract Tests', () => {
           const optionalFields = ['database', 'redis', 'memory', 'checks'];
 
           optionalFields.forEach((field) => {
-            if (res.body.hasOwnProperty(field)) {
+            if (Object.prototype.hasOwnProperty.call(res.body, field)) {
               expect(typeof res.body[field]).toBe('object');
             }
           });

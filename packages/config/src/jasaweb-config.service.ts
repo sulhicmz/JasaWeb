@@ -251,6 +251,7 @@ export interface ConfigValidationResult {
  * Get array from comma-separated environment variable string
  */
 function getEnvArray(key: string, defaultValue: string[] = []): string[] {
+  // eslint-disable-next-line security/detect-object-injection
   const value = process.env[key];
   if (!value) return defaultValue;
   return value

@@ -85,6 +85,7 @@ export class SecurityMonitoringService {
         throw new Error('Reports directory path validation failed');
       }
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.mkdir(reportsPath, { recursive: true });
       this.reportsPath = reportsPath; // Update the instance property
     } catch (error) {
@@ -212,6 +213,7 @@ export class SecurityMonitoringService {
         throw new Error('Invalid file extension for security report');
       }
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.writeFile(filepath, JSON.stringify(report, null, 2), {
         mode: 0o640,
       });
@@ -224,6 +226,7 @@ export class SecurityMonitoringService {
 
   async getLatestReport(): Promise<SecurityReport | null> {
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const files = await fs.readdir(this.reportsPath);
       const reportFiles = files
         .filter((file: string) => {
@@ -265,6 +268,7 @@ export class SecurityMonitoringService {
   async getReportHistory(limit: number = 10): Promise<SecurityReport[]> {
     try {
       // Path is controlled constant from process.cwd() and constant string
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const files = await fs.readdir(this.reportsPath);
       const reportFiles = files
         .filter(
@@ -292,6 +296,7 @@ export class SecurityMonitoringService {
             continue;
           }
 
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
           const content = await fs.readFile(filepath, 'utf8');
           const report = JSON.parse(content) as SecurityReport;
           reports.push(report);

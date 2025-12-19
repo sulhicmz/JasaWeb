@@ -351,7 +351,7 @@ export class ContractTestUtils {
       if (typeof obj !== 'object' || obj === null) return;
 
       allSensitiveFields.forEach((field) => {
-        if (obj.hasOwnProperty(field)) {
+        if (Object.prototype.hasOwnProperty.call(obj, field)) {
           fail(`Sensitive field '${field}' found at ${path}${field}`);
         }
       });

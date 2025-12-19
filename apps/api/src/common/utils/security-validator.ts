@@ -194,7 +194,9 @@ export class SecurityValidator {
    */
   static validateFileExtension(filename: string): boolean {
     const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
-    return this.ALLOWED_EXTENSIONS.includes(ext as any);
+    return this.ALLOWED_EXTENSIONS.includes(
+      ext as (typeof this.ALLOWED_EXTENSIONS)[number]
+    );
   }
 
   /**

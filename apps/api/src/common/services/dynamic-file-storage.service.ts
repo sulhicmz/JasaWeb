@@ -42,7 +42,7 @@ abstract class BaseStorageAdapter implements StorageAdapter {
 
   abstract exists(key: string): Promise<boolean>;
 
-  async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+  async getSignedUrl(key: string, _expiresIn: number): Promise<string> {
     if (!SecurityValidator.isValidKey(key)) {
       throw new Error('Invalid key format');
     }
@@ -145,6 +145,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
         ? validatedDirPath
         : this.uploadPath;
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.mkdir(validatedLiteralPath, { recursive: true, mode: 0o750 });
     } catch (error) {
       this.logger.error('Directory creation failed:', error);
@@ -163,6 +164,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
         throw new Error('File write path validation failed');
       }
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.writeFile(normalizedPath, data, { mode: 0o640 });
     } catch (error) {
       this.logger.error('File write failed:', error);
@@ -206,6 +208,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
         throw new Error('File read path validation failed');
       }
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
@@ -239,6 +242,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
         throw new Error('File deletion path validation failed');
       }
 
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.unlink(normalizedPath);
       this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {

@@ -5,7 +5,6 @@ import { AppModule } from '../../src/app.module';
 import {
   DatabaseTestHelper,
   ContractTestUtils,
-  ContractTestFixtures,
 } from '../helpers/contract-test-helpers';
 
 /**

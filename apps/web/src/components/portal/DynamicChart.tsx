@@ -9,8 +9,8 @@ interface ChartComponentProps {
 }
 
 interface DynamicChartProps {
-  data: any;
-  options: any;
+  data: ChartData<ChartType>;
+  options: ChartOptions<ChartType>;
   className?: string;
 }
 
