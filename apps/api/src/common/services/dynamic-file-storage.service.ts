@@ -88,11 +88,11 @@ class LocalStorageAdapter extends BaseStorageAdapter {
   }
 
   private ensureDirectoryExists(): void {
-    const fs = require('fs');
-    const path = require('path');
+    const fs = require('fs') as typeof import('fs');
+    const path = require('path') as typeof import('path');
 
     // Define allowed base directories for security
-    const allowedBases = ['./uploads', '/tmp/uploads'];
+    const allowedBases = ['./uploads', '/tmp/uploads'] as const;
 
     // Sanitize and validate path to prevent directory traversal
     const normalizedPath = path.normalize(this.uploadPath);
@@ -116,34 +116,34 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       throw new Error('Invalid characters in upload path');
     }
 
-    // Security: Use literal constant and secure filesystem operations
-    const DEFAULT_UPLOAD_DIR = 'uploads';
+    // Security: Use literal constant and secure filesystem operation wrapper
+    const DEFAULT_UPLOAD_DIR = 'uploads' as const;
     const uploadDir = normalizedPath.endsWith(DEFAULT_UPLOAD_DIR)
       ? normalizedPath
       : path.join(normalizedPath, DEFAULT_UPLOAD_DIR);
 
     // Security: Create secure filesystem operation wrapper
-    const secureFileExists = (path: string): boolean => {
+    const secureFileExists = (filePath: string): boolean => {
       const ALLOWED_BASES = [process.cwd(), '/tmp'];
-      const resolvedPath = require('path').resolve(path);
+      const pathModule = require('path');
+      const resolvedPath = pathModule.resolve(filePath);
       const isAllowed = ALLOWED_BASES.some((base) =>
         resolvedPath.startsWith(base)
       );
       // Secure file existence check with validated path
       try {
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         // Path is validated through security checks above to prevent directory traversal
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
-        return isAllowed && fs.existsSync(path);
+        return isAllowed && fs.existsSync(filePath);
       } catch (error) {
         this.logger.error('File existence check failed:', error);
         return false;
       }
     };
 
-    const secureMkdir = (path: string): void => {
+    const secureMkdir = (dirPath: string): void => {
       const ALLOWED_BASES = [process.cwd(), '/tmp'];
-      const resolvedPath = require('path').resolve(path);
+      const pathModule = require('path');
+      const resolvedPath = pathModule.resolve(dirPath);
       const isAllowed = ALLOWED_BASES.some((base) =>
         resolvedPath.startsWith(base)
       );
@@ -152,10 +152,8 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       }
       // Secure directory creation with validated path
       try {
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         // Path is validated through security checks above to prevent directory traversal
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
-        fs.mkdirSync(path, { recursive: true, mode: 0o750 });
+        fs.mkdirSync(dirPath, { recursive: true, mode: 0o750 });
       } catch (error) {
         this.logger.error('Directory creation failed:', error);
         throw error;
@@ -212,9 +210,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
     // Secure directory creation with validated path
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is validated through normalization and path checks above to prevent directory traversal
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.mkdir(normalizedDirPath, { recursive: true, mode: 0o750 });
     } catch (error) {
       this.logger.error('Directory creation failed:', error);
@@ -224,7 +220,6 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     // Write file with secure permissions
     try {
       // Path is validated through normalization and path checks above to prevent directory traversal
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.writeFile(normalizedPath, data, { mode: 0o640 });
     } catch (error) {
       this.logger.error('File write failed:', error);
@@ -269,9 +264,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Secure file read with validated path
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is validated through normalization and path checks above to prevent directory traversal
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
@@ -306,9 +299,7 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Secure file deletion with validated path
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is validated through normalization and path checks above to prevent directory traversal
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.unlink(normalizedPath);
       this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {
@@ -344,7 +335,6 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
 
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.access(normalizedPath);
       return true;
     } catch {
@@ -378,12 +368,14 @@ class S3StorageAdapter extends BaseStorageAdapter {
     if (this.s3Client) return;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore - Dynamic import
-      const { S3Client } = await import('@aws-sdk/client-s3');
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-ignore - Dynamic import
-      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+      // Dynamic imports with proper typing
+      const s3Module = await import('@aws-sdk/client-s3');
+      const presignerModule = await import('@aws-sdk/s3-request-presigner');
+
+      const S3Client =
+        s3Module.S3Client as typeof import('@aws-sdk/client-s3').S3Client;
+      const getSignedUrl =
+        presignerModule.getSignedUrl as typeof import('@aws-sdk/s3-request-presigner').getSignedUrl;
 
       // Create S3 client configuration
       const clientConfig: S3ClientConfig = {
