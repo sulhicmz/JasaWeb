@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   standardize:
-    name: Standardize Code
+    name: Pick and Execute Task
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
 
@@ -22,7 +22,7 @@ jobs:
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -37,58 +37,48 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 8.15.0
-          run_install: false
 
-      - name: Get pnpm store directory
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Configure Git
         run: |
           git config --global user.name "sulhicmz"
           git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install OpenCode CLI
+      - name: Install OpenCode
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Run Standarizer
+      - name: Execute
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Code Standarizer**.
+          ROLE: Task Executor
 
-          **TECH STACK:**
-          - Frontend: Astro + React (Cloudflare Pages)
-          - Backend: Cloudflare Workers
-          - Database: Neon PostgreSQL + Prisma ORM
-          - Cache: Cloudflare KV
-          - Storage: Cloudflare R2
+          TECH STACK (FINAL):
+          - Astro + React
+          - Cloudflare Workers/Pages
+          - Neon PostgreSQL + Prisma
+          - Cloudflare KV & R2
+          - Midtrans (payment)
 
-          **TASK:** Pick ONE task from task.md and complete it.
+          STEPS:
+          1. Read AGENTS.md (rules)
+          2. Read task.md (find first unchecked [ ] task)
+          3. Read blueprint.md (specs)
+          4. Implement the task
+          5. Test: pnpm build
+          6. Update task.md: mark [x]
+          7. Commit with Conventional Commits
+          8. Create PR to dev
 
-          **STEPS:**
-          1. Read: AGENTS.md, task.md
-          2. Pick the FIRST unchecked task
-          3. Implement the task
-          4. Verify: pnpm build, pnpm test
-          5. Update task.md: mark task as [x]
-          6. Commit with Conventional Commits
-          7. Create PR to `dev`
+          CONSTRAINTS:
+          - Only implement tasks from task.md
+          - Do NOT add features outside blueprint
+          - Do NOT modify apps/api/
+          - Do NOT add new dependencies without listing in PR
 
-          **CONSTRAINTS:**
-          - DO NOT modify apps/api (deprecated)
-          - Ensure Cloudflare Workers compatibility
-          - No Node.js-specific APIs (fs, path, child_process)
-          - If stuck, document blocker in bug.md
+          If no unchecked tasks, report "No tasks available"
           PROMPT
           )" --model iflowcn/glm-4.6 --share false

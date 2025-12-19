@@ -1,102 +1,138 @@
 # JasaWeb - AI Agent Guidelines
 
-## 🚨 STATUS: MIGRASI KE CLOUDFLARE
+## 🎯 Project Overview
 
-Project sedang migrasi. Lihat `task.md` untuk progress.
+Platform jasa pembuatan website dengan client portal.
+
+**Scope**: Marketing site + Client portal + Admin panel + Midtrans payment
 
 ---
 
-## Tech Stack (Target)
+## Tech Stack (FINAL - JANGAN DIUBAH)
 
 | Komponen | Teknologi |
 |----------|-----------|
 | Frontend | Astro + React |
 | Backend | Cloudflare Workers (Astro API Routes) |
-| Database | Neon PostgreSQL + Prisma ORM + Hyperdrive |
+| Database | Neon PostgreSQL + Prisma ORM |
 | Cache | Cloudflare KV |
 | Storage | Cloudflare R2 |
-| Deployment | Cloudflare Pages |
+| Payment | Midtrans (QRIS) |
+| Hosting | Cloudflare Pages |
 
 ---
 
-## File Penting
+## 📁 File Referensi
 
 | File | Fungsi |
 |------|--------|
-| `task.md` | Daftar task untuk dikerjakan |
-| `bug.md` | Daftar bug untuk diperbaiki |
-| `evaluasi.md` | Hasil evaluasi codebase |
+| `docs/architecture/blueprint.md` | Spesifikasi fitur & database schema |
 | `docs/deployment/SETUP.md` | Panduan setup Cloudflare |
+| `task.md` | Checklist task |
+| `bug.md` | Bug tracker |
 
 ---
 
-## Struktur Direktori
+## 🏗️ Struktur Direktori
 
 ```
 apps/
-├── web/                    # AKTIF - Astro + Workers
+├── web/                    # AKTIF
 │   ├── src/
-│   │   ├── pages/api/      # API endpoints
-│   │   ├── lib/prisma.ts   # Database client
-│   │   └── services/       # KV, R2 services
+│   │   ├── pages/          # Astro pages
+│   │   │   └── api/        # API endpoints (Workers)
+│   │   ├── components/     # React components
+│   │   ├── lib/            # Utilities (prisma, auth)
+│   │   └── services/       # Business logic
 │   ├── prisma/             # Database schema
 │   └── wrangler.toml       # Cloudflare config
-└── api/                    # DEPRECATED - Jangan modify
+└── api/                    # DEPRECATED - JANGAN MODIFY
 ```
 
 ---
 
 ## ⛔ PROHIBITED ACTIONS
 
-AI Agents **DILARANG KERAS** melakukan:
+AI Agents **DILARANG KERAS**:
 
-1. **Membuat file dokumentasi baru** tanpa instruksi eksplisit dari user
-2. **Menambah dependencies baru** ke package.json tanpa approval
-3. **Mengubah tech stack** dari yang sudah ditetapkan (Cloudflare/Neon/Prisma)
-4. **Modify `apps/api/`** - folder ini DEPRECATED
-5. **Menggunakan Node.js APIs** yang tidak tersedia di Workers (fs, path, child_process)
-6. **Hardcode secrets** - semua secrets harus via environment variables
-7. **Skip testing** - selalu run `pnpm build` sebelum commit
-8. **Membuat integrasi baru** dengan service eksternal tanpa approval
+1. **Mengubah tech stack** - Stack sudah final
+2. **Menambah dependencies** tanpa approval user
+3. **Membuat file dokumentasi baru** - Update yang ada saja
+4. **Modify `apps/api/`** - Deprecated
+5. **Menambah fitur di luar blueprint** - Lihat "Out of Scope" di blueprint.md
+6. **Menggunakan Node.js APIs** - Workers tidak support fs, path, etc.
+7. **Hardcode secrets** - Gunakan environment variables
+8. **Skip testing** - Selalu `pnpm build` sebelum commit
+9. **Menambah integrasi baru** - Hanya Midtrans yang diizinkan
 
 ---
 
 ## ✅ ALLOWED ACTIONS
 
-AI Agents **BOLEH** melakukan:
+AI Agents **BOLEH**:
 
 1. Mengerjakan task dari `task.md`
-2. Fix bugs yang tertulis di `bug.md`
-3. Update dokumentasi **yang sudah ada**
-4. Refactor code dalam scope task yang diberikan
+2. Fix bugs dari `bug.md`
+3. Update dokumentasi yang sudah ada
+4. Refactor dalam scope task
 5. Commit dengan Conventional Commits
 
 ---
 
-## Conventional Commits
+## 📋 Workflow
+
+```
+1. Baca task.md → Pilih task pertama yang belum selesai
+2. Baca blueprint.md → Pahami spesifikasi
+3. Implementasi → Code changes
+4. Test → pnpm build
+5. Update task.md → Mark [x]
+6. Commit → Conventional Commits
+7. Create PR → ke branch 'dev'
+```
+
+---
+
+## 🏷️ Conventional Commits
 
 ```
 feat(scope): add new feature
 fix(scope): fix bug
 docs(scope): update documentation
 refactor(scope): code refactoring
-test(scope): add tests
-ci(scope): update workflows
+```
+
+Contoh:
+```
+feat(auth): implement login endpoint
+fix(billing): handle midtrans webhook error
+docs(blueprint): update database schema
 ```
 
 ---
 
-## Quick Commands
+## 🔒 Security Rules
 
-```bash
-pnpm install          # Install deps
-pnpm build            # Build all
-pnpm test             # Run tests
-pnpm lint             # Check linting
-pnpm prisma generate  # Generate Prisma client
-```
+1. **Passwords**: Hash dengan bcrypt/argon2
+2. **JWT**: Short expiry (15min access, 7d refresh)
+3. **Input validation**: Zod untuk semua input
+4. **SQL**: Gunakan Prisma (no raw queries)
+5. **Secrets**: Semua via `wrangler secret put`
 
 ---
 
-**Branch utama**: `dev`
+## 🚫 Out of Scope (V1)
+
+Jangan implementasi ini di V1:
+- WhatsApp notification
+- Real-time updates (WebSocket)
+- Ticket system
+- CRM
+- Complex RBAC
+- File versioning
+- Multi-tenant
+
+---
+
+**Branch**: `dev`
 **Deployment**: Cloudflare Pages

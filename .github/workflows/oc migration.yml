@@ -4,39 +4,38 @@ on:
   workflow_dispatch:
     inputs:
       phase:
-        description: 'Migration phase to execute'
+        description: 'Migration phase'
         required: true
         type: choice
         options:
           - 'phase-1-database'
-          - 'phase-2-cache'
-          - 'phase-3-storage'
-          - 'phase-4-backend'
-          - 'phase-5-cleanup'
+          - 'phase-2-services'
+          - 'phase-3-auth'
+          - 'phase-4-public-site'
+          - 'phase-5-client-portal'
+          - 'phase-6-admin-panel'
+          - 'phase-7-payment'
 
 permissions:
   contents: write
   pull-requests: write
-  issues: write
-  actions: write
 
 concurrency:
-  group: migration-${{ github.workflow }}
+  group: oc-migration
   cancel-in-progress: false
 
 jobs:
   migrate:
-    name: Execute Migration Phase
+    name: Execute Migration
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -51,291 +50,183 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 8.15.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
-
-      - name: Configure Git Identity
-        run: |
-          git config --global user.name "sulhicmz"
-          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install OpenCode CLI
+      - name: Configure Git
+        run: |
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+
+      - name: Install OpenCode
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Execute Phase 1 - Database Migration
-        if: ${{ github.event.inputs.phase == 'phase-1-database' }}
+      - name: Phase 1 - Database
+        if: inputs.phase == 'phase-1-database'
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Migration Specialist** for Cloudflare ecosystem.
+          PHASE 1: DATABASE SETUP
 
-          **PHASE 1: DATABASE MIGRATION**
+          Read: AGENTS.md, docs/architecture/blueprint.md, task.md
 
-          **OBJECTIVE:** Migrate from local PostgreSQL to Neon + Prisma with Cloudflare Workers runtime.
+          Tasks:
+          1. Create apps/web/prisma/schema.prisma (copy schema from blueprint.md)
+          2. Add: previewFeatures = ["driverAdapters"], runtime = "cloudflare"
+          3. Create apps/web/src/lib/prisma.ts (factory function)
+          4. Install: @prisma/client @prisma/adapter-pg pg
+          5. Run: pnpm prisma generate
+          6. Update task.md: mark Phase 1 tasks as [x]
 
-          **TECH STACK:**
-          - Database: Neon PostgreSQL (external, already setup)
-          - ORM: Prisma with runtime = "cloudflare"
-          - Connection: via Cloudflare Hyperdrive
-
-          **TASKS:**
-          1. Move `apps/api/prisma/schema.prisma` to `apps/web/prisma/schema.prisma`
-          2. Update schema.prisma:
-             - Add `previewFeatures = ["driverAdapters"]`
-             - Add `runtime = "cloudflare"`
-          3. Create `apps/web/src/lib/prisma.ts`:
-             - Factory function that creates PrismaClient per-request
-             - Use PrismaPg adapter with Hyperdrive connection
-          4. Install dependencies: `@prisma/adapter-pg`, `pg`
-          5. Verify: `pnpm prisma generate` succeeds
-
-          **FILES TO CREATE/MODIFY:**
-          - apps/web/prisma/schema.prisma (create)
-          - apps/web/src/lib/prisma.ts (create)
-          - apps/web/package.json (add prisma deps)
-
-          **CONSTRAINTS:**
-          - DO NOT modify apps/api (deprecated)
-          - DO NOT break existing functionality
-          - Commit with: `feat(db): migrate prisma to cloudflare workers runtime`
-
-          **SUCCESS CRITERIA:**
-          - schema.prisma has `runtime = "cloudflare"`
-          - prisma.ts factory function exists
-          - `pnpm prisma generate` works
-          - Create PR to `dev` branch
+          Commit: feat(db): setup prisma for cloudflare workers
+          Create PR to dev
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
 
-      - name: Execute Phase 2 - Cache Migration
-        if: ${{ github.event.inputs.phase == 'phase-2-cache' }}
+      - name: Phase 2 - Services
+        if: inputs.phase == 'phase-2-services'
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Migration Specialist** for Cloudflare ecosystem.
+          PHASE 2: SERVICES SETUP
 
-          **PHASE 2: CACHE MIGRATION (Redis → Cloudflare KV)**
+          Read: AGENTS.md, task.md
 
-          **OBJECTIVE:** Replace all Redis usage with Cloudflare KV.
+          Tasks:
+          1. Create apps/web/src/services/cache.service.ts (KV wrapper)
+          2. Create apps/web/src/services/storage.service.ts (R2 wrapper)
+          3. Update apps/web/wrangler.toml with KV and R2 bindings
+          4. Update task.md
 
-          **TECH STACK:**
-          - Cache: Cloudflare KV (binding: CACHE)
-
-          **TASKS:**
-          1. Create `apps/web/src/services/cache.service.ts`:
-             - KVCacheService class with get, set, delete, has methods
-             - Factory function: createCache(env)
-          2. Search for Redis usages: `grep -r "redis" apps/`
-          3. Replace Redis patterns with KV patterns
-          4. Update wrangler.toml with KV namespace binding
-
-          **KV SERVICE TEMPLATE:**
-          ```typescript
-          export class KVCacheService {
-            constructor(private kv: KVNamespace) {}
-
-            async get<T>(key: string): Promise<T | null> {
-              const value = await this.kv.get(key, 'json');
-              return value as T | null;
-            }
-
-            async set(key: string, value: unknown, ttl?: number): Promise<void> {
-              await this.kv.put(key, JSON.stringify(value),
-                ttl ? { expirationTtl: ttl } : undefined);
-            }
-
-            async delete(key: string): Promise<void> {
-              await this.kv.delete(key);
-            }
-          }
-
-          export function createCache(env: { CACHE: KVNamespace }) {
-            return new KVCacheService(env.CACHE);
-          }
-          ```
-
-          **CONSTRAINTS:**
-          - DO NOT modify apps/api (deprecated)
-          - Keep same cache semantics (TTL, keys)
-          - Commit with: `feat(cache): migrate redis to cloudflare kv`
-
-          **SUCCESS CRITERIA:**
-          - cache.service.ts exists and compiles
-          - No Redis imports in apps/web
-          - Create PR to `dev` branch
+          Commit: feat(services): add kv cache and r2 storage services
+          Create PR to dev
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
 
-      - name: Execute Phase 3 - Storage Migration
-        if: ${{ github.event.inputs.phase == 'phase-3-storage' }}
+      - name: Phase 3 - Auth
+        if: inputs.phase == 'phase-3-auth'
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Migration Specialist** for Cloudflare ecosystem.
+          PHASE 3: AUTH ENDPOINTS
 
-          **PHASE 3: STORAGE MIGRATION (S3 → Cloudflare R2)**
+          Read: AGENTS.md, blueprint.md, task.md
 
-          **OBJECTIVE:** Replace AWS S3/MinIO with Cloudflare R2.
+          Tasks:
+          1. Create apps/web/src/lib/auth.ts (JWT utilities)
+          2. Create apps/web/src/pages/api/auth/register.ts
+          3. Create apps/web/src/pages/api/auth/login.ts
+          4. Create apps/web/src/pages/api/auth/logout.ts
+          5. Create apps/web/src/pages/api/auth/me.ts
+          6. Update task.md
 
-          **TECH STACK:**
-          - Storage: Cloudflare R2 (binding: STORAGE)
-          - Note: R2 is S3-compatible
+          Requirements:
+          - Use bcrypt for password hashing
+          - JWT with 15min access token, 7d refresh token
+          - Roles: admin, client
 
-          **TASKS:**
-          1. Create `apps/web/src/services/storage.service.ts`:
-             - R2StorageService class with upload, download, delete, list methods
-             - Factory function: createStorage(env)
-          2. Update wrangler.toml with R2 bucket binding
-          3. Search for S3/MinIO usages and document migration path
-
-          **R2 SERVICE TEMPLATE:**
-          ```typescript
-          export class R2StorageService {
-            constructor(private bucket: R2Bucket) {}
-
-            async upload(key: string, data: ArrayBuffer | ReadableStream, contentType?: string) {
-              return await this.bucket.put(key, data, {
-                httpMetadata: contentType ? { contentType } : undefined
-              });
-            }
-
-            async download(key: string): Promise<ArrayBuffer | null> {
-              const obj = await this.bucket.get(key);
-              return obj ? await obj.arrayBuffer() : null;
-            }
-
-            async delete(key: string): Promise<void> {
-              await this.bucket.delete(key);
-            }
-
-            async list(prefix?: string) {
-              return await this.bucket.list({ prefix });
-            }
-          }
-
-          export function createStorage(env: { STORAGE: R2Bucket }) {
-            return new R2StorageService(env.STORAGE);
-          }
-          ```
-
-          **CONSTRAINTS:**
-          - DO NOT modify apps/api (deprecated)
-          - Commit with: `feat(storage): add cloudflare r2 service`
-
-          **SUCCESS CRITERIA:**
-          - storage.service.ts exists and compiles
-          - wrangler.toml has R2 binding
-          - Create PR to `dev` branch
+          Commit: feat(auth): implement auth endpoints
+          Create PR to dev
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
 
-      - name: Execute Phase 4 - Backend Migration
-        if: ${{ github.event.inputs.phase == 'phase-4-backend' }}
+      - name: Phase 4 - Public Site
+        if: inputs.phase == 'phase-4-public-site'
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Migration Specialist** for Cloudflare ecosystem.
+          PHASE 4: PUBLIC SITE PAGES
 
-          **PHASE 4: BACKEND MIGRATION (NestJS → Astro API Routes)**
+          Read: AGENTS.md, blueprint.md, task.md
 
-          **OBJECTIVE:** Migrate critical API endpoints from NestJS to Astro API routes.
+          Tasks:
+          1. Create/update landing page
+          2. Create template gallery page
+          3. Create pricing page
+          4. Create blog list & detail pages
+          5. Create register & login pages
+          6. Update task.md
 
-          **TECH STACK:**
-          - Backend: Astro SSR with Cloudflare adapter
-          - Runtime: Cloudflare Workers
+          Requirements:
+          - Use Astro pages with React components
+          - Tailwind for styling
+          - Fetch data from API endpoints
 
-          **TASKS:**
-          1. Create basic API structure in `apps/web/src/pages/api/`:
-             - health.ts (GET /api/health)
-             - auth/login.ts (POST /api/auth/login)
-             - auth/logout.ts (POST /api/auth/logout)
-          2. Use services created in previous phases:
-             - createPrismaClient for database
-             - createCache for KV
-             - createStorage for R2
-          3. Add Cloudflare env types to `apps/web/src/env.d.ts`
-
-          **API ROUTE TEMPLATE:**
-          ```typescript
-          // apps/web/src/pages/api/health.ts
-          import type { APIRoute } from 'astro';
-
-          export const GET: APIRoute = async ({ locals }) => {
-            const env = locals.runtime.env;
-
-            return new Response(JSON.stringify({
-              status: 'ok',
-              timestamp: new Date().toISOString()
-            }), {
-              headers: { 'Content-Type': 'application/json' }
-            });
-          };
-          ```
-
-          **CONSTRAINTS:**
-          - Focus on auth endpoints first (most critical)
-          - DO NOT modify apps/api
-          - Commit with: `feat(api): add astro api routes for cloudflare workers`
-
-          **SUCCESS CRITERIA:**
-          - /api/health endpoint works
-          - /api/auth/* endpoints scaffolded
-          - TypeScript compiles without errors
-          - Create PR to `dev` branch
+          Commit: feat(public): add public site pages
+          Create PR to dev
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
 
-      - name: Execute Phase 5 - Cleanup
-        if: ${{ github.event.inputs.phase == 'phase-5-cleanup' }}
+      - name: Phase 5 - Client Portal
+        if: inputs.phase == 'phase-5-client-portal'
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Migration Specialist** for Cloudflare ecosystem.
+          PHASE 5: CLIENT PORTAL
 
-          **PHASE 5: CLEANUP & VERIFICATION**
+          Read: AGENTS.md, blueprint.md, task.md
 
-          **OBJECTIVE:** Clean up old code and verify migration is complete.
+          Tasks:
+          1. Create dashboard page
+          2. Create "Web Saya" projects list page
+          3. Create project detail page (status, URL, credentials)
+          4. Create billing page (invoices, payment)
+          5. Create "Akun Saya" page
+          6. Add auth guard for client routes
+          7. Update task.md
 
-          **TASKS:**
-          1. Verify all services work:
-             - Run `pnpm build`
-             - Run `pnpm test`
-             - Run `pnpm lint`
-          2. Update documentation:
-             - AGENTS.md: Mark migration complete
-             - README.md: Update tech stack section
-             - Remove references to Docker/NestJS for new deployments
-          3. Create migration summary in `docs/deployment/MIGRATION_COMPLETE.md`:
-             - List all migrated components
-             - Document any breaking changes
-             - Note any remaining tasks
-          4. DO NOT delete apps/api yet (keep for reference)
+          Requirements:
+          - Protected routes (require login)
+          - Role check: client or admin
 
-          **CONSTRAINTS:**
-          - Verify before documenting
-          - Be honest about incomplete items
-          - Commit with: `docs: finalize cloudflare migration documentation`
-
-          **SUCCESS CRITERIA:**
-          - Build passes
-          - Tests pass
-          - Documentation updated
-          - Create PR to `dev` branch
+          Commit: feat(portal): add client portal pages
+          Create PR to dev
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
 
-      - name: Summary
-        if: always()
+      - name: Phase 6 - Admin Panel
+        if: inputs.phase == 'phase-6-admin-panel'
         run: |
-          echo "Migration phase ${{ github.event.inputs.phase }} completed"
-          echo "Check the PR created for review"
+          opencode run "$(cat <<'PROMPT'
+          PHASE 6: ADMIN PANEL
+
+          Read: AGENTS.md, blueprint.md, task.md
+
+          Tasks:
+          1. Create admin dashboard
+          2. Create manage clients CRUD
+          3. Create manage projects CRUD + status update
+          4. Create manage blog CRUD
+          5. Create manage pages CRUD
+          6. Create manage templates CRUD
+          7. Add admin guard (role: admin only)
+          8. Update task.md
+
+          Commit: feat(admin): add admin panel
+          Create PR to dev
+          PROMPT
+          )" --model iflowcn/glm-4.6 --share false
+
+      - name: Phase 7 - Payment
+        if: inputs.phase == 'phase-7-payment'
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          PHASE 7: MIDTRANS PAYMENT
+
+          Read: AGENTS.md, blueprint.md, task.md
+
+          Tasks:
+          1. Install midtrans-client
+          2. Create apps/web/src/lib/midtrans.ts (client wrapper)
+          3. Create apps/web/src/pages/api/invoices/[id]/pay.ts
+          4. Create apps/web/src/pages/api/webhooks/midtrans.ts
+          5. Update billing page to show QRIS
+          6. Update task.md
+
+          Requirements:
+          - QRIS payment method
+          - Webhook to update invoice status
+          - Environment: MIDTRANS_SERVER_KEY, MIDTRANS_CLIENT_KEY
+
+          Commit: feat(payment): integrate midtrans qris
+          Create PR to dev
+          PROMPT
+          )" --model iflowcn/glm-4.6 --share false

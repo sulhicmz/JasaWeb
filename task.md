@@ -1,59 +1,73 @@
 # 📋 Task List
 
-Daftar task untuk AI agents. Update file ini setelah menyelesaikan task.
+Checklist untuk AI agents. Update setelah selesai task.
 
 ---
 
-## 🔄 Migration to Cloudflare (Priority: HIGH)
+## 🔴 Priority: HIGH - Infrastructure
 
-### Phase 1: Database
-- [ ] Move prisma schema dari `apps/api/prisma/` ke `apps/web/prisma/`
-- [ ] Update schema.prisma dengan `runtime = "cloudflare"`
+### Phase 1: Database Setup
+- [ ] Create `apps/web/prisma/schema.prisma` dengan schema dari blueprint
+- [ ] Add Prisma config: `runtime = "cloudflare"`, `previewFeatures = ["driverAdapters"]`
 - [ ] Create `apps/web/src/lib/prisma.ts` factory function
-- [ ] Install `@prisma/adapter-pg` dan `pg`
-- [ ] Verify `pnpm prisma generate` works
+- [ ] Install: `@prisma/client`, `@prisma/adapter-pg`, `pg`
+- [ ] Verify: `pnpm prisma generate`
 
-### Phase 2: Cache
-- [ ] Create `apps/web/src/services/cache.service.ts`
-- [ ] Implement KVCacheService class
-- [ ] Update wrangler.toml dengan KV namespace
-- [ ] Remove Redis dependencies dari apps/web
+### Phase 2: Services Setup
+- [ ] Create `apps/web/src/services/cache.service.ts` (Cloudflare KV)
+- [ ] Create `apps/web/src/services/storage.service.ts` (Cloudflare R2)
+- [ ] Update `apps/web/wrangler.toml` dengan bindings
 
-### Phase 3: Storage
-- [ ] Create `apps/web/src/services/storage.service.ts`
-- [ ] Implement R2StorageService class
-- [ ] Update wrangler.toml dengan R2 bucket binding
-
-### Phase 4: Backend
-- [ ] Create `apps/web/src/pages/api/health.ts`
+### Phase 3: Auth
+- [ ] Create `apps/web/src/pages/api/auth/register.ts`
 - [ ] Create `apps/web/src/pages/api/auth/login.ts`
 - [ ] Create `apps/web/src/pages/api/auth/logout.ts`
-- [ ] Add Cloudflare env types ke `apps/web/src/env.d.ts`
-
-### Phase 5: Cleanup
-- [ ] Verify build passes: `pnpm build`
-- [ ] Verify tests pass: `pnpm test`
-- [ ] Update README.md dengan new stack
-- [ ] Create MIGRATION_COMPLETE.md
+- [ ] Create `apps/web/src/pages/api/auth/me.ts`
+- [ ] Create `apps/web/src/lib/auth.ts` (JWT utilities)
 
 ---
 
-## 🐛 Bugs (Priority: MEDIUM)
+## 🟡 Priority: MEDIUM - Features
 
-_No open bugs_
+### Public Site
+- [ ] Landing page dengan 3 layanan
+- [ ] Template gallery page
+- [ ] Pricing page
+- [ ] Blog list & detail page
+- [ ] Register page
+- [ ] Login page
+
+### Client Portal
+- [ ] Dashboard page
+- [ ] Web Saya (projects list)
+- [ ] Project detail page
+- [ ] Billing page
+- [ ] Akun Saya page
+
+### Admin Panel
+- [ ] Admin dashboard
+- [ ] Manage clients (CRUD)
+- [ ] Manage projects (CRUD + update status)
+- [ ] Manage blog (CRUD)
+- [ ] Manage pages (CRUD)
+- [ ] Manage templates (CRUD)
 
 ---
 
-## 📝 Documentation (Priority: LOW)
+## 🟢 Priority: LOW - Payment
 
-- [ ] Update README.md tech stack section
-- [ ] Update AGENTS.md after migration complete
+### Midtrans Integration
+- [ ] Install Midtrans SDK
+- [ ] Create `apps/web/src/lib/midtrans.ts`
+- [ ] Create `apps/web/src/pages/api/invoices/[id]/pay.ts`
+- [ ] Create `apps/web/src/pages/api/webhooks/midtrans.ts`
+- [ ] Test payment flow
 
 ---
 
 ## ✅ Completed
 
-_Tasks yang sudah selesai dipindahkan ke sini_
+_Move completed tasks here with date_
 
 ---
 

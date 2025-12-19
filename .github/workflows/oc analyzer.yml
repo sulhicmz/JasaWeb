@@ -22,7 +22,7 @@ jobs:
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -37,60 +37,48 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 8.15.0
-          run_install: false
 
-      - name: Get pnpm store directory
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Configure Git
         run: |
           git config --global user.name "sulhicmz"
           git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install OpenCode CLI
+      - name: Install OpenCode
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Run Analyzer
+      - name: Execute
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Codebase Analyzer**.
+          ROLE: Codebase Analyzer (Read-Only)
 
-          **TECH STACK:**
-          - Frontend: Astro + React (Cloudflare Pages)
-          - Backend: Cloudflare Workers
-          - Database: Neon PostgreSQL + Prisma ORM
-          - Cache: Cloudflare KV
-          - Storage: Cloudflare R2
+          TECH STACK:
+          - Astro + React
+          - Cloudflare Workers/Pages
+          - Neon PostgreSQL + Prisma
+          - Cloudflare KV & R2
+          - Midtrans (payment)
 
-          **TASK:** Evaluate the codebase and update evaluasi.md
+          STEPS:
+          1. Read: AGENTS.md, blueprint.md, task.md, bug.md
+          2. Run: pnpm build (check for errors)
+          3. Run: pnpm lint (check for warnings)
+          4. Evaluate (0-100):
+             - Build status
+             - Code quality
+             - Blueprint compliance
+          5. Update evaluasi.md with scores and findings
+          6. If bugs found, add to bug.md
+          7. Commit: docs(eval): update evaluation report
+          8. Create PR to dev
 
-          **STEPS:**
-          1. Read: AGENTS.md, task.md, bug.md
-          2. Run: pnpm build, pnpm test, pnpm lint
-          3. Evaluate (0-100): Stability, Performance, Security, Scalability, Modularity
-          4. Update evaluasi.md with scores and justification
-          5. Update task.md if you find new tasks
-          6. Update bug.md if you find bugs
-
-          **OUTPUT:**
-          - Update evaluasi.md
-          - Commit: `docs(eval): update codebase evaluation`
-          - Create PR to `dev`
-
-          **CONSTRAINTS:**
-          - DO NOT modify code files
+          CONSTRAINTS:
+          - DO NOT modify code files (.ts, .tsx, .js)
           - Only update .md documentation files
+          - Be honest in evaluation
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
