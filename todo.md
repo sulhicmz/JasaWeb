@@ -63,17 +63,20 @@ Source: `AGENTS.md` + `/docs/` directory. This checklist unifies tooling (pnpm, 
 
 ## 8) Current Tasks (ACTIVE)
 
-- [ ] Lighthouse performance optimization for marketing site
-- [ ] Complete API contract testing setup
+- [x] Lighthouse performance optimization for marketing site
+- [x] Complete API contract testing setup
+- [x] Repository hygiene and configuration standardization
 - [ ] Set up staging environment
 - [ ] Finalize production deployment pipeline
 
 ## 9) Known Issues & Technical Debt
 
-- [ ] Resolve TODO comments in dynamic-file-storage.service.ts
-- [ ] Optimize large bundle imports in frontend
-- [ ] Complete TypeScript strict mode compliance
-- [ ] Update outdated dependencies
+- [x] Resolve TODO comments in dynamic-file-storage.service.ts
+- [x] Optimize large bundle imports in frontend
+- [x] Complete TypeScript strict mode compliance
+- [x] Update outdated dependencies
+- [ ] Consolidate test helpers across packages
+- [ ] Standardize ESLint configurations across packages
 
 ## 10) Next Steps (FUTURE)
 
@@ -85,4 +88,4 @@ Source: `AGENTS.md` + `/docs/` directory. This checklist unifies tooling (pnpm, 
 ---
 
 _Last updated: 2025-12-19_  
-_Status: MVP complete, optimization and deployment in progress_
+_Status: MVP complete, repository hygiene completed, deployment in progress_

@@ -2,18 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-
-### Changed
-
-- Repository hygiene improvements and build artifact cleanup
-- Updated project documentation to reflect current MVP status
-- Removed non-functional security scan scripts from package.json
-
-### Fixed
-
-- Corrected authentication documentation to reflect custom JWT implementation
-
 ## [1.0.0] - 2025-12-19
 
 ### Added

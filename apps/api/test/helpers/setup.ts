@@ -4,6 +4,12 @@ import { vi } from 'vitest';
 // Set up Reflect for NestJS decorators - this must be loaded first
 import 'reflect-metadata';
 
+// Import centralized testing utilities
+import { TestConfigHelper } from '@jasaweb/testing';
+
+// Set up test environment
+TestConfigHelper.setupTestEnvironment();
+
 // Ensure vitest globals are available
 const globalVitest = global as typeof globalThis & {
   describe?: typeof describe;

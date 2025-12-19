@@ -616,3 +616,48 @@ export function generateSecureSecret(length: number = 32): string {
   }
   return result;
 }
+
+export function getEnvArray(key: string, separator: string = ','): string[] {
+  const value = getOptionalEnv(key);
+  if (!value) return [];
+  return value
+    .split(separator)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function getEnvUrl(key: string): string {
+  const value = getRequiredEnv(key);
+  try {
+    new URL(value);
+    return value;
+  } catch {
+    throw new EnvValidationError(
+      `Environment variable ${key} must be a valid URL`
+    );
+  }
+}
+
+export function getEnvNumberMin(key: string, min: number): number {
+  const value = getEnvNumber(key);
+  if (value < min) {
+    throw new EnvValidationError(
+      `Environment variable ${key} must be at least ${min}`
+    );
+  }
+  return value;
+}
+
+export function getEnvEmail(key: string): string {
+  const value = getRequiredEnv(key);
+  validateEmail(value);
+  return value;
+}
+
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new EnvValidationError(`Invalid email format: ${email}`);
+  }
+  return true;
+}
