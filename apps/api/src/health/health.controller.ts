@@ -24,7 +24,11 @@ export class HealthController {
     try {
       return await this.health.check([
         // Check HTTP connectivity
-        () => this.http.pingCheck('http', 'https://httpbin.org/get'),
+        () =>
+          this.http.pingCheck(
+            'http',
+            process.env.HEALTH_CHECK_ENDPOINT || 'https://httpbin.org/get'
+          ),
 
         // Check database connectivity
         () => this.prismaHealthIndicator.isHealthy('database'),
@@ -57,7 +61,11 @@ export class HealthController {
   async httpCheck() {
     try {
       return await this.health.check([
-        () => this.http.pingCheck('http', 'https://httpbin.org/get'),
+        () =>
+          this.http.pingCheck(
+            'http',
+            process.env.HEALTH_CHECK_ENDPOINT || 'https://httpbin.org/get'
+          ),
       ]);
     } catch (error: unknown) {
       const message = this.getErrorMessage(error);

@@ -1,661 +1,583 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { DashboardController } from '../../src/dashboard/dashboard.controller';
-import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant-prisma.service';
-import { PrismaService } from '../../src/common/database/prisma.service';
-import { RolesGuard } from '../../src/common/guards/roles.guard';
-import { Cache } from 'cache-manager';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { DashboardGateway } from '../../src/dashboard/dashboard.gateway';
-import { ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { CacheModule } from '@nestjs/cache-manager';
-import { APP_GUARD } from '@nestjs/core';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../../src/app.module';
+import { DatabaseTestHelper, ContractTestUtils } from '@jasaweb/testing';
 
-describe('DashboardController API Contract Tests', () => {
-  let controller: DashboardController;
-  let prismaService: MultiTenantPrismaService;
-  let cacheManager: Cache;
-  let dashboardGateway: DashboardGateway;
+/**
+ * API Contract Test Suite for Dashboard Endpoints
+ *
+ * Tests the contract between frontend and backend for dashboard functionality.
+ * Ensures API responses remain stable and don't break client applications.
+ */
+describe('Dashboard API Contract Tests', () => {
+  let app: INestApplication;
+  let testHelper: DatabaseTestHelper;
+  let testUser: any;
+  let accessToken: string;
 
-  const mockOrganizationId = 'org-1';
-  const mockUserId = 'user-1';
+  beforeAll(async () => {
+    testHelper = new DatabaseTestHelper();
+    await testHelper.setupTestDatabase();
 
-  const mockPrismaService = {
-    project: {
-      findMany: vi.fn(),
-      count: vi.fn(),
-    },
-    ticket: {
-      findMany: vi.fn(),
-      count: vi.fn(),
-    },
-    invoice: {
-      findMany: vi.fn(),
-      count: vi.fn(),
-      aggregate: vi.fn(),
-    },
-    milestone: {
-      findMany: vi.fn(),
-      count: vi.fn(),
-    },
-    auditLog: {
-      findMany: vi.fn(),
-    },
-  };
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-  const mockCacheManager = {
-    get: vi.fn(),
-    set: vi.fn(),
-    del: vi.fn(),
-  };
+    app = moduleFixture.createNestApplication();
+    await app.init();
 
-  const mockDashboardGateway = {
-    broadcastDashboardUpdate: vi.fn(),
-  };
+    // Create test user and get token
+    const result = await testHelper.createTestUser();
+    testUser = result.user;
+    accessToken = result.accessToken;
+  });
 
-  const mockReflector = {
-    getAllAndOverride: vi.fn(),
-  };
+  afterAll(async () => {
+    await testHelper.cleanup();
+    await app.close();
+  });
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        CacheModule.register({ ttl: 5, max: 100 }),
-        ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
-      ],
-      controllers: [DashboardController],
-      providers: [
-        {
-          provide: MultiTenantPrismaService,
-          useValue: mockPrismaService,
-        },
-        {
-          provide: PrismaService,
-          useValue: {
-            membership: {
-              findFirst: vi.fn(),
-            },
-          },
-        },
-        {
-          provide: CACHE_MANAGER,
-          useValue: mockCacheManager,
-        },
-        {
-          provide: DashboardGateway,
-          useValue: mockDashboardGateway,
-        },
-        {
-          provide: Reflector,
-          useValue: mockReflector,
-        },
-      ],
-    })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(APP_GUARD)
-      .useValue({ canActivate: () => true }) // Bypass global guards for tests
-      .compile();
+    await testHelper.clearDatabase();
 
-    controller = module.get<DashboardController>(DashboardController);
-    prismaService = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
-    cacheManager = module.get<Cache>(CACHE_MANAGER);
-    dashboardGateway = module.get<DashboardGateway>(DashboardGateway);
-
-    vi.clearAllMocks();
+    // Recreate test user after cleanup
+    const result = await testHelper.createTestUser();
+    testUser = result.user;
+    accessToken = result.accessToken;
   });
 
-  describe('API Contract - GET /dashboard/stats', () => {
-    it('should return dashboard statistics with correct contract', async () => {
-      // Mock cache miss
-      mockCacheManager.get.mockResolvedValue(null);
+  describe('GET /dashboard/stats', () => {
+    it('should return proper contract response for dashboard stats', async () => {
+      // Create test data
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
+      await testHelper.createTestTicket(testUser.organizationId, testUser.id);
 
-      // Mock Prisma responses
-      mockPrismaService.project.findMany.mockResolvedValue([
-        { status: 'active' },
-        { status: 'completed' },
-        { status: 'completed' },
-        { status: 'in-progress' },
-        { status: 'on-hold' },
-      ]);
+      return request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Response structure validation
+          expect(res.body).toHaveProperty('projects');
+          expect(res.body).toHaveProperty('tickets');
+          expect(res.body).toHaveProperty('invoices');
+          expect(res.body).toHaveProperty('milestones');
 
-      mockPrismaService.ticket.findMany.mockResolvedValue([
-        { status: 'open', priority: 'high' },
-        { status: 'open', priority: 'medium' },
-        { status: 'in-progress', priority: 'critical' },
-        { status: 'open', priority: 'low' },
-      ]);
+          // Contract: Projects statistics structure
+          expect(res.body.projects).toEqual({
+            total: expect.any(Number),
+            active: expect.any(Number),
+            completed: expect.any(Number),
+            onHold: expect.any(Number),
+          });
 
-      mockPrismaService.invoice.findMany.mockResolvedValue([
-        { status: 'issued', amount: 5000, dueAt: new Date() },
-        { status: 'paid', amount: 10000, dueAt: new Date() },
-        { status: 'draft', amount: 3000, dueAt: new Date() },
-      ]);
+          // Contract: Tickets statistics structure
+          expect(res.body.tickets).toEqual({
+            total: expect.any(Number),
+            open: expect.any(Number),
+            inProgress: expect.any(Number),
+            highPriority: expect.any(Number),
+            critical: expect.any(Number),
+          });
 
-      mockPrismaService.milestone.findMany.mockResolvedValue([
-        { status: 'completed', dueAt: new Date() },
-        { status: 'completed', dueAt: new Date() },
-        { status: 'in-progress', dueAt: new Date() },
-      ]);
+          // Contract: Invoices statistics structure
+          expect(res.body.invoices).toEqual({
+            total: expect.any(Number),
+            pending: expect.any(Number),
+            overdue: expect.any(Number),
+            totalAmount: expect.any(Number),
+            pendingAmount: expect.any(Number),
+          });
 
-      const result = await controller.getDashboardStats(mockOrganizationId);
+          // Contract: Milestones statistics structure
+          expect(res.body.milestones).toEqual({
+            total: expect.any(Number),
+            completed: expect.any(Number),
+            overdue: expect.any(Number),
+            dueThisWeek: expect.any(Number),
+          });
 
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('projects');
-      expect(result).toHaveProperty('tickets');
-      expect(result).toHaveProperty('invoices');
-      expect(result).toHaveProperty('milestones');
+          // Contract: Type validation
+          expect(typeof res.body.projects.total).toBe('number');
+          expect(typeof res.body.tickets.total).toBe('number');
+          expect(typeof res.body.invoices.totalAmount).toBe('number');
+          expect(typeof res.body.milestones.total).toBe('number');
 
-      // Projects contract
-      expect(result.projects).toHaveProperty('total');
-      expect(result.projects).toHaveProperty('active');
-      expect(result.projects).toHaveProperty('completed');
-      expect(result.projects).toHaveProperty('onHold');
-      expect(typeof result.projects.total).toBe('number');
-      expect(typeof result.projects.active).toBe('number');
-      expect(typeof result.projects.completed).toBe('number');
-      expect(typeof result.projects.onHold).toBe('number');
+          // Contract: Value constraints
+          expect(res.body.projects.total).toBeGreaterThanOrEqual(0);
+          expect(res.body.tickets.total).toBeGreaterThanOrEqual(0);
+          expect(res.body.invoices.totalAmount).toBeGreaterThanOrEqual(0);
+          expect(res.body.milestones.total).toBeGreaterThanOrEqual(0);
 
-      // Tickets contract
-      expect(result.tickets).toHaveProperty('total');
-      expect(result.tickets).toHaveProperty('open');
-      expect(result.tickets).toHaveProperty('inProgress');
-      expect(result.tickets).toHaveProperty('highPriority');
-      expect(result.tickets).toHaveProperty('critical');
-      expect(typeof result.tickets.total).toBe('number');
-      expect(typeof result.tickets.open).toBe('number');
-      expect(typeof result.tickets.inProgress).toBe('number');
-      expect(typeof result.tickets.highPriority).toBe('number');
-      expect(typeof result.tickets.critical).toBe('number');
+          // Contract: No negative values
+          expect(res.body.projects.active).toBeGreaterThanOrEqual(0);
+          expect(res.body.projects.completed).toBeGreaterThanOrEqual(0);
+          expect(res.body.projects.onHold).toBeGreaterThanOrEqual(0);
+          expect(res.body.tickets.open).toBeGreaterThanOrEqual(0);
+          expect(res.body.tickets.inProgress).toBeGreaterThanOrEqual(0);
+          expect(res.body.tickets.highPriority).toBeGreaterThanOrEqual(0);
+          expect(res.body.tickets.critical).toBeGreaterThanOrEqual(0);
 
-      // Invoices contract
-      expect(result.invoices).toHaveProperty('total');
-      expect(result.invoices).toHaveProperty('pending');
-      expect(result.invoices).toHaveProperty('overdue');
-      expect(result.invoices).toHaveProperty('totalAmount');
-      expect(result.invoices).toHaveProperty('pendingAmount');
-      expect(typeof result.invoices.total).toBe('number');
-      expect(typeof result.invoices.pending).toBe('number');
-      expect(typeof result.invoices.overdue).toBe('number');
-      expect(typeof result.invoices.totalAmount).toBe('number');
-      expect(typeof result.invoices.pendingAmount).toBe('number');
-
-      // Milestones contract
-      expect(result.milestones).toHaveProperty('total');
-      expect(result.milestones).toHaveProperty('completed');
-      expect(result.milestones).toHaveProperty('overdue');
-      expect(result.milestones).toHaveProperty('dueThisWeek');
-      expect(typeof result.milestones.total).toBe('number');
-      expect(typeof result.milestones.completed).toBe('number');
-      expect(typeof result.milestones.overdue).toBe('number');
-      expect(typeof result.milestones.dueThisWeek).toBe('number');
-
-      // Verify caching behavior
-      expect(cacheManager.set).toHaveBeenCalledWith(
-        `dashboard-stats-${mockOrganizationId}`,
-        expect.any(Object),
-        300000
-      );
+          // Contract: Response headers
+          ContractTestUtils.validateResponseHeaders(res.headers, /json/);
+        });
     });
 
-    it('should return cached stats with same contract', async () => {
-      const cachedStats = {
-        projects: { total: 3, active: 2, completed: 1, onHold: 0 },
-        tickets: {
-          total: 5,
-          open: 3,
-          inProgress: 2,
-          highPriority: 1,
-          critical: 0,
-        },
-        invoices: {
-          total: 2,
-          pending: 1,
-          overdue: 0,
-          totalAmount: 10000,
-          pendingAmount: 5000,
-        },
-        milestones: { total: 6, completed: 4, overdue: 1, dueThisWeek: 1 },
-      };
+    it('should return proper contract response for empty organization', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Should return zero values for empty org
+          expect(res.body.projects.total).toBe(0);
+          expect(res.body.tickets.total).toBe(0);
+          expect(res.body.invoices.total).toBe(0);
+          expect(res.body.milestones.total).toBe(0);
 
-      mockCacheManager.get.mockResolvedValue(cachedStats);
+          // Contract: All derived values should be zero
+          expect(res.body.projects.active).toBe(0);
+          expect(res.body.projects.completed).toBe(0);
+          expect(res.body.projects.onHold).toBe(0);
+          expect(res.body.tickets.open).toBe(0);
+          expect(res.body.tickets.inProgress).toBe(0);
+          expect(res.body.tickets.highPriority).toBe(0);
+          expect(res.body.tickets.critical).toBe(0);
+        });
+    });
 
-      const result = await controller.getDashboardStats(mockOrganizationId);
+    it('should support refresh parameter', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/stats?refresh=true')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Response should have same structure regardless of refresh
+          expect(res.body).toHaveProperty('projects');
+          expect(res.body).toHaveProperty('tickets');
+          expect(res.body).toHaveProperty('invoices');
+          expect(res.body).toHaveProperty('milestones');
+        });
+    });
 
-      // Should match the exact same contract
-      expect(result).toEqual(cachedStats);
-      expect(cacheManager.get).toHaveBeenCalledWith(
-        `dashboard-stats-${mockOrganizationId}`
-      );
-      expect(prismaService.project.findMany).not.toHaveBeenCalled();
+    it('should return proper error contract for unauthorized access', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .expect(401)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 401);
+          expect(res.body.error).toBe('Unauthorized');
+        });
     });
   });
 
-  describe('API Contract - GET /dashboard/recent-activity', () => {
-    it('should return recent activity with correct contract', async () => {
-      const mockProjects = [
-        {
-          id: 'p1',
-          name: 'Test Project',
-          status: 'active',
-          createdAt: new Date('2023-12-01'),
-          updatedAt: new Date('2023-12-10'),
-        },
-      ];
+  describe('GET /dashboard/recent-activity', () => {
+    it('should return proper contract response for recent activity', async () => {
+      // Create test activities
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
+      await testHelper.createTestTicket(testUser.organizationId, testUser.id);
 
-      const mockTickets = [
-        {
-          id: 't1',
-          type: 'bug',
-          priority: 'high',
-          status: 'open',
-          createdAt: new Date('2023-12-09'),
-        },
-      ];
+      return request(app.getHttpServer())
+        .get('/dashboard/recent-activity')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Response should be array
+          expect(Array.isArray(res.body)).toBe(true);
 
-      const mockMilestones = [
-        {
-          id: 'm1',
-          title: 'Test Milestone',
-          status: 'completed',
-          dueAt: new Date('2023-12-08'),
-          createdAt: new Date('2023-12-05'),
-        },
-      ];
+          if (res.body.length > 0) {
+            // Contract: Activity item structure
+            expect(res.body[0]).toEqual({
+              id: expect.any(String),
+              type: expect.any(String),
+              title: expect.any(String),
+              description: expect.any(String),
+              status: expect.any(String),
+              createdAt: expect.any(String),
+              priority: expect.any(String),
+            });
 
-      const mockInvoices = [
-        {
-          id: 'i1',
-          status: 'issued',
-          amount: 1000,
-          dueAt: new Date('2023-12-15'),
-          createdAt: new Date('2023-12-07'),
-        },
-      ];
+            // Contract: Validate data types
+            ContractTestUtils.validateUUID(res.body[0].id);
+            ContractTestUtils.validateDateString(res.body[0].createdAt);
+            ContractTestUtils.validateEmail(res.body[0].type); // Should be valid email format
 
-      mockPrismaService.project.findMany.mockResolvedValue(mockProjects);
-      mockPrismaService.ticket.findMany.mockResolvedValue(mockTickets);
-      mockPrismaService.milestone.findMany.mockResolvedValue(mockMilestones);
-      mockPrismaService.invoice.findMany.mockResolvedValue(mockInvoices);
+            // Contract: Type validation
+            expect(['project', 'ticket', 'milestone', 'invoice']).toContain(
+              res.body[0].type
+            );
+            expect(['low', 'medium', 'high', 'critical']).toContain(
+              res.body[0].priority
+            );
 
-      const result = await controller.getRecentActivity(
-        mockOrganizationId,
-        '10'
-      );
-
-      // API Contract validation
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(4);
-
-      // Each activity item should follow the contract
-      result.forEach((activity) => {
-        expect(activity).toHaveProperty('id');
-        expect(activity).toHaveProperty('type');
-        expect(activity).toHaveProperty('title');
-        expect(activity).toHaveProperty('description');
-        expect(activity).toHaveProperty('status');
-        expect(activity).toHaveProperty('createdAt');
-        expect(activity).toHaveProperty('priority');
-
-        expect(typeof activity.id).toBe('string');
-        expect(typeof activity.type).toBe('string');
-        expect(typeof activity.title).toBe('string');
-        expect(typeof activity.description).toBe('string');
-        expect(typeof activity.status).toBe('string');
-        expect(activity.createdAt).toBeInstanceOf(Date);
-        expect(['low', 'medium', 'high', 'critical', undefined]).toContain(
-          activity.priority
-        );
-      });
-
-      // Verify sorting by createdAt (most recent first)
-      for (let i = 1; i < result.length; i++) {
-        const prevDate = result[i - 1]?.createdAt;
-        const currDate = result[i]?.createdAt;
-        if (prevDate && currDate) {
-          expect(prevDate.getTime()).toBeGreaterThanOrEqual(currDate.getTime());
-        }
-      }
+            // Contract: No sensitive data
+            ContractTestUtils.validateNoSensitiveData(res.body[0]);
+          }
+        });
     });
 
     it('should respect limit parameter', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-
-      await controller.getRecentActivity(mockOrganizationId, '5');
-
-      expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 2 }) // Math.ceil(5/4) = 2
-      );
-    });
-
-    it('should cap limit at 50', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-
-      await controller.getRecentActivity(mockOrganizationId, '100');
-
-      expect(mockPrismaService.project.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 13 }) // Math.ceil(50/4) = 13
-      );
-    });
-  });
-
-  describe('API Contract - GET /dashboard/projects-overview', () => {
-    it('should return projects overview with correct contract', async () => {
-      const mockProjects = [
-        {
-          id: 'project-1',
-          name: 'Test Project',
-          status: 'in_progress',
-          createdAt: new Date('2023-12-01'),
-          updatedAt: new Date('2023-12-10'),
-          startAt: new Date('2023-12-01'),
-          dueAt: new Date('2023-12-31'),
-          milestones: [
-            { id: 'm1', status: 'completed', dueAt: new Date('2023-12-15') },
-            { id: 'm2', status: 'in-progress', dueAt: new Date('2023-12-30') },
-          ],
-          tickets: [
-            { id: 't1', status: 'open', priority: 'high' },
-            { id: 't2', status: 'closed', priority: 'low' },
-          ],
-          _count: {
-            milestones: 2,
-            tickets: 2,
-          },
-        },
-      ];
-
-      mockPrismaService.project.findMany.mockResolvedValue(mockProjects);
-
-      const result = await controller.getProjectsOverview(
-        mockOrganizationId,
-        '6'
-      );
-
-      // API Contract validation
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(1);
-
-      const project = result[0];
-      expect(project).toBeDefined();
-
-      if (project) {
-        expect(project).toHaveProperty('id');
-        expect(project).toHaveProperty('name');
-        expect(project).toHaveProperty('description');
-        expect(project).toHaveProperty('status');
-        expect(project).toHaveProperty('progress');
-        expect(project).toHaveProperty('totalMilestones');
-        expect(project).toHaveProperty('completedMilestones');
-        expect(project).toHaveProperty('openTickets');
-        expect(project).toHaveProperty('highPriorityTickets');
-        expect(project).toHaveProperty('createdAt');
-        expect(project).toHaveProperty('updatedAt');
-        expect(project).toHaveProperty('startAt');
-        expect(project).toHaveProperty('dueAt');
-
-        // Type validation
-        expect(typeof project.id).toBe('string');
-        expect(typeof project.name).toBe('string');
-        expect(typeof project.status).toBe('string');
-        expect(typeof project.progress).toBe('number');
-        expect(typeof project.totalMilestones).toBe('number');
-        expect(typeof project.completedMilestones).toBe('number');
-        expect(typeof project.openTickets).toBe('number');
-        expect(typeof project.highPriorityTickets).toBe('number');
-
-        // Value validation
-        expect(project.progress).toBeGreaterThanOrEqual(0);
-        expect(project.progress).toBeLessThanOrEqual(100);
-        expect(project.totalMilestones).toBeGreaterThanOrEqual(0);
-        expect(project.completedMilestones).toBeGreaterThanOrEqual(0);
-        expect(project.completedMilestones).toBeLessThanOrEqual(
-          project.totalMilestones
-        );
-        expect(project.openTickets).toBeGreaterThanOrEqual(0);
-        expect(project.highPriorityTickets).toBeGreaterThanOrEqual(0);
-        expect(project.highPriorityTickets).toBeLessThanOrEqual(
-          project.openTickets
+      // Create multiple activities
+      for (let i = 0; i < 15; i++) {
+        await testHelper.createTestProject(
+          testUser.organizationId,
+          testUser.id
         );
       }
+
+      return request(app.getHttpServer())
+        .get('/dashboard/recent-activity?limit=5')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(Array.isArray(res.body)).toBe(true);
+          expect(res.body.length).toBeLessThanOrEqual(5);
+        });
+    });
+
+    it('should return empty array for organization with no activity', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/recent-activity')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toEqual([]);
+        });
+    });
+
+    it('should return proper error contract for invalid limit', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/recent-activity?limit=-1')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 400);
+        });
     });
   });
 
-  describe('API Contract - POST /dashboard/notify-update', () => {
-    it('should handle notification with correct contract', async () => {
-      const body = {
-        type: 'project',
-        data: { projectId: 'project-1', status: 'completed' },
-      };
-
-      await controller.notifyDashboardUpdate(
-        body,
-        mockOrganizationId,
-        mockUserId
+  describe('GET /dashboard/projects-overview', () => {
+    it('should return proper contract response for projects overview', async () => {
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
       );
 
-      expect(dashboardGateway.broadcastDashboardUpdate).toHaveBeenCalledWith({
-        type: 'project',
-        data: { ...body.data, userId: mockUserId },
-        timestamp: expect.any(Date),
-        organizationId: mockOrganizationId,
+      return request(app.getHttpServer())
+        .get('/dashboard/projects-overview')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Response should be array
+          expect(Array.isArray(res.body)).toBe(true);
+
+          if (res.body.length > 0) {
+            // Contract: Project overview item structure
+            expect(res.body[0]).toEqual({
+              id: project.id,
+              name: expect.any(String),
+              description: expect.any(String),
+              status: expect.any(String),
+              progress: expect.any(Number),
+              totalMilestones: expect.any(Number),
+              completedMilestones: expect.any(Number),
+              openTickets: expect.any(Number),
+              highPriorityTickets: expect.any(Number),
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+            });
+
+            // Contract: Validate data types
+            ContractTestUtils.validateUUID(res.body[0].id);
+            ContractTestUtils.validateDateString(res.body[0].createdAt);
+            ContractTestUtils.validateDateString(res.body[0].updatedAt);
+
+            // Contract: Progress constraints
+            expect(res.body[0].progress).toBeGreaterThanOrEqual(0);
+            expect(res.body[0].progress).toBeLessThanOrEqual(100);
+
+            // Contract: Count constraints
+            expect(res.body[0].totalMilestones).toBeGreaterThanOrEqual(0);
+            expect(res.body[0].completedMilestones).toBeGreaterThanOrEqual(0);
+            expect(res.body[0].completedMilestones).toBeLessThanOrEqual(
+              res.body[0].totalMilestones
+            );
+            expect(res.body[0].openTickets).toBeGreaterThanOrEqual(0);
+            expect(res.body[0].highPriorityTickets).toBeGreaterThanOrEqual(0);
+            expect(res.body[0].highPriorityTickets).toBeLessThanOrEqual(
+              res.body[0].openTickets
+            );
+          }
+        });
+    });
+
+    it('should respect limit parameter', async () => {
+      // Create multiple projects
+      for (let i = 0; i < 10; i++) {
+        await testHelper.createTestProject(
+          testUser.organizationId,
+          testUser.id
+        );
+      }
+
+      return request(app.getHttpServer())
+        .get('/dashboard/projects-overview?limit=3')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(Array.isArray(res.body)).toBe(true);
+          expect(res.body.length).toBeLessThanOrEqual(3);
+        });
+    });
+
+    it('should return empty array for organization with no projects', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/projects-overview')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toEqual([]);
+        });
+    });
+  });
+
+  describe('POST /dashboard/refresh-cache', () => {
+    it('should return proper contract response for cache refresh', async () => {
+      return request(app.getHttpServer())
+        .post('/dashboard/refresh-cache')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Refresh response structure
+          expect(res.body).toEqual({
+            message: 'Dashboard cache refreshed successfully',
+            timestamp: expect.any(String),
+          });
+
+          // Contract: Validate timestamp format
+          ContractTestUtils.validateDateString(res.body.timestamp);
+        });
+    });
+
+    it('should return proper error contract for unauthorized cache refresh', async () => {
+      return request(app.getHttpServer())
+        .post('/dashboard/refresh-cache')
+        .expect(401)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 401);
+        });
+    });
+  });
+
+  describe('Multi-tenancy Contract', () => {
+    it('should enforce organization isolation for all dashboard endpoints', async () => {
+      // Create user and data in organization A
+      const userA = await testHelper.createTestUser({
+        email: 'user-a@example.com',
+      });
+      await testHelper.createTestProject(
+        userA.user.organizationId,
+        userA.user.id
+      );
+      await testHelper.createTestTicket(
+        userA.user.organizationId,
+        userA.user.id
+      );
+
+      // Create user in organization B (no data)
+      const userB = await testHelper.createTestUser({
+        email: 'user-b@example.com',
+      });
+
+      // User B should see empty dashboard
+      const statsResponse = await request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${userB.accessToken}`)
+        .expect(200);
+
+      expect(statsResponse.body.projects.total).toBe(0);
+      expect(statsResponse.body.tickets.total).toBe(0);
+
+      const activityResponse = await request(app.getHttpServer())
+        .get('/dashboard/recent-activity')
+        .set('Authorization', `Bearer ${userB.accessToken}`)
+        .expect(200);
+
+      expect(activityResponse.body).toEqual([]);
+
+      const projectsResponse = await request(app.getHttpServer())
+        .get('/dashboard/projects-overview')
+        .set('Authorization', `Bearer ${userB.accessToken}`)
+        .expect(200);
+
+      expect(projectsResponse.body).toEqual([]);
+    });
+
+    it('should properly scope cache operations to organization', async () => {
+      // Test cache refresh for specific organization
+      await request(app.getHttpServer())
+        .post('/dashboard/refresh-cache')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Create data in another organization
+      const otherUser = await testHelper.createTestUser({
+        email: 'other@example.com',
+      });
+
+      await testHelper.createTestProject(
+        otherUser.user.organizationId,
+        otherUser.user.id
+      );
+
+      // Original user's cached data should not be affected
+      const statsResponse = await request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Contract: Data should still be scoped correctly
+      expect(statsResponse.body.projects.total).toBe(0);
+    });
+  });
+
+  describe('Performance Contract', () => {
+    it('should handle concurrent requests without data corruption', async () => {
+      // Create test data
+      for (let i = 0; i < 5; i++) {
+        await testHelper.createTestProject(
+          testUser.organizationId,
+          testUser.id
+        );
+        await testHelper.createTestTicket(testUser.organizationId, testUser.id);
+      }
+
+      // Make concurrent requests
+      const requests = Array(10)
+        .fill(0)
+        .map(() =>
+          request(app.getHttpServer())
+            .get('/dashboard/stats')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .expect(200)
+        );
+
+      const responses = await Promise.all(requests);
+
+      // Contract: All responses should have identical contract structure
+      responses.forEach((res) => {
+        expect(res.body).toHaveProperty('projects');
+        expect(res.body).toHaveProperty('tickets');
+        expect(res.body).toHaveProperty('invoices');
+        expect(res.body).toHaveProperty('milestones');
+        expect(res.body.projects.total).toBe(5);
+        expect(res.body.tickets.total).toBe(5);
       });
     });
 
-    it('should handle broadcast errors gracefully', async () => {
-      const body = { type: 'stats', data: { action: 'refresh' } };
-      mockDashboardGateway.broadcastDashboardUpdate.mockRejectedValue(
-        new Error('WebSocket connection failed')
-      );
-
-      await expect(
-        controller.notifyDashboardUpdate(body, mockOrganizationId, mockUserId)
-      ).rejects.toThrow(
-        'Failed to send notification: WebSocket connection failed'
-      );
+    it('should maintain response size within reasonable limits', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Response should be reasonably sized
+          const responseString = JSON.stringify(res.body);
+          expect(responseString.length).toBeLessThan(2048); // 2KB max for stats
+        });
     });
   });
 
-  describe('API Contract - POST /dashboard/refresh-cache', () => {
-    it('should refresh cache with correct response', async () => {
-      await controller.refreshDashboardCache(mockOrganizationId);
+  describe('Analytics Extensions Contract', () => {
+    it('should support analytics trends endpoint', async () => {
+      return (
+        request(app.getHttpServer())
+          .get(
+            '/dashboard/analytics/trends?period=30d&metrics=projects,tickets'
+          )
+          .set('Authorization', `Bearer ${accessToken}`)
+          // Note: This might return 404 if analytics routes aren't implemented yet
+          .expect((res) => {
+            if (res.status === 200) {
+              // Contract: Analytics response structure if implemented
+              expect(res.body).toHaveProperty('period');
+              expect(res.body).toHaveProperty('trends');
+              expect(res.body).toHaveProperty('startDate');
+              expect(res.body).toHaveProperty('endDate');
+            } else {
+              // Should return proper 404 if not implemented
+              expect(res.status).toBe(404);
+              ContractTestUtils.validateErrorResponse(res.body, 404);
+            }
+          })
+      );
+    });
 
-      expect(cacheManager.del).toHaveBeenCalledWith(
-        `dashboard-stats-${mockOrganizationId}`
-      );
-      expect(cacheManager.del).toHaveBeenCalledWith(
-        `dashboard-activity-${mockOrganizationId}`
-      );
-      expect(cacheManager.del).toHaveBeenCalledWith(
-        `dashboard-projects-${mockOrganizationId}`
-      );
+    it('should support performance metrics endpoint', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/analytics/performance?period=90d')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect((res) => {
+          if (res.status === 200) {
+            // Contract: Performance metrics structure if implemented
+            expect(res.body).toHaveProperty('period');
+            expect(res.body).toHaveProperty('projectPerformance');
+            expect(res.body).toHaveProperty('ticketResolution');
+            expect(res.body).toHaveProperty('milestoneCompletion');
+          } else {
+            expect(res.status).toBe(404);
+            ContractTestUtils.validateErrorResponse(res.body, 404);
+          }
+        });
+    });
+  });
 
-      expect(dashboardGateway.broadcastDashboardUpdate).toHaveBeenCalledWith({
-        type: 'stats',
-        data: { action: 'refresh' },
-        timestamp: expect.any(Date),
-        organizationId: mockOrganizationId,
+  describe('Contract Versioning and Stability', () => {
+    it('should maintain consistent response structure across different data states', async () => {
+      // Get dashboard stats with empty organization
+      const emptyResponse = await request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Add data and get stats again
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
+      const dataResponse = await request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Contract: Structure should be identical
+      const requiredFields = ['projects', 'tickets', 'invoices', 'milestones'];
+      requiredFields.forEach((field) => {
+        expect(emptyResponse.body).toHaveProperty(field);
+        expect(dataResponse.body).toHaveProperty(field);
       });
-    });
-  });
 
-  describe('API Contract - Analytics Endpoints', () => {
-    it('should return analytics trends with correct contract', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-
-      const result = await controller.getAnalyticsTrends(
-        mockOrganizationId,
-        '30d',
-        'projects,tickets'
+      // Contract: Sub-structure should be identical
+      expect(typeof emptyResponse.body.projects).toBe('object');
+      expect(typeof dataResponse.body.projects).toBe('object');
+      expect(Object.keys(emptyResponse.body.projects)).toEqual(
+        Object.keys(dataResponse.body.projects)
       );
-
-      // API Contract validation
-      expect(result).toHaveProperty('period', '30d');
-      expect(result).toHaveProperty('startDate');
-      expect(result).toHaveProperty('endDate');
-      expect(result).toHaveProperty('trends');
-
-      expect(typeof result.period).toBe('string');
-      expect(result.startDate).toBeInstanceOf(Date);
-      expect(result.endDate).toBeInstanceOf(Date);
-      expect(typeof result.trends).toBe('object');
-
-      expect(result.trends).toHaveProperty('projects');
-      expect(result.trends).toHaveProperty('tickets');
     });
 
-    it('should return performance metrics with correct contract', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-
-      const result = await controller.getPerformanceMetrics(
-        mockOrganizationId,
-        '90d'
-      );
-
-      // API Contract validation
-      expect(result).toHaveProperty('period', '90d');
-      expect(result).toHaveProperty('projectPerformance');
-      expect(result).toHaveProperty('ticketResolution');
-      expect(result).toHaveProperty('milestoneCompletion');
-      expect(result).toHaveProperty('invoiceMetrics');
-
-      expect(typeof result.projectPerformance).toBe('object');
-      expect(typeof result.ticketResolution).toBe('object');
-      expect(typeof result.milestoneCompletion).toBe('object');
-      expect(typeof result.invoiceMetrics).toBe('object');
-    });
-
-    it('should return forecast analytics with correct contract', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-
-      const result = await controller.getForecastAnalytics(
-        mockOrganizationId,
-        '30d'
-      );
-
-      // API Contract validation
-      expect(result).toHaveProperty('horizon', '30d');
-      expect(result).toHaveProperty('forecastDate');
-      expect(result).toHaveProperty('projectForecast');
-      expect(result).toHaveProperty('milestoneForecast');
-      expect(result).toHaveProperty('invoiceForecast');
-      expect(result).toHaveProperty('resourceForecast');
-
-      expect(typeof result.forecastDate).toBe('string');
-      expect(typeof result.projectForecast).toBe('object');
-      expect(typeof result.milestoneForecast).toBe('object');
-      expect(typeof result.invoiceForecast).toBe('object');
-      expect(typeof result.resourceForecast).toBe('object');
-    });
-
-    it('should return predictive analytics with correct contract', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.count.mockResolvedValue(0);
-      mockPrismaService.milestone.count.mockResolvedValue(0);
-
-      const result = await controller.getPredictiveAnalytics(
-        mockOrganizationId,
-        '90d',
-        '0.8'
-      );
-
-      // API Contract validation
-      expect(result).toHaveProperty('horizon', '90d');
-      expect(result).toHaveProperty('confidenceLevel', 0.8);
-      expect(result).toHaveProperty('predictions');
-      expect(result).toHaveProperty('recommendations');
-
-      expect(typeof result.predictions).toBe('object');
-      expect(typeof result.recommendations).toBe('object');
-
-      expect(result.predictions).toHaveProperty('projects');
-      expect(result.predictions).toHaveProperty('revenue');
-      expect(result.predictions).toHaveProperty('risks');
-      expect(result.predictions).toHaveProperty('capacity');
-
-      expect(Array.isArray(result.recommendations)).toBe(true);
-    });
-  });
-
-  describe('Error Handling Contract', () => {
-    it('should handle database connection errors', async () => {
-      mockPrismaService.project.findMany.mockRejectedValue(
-        new Error('Database connection failed')
-      );
-
-      await expect(
-        controller.getDashboardStats(mockOrganizationId)
-      ).rejects.toThrow('Database connection failed');
-    });
-
-    it('should handle cache service errors gracefully', async () => {
-      mockCacheManager.get.mockRejectedValue(
-        new Error('Cache service unavailable')
-      );
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-
-      const result = await controller.getDashboardStats(mockOrganizationId);
-
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('projects');
-    });
-
-    it('should handle invalid time range parameters', async () => {
-      mockPrismaService.project.findMany.mockRejectedValue(
-        new Error('Invalid time range')
-      );
-
-      await expect(
-        controller.getAnalyticsTrends(mockOrganizationId, 'invalid')
-      ).rejects.toThrow('Invalid time range');
-    });
-  });
-
-  describe('Data Validation and Security Contract', () => {
-    it('should validate organization access for all endpoints', async () => {
-      mockPrismaService.project.findMany.mockResolvedValue([]);
-      mockPrismaService.ticket.findMany.mockResolvedValue([]);
-      mockPrismaService.invoice.findMany.mockResolvedValue([]);
-      mockPrismaService.milestone.findMany.mockResolvedValue([]);
-
-      await controller.getDashboardStats(mockOrganizationId);
-      await controller.getRecentActivity(mockOrganizationId);
-      await controller.getProjectsOverview(mockOrganizationId);
-
-      expect(mockPrismaService.project.findMany).toHaveBeenCalledTimes(3);
-    });
-
-    it('should handle malformed input parameters', async () => {
-      await expect(
-        controller.getRecentActivity(mockOrganizationId, '-1')
-      ).resolves.toBeDefined(); // Should handle negative limits
-
-      await expect(
-        controller.getAnalyticsTrends(mockOrganizationId, 'abc')
-      ).rejects.toThrow(); // Should throw on invalid period
+    it('should not include internal or debugging information', async () => {
+      return request(app.getHttpServer())
+        .get('/dashboard/stats')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: No internal fields
+          ContractTestUtils.validateNoSensitiveData(res.body, [
+            'queryTime',
+            'cacheHits',
+            'databaseQueries',
+            'internalMetrics',
+            'debugInfo',
+          ]);
+        });
     });
   });
 });

@@ -1,35 +1,29 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Query,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
 } from '@nestjs/common';
-import { ProjectService } from './project.service';
-import type { CreateProjectDto, UpdateProjectDto } from './project.service';
-import { Roles, Role } from '../common/decorators/roles.decorator';
-import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
+import { Role, Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import type { CreateProjectDto, UpdateProjectDto } from './project.service';
+import { ProjectService } from './project.service';
 
 @Controller('projects')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(AuthGuard, RolesGuard) // Use authentication and roles guard
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-<<<<<<< HEAD
   @UseGuards(ThrottlerGuard)
   @Post()
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Finance) // Only these roles can create projects
-=======
-  @Post()
-  @UseGuards(ThrottlerGuard)
-  @Roles(Role.OrgOwner, Role.OrgAdmin) // Only admin roles can create
->>>>>>> origin/main
   create(
     @Body() createProjectDto: CreateProjectDto,
     @CurrentOrganizationId() organizationId: string
@@ -38,6 +32,7 @@ export class ProjectController {
   }
 
   @Get()
+<<<<<<< HEAD
   @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer, Role.Member) // Multiple roles allowed
   findAll(
     @CurrentOrganizationId() organizationId: string,
@@ -46,6 +41,14 @@ export class ProjectController {
     @Query('limit') limit?: string,
     @Query('status') status?: string,
     @Query('search') search?: string
+=======
+  @Roles(Role.OrgOwner, Role.OrgAdmin, Role.Reviewer)
+  async findAll(
+    @Query('view') view?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('organizationId') organizationId?: string
+>>>>>>> origin/dev
   ) {
     const normalizedView =
       view?.toLowerCase() === 'detail' ? 'detail' : 'summary';

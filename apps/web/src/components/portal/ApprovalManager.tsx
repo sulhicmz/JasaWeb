@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 interface Approval {
   id: string;
@@ -68,7 +68,7 @@ const ApprovalManager: React.FC<ApprovalManagerProps> = ({
     e.preventDefault();
 
     try {
-      const response = await apiClient.post('/approvals', {
+      const response = await api.post('/approvals', {
         ...formData,
         projectId,
       });
@@ -91,7 +91,7 @@ const ApprovalManager: React.FC<ApprovalManagerProps> = ({
     if (!reviewingApproval) return;
 
     try {
-      const response = await apiClient.patch(
+      const response = await api.patch(
         `/approvals/${reviewingApproval.id}`,
         reviewData
       );

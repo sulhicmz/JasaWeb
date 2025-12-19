@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 interface ChartData {
   labels: string[];
@@ -36,6 +36,11 @@ interface AnalyticsTrends {
     milestones: TrendData;
     invoices: TrendData;
   };
+}
+
+interface DailyDataPoint {
+  date: string;
+  count: number;
 }
 
 interface PerformanceMetric {
@@ -114,9 +119,9 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
 
       const [trendsResponse, performanceResponse, predictiveResponse] =
         await Promise.all([
-          apiClient.get(`/dashboard/analytics/trends?period=${selectedPeriod}`),
-          apiClient.get('/dashboard/analytics/performance'),
-          apiClient.get('/dashboard/analytics/predictive'),
+          api.get(`/dashboard/analytics/trends?period=${selectedPeriod}`),
+          api.get('/dashboard/analytics/performance'),
+          api.get('/dashboard/analytics/predictive'),
         ]);
 
       if (trendsResponse.data && !trendsResponse.error) {
@@ -528,11 +533,12 @@ const AdvancedDashboardCharts: React.FC<AdvancedDashboardChartsProps> = ({
             <div key={key}>
               {renderLineChart(
                 {
-                  labels: data.daily?.map((d: any) => d.date) || [],
+                  labels:
+                    data.daily?.map((_, index) => `Day ${index + 1}`) || [],
                   datasets: [
                     {
                       label: key.charAt(0).toUpperCase() + key.slice(1),
-                      data: data.daily?.map((d: any) => d.count) || [],
+                      data: data.daily || [],
                       backgroundColor: ['#3B82F6'],
                       borderColor: ['#2563EB'],
                       tension: 0.4,

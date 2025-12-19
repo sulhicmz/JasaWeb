@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import apiClient from '../../services/apiClient';
+=======
+import { getApiUrl } from '../../config/api';
+>>>>>>> origin/dev
 
 interface Activity {
   id: string;
@@ -26,9 +30,21 @@ const ActivityFeed: React.FC = () => {
       setLoading(true);
       setError(null);
 
+<<<<<<< HEAD
       const limit = import.meta.env.DEFAULT_PAGE_LIMIT || '10';
       const response = await apiClient.get(
         `/dashboard/recent-activity?limit=${limit}`
+=======
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(
+        `${getApiUrl()}/dashboard/recent-activity?limit=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+>>>>>>> origin/dev
       );
 
       if (response.error || !response.data) {

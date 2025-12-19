@@ -190,8 +190,11 @@ export class SecurityController {
 
     // Calculate average
     const averageVulnerabilities =
-      reports.reduce((sum, report) => sum + report.totalVulnerabilities, 0) /
-      reports.length;
+      reports.reduce(
+        (sum: number, report: SecurityReport) =>
+          sum + report.totalVulnerabilities,
+        0
+      ) / reports.length;
 
     return {
       totalScans: reports.length,

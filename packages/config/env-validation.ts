@@ -339,9 +339,31 @@ export const ENV_SCHEMA: Record<string, EnvSchema> = {
   NODE_ENV: {
     type: 'string',
     required: false,
-    pattern: /^(development|production|test)$/,
     defaultValue: 'development',
-    description: 'Application environment (development, production, or test)',
+    pattern: /^(development|production|test)$/,
+    description: 'Application environment',
+  },
+
+  // Test Variables (only for testing)
+  TEST_STRING: {
+    type: 'string',
+    required: false,
+    description: 'Test string variable',
+  },
+  TEST_NUMBER: {
+    type: 'number',
+    required: false,
+    description: 'Test number variable',
+  },
+  TEST_BOOLEAN: {
+    type: 'boolean',
+    required: false,
+    description: 'Test boolean variable',
+  },
+  NON_EXISTENT: {
+    type: 'string',
+    required: false,
+    description: 'Test non-existent variable',
   },
   PORT: {
     type: 'number',
@@ -615,4 +637,49 @@ export function generateSecureSecret(length: number = 32): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+export function getEnvArray(key: string, separator: string = ','): string[] {
+  const value = getOptionalEnv(key);
+  if (!value) return [];
+  return value
+    .split(separator)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function getEnvUrl(key: string): string {
+  const value = getRequiredEnv(key);
+  try {
+    new URL(value);
+    return value;
+  } catch {
+    throw new EnvValidationError(
+      `Environment variable ${key} must be a valid URL`
+    );
+  }
+}
+
+export function getEnvNumberMin(key: string, min: number): number {
+  const value = getEnvNumber(key);
+  if (value < min) {
+    throw new EnvValidationError(
+      `Environment variable ${key} must be at least ${min}`
+    );
+  }
+  return value;
+}
+
+export function getEnvEmail(key: string): string {
+  const value = getRequiredEnv(key);
+  validateEmail(value);
+  return value;
+}
+
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new EnvValidationError(`Invalid email format: ${email}`);
+  }
+  return true;
 }

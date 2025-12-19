@@ -1,411 +1,510 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AuthService } from '../../src/auth/auth.service';
-import { UsersService } from '../../src/users/users.service';
-import { JwtService } from '@nestjs/jwt';
-import { RefreshTokenService } from '../../src/auth/refresh-token.service';
-import { PasswordService } from '../../src/auth/password.service';
-import { PrismaService } from '../../src/common/database/prisma.service';
-import { LoginUserDto } from '../../src/auth/dto/login-user.dto';
-import { CreateUserDto } from '../../src/users/dto/create-user.dto';
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../../src/app.module';
+import {
+  DatabaseTestHelper,
+  ContractTestUtils,
+  ContractTestFixtures,
+} from '@jasaweb/testing';
 
-describe('AuthService API Contract Tests', () => {
-  let service: AuthService;
+/**
+ * API Contract Test Suite for Authentication Endpoints
+ *
+ * This suite tests the contract between frontend and backend API.
+ * It ensures API responses remain stable and don't break clients.
+ *
+ * Contract tests focus on:
+ * - Response structure and data types
+ * - Status codes for different scenarios
+ * - Error response format
+ * - HTTP headers and metadata
+ */
+describe('Authentication API Contract Tests', () => {
+  let app: INestApplication;
+  let testHelper: DatabaseTestHelper;
 
-  const mockUsersService = {
-    findByEmail: vi.fn(),
-    create: vi.fn(),
-    updatePasswordHash: vi.fn(),
-  };
+  beforeAll(async () => {
+    testHelper = new DatabaseTestHelper();
+    await testHelper.setupTestDatabase();
 
-  const mockJwtService = {
-    sign: vi.fn(),
-    verify: vi.fn(),
-    verifyAsync: vi.fn(),
-    signAsync: vi.fn(),
-  };
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-  const mockRefreshTokenService = {
-    createRefreshToken: vi.fn(),
-    validateRefreshToken: vi.fn(),
-    revokeRefreshToken: vi.fn(),
-  };
-
-  const mockPasswordService = {
-    hashPassword: vi.fn(),
-    verifyPassword: vi.fn(),
-  };
-
-  const mockPrismaService = {
-    user: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-    organization: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-    membership: {
-      findMany: vi.fn(),
-      findFirst: vi.fn(),
-      create: vi.fn(),
-    },
-  };
-
-  beforeEach(() => {
-    service = new AuthService(
-      mockUsersService as unknown as UsersService,
-      mockJwtService as unknown as JwtService,
-      mockRefreshTokenService as unknown as RefreshTokenService,
-      mockPasswordService as unknown as PasswordService,
-      mockPrismaService as unknown as PrismaService
-    );
-
-    vi.clearAllMocks();
+    app = moduleFixture.createNestApplication();
+    await app.init();
   });
 
-  describe('API Contract - POST /auth/login', () => {
-    it('should return login response with correct contract', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: 'password123',
-        organizationId: 'org-1',
-      };
+  afterAll(async () => {
+    await testHelper.cleanup();
+    await app.close();
+  });
 
-      const mockUser = {
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Test User',
-        password: 'hashedPassword',
-        organizationId: 'org-1',
-        passwordHashVersion: 'v1' as const,
-      };
+  beforeEach(async () => {
+    await testHelper.clearDatabase();
+  });
 
-      const mockMembership = {
-        id: 'membership-1',
-        userId: 'user-1',
-        organizationId: 'org-1',
-        role: 'owner',
-      };
+  describe('POST /auth/register', () => {
+    const validPayload = {
+      email: 'test@example.com',
+      password: 'SecurePass123!',
+      firstName: 'John',
+      lastName: 'Doe',
+      organizationName: 'Test Organization',
+    };
 
-      // Mock user lookup
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+    it('should return proper contract response on successful registration', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/register')
+        .send(validPayload)
+        .expect(201)
+        .expect((res) => {
+          // Contract: Response structure validation
+          expect(res.body).toHaveProperty('user');
+          expect(res.body).toHaveProperty('tokens');
+          expect(res.body).toHaveProperty('message');
 
-      // Mock password verification
-      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
+          // Contract: User object structure
+          expect(res.body.user).toEqual({
+            id: expect.any(String),
+            email: validPayload.email,
+            firstName: validPayload.firstName,
+            lastName: validPayload.lastName,
+            organizationId: expect.any(String),
+            organization: {
+              id: expect.any(String),
+              name: validPayload.organizationName,
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+            },
+            role: 'OWNER',
+            isActive: true,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+            password: undefined, // Should not return password
+          });
 
-      // Mock token generation
-      mockRefreshTokenService.createRefreshToken.mockResolvedValue({
-        token: 'access-token',
-        refreshToken: 'refresh-token',
-        expiresAt: new Date(),
-      });
+          // Contract: Tokens object structure
+          expect(res.body.tokens).toEqual({
+            accessToken: expect.any(String),
+            refreshToken: expect.any(String),
+            expiresIn: expect.any(Number),
+          });
 
-      // Mock membership lookup
-      mockPrismaService.membership.findFirst.mockResolvedValue(mockMembership);
+          // Contract: Message format
+          expect(res.body.message).toBe('User registered successfully');
 
-      const result = await service.login(loginUserDto);
-
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result).toHaveProperty('expiresAt');
-      expect(result).toHaveProperty('user');
-
-      // Token contract
-      expect(typeof result.access_token).toBe('string');
-      expect(typeof result.refreshToken).toBe('string');
-      expect(result.expiresAt).toBeInstanceOf(Date);
-
-      // User contract
-      expect(result.user).toHaveProperty('id');
-      expect(result.user).toHaveProperty('email');
-      expect(result.user).toHaveProperty('name');
-      expect(result.user).toHaveProperty('profilePicture');
-
-      expect(typeof result.user.id).toBe('string');
-      expect(typeof result.user.email).toBe('string');
-      expect(typeof result.user.name).toBe('string');
-
-      // Verify user data matches expected structure
-      expect(result.user).toEqual({
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Test User',
-        profilePicture: undefined,
-      });
+          // Contract: Response headers
+          expect(res.headers['content-type']).toMatch(/json/);
+        });
     });
 
-    it('should reject login for non-existent user', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'nonexistent@example.com',
-        password: 'password123',
-        organizationId: 'org-1',
-      };
+    it('should return proper error contract for invalid email', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          ...validPayload,
+          email: 'invalid-email',
+        })
+        .expect(400)
+        .expect((res) => {
+          // Contract: Error response structure
+          expect(res.body).toHaveProperty('error');
+          expect(res.body).toHaveProperty('message');
+          expect(res.body).toHaveProperty('statusCode');
+          expect(res.body).toHaveProperty('timestamp');
 
-      mockUsersService.findByEmail.mockResolvedValue(null);
-
-      await expect(service.login(loginUserDto)).rejects.toThrow(
-        'Invalid credentials'
-      );
+          // Contract: Error data types
+          expect(res.body.error).toBe('Bad Request');
+          expect(res.body.statusCode).toBe(400);
+          expect(res.body.message).toContain('email');
+          expect(res.body.timestamp).toMatch(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/
+          );
+        });
     });
 
-    it('should reject login for invalid password', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: 'wrongpassword',
-        organizationId: 'org-1',
-      };
+    it('should return proper error contract for weak password', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          ...validPayload,
+          password: '123',
+        })
+        .expect(400)
+        .expect((res) => {
+          // Contract: Validation error format
+          expect(res.body.error).toBe('Bad Request');
+          expect(res.body.statusCode).toBe(400);
+          expect(Array.isArray(res.body.message)).toBe(true);
+          expect(
+            res.body.message.some((msg: string) => msg.includes('password'))
+          ).toBe(true);
+        });
+    });
 
-      const mockUser = {
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Test User',
-        password: 'hashedPassword',
-        organizationId: 'org-1',
-        passwordHashVersion: 'v1' as const,
-      };
+    it('should return proper error contract for duplicate email', async () => {
+      // First registration
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send(validPayload)
+        .expect(201);
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: false });
-
-      await expect(service.login(loginUserDto)).rejects.toThrow(
-        'Invalid credentials'
-      );
+      // Duplicate registration
+      return request(app.getHttpServer())
+        .post('/auth/register')
+        .send(validPayload)
+        .expect(409)
+        .expect((res) => {
+          // Contract: Conflict error format
+          expect(res.body.error).toBe('Conflict');
+          expect(res.body.statusCode).toBe(409);
+          expect(res.body.message).toContain('email');
+          expect(res.body.message).toContain('already exists');
+        });
     });
   });
 
-  describe('API Contract - POST /auth/register', () => {
-    it('should return registration response with correct contract', async () => {
-      const createUserDto: CreateUserDto = {
-        email: 'newuser@example.com',
-        password: 'password123',
-        name: 'New User',
-      };
+  describe('POST /auth/login', () => {
+    const userData = {
+      email: 'login@example.com',
+      password: 'SecurePass123!',
+      firstName: 'Login',
+      lastName: 'User',
+      organizationName: 'Login Test Org',
+    };
 
-      const mockUser = {
-        id: 'user-2',
-        email: 'newuser@example.com',
-        name: 'New User',
-        password: 'hashedPassword',
-        organizationId: 'org-2',
-        passwordHashVersion: 'v1' as const,
-      };
+    beforeEach(async () => {
+      // Register user first
+      await request(app.getHttpServer()).post('/auth/register').send(userData);
+    });
 
-      const mockOrganization = {
-        id: 'org-2',
-        name: 'New Organization',
-        slug: 'new-org',
-      };
+    it('should return proper contract response on successful login', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: userData.email,
+          password: userData.password,
+        })
+        .expect(200)
+        .expect((res) => {
+          // Contract: Login response structure
+          expect(res.body).toHaveProperty('user');
+          expect(res.body).toHaveProperty('tokens');
 
-      // Mock existing user check (null means no existing user)
-      mockUsersService.findByEmail.mockResolvedValue(null);
+          // Contract: User object (should match register response but without org details)
+          expect(res.body.user).toEqual({
+            id: expect.any(String),
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            organizationId: expect.any(String),
+            organization: {
+              id: expect.any(String),
+              name: userData.organizationName,
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+            },
+            role: 'OWNER',
+            isActive: true,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+            password: undefined,
+          });
 
-      // Mock user creation
-      mockUsersService.create.mockResolvedValue(mockUser);
+          // Contract: Tokens object (should match register tokens structure)
+          expect(res.body.tokens).toEqual({
+            accessToken: expect.any(String),
+            refreshToken: expect.any(String),
+            expiresIn: expect.any(Number),
+          });
 
-      // Mock password hashing
-      mockPasswordService.hashPassword.mockResolvedValue({ hash: 'hashedPassword' });
+          // Contract: Token format validation
+          expect(res.body.tokens.accessToken).toMatch(
+            /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
+          );
+          expect(res.body.tokens.refreshToken).toMatch(
+            /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
+          );
+          expect(res.body.tokens.expiresIn).toBeGreaterThan(0);
+        });
+    });
 
-      // Mock token generation
-      mockRefreshTokenService.createRefreshToken.mockResolvedValue({
-        token: 'access-token',
-        refreshToken: 'refresh-token',
-        expiresAt: new Date(),
-      });
+    it('should return proper error contract for invalid credentials', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: userData.email,
+          password: 'wrong-password',
+        })
+        .expect(401)
+        .expect((res) => {
+          // Contract: Auth error format
+          expect(res.body.error).toBe('Unauthorized');
+          expect(res.body.statusCode).toBe(401);
+          expect(res.body.message).toBe(' Invalid credentials');
+        });
+    });
 
-      // Mock existing membership check (null means no existing membership)
-      mockPrismaService.membership.findFirst.mockResolvedValue(null);
-
-      // Mock organization creation
-      mockPrismaService.organization.create.mockResolvedValue(
-        mockOrganization
-      );
-
-      // Mock membership creation
-      mockPrismaService.membership.create.mockResolvedValue({
-        id: 'membership-2',
-        userId: 'user-2',
-        organizationId: 'org-2',
-        role: 'owner',
-      });
-
-      const result = await service.register(createUserDto);
-
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('access_token');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result).toHaveProperty('expiresAt');
-      expect(result).toHaveProperty('user');
-
-      // Token contract
-      expect(typeof result.access_token).toBe('string');
-      expect(typeof result.refreshToken).toBe('string');
-      expect(result.expiresAt).toBeInstanceOf(Date);
-
-      // User contract
-      expect(result.user).toHaveProperty('id');
-      expect(result.user).toHaveProperty('email');
-      expect(result.user).toHaveProperty('name');
-      expect(result.user).toHaveProperty('profilePicture');
-
-      expect(typeof result.user.id).toBe('string');
-      expect(typeof result.user.email).toBe('string');
-      expect(typeof result.user.name).toBe('string');
-
-      // Verify user data matches expected structure
-      expect(result.user).toEqual({
-        id: 'user-2',
-        email: 'newuser@example.com',
-        name: 'New User',
-        profilePicture: undefined,
-      });
+    it('should return proper error contract for non-existent user', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'nonexistent@example.com',
+          password: userData.password,
+        })
+        .expect(401)
+        .expect((res) => {
+          // Contract: Should not reveal user existence
+          expect(res.body.error).toBe('Unauthorized');
+          expect(res.body.statusCode).toBe(401);
+          expect(res.body.message).toBe(' Invalid credentials');
+        });
     });
   });
 
-  describe('API Contract - User Validation', () => {
-    it('should validate user credentials correctly', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: 'password123',
-        organizationId: 'org-1',
-      };
+  describe('POST /auth/refresh', () => {
+    let validRefreshToken: string;
 
-      const mockUser = {
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Test User',
-        password: 'hashedPassword',
-        organizationId: 'org-1',
-        passwordHashVersion: 'v1' as const,
-      };
+    beforeEach(async () => {
+      // Register and login to get refresh token
+      const registerResponse = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'refresh@example.com',
+          password: 'SecurePass123!',
+          firstName: 'Refresh',
+          lastName: 'User',
+          organizationName: 'Refresh Test Org',
+        });
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
-
-      const result = await service.validateUser(
-        loginUserDto.email,
-        loginUserDto.password
-      );
-
-      expect(result).toBeDefined();
-      expect(result).toEqual(expect.objectContaining({
-        id: mockUser.id,
-        email: mockUser.email
-      }));
+      validRefreshToken = registerResponse.body.tokens.refreshToken;
     });
 
-    it('should return null for invalid credentials', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: 'wrongpassword',
-        organizationId: 'org-1',
-      };
+    it('should return proper contract response on successful refresh', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refreshToken: validRefreshToken })
+        .expect(200)
+        .expect((res) => {
+          // Contract: Refresh response structure
+          expect(res.body).toEqual({
+            accessToken: expect.any(String),
+            refreshToken: expect.any(String),
+            expiresIn: expect.any(Number),
+          });
 
-      mockUsersService.findByEmail.mockResolvedValue(null);
+          // Contract: Token formats
+          expect(res.body.accessToken).toMatch(
+            /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
+          );
+          expect(res.body.refreshToken).toMatch(
+            /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/
+          );
+          expect(res.body.expiresIn).toBeGreaterThan(0);
 
-      const result = await service.validateUser(
-        loginUserDto.email,
-        loginUserDto.password
-      );
+          // Contract: Should get new tokens (not the same as before)
+          expect(res.body.accessToken).not.toBe(validRefreshToken);
+          expect(res.body.refreshToken).not.toBe(validRefreshToken);
+        });
+    });
 
-      expect(result).toBeNull();
+    it('should return proper error contract for invalid refresh token', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refreshToken: 'invalid-token' })
+        .expect(401)
+        .expect((res) => {
+          // Contract: Token error format
+          expect(res.body.error).toBe('Unauthorized');
+          expect(res.body.statusCode).toBe(401);
+          expect(res.body.message).toBe('Invalid refresh token');
+        });
+    });
+
+    it('should return proper error contract for missing refresh token', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({})
+        .expect(400)
+        .expect((res) => {
+          // Contract: Validation error
+          expect(res.body.error).toBe('Bad Request');
+          expect(res.body.statusCode).toBe(400);
+          expect(res.body.message).toContain('refreshToken');
+        });
     });
   });
 
-  describe('Error Handling Contract', () => {
-    it('should handle database connection errors', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: 'password123',
-        organizationId: 'org-1',
-      };
+  describe('POST /auth/logout', () => {
+    let validAccessToken: string;
 
-      mockUsersService.findByEmail.mockRejectedValue(
-        new Error('Database connection failed')
-      );
+    beforeEach(async () => {
+      const registerResponse = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'logout@example.com',
+          password: 'SecurePass123!',
+          firstName: 'Logout',
+          lastName: 'User',
+          organizationName: 'Logout Test Org',
+        });
 
-      await expect(service.login(loginUserDto)).rejects.toThrow(
-        'Database connection failed'
-      );
+      validAccessToken = registerResponse.body.tokens.accessToken;
     });
 
-    it('should handle token generation errors', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: 'password123',
-        organizationId: 'org-1',
-      };
+    it('should return proper contract response on successful logout', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', `Bearer ${validAccessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Logout response structure
+          expect(res.body).toEqual({
+            message: 'Logged out successfully',
+          });
+        });
+    });
 
-      const mockUser = {
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Test User',
-        password: 'hashedPassword',
-        organizationId: 'org-1',
-        passwordHashVersion: 'v1' as const,
-      };
+    it('should return proper error contract for missing authorization', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .expect(401)
+        .expect((res) => {
+          // Contract: Missing auth error
+          expect(res.body.error).toBe('Unauthorized');
+          expect(res.body.statusCode).toBe(401);
+        });
+    });
 
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: true });
+    it('should return proper error contract for invalid token', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401)
+        .expect((res) => {
+          // Contract: Invalid token error
+          expect(res.body.error).toBe('Unauthorized');
+          expect(res.body.statusCode).toBe(401);
+        });
+    });
+  });
 
-      // We also need to mock the membership check here, as it happens before token generation
-      mockPrismaService.membership.findFirst.mockResolvedValue({
-        id: 'membership-1',
-        userId: 'user-1',
-        organizationId: 'org-1',
-        role: 'owner',
+  describe('GET /auth/profile', () => {
+    let validAccessToken: string;
+    let userData: any;
+
+    beforeEach(async () => {
+      const registerResponse = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'profile@example.com',
+          password: 'SecurePass123!',
+          firstName: 'Profile',
+          lastName: 'User',
+          organizationName: 'Profile Test Org',
+        });
+
+      validAccessToken = registerResponse.body.tokens.accessToken;
+      userData = registerResponse.body.user;
+    });
+
+    it('should return proper contract response for profile retrieval', async () => {
+      return request(app.getHttpServer())
+        .get('/auth/profile')
+        .set('Authorization', `Bearer ${validAccessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Profile response should match user structure
+          expect(res.body).toEqual({
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            organizationId: userData.organizationId,
+            organization: userData.organization,
+            role: 'OWNER',
+            isActive: true,
+            createdAt: userData.createdAt,
+            updatedAt: userData.updatedAt,
+            password: undefined, // Never include password
+          });
+        });
+    });
+
+    it('should return proper error contract for unauthorized access', async () => {
+      return request(app.getHttpServer())
+        .get('/auth/profile')
+        .expect(401)
+        .expect((res) => {
+          // Contract: Unauthorized error format
+          expect(res.body.error).toBe('Unauthorized');
+          expect(res.body.statusCode).toBe(401);
+        });
+    });
+  });
+
+  describe('Contract Versioning and Backward Compatibility', () => {
+    it('should maintain response structure version consistency', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'version@example.com',
+          password: 'SecurePass123!',
+          firstName: 'Version',
+          lastName: 'Test',
+          organizationName: 'Version Test Org',
+        })
+        .expect(201);
+
+      // Contract: Ensure response has all required fields
+      const requiredFields = ['user', 'tokens', 'message'];
+      requiredFields.forEach((field) => {
+        expect(response.body).toHaveProperty(field);
       });
 
-      mockRefreshTokenService.createRefreshToken.mockRejectedValue(
-        new Error('Token generation failed')
-      );
+      // Contract: Ensure nested objects have required structure
+      const userFields = [
+        'id',
+        'email',
+        'firstName',
+        'lastName',
+        'organizationId',
+        'organization',
+        'role',
+        'isActive',
+        'createdAt',
+        'updatedAt',
+      ];
+      userFields.forEach((field) => {
+        expect(response.body.user).toHaveProperty(field);
+      });
 
-      await expect(service.login(loginUserDto)).rejects.toThrow(
-        'Token generation failed'
-      );
-    });
-  });
-
-  describe('Data Validation Contract', () => {
-    it('should validate email format', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'invalid-email',
-        password: 'password123',
-        organizationId: 'org-1',
-      };
-
-      // This should be handled by DTO validation, but we test service behavior
-      mockUsersService.findByEmail.mockResolvedValue(null);
-
-      await expect(service.login(loginUserDto)).rejects.toThrow(
-        'Invalid credentials'
-      );
+      const tokenFields = ['accessToken', 'refreshToken', 'expiresIn'];
+      tokenFields.forEach((field) => {
+        expect(response.body.tokens).toHaveProperty(field);
+      });
     });
 
-    it('should handle empty password', async () => {
-      const loginUserDto: LoginUserDto = {
-        email: 'user@example.com',
-        password: '',
-        organizationId: 'org-1',
-      };
+    it('should not include sensitive information in responses', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'sensitive@example.com',
+          password: 'SecurePass123!',
+          firstName: 'Sensitive',
+          lastName: 'Test',
+          organizationName: 'Sensitive Test Org',
+        })
+        .expect(201);
 
-      const mockUser = {
-        id: 'user-1',
-        email: 'user@example.com',
-        name: 'Test User',
-        password: 'hashedPassword',
-        organizationId: 'org-1',
-        passwordHashVersion: 'v1' as const,
-      };
-
-      mockUsersService.findByEmail.mockResolvedValue(mockUser);
-      mockPasswordService.verifyPassword.mockResolvedValue({ isValid: false });
-
-      await expect(service.login(loginUserDto)).rejects.toThrow(
-        'Invalid credentials'
-      );
+      // Contract: Security - ensure no sensitive data leaks
+      expect(response.body.user.password).toBeUndefined();
+      expect(response.body.user).not.toHaveProperty('passwordHash');
+      expect(response.body.user).not.toHaveProperty('salt');
+      expect(response.body.tokens).not.toHaveProperty('tokenType');
+      expect(response.body).not.toHaveProperty('internalData');
     });
   });
 });

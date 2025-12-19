@@ -1,12 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import apiClient from '../../services/apiClient';
+=======
+import { getApiUrl } from '../../config/api';
+>>>>>>> origin/dev
 
 interface Project {
   id: string;
   status: string;
   name?: string;
-  [key: string]: any;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
 }
 
 interface Ticket {
@@ -14,14 +20,22 @@ interface Ticket {
   status: string;
   priority: string;
   title?: string;
-  [key: string]: any;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
+  projectId?: string;
 }
 
 interface Invoice {
   id: string;
   status: string;
   amount: number;
-  [key: string]: any;
+  dueDate?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
+  projectId?: string;
 }
 
 interface StatusData {
@@ -46,7 +60,16 @@ const StatusWidgets: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
 
+<<<<<<< HEAD
       const response = await apiClient.get('/dashboard/stats');
+=======
+      const response = await fetch(`${getApiUrl()}/dashboard/stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+>>>>>>> origin/dev
 
       if (response.error || !response.data) {
         throw new Error(response.error || 'Failed to fetch dashboard stats');

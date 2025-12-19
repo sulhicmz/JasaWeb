@@ -1,6 +1,25 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
+<<<<<<< HEAD
 import { logger } from '@jasaweb/config';
+=======
+// Simple logger fallback for web app
+const logger = {
+  debug: (message: string, data?: Record<string, unknown>) =>
+    console.debug(`[DEBUG] ${message}`, data),
+  info: (message: string, data?: Record<string, unknown>) =>
+    console.info(`[INFO] ${message}`, data),
+  warn: (message: string, data?: Record<string, unknown>) =>
+    console.warn(`[WARN] ${message}`, data),
+  error: (message: string, error?: Error | Record<string, unknown>) =>
+    console.error(`[ERROR] ${message}`, error),
+  performance: (
+    metric: string,
+    value: number,
+    details?: Record<string, unknown>
+  ) => console.info(`[PERF] ${metric}: ${value}ms`, details),
+};
+>>>>>>> origin/dev
 
 export type NotificationType =
   | 'info'
@@ -100,7 +119,16 @@ export class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    const apiConfig = {
+      apiConfig: {
+        baseUrl:
+          import.meta.env.PUBLIC_API_URL ||
+          (import.meta.env.MODE === 'production'
+            ? 'https://api.jasaweb.com'
+            : 'http://localhost:3000'),
+      },
+    };
+    const apiUrl = apiConfig.apiConfig.baseUrl;
 
     this.socket = io(`${apiUrl}/notifications`, {
       auth: {
@@ -127,7 +155,16 @@ export class NotificationService {
       return;
     }
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    const apiConfig = {
+      apiConfig: {
+        baseUrl:
+          import.meta.env.PUBLIC_API_URL ||
+          (import.meta.env.MODE === 'production'
+            ? 'https://api.jasaweb.com'
+            : 'http://localhost:3000'),
+      },
+    };
+    const apiUrl = apiConfig.apiConfig.baseUrl;
 
     this.dashboardSocket = io(`${apiUrl}/dashboard`, {
       auth: {
@@ -163,7 +200,7 @@ export class NotificationService {
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         // Max reconnection attempts reached
-        this.callbacks.onError?.(error);
+        this.callbacks.onError?.(error as Error | Record<string, unknown>);
       }
 
       this.callbacks.onError?.(error);
@@ -213,8 +250,11 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('connect_error', (error: unknown) => {
-      logger.error('Dashboard WebSocket connection error', error);
-      this.callbacks.onError?.(error);
+      logger.error(
+        'Dashboard WebSocket connection error',
+        error as Error | Record<string, unknown>
+      );
+      this.callbacks.onError?.(error as Error | Record<string, unknown>);
     });
 
     this.dashboardSocket.on('initial-data', (data: NotificationData) => {
@@ -237,7 +277,10 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('dashboard-update', (update: DashboardUpdate) => {
-      logger.debug('Dashboard update', update);
+      logger.debug(
+        'Dashboard update',
+        update as unknown as Record<string, unknown>
+      );
       this.callbacks.onDashboardUpdate?.(update);
 
       // Dispatch custom event for dashboard components
@@ -254,7 +297,10 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('personal-update', (data: DashboardUpdate) => {
-      logger.debug('Personal update', data);
+      logger.debug(
+        'Personal update',
+        data as unknown as Record<string, unknown>
+      );
 
       // Show personal notification
       this.showRealtimeNotification(
@@ -265,8 +311,11 @@ export class NotificationService {
     });
 
     this.dashboardSocket.on('error', (error: unknown) => {
-      logger.error('Dashboard WebSocket error', error);
-      this.callbacks.onError?.(error);
+      logger.error(
+        'Dashboard WebSocket error',
+        error as Error | Record<string, unknown>
+      );
+      this.callbacks.onError?.(error as Error | Record<string, unknown>);
       this.showRealtimeNotification('Connection error', 'error');
     });
   }

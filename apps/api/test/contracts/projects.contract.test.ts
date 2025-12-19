@@ -1,529 +1,637 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProjectController } from '../../src/projects/project.controller';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../../src/app.module';
 import {
-  ProjectService,
-  CreateProjectDto,
-  UpdateProjectDto,
-} from '../../src/projects/project.service';
-import { MultiTenantPrismaService } from '../../src/common/database/multi-tenant-prisma.service';
-import { RolesGuard } from '../../src/common/guards/roles.guard';
-import { ThrottlerGuard } from '@nestjs/throttler';
-import { Reflector } from '@nestjs/core';
+  DatabaseTestHelper,
+  ContractTestUtils,
+  ContractTestFixtures,
+} from '@jasaweb/testing';
 
-describe('ProjectController API Contract Tests', () => {
-  let controller: ProjectController;
-  let service: ProjectService;
+/**
+ * API Contract Test Suite for Projects Endpoints
+ *
+ * Tests the contract between frontend and backend for project management.
+ * Ensures API responses remain stable and don't break client applications.
+ */
+describe('Projects API Contract Tests', () => {
+  let app: INestApplication;
+  let testHelper: DatabaseTestHelper;
+  let testUser: any;
+  let accessToken: string;
 
-  const mockProject = {
-    id: '1',
-    name: 'Test Project',
-    status: 'active',
-    startAt: new Date(),
-    dueAt: new Date(),
-    organizationId: 'org1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  beforeAll(async () => {
+    testHelper = new DatabaseTestHelper();
+    await testHelper.setupTestDatabase();
 
-  const mockProjectWithRelations = {
-    ...mockProject,
-    milestones: [],
-    files: [],
-    approvals: [],
-    tasks: [],
-    tickets: [],
-    invoices: [],
-  };
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-  const mockProjectsService = {
-    create: vi.fn(),
-    findAll: vi.fn(),
-    findOne: vi.fn(),
-    update: vi.fn(),
-    remove: vi.fn(),
-    findByOrganization: vi.fn(),
-    findByStatus: vi.fn(),
-    getProjectStats: vi.fn(),
-  };
+    app = moduleFixture.createNestApplication();
+    await app.init();
 
-  const mockMultiTenantPrismaService = {
-    project: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-    milestone: {
-      count: vi.fn(),
-    },
-    approval: {
-      count: vi.fn(),
-    },
-    task: {
-      count: vi.fn(),
-    },
-  };
+    // Create test user and get token
+    const result = await testHelper.createTestUser();
+    testUser = result.user;
+    accessToken = result.accessToken;
+  });
+
+  afterAll(async () => {
+    await testHelper.cleanup();
+    await app.close();
+  });
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [ProjectController],
-      providers: [
-        {
-          provide: ProjectService,
-          useValue: mockProjectsService,
-        },
-        {
-          provide: MultiTenantPrismaService,
-          useValue: mockMultiTenantPrismaService,
-        },
-        {
-          provide: Reflector,
-          useValue: {
-            getAllAndOverride: vi.fn(),
-          },
-        },
-      ],
-    })
-      .overrideGuard(RolesGuard)
-      .useValue({ canActivate: () => true })
-      .overrideGuard(ThrottlerGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    await testHelper.clearDatabase();
 
-    controller = module.get<ProjectController>(ProjectController);
-    service = module.get<ProjectService>(ProjectService);
-
-    // Manually inject the service if it's not injected properly
-    if (!(controller as any).projectService) {
-      (controller as any).projectService = service;
-    }
-
-    // Ensure service injection works - verify controller is created and service is available
-    expect(controller).toBeDefined();
-    expect(service).toBeDefined();
-    expect((controller as any).projectService).toBeDefined();
-
-    vi.clearAllMocks();
+    // Recreate test user after cleanup
+    const result = await testHelper.createTestUser();
+    testUser = result.user;
+    accessToken = result.accessToken;
   });
 
-  describe('API Contract - POST /projects', () => {
-    it('should create a project with correct contract', async () => {
-      const createProjectDto: CreateProjectDto = {
-        name: 'Test Project',
-        status: 'draft',
-      };
+  describe('GET /projects (summary view)', () => {
+    it('should return proper contract response for projects list', async () => {
+      // Create test projects
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
 
-      mockProjectsService.create.mockResolvedValue(mockProject);
+      return request(app.getHttpServer())
+        .get('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Response structure validation
+          expect(res.body).toHaveProperty('data');
+          expect(res.body).toHaveProperty('meta');
 
-      const result = await controller.create(createProjectDto, 'org1');
+          // Contract: Data should be array
+          expect(Array.isArray(res.body.data)).toBe(true);
 
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('name');
-      expect(result).toHaveProperty('status');
-      expect(result).toHaveProperty('startAt');
-      expect(result).toHaveProperty('dueAt');
-      expect(result).toHaveProperty('organizationId');
-      expect(result).toHaveProperty('createdAt');
-      expect(result).toHaveProperty('updatedAt');
+          // Contract: Meta pagination structure
+          expect(res.body.meta).toEqual({
+            page: expect.any(Number),
+            limit: expect.any(Number),
+            total: expect.any(Number),
+            totalPages: expect.any(Number),
+            hasNext: expect.any(Boolean),
+            hasPrevious: expect.any(Boolean),
+          });
 
-      // Type validation
-      expect(typeof result.id).toBe('string');
-      expect(typeof result.name).toBe('string');
-      expect(typeof result.status).toBe('string');
-      expect(result.startAt).toBeInstanceOf(Date);
-      expect(result.dueAt).toBeInstanceOf(Date);
-      expect(typeof result.organizationId).toBe('string');
-      expect(result.createdAt).toBeInstanceOf(Date);
-      expect(result.updatedAt).toBeInstanceOf(Date);
+          // Contract: Validate pagination values
+          expect(res.body.meta.page).toBe(1);
+          expect(res.body.meta.limit).toBe(10); // Default limit
+          expect(res.body.meta.total).toBe(2);
+          expect(res.body.meta.totalPages).toBe(1);
+          expect(res.body.meta.hasNext).toBe(false);
+          expect(res.body.meta.hasPrevious).toBe(false);
 
-      // Value validation
-      expect([
-        'draft',
-        'active',
-        'completed',
-        'on-hold',
-        'cancelled',
-      ]).toContain(result.status);
-      expect(result.name).toBe('Test Project');
+          if (res.body.data.length > 0) {
+            // Contract: Project summary structure
+            expect(res.body.data[0]).toEqual({
+              id: expect.any(String),
+              name: expect.any(String),
+              description: expect.any(String),
+              status: expect.any(String),
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+              organizationId: testUser.organizationId,
+            });
+
+            // Contract: Validate data types
+            ContractTestUtils.validateDateString(res.body.data[0].createdAt);
+            ContractTestUtils.validateDateString(res.body.data[0].updatedAt);
+            ContractTestUtils.validateUUID(res.body.data[0].id);
+            ContractTestUtils.validateUUID(res.body.data[0].organizationId);
+
+            // Contract: Status should be valid
+            expect(['ACTIVE', 'COMPLETED', 'ON_HOLD', 'CANCELLED']).toContain(
+              res.body.data[0].status
+            );
+
+            // Contract: No sensitive data
+            ContractTestUtils.validateNoSensitiveData(res.body.data[0]);
+          }
+
+          // Contract: Response headers
+          ContractTestUtils.validateResponseHeaders(res.headers, /json/);
+        });
     });
 
-    it('should set default status to draft if not provided', async () => {
-      const createProjectDto = {
-        name: 'Test Project',
-      };
-
-      const projectWithDefaultStatus = {
-        ...mockProject,
-        status: 'draft',
-      };
-
-      mockProjectsService.create.mockResolvedValue(projectWithDefaultStatus);
-
-      const result = await controller.create(createProjectDto, 'org1');
-
-      expect(result.status).toBe('draft');
+    it('should return proper contract response for empty projects list', async () => {
+      return request(app.getHttpServer())
+        .get('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.data).toEqual([]);
+          expect(res.body.meta.total).toBe(0);
+          expect(res.body.meta.totalPages).toBe(0);
+        });
     });
-  });
 
-  describe('API Contract - GET /projects', () => {
-    it('should return projects list with correct contract', async () => {
-      const projects = [mockProject];
-      mockProjectsService.findAll.mockResolvedValue(projects);
-
-      const result = await controller.findAll('org1');
-
-      // API Contract validation
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(1);
-
-      const project = result[0];
-      expect(project).toHaveProperty('id');
-      expect(project).toHaveProperty('name');
-      expect(project).toHaveProperty('status');
-      expect(project).toHaveProperty('startAt');
-      expect(project).toHaveProperty('dueAt');
-      expect(project).toHaveProperty('organizationId');
-      expect(project).toHaveProperty('createdAt');
-      expect(project).toHaveProperty('updatedAt');
-
-      // Type validation for each project
-      if (project) {
-        expect(typeof project.id).toBe('string');
-        expect(typeof project.name).toBe('string');
-        expect(typeof project.status).toBe('string');
-        expect(project.startAt).toBeInstanceOf(Date);
-        expect(project.dueAt).toBeInstanceOf(Date);
-        expect(typeof project.organizationId).toBe('string');
-        expect(project.createdAt).toBeInstanceOf(Date);
-        expect(project.updatedAt).toBeInstanceOf(Date);
+    it('should return proper contract with pagination parameters', async () => {
+      // Create multiple projects for pagination testing
+      for (let i = 0; i < 15; i++) {
+        await testHelper.createTestProject(
+          testUser.organizationId,
+          testUser.id
+        );
       }
+
+      return request(app.getHttpServer())
+        .get('/projects?page=2&limit=5')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('data');
+          expect(res.body).toHaveProperty('meta');
+
+          expect(res.body.meta.page).toBe(2);
+          expect(res.body.meta.limit).toBe(5);
+          expect(res.body.meta.total).toBe(15);
+          expect(res.body.meta.totalPages).toBe(3);
+          expect(res.body.meta.hasNext).toBe(true);
+          expect(res.body.meta.hasPrevious).toBe(true);
+          expect(res.body.data).toHaveLength(5);
+        });
     });
 
-    it('should return projects in detail view when specified', async () => {
-      const projects = [mockProjectWithRelations];
-      mockProjectsService.findAll.mockResolvedValue(projects);
-
-      const result = await controller.findAll('org1', 'detail');
-
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toHaveLength(1);
-
-      const project = result[0];
-      expect(project).toBeDefined();
-
-      if (project) {
-        expect(project).toHaveProperty('milestones');
-        expect(project).toHaveProperty('files');
-        expect(project).toHaveProperty('approvals');
-        expect(project).toHaveProperty('tasks');
-        expect(project).toHaveProperty('tickets');
-        expect(project).toHaveProperty('invoices');
-
-        expect(Array.isArray(project.milestones)).toBe(true);
-        expect(Array.isArray(project.files)).toBe(true);
-        expect(Array.isArray(project.approvals)).toBe(true);
-        expect(Array.isArray(project.tasks)).toBe(true);
-        expect(Array.isArray(project.tickets)).toBe(true);
-        expect(Array.isArray(project.invoices)).toBe(true);
-      }
-    });
-  });
-
-  describe('API Contract - GET /projects/:id', () => {
-    it('should return a single project with correct contract', async () => {
-      mockProjectsService.findOne.mockResolvedValue(mockProjectWithRelations);
-
-      const result = await controller.findOne('1', 'org1');
-
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('name');
-      expect(result).toHaveProperty('status');
-      expect(result).toHaveProperty('startAt');
-      expect(result).toHaveProperty('dueAt');
-      expect(result).toHaveProperty('organizationId');
-      expect(result).toHaveProperty('createdAt');
-      expect(result).toHaveProperty('updatedAt');
-      expect(result).toHaveProperty('milestones');
-      expect(result).toHaveProperty('files');
-      expect(result).toHaveProperty('approvals');
-      expect(result).toHaveProperty('tasks');
-      expect(result).toHaveProperty('tickets');
-      expect(result).toHaveProperty('invoices');
-
-      // Type validation
-      expect(typeof result.id).toBe('string');
-      expect(typeof result.name).toBe('string');
-      expect(typeof result.status).toBe('string');
-      expect(result.startAt).toBeInstanceOf(Date);
-      expect(result.dueAt).toBeInstanceOf(Date);
-      expect(typeof result.organizationId).toBe('string');
-      expect(result.createdAt).toBeInstanceOf(Date);
-      expect(result.updatedAt).toBeInstanceOf(Date);
-
-      // Note: Relations are only included in detail view
+    it('should return proper error contract for unauthorized access', async () => {
+      return request(app.getHttpServer())
+        .get('/projects')
+        .expect(401)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 401);
+          expect(res.body.error).toBe('Unauthorized');
+        });
     });
 
-    it('should handle project not found', async () => {
-      mockProjectsService.findOne.mockRejectedValue(
-        new Error('Project not found')
-      );
-
-      await expect(controller.findOne('999', 'org1')).rejects.toThrow(
-        'Project not found'
-      );
+    it('should return proper error contract for invalid token', async () => {
+      return request(app.getHttpServer())
+        .get('/projects')
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 401);
+          expect(res.body.error).toBe('Unauthorized');
+        });
     });
   });
 
-  describe('API Contract - PATCH /projects/:id', () => {
-    it('should update a project with correct contract', async () => {
-      const updateProjectDto: UpdateProjectDto = {
-        name: 'Updated Project',
-      };
-
-      const updatedProject = { ...mockProject, name: 'Updated Project' };
-      mockProjectsService.update.mockResolvedValue(updatedProject);
-
-      const result = await controller.update('1', updateProjectDto, 'org1');
-
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('name');
-      expect(result).toHaveProperty('status');
-      expect(result).toHaveProperty('startAt');
-      expect(result).toHaveProperty('dueAt');
-      expect(result).toHaveProperty('organizationId');
-      expect(result).toHaveProperty('createdAt');
-      expect(result).toHaveProperty('updatedAt');
-
-      // Verify update
-      expect(result.name).toBe('Updated Project');
-      expect(typeof result.id).toBe('string');
-      expect(result.updatedAt).toBeInstanceOf(Date);
-    });
-
-    it('should handle project not found on update', async () => {
-      const updateProjectDto: UpdateProjectDto = {
-        name: 'Updated Project',
-      };
-
-      mockProjectsService.update.mockRejectedValue(
-        new Error('Project not found')
+  describe('GET /projects?view=detail', () => {
+    it('should return proper contract response for detailed projects list', async () => {
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
       );
 
-      await expect(
-        controller.update('999', updateProjectDto, 'org1')
-      ).rejects.toThrow('Project not found');
+      return request(app.getHttpServer())
+        .get('/projects?view=detail')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('data');
+          expect(res.body).toHaveProperty('meta');
+
+          if (res.body.data.length > 0) {
+            // Contract: Detailed project structure
+            expect(res.body.data[0]).toEqual({
+              id: project.id,
+              name: expect.any(String),
+              description: expect.any(String),
+              status: expect.any(String),
+              organizationId: testUser.organizationId,
+              createdBy: testUser.id,
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+              // Include counts and relations for detailed view
+              milestonesCount: expect.any(Number),
+              ticketsCount: expect.any(Number),
+              completedMilestonesCount: expect.any(Number),
+              openTicketsCount: expect.any(Number),
+            });
+
+            // Contract: Validate count fields are numbers
+            expect(typeof res.body.data[0].milestonesCount).toBe('number');
+            expect(typeof res.body.data[0].ticketsCount).toBe('number');
+            expect(typeof res.body.data[0].completedMilestonesCount).toBe(
+              'number'
+            );
+            expect(typeof res.body.data[0].openTicketsCount).toBe('number');
+          }
+        });
+    });
+
+    it('should return proper contract response with filter parameters', async () => {
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
+      await testHelper.createTestProject(testUser.organizationId, testUser.id);
+
+      return request(app.getHttpServer())
+        .get('/projects?view=detail&status=ACTIVE')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Filtered response structure
+          expect(res.body).toHaveProperty('data');
+          expect(res.body).toHaveProperty('meta');
+
+          // All returned projects should have the specified status
+          if (res.body.data.length > 0) {
+            res.body.data.forEach((project: any) => {
+              expect(project.status).toBe('ACTIVE');
+            });
+          }
+        });
     });
   });
 
-  describe('API Contract - DELETE /projects/:id', () => {
-    it('should delete a project with correct contract', async () => {
-      mockProjectsService.remove.mockResolvedValue(mockProject);
+  describe('POST /projects', () => {
+    it('should return proper contract response on successful project creation', async () => {
+      const projectData = ContractTestFixtures.createProjectData();
 
-      const result = await controller.remove('1', 'org1');
+      return request(app.getHttpServer())
+        .post('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(projectData)
+        .expect(201)
+        .expect((res) => {
+          // Contract: Create response structure
+          expect(res.body).toEqual({
+            id: expect.any(String),
+            name: projectData.name,
+            description: projectData.description,
+            status: 'ACTIVE', // Default status
+            organizationId: testUser.organizationId,
+            createdBy: testUser.id,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          });
 
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('id');
-      expect(result).toHaveProperty('name');
-      expect(result).toHaveProperty('status');
-      expect(result).toHaveProperty('startAt');
-      expect(result).toHaveProperty('dueAt');
-      expect(result).toHaveProperty('organizationId');
-      expect(result).toHaveProperty('createdAt');
-      expect(result).toHaveProperty('updatedAt');
+          // Contract: Validate data types
+          ContractTestUtils.validateUUID(res.body.id);
+          ContractTestUtils.validateDateString(res.body.createdAt);
+          ContractTestUtils.validateDateString(res.body.updatedAt);
 
-      // Verify deleted project data
-      expect(result.id).toBe('1');
-      expect(typeof result.id).toBe('string');
-      expect(typeof result.name).toBe('string');
+          // Contract: Validate no sensitive data
+          ContractTestUtils.validateNoSensitiveData(res.body);
+
+          // Contract: Response headers
+          ContractTestUtils.validateResponseHeaders(res.headers, /json/);
+        });
     });
 
-    it('should handle project not found on delete', async () => {
-      mockProjectsService.remove.mockRejectedValue(
-        new Error('Project not found')
-      );
-
-      await expect(controller.remove('999', 'org1')).rejects.toThrow(
-        'Project not found'
-      );
+    it('should return proper error contract for invalid project data', async () => {
+      return request(app.getHttpServer())
+        .post('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: '', // Empty name should fail validation
+          description: 'Valid description',
+        })
+        .expect(400)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 400);
+          expect(res.body.error).toBe('Bad Request');
+          expect(Array.isArray(res.body.message)).toBe(true);
+        });
     });
-  });
 
-  describe('API Contract - GET /projects/organization/:orgId', () => {
-    it('should handle organization-specific data isolation', async () => {
-      // This test validates that the multi-tenant architecture is working
-      // The controller uses @CurrentOrganizationId decorator to ensure data isolation
-      expect(controller).toBeDefined();
-      expect(typeof controller.findAll).toBe('function');
+    it('should return proper error contract for missing authorization', async () => {
+      const projectData = ContractTestFixtures.createProjectData();
 
-      // Organization context is handled by decorators and middleware
-      // This test ensures the contract supports multi-tenancy
-      expect('organizationId' in mockProject).toBe(true);
+      return request(app.getHttpServer())
+        .post('/projects')
+        .send(projectData)
+        .expect(401)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 401);
+        });
     });
-  });
 
-  describe('API Contract - GET /projects/status/:status', () => {
-    it('should validate status filtering through service layer', async () => {
-      // Status filtering is handled by the service layer
-      // Controller delegates status filtering to ProjectService
-      expect(controller).toBeDefined();
-      expect(typeof controller.findAll).toBe('function');
-
-      // Valid status values contract
-      const validStatuses = [
-        'draft',
-        'active',
-        'completed',
-        'on-hold',
-        'cancelled',
-      ];
-      validStatuses.forEach((status) => {
-        expect(typeof status).toBe('string');
+    it('should return proper contract response with custom project data', async () => {
+      const customProjectData = ContractTestFixtures.createProjectData({
+        name: 'Custom Project Name',
+        description: 'Custom project description for contract testing',
+        status: 'ON_HOLD', // Override default status
       });
+
+      return request(app.getHttpServer())
+        .post('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(customProjectData)
+        .expect(201)
+        .expect((res) => {
+          expect(res.body.name).toBe(customProjectData.name);
+          expect(res.body.description).toBe(customProjectData.description);
+          expect(res.body.status).toBe(customProjectData.status);
+        });
     });
   });
 
-  describe('API Contract - GET /projects/:id/stats', () => {
-    it('should return project statistics with correct contract', async () => {
-      const mockStats = {
-        milestoneCount: 5,
-        completedMilestones: 3,
-        fileCount: 10,
-        pendingApprovals: 2,
-        taskCount: 8,
-        completedTasks: 4,
-        progress: 60,
+  describe('GET /projects/:id', () => {
+    it('should return proper contract response for existing project', async () => {
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
+      );
+
+      return request(app.getHttpServer())
+        .get(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Single project response structure
+          expect(res.body).toEqual({
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            status: project.status,
+            organizationId: testUser.organizationId,
+            createdBy: testUser.id,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          });
+
+          // Contract: Validate UUID and timestamp formats
+          ContractTestUtils.validateUUID(res.body.id);
+          ContractTestUtils.validateDateString(res.body.createdAt);
+          ContractTestUtils.validateDateString(res.body.updatedAt);
+        });
+    });
+
+    it('should return proper error contract for non-existent project', async () => {
+      const nonExistentId = 'non-existent-id';
+
+      return request(app.getHttpServer())
+        .get(`/projects/${nonExistentId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 404);
+          expect(res.body.error).toBe('Not Found');
+          expect(res.body.message).toContain('Project not found');
+        });
+    });
+
+    it('should return proper error contract for unauthorized project access', async () => {
+      // Create user from different organization
+      const otherUser = await testHelper.createTestUser({
+        email: 'other@example.com',
+      });
+
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
+      );
+
+      return request(app.getHttpServer())
+        .get(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${otherUser.accessToken}`)
+        .expect(403)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 403);
+          expect(res.body.error).toBe('Forbidden');
+        });
+    });
+  });
+
+  describe('PUT /projects/:id', () => {
+    it('should return proper contract response on successful project update', async () => {
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
+      );
+      const updateData = {
+        name: 'Updated Project Name',
+        description: 'Updated project description',
+        status: 'COMPLETED',
       };
 
-      mockProjectsService.getProjectStats.mockResolvedValue(mockStats);
+      return request(app.getHttpServer())
+        .put(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updateData)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Update response structure
+          expect(res.body).toEqual({
+            id: project.id,
+            name: updateData.name,
+            description: updateData.description,
+            status: updateData.status,
+            organizationId: testUser.organizationId,
+            createdBy: testUser.id,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+          });
 
-      const result = await controller.getProjectStats('1', 'org1');
+          // Contract: Verify updated fields
+          expect(res.body.name).toBe(updateData.name);
+          expect(res.body.description).toBe(updateData.description);
+          expect(res.body.status).toBe(updateData.status);
 
-      // API Contract validation
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty('milestoneCount');
-      expect(result).toHaveProperty('completedMilestones');
-      expect(result).toHaveProperty('fileCount');
-      expect(result).toHaveProperty('pendingApprovals');
-      expect(result).toHaveProperty('taskCount');
-      expect(result).toHaveProperty('completedTasks');
-      expect(result).toHaveProperty('progress');
-
-      // Type validation
-      expect(typeof result.milestoneCount).toBe('number');
-      expect(typeof result.completedMilestones).toBe('number');
-      expect(typeof result.fileCount).toBe('number');
-      expect(typeof result.pendingApprovals).toBe('number');
-      expect(typeof result.taskCount).toBe('number');
-      expect(typeof result.completedTasks).toBe('number');
-      expect(typeof result.progress).toBe('number');
-
-      // Value validation
-      expect(result.milestoneCount).toBeGreaterThanOrEqual(0);
-      expect(result.completedMilestones).toBeGreaterThanOrEqual(0);
-      expect(result.completedMilestones).toBeLessThanOrEqual(
-        result.milestoneCount
-      );
-      expect(result.fileCount).toBeGreaterThanOrEqual(0);
-      expect(result.pendingApprovals).toBeGreaterThanOrEqual(0);
-      expect(result.taskCount).toBeGreaterThanOrEqual(0);
-      expect(result.completedTasks).toBeGreaterThanOrEqual(0);
-      expect(result.completedTasks).toBeLessThanOrEqual(result.taskCount);
-      expect(result.progress).toBeGreaterThanOrEqual(0);
-      expect(result.progress).toBeLessThanOrEqual(100);
+          // Contract: Updated timestamp should be recent
+          const updatedAt = new Date(res.body.updatedAt);
+          const createdAt = new Date(res.body.createdAt);
+          expect(updatedAt.getTime()).toBeGreaterThanOrEqual(
+            createdAt.getTime()
+          );
+        });
     });
 
-    it('should handle project not found for stats', async () => {
-      mockProjectsService.getProjectStats.mockRejectedValue(
-        new Error('Project not found')
+    it('should return proper error contract for invalid project data', async () => {
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
       );
 
-      await expect(controller.getProjectStats('999', 'org1')).rejects.toThrow(
-        'Project not found'
-      );
-    });
-  });
-
-  describe('Error Handling Contract', () => {
-    it('should handle database connection errors', async () => {
-      mockProjectsService.findAll.mockRejectedValue(
-        new Error('Database connection failed')
-      );
-
-      await expect(controller.findAll('org1')).rejects.toThrow(
-        'Database connection failed'
-      );
+      return request(app.getHttpServer())
+        .put(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: '', // Invalid empty name
+        })
+        .expect(400)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 400);
+        });
     });
 
-    it('should handle validation errors', async () => {
-      const invalidProjectDto = {
-        name: '', // Empty name should fail validation
-      };
-
-      mockProjectsService.create.mockRejectedValue(
-        new Error('Validation failed')
-      );
-
-      await expect(
-        controller.create(invalidProjectDto, 'org1')
-      ).rejects.toThrow('Validation failed');
+    it('should return proper error contract for non-existent project', async () => {
+      return request(app.getHttpServer())
+        .put('/projects/non-existent-id')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'Updated Name' })
+        .expect(404)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 404);
+        });
     });
   });
 
-  describe('Data Validation Contract', () => {
-    it('should validate project status values', async () => {
-      const validStatuses = [
-        'draft',
-        'active',
-        'completed',
-        'on-hold',
-        'cancelled',
+  describe('DELETE /projects/:id', () => {
+    it('should return proper contract response on successful project deletion', async () => {
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
+      );
+
+      return request(app.getHttpServer())
+        .delete(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          // Contract: Delete response structure
+          expect(res.body).toEqual({
+            message: 'Project deleted successfully',
+          });
+
+          // Contract: Verify project no longer exists
+          request(app.getHttpServer())
+            .get(`/projects/${project.id}`)
+            .set('Authorization', `Bearer ${accessToken}`)
+            .expect(404);
+        });
+    });
+
+    it('should return proper error contract for non-existent project', async () => {
+      return request(app.getHttpServer())
+        .delete('/projects/non-existent-id')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 404);
+        });
+    });
+
+    it('should return proper error contract for unauthorized project deletion', async () => {
+      const otherUser = await testHelper.createTestUser({
+        email: 'other@example.com',
+      });
+
+      const project = await testHelper.createTestProject(
+        testUser.organizationId,
+        testUser.id
+      );
+
+      return request(app.getHttpServer())
+        .delete(`/projects/${project.id}`)
+        .set('Authorization', `Bearer ${otherUser.accessToken}`)
+        .expect(403)
+        .expect((res) => {
+          ContractTestUtils.validateErrorResponse(res.body, 403);
+        });
+    });
+  });
+
+  describe('Multi-tenancy Contract', () => {
+    it('should enforce organization isolation', async () => {
+      // Create user and project in organization A
+      const userA = await testHelper.createTestUser({
+        email: 'user-a@example.com',
+      });
+      const projectA = await testHelper.createTestProject(
+        userA.user.organizationId,
+        userA.user.id
+      );
+
+      // Create user in organization B
+      const userB = await testHelper.createTestUser({
+        email: 'user-b@example.com',
+      });
+
+      // User B should not see User A's projects
+      return request(app.getHttpServer())
+        .get('/projects')
+        .set('Authorization', `Bearer ${userB.accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.data).toEqual([]);
+          expect(res.body.meta.total).toBe(0);
+        });
+    });
+
+    it('should properly scope operations to user organization', async () => {
+      const userA = await testHelper.createTestUser({
+        email: 'user-a@example.com',
+      });
+      const projectA = await testHelper.createTestProject(
+        userA.user.organizationId,
+        userA.user.id
+      );
+
+      // User B should not be able to access User A's project by ID
+      const userB = await testHelper.createTestUser({
+        email: 'user-b@example.com',
+      });
+
+      return request(app.getHttpServer())
+        .get(`/projects/${projectA.id}`)
+        .set('Authorization', `Bearer ${userB.accessToken}`)
+        .expect(404); // Should return 404, not 403, to avoid revealing existence
+    });
+  });
+
+  describe('Contract Versioning and Stability', () => {
+    it('should maintain consistent response structure across operations', async () => {
+      const projectData = ContractTestFixtures.createProjectData();
+
+      // Create project
+      const createResponse = await request(app.getHttpServer())
+        .post('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(projectData)
+        .expect(201);
+
+      // Get project
+      const getResponse = await request(app.getHttpServer())
+        .get(`/projects/${createResponse.body.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Contract: Create and get responses should have same structure
+      const requiredFields = [
+        'id',
+        'name',
+        'description',
+        'status',
+        'organizationId',
+        'createdBy',
+        'createdAt',
+        'updatedAt',
       ];
+      requiredFields.forEach((field) => {
+        expect(createResponse.body).toHaveProperty(field);
+        expect(getResponse.body).toHaveProperty(field);
+      });
 
-      for (const status of validStatuses) {
-        const project = { ...mockProject, status };
-        mockProjectsService.findAll.mockResolvedValue([project]);
-
-        await expect(
-          controller.findAll('org1', 'summary')
-        ).resolves.toBeDefined();
-      }
-    });
-
-    it('should handle invalid project ID format', async () => {
-      mockProjectsService.findOne.mockRejectedValue(
-        new Error('Invalid project ID format')
-      );
-
-      await expect(controller.findOne('invalid-id', 'org1')).rejects.toThrow(
-        'Invalid project ID format'
+      // Contract: Values should be consistent
+      expect(createResponse.body.id).toBe(getResponse.body.id);
+      expect(createResponse.body.name).toBe(getResponse.body.name);
+      expect(createResponse.body.description).toBe(
+        getResponse.body.description
       );
     });
 
-    it('should validate date fields', async () => {
-      const projectWithDates = {
-        ...mockProject,
-        startAt: new Date('2023-01-01'),
-        dueAt: new Date('2023-12-31'),
-      };
+    it('should not include internal or sensitive information', async () => {
+      const projectData = ContractTestFixtures.createProjectData();
 
-      mockProjectsService.findOne.mockResolvedValue(projectWithDates);
-
-      const result = await controller.findOne('1', 'org1');
-
-      expect(result.startAt).toBeInstanceOf(Date);
-      expect(result.dueAt).toBeInstanceOf(Date);
-      expect(result.startAt!.getTime()).toBeLessThanOrEqual(
-        result.dueAt!.getTime()
-      );
+      return request(app.getHttpServer())
+        .post('/projects')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(projectData)
+        .expect(201)
+        .expect((res) => {
+          // Contract: No sensitive or internal fields
+          ContractTestUtils.validateNoSensitiveData(res.body, [
+            'internalStatus',
+            'adminNotes',
+            'databaseId',
+            'systemFields',
+          ]);
+        });
     });
   });
 });

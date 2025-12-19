@@ -29,27 +29,17 @@ vi.mock('chart.js', () => ({
 }));
 
 describe('DashboardCharts', () => {
-  let DashboardCharts: any;
-  let dashboardCharts: any;
-
   beforeEach(async () => {
     // Setup DOM
     document.body.innerHTML = `
       <div id="projectStatusChart"></div>
       <div id="ticketPriorityChart"></div>
       <div id="revenueTrendChart"></div>
-      <div id="completionRateChart"></div>
-      <div id="milestoneTimelineChart"></div>
-      <div id="projectStatusLegend"></div>
-      <div id="ticketPriorityLegend"></div>
-      <button id="chartRefreshBtn"><i class="fas fa-sync-alt"></i></button>
       <select id="chartTimeRange"></select>
     `;
 
     // Dynamic import
-    const module = await import(
-      '../src/components/dashboard/DashboardCharts.astro'
-    );
+    await import('../src/components/dashboard/DashboardCharts.astro');
     // Note: Since this is an Astro component, we'll test the JavaScript logic separately
   });
 

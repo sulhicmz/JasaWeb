@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EnvironmentUrlValidator } from '../config/environment-url-validator';
+import { UrlBuilder } from '@jasaweb/config';
 
 export interface SecurityConfig {
   jwt: {
@@ -84,7 +86,10 @@ export class SecurityConfigService {
     return {
       jwt: {
         secret: this.configService.getOrThrow<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '1h'),
+        expiresIn: this.configService.get<string>(
+          'JWT_EXPIRES_IN',
+          process.env.NODE_ENV === 'production' ? '15m' : '1h'
+        ),
         issuer: this.configService.get<string>('JWT_ISSUER', 'jasaweb-api'),
         audience: this.configService.get<string>(
           'JWT_AUDIENCE',
@@ -110,11 +115,17 @@ export class SecurityConfigService {
       },
       rateLimit: {
         windowMs: parseInt(
-          this.configService.get<string>('RATE_LIMIT_WINDOW_MS', '60000'),
+          this.configService.get<string>(
+            'RATE_LIMIT_WINDOW_MS',
+            process.env.NODE_ENV === 'production' ? '900000' : '60000'
+          ),
           10
         ),
         max: parseInt(
-          this.configService.get<string>('RATE_LIMIT_MAX', '100'),
+          this.configService.get<string>(
+            'RATE_LIMIT_MAX',
+            process.env.NODE_ENV === 'production' ? '100' : '1000'
+          ),
           10
         ),
         authEndpoints: {
@@ -158,23 +169,26 @@ export class SecurityConfigService {
   }
 
   private buildAllowedOrigins(isDevelopment: boolean): string[] {
-    if (isDevelopment) {
-      return [
-        'http://localhost:3000',
-        'http://localhost:4321',
-        'http://localhost:5173',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:4321',
-        'http://127.0.0.1:5173',
-      ];
-    }
+    try {
+      // Use the unified configuration validator for dynamic CORS origins
+      const config = EnvironmentUrlValidator.buildEnvironmentUrls();
+      return config.corsOrigins;
+    } catch {
+      // Fallback to manually configured origins with environment awareness
+      if (isDevelopment) {
+        return UrlBuilder.getAllowedOrigins();
+      }
 
-    const productionOrigins = this.configService.get<string>('ALLOWED_ORIGINS');
-    if (productionOrigins) {
-      return productionOrigins.split(',').map((origin) => origin.trim());
-    }
+      const productionOrigins =
+        this.configService.get<string>('ALLOWED_ORIGINS');
+      if (productionOrigins) {
+        return productionOrigins
+          .split(',')
+          .map((origin: string) => origin.trim());
+      }
 
-    return [];
+      return [];
+    }
   }
 
   private buildCSP(isDevelopment: boolean): string {

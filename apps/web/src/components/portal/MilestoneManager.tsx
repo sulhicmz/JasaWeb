@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import apiClient from '../../services/apiClient';
+=======
+import { getApiUrl } from '../../config/api';
+>>>>>>> origin/dev
 
 interface Milestone {
   id: string;
@@ -54,6 +58,15 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
     e.preventDefault();
 
     try {
+<<<<<<< HEAD
+=======
+      const token = localStorage.getItem('authToken');
+      const url = editingMilestone
+        ? `${getApiUrl()}/milestones/${editingMilestone.id}`
+        : `${getApiUrl()}/milestones`;
+
+      const method = editingMilestone ? 'PATCH' : 'POST';
+>>>>>>> origin/dev
       const body = {
         title: formData.title,
         dueAt: formData.dueAt ? new Date(formData.dueAt).toISOString() : null,
@@ -82,7 +95,17 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
     }
 
     try {
+<<<<<<< HEAD
       const response = await apiClient.delete(`/milestones/${milestoneId}`);
+=======
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${getApiUrl()}/milestones/${milestoneId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+>>>>>>> origin/dev
 
       if (!response.error) {
         onMilestoneUpdate();

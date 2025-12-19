@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import apiClient from '../../services/apiClient';
+import { api } from '../../services/api';
 
 interface Task {
   id: string;
@@ -72,8 +72,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({
       };
 
       const response = editingTask
-        ? await apiClient.patch(`/tasks/${editingTask.id}`, body)
-        : await apiClient.post('/tasks', body);
+        ? await api.patch(`/tasks/${editingTask.id}`, body)
+        : await api.post('/tasks', body);
 
       if (!response.error) {
         closeModal();
@@ -93,7 +93,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     }
 
     try {
-      const response = await apiClient.delete(`/tasks/${taskId}`);
+      const response = await api.delete(`/tasks/${taskId}`);
 
       if (!response.error) {
         onTaskUpdate();
@@ -108,7 +108,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
 
   const handleStatusChange = async (taskId: string, newStatus: string) => {
     try {
-      const response = await apiClient.patch(`/tasks/${taskId}`, {
+      const response = await api.patch(`/tasks/${taskId}`, {
         status: newStatus,
       });
 

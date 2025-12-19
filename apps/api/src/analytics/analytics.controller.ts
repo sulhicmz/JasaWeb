@@ -13,94 +13,84 @@ export class AnalyticsController {
   @Get('projects')
   async getProjectAnalytics(
     @CurrentOrganizationId() organizationId: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('projectId') projectId?: string
+    @Query() query: AnalyticsQueryDto
   ) {
     return this.analyticsService.getProjectAnalytics(organizationId, {
-      dateFrom,
-      dateTo,
-      projectId,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      projectId: query.projectId,
     });
   }
 
   @Get('team-performance')
   async getTeamPerformanceAnalytics(
     @CurrentOrganizationId() organizationId: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('userId') userId?: string
+    @Query() query: AnalyticsQueryDto
   ) {
     return this.analyticsService.getTeamPerformanceAnalytics(organizationId, {
-      dateFrom,
-      dateTo,
-      userId,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      userId: query.userId,
     });
   }
 
   @Get('financial')
   async getFinancialAnalytics(
     @CurrentOrganizationId() organizationId: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('projectId') projectId?: string
+    @Query() query: AnalyticsQueryDto
   ) {
     return this.analyticsService.getFinancialAnalytics(organizationId, {
-      dateFrom,
-      dateTo,
-      projectId,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      projectId: query.projectId,
     });
   }
 
   @Get('client-insights')
   async getClientInsightsAnalytics(
     @CurrentOrganizationId() organizationId: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string
+    @Query() query: AnalyticsQueryDto
   ) {
     return this.analyticsService.getClientInsightsAnalytics(organizationId, {
-      dateFrom,
-      dateTo,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
     });
   }
 
   @Get('activity-trends')
   async getActivityTrends(
     @CurrentOrganizationId() organizationId: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('granularity') granularity?: 'day' | 'week' | 'month'
+    @Query() query: AnalyticsQueryDto
   ) {
     return this.analyticsService.getActivityTrends(organizationId, {
-      dateFrom,
-      dateTo,
-      granularity,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      granularity: query.groupBy as 'day' | 'week' | 'month' | undefined,
     });
   }
 
   @Get('overview')
   async getOverviewAnalytics(
     @CurrentOrganizationId() organizationId: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string
+    @Query() query: AnalyticsQueryDto
   ) {
     const [projects, teamPerformance, financial, clientInsights] =
       await Promise.all([
         this.analyticsService.getProjectAnalytics(organizationId, {
-          dateFrom,
-          dateTo,
+          dateFrom: query.dateFrom,
+          dateTo: query.dateTo,
         }),
         this.analyticsService.getTeamPerformanceAnalytics(organizationId, {
-          dateFrom,
-          dateTo,
+          dateFrom: query.dateFrom,
+          dateTo: query.dateTo,
         }),
         this.analyticsService.getFinancialAnalytics(organizationId, {
-          dateFrom,
-          dateTo,
+          dateFrom: query.dateFrom,
+          dateTo: query.dateTo,
         }),
         this.analyticsService.getClientInsightsAnalytics(organizationId, {
-          dateFrom,
-          dateTo,
+          dateFrom: query.dateFrom,
+          dateTo: query.dateTo,
         }),
       ]);
 

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "node"]
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "../../packages/config/src/**/*",
+    "../../packages/config/index.ts",
+    "../../packages/config/logger.ts",
+    "../../packages/config/service-ports.ts",
+    "../../packages/config/env-validation.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

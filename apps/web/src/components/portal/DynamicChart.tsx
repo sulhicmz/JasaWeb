@@ -1,12 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
+import { ChartData, ChartOptions, ChartType } from '../../types/chart.types';
 
 interface ChartComponentProps {
-  type: 'bar' | 'pie' | 'line';
-  data: any;
-  options: any;
+  type: ChartType;
+  data: ChartData<ChartType>;
+  options: ChartOptions<ChartType>;
   className?: string;
 }
+
+interface DynamicChartProps {
+  data: ChartData<ChartType>;
+  options: ChartOptions<ChartType>;
+  className?: string;
+}
+
+type ChartComponentType = React.FC<DynamicChartProps>;
 
 const DynamicChart: React.FC<ChartComponentProps> = ({
   type,
@@ -14,7 +22,8 @@ const DynamicChart: React.FC<ChartComponentProps> = ({
   options,
   className,
 }) => {
-  const [ChartComponent, setChartComponent] = useState<any>(null);
+  const [ChartComponent, setChartComponent] =
+    useState<ChartComponentType | null>(null);
 
   useEffect(() => {
     const loadChart = async () => {
@@ -25,16 +34,24 @@ const DynamicChart: React.FC<ChartComponentProps> = ({
 
       switch (type) {
         case 'bar':
-          setChartComponent(() => (props: any) => <Bar {...props} />);
+          setChartComponent(() => (props: DynamicChartProps) => (
+            <Bar {...props} />
+          ));
           break;
         case 'pie':
-          setChartComponent(() => (props: any) => <Pie {...props} />);
+          setChartComponent(() => (props: DynamicChartProps) => (
+            <Pie {...props} />
+          ));
           break;
         case 'line':
-          setChartComponent(() => (props: any) => <Line {...props} />);
+          setChartComponent(() => (props: DynamicChartProps) => (
+            <Line {...props} />
+          ));
           break;
         default:
-          setChartComponent(() => (props: any) => <Bar {...props} />);
+          setChartComponent(() => (props: DynamicChartProps) => (
+            <Bar {...props} />
+          ));
       }
     };
 

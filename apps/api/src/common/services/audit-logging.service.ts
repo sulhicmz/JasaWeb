@@ -257,22 +257,24 @@ export class AuditLoggingService {
     return {
       ...event,
       details: event.details
-<<<<<<< HEAD
         ? this.sanitizeAuditData({ details: event.details } as AuditLogEntry)
             .details
+<<<<<<< Updated upstream
 =======
         ? this.sanitizeAuditData({
-            action: 'TEMP_AUDIT',
-            actorId: '',
-            organizationId: '',
-            target: 'temp',
-            ipAddress: '',
-            severity: 'LOW',
+            action: event.eventType,
+            actorId: event.actorId || '',
+            organizationId: event.organizationId || '',
+            target: 'security',
+            ipAddress: event.ipAddress || '',
+            severity: event.severity || 'LOW',
             success: true,
-            timestamp: new Date(),
+            timestamp: event.timestamp || new Date(),
             details: event.details,
           }).details
 >>>>>>> origin/main
+=======
+>>>>>>> Stashed changes
         : undefined,
     };
   }

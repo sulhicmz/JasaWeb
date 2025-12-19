@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { execSync } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
+import { join } from 'path';
+import { promises as fs } from 'fs';
+import { SecurityValidator } from '../utils/security-validator';
 
-export interface VulnerabilityAlert {
-  severity: 'critical' | 'high' | 'moderate' | 'low';
+export interface Vulnerability {
+  severity: 'low' | 'moderate' | 'high' | 'critical';
   package: string;
   title: string;
-  url?: string;
+  url: string;
   fixedIn?: string;
   recommendation: string;
   detectedAt: Date;
@@ -19,34 +19,78 @@ export interface SecurityReport {
   timestamp: Date;
   totalVulnerabilities: number;
   severityBreakdown: Record<string, number>;
-  criticalVulnerabilities: VulnerabilityAlert[];
-  highVulnerabilities: VulnerabilityAlert[];
-  moderateVulnerabilities: VulnerabilityAlert[];
+  criticalVulnerabilities: Vulnerability[];
+  highVulnerabilities: Vulnerability[];
+  moderateVulnerabilities: Vulnerability[];
   recommendations: string[];
 }
 
-// Define allowed paths for security
-const ALLOWED_PATHS = [path.join(process.cwd(), 'security-reports')];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface AuditAdvisory {
+  severity: 'low' | 'moderate' | 'high' | 'critical';
+  title: string;
+  url: string;
+  fixAvailable?: {
+    version: string;
+  };
+  recommendation?: string;
+}
 
-function isValidPath(filePath: string): boolean {
-  return ALLOWED_PATHS.some((allowedPath) => filePath.startsWith(allowedPath));
+interface AuditVulnerability {
+  [packageName: string]: {
+    severity: 'low' | 'moderate' | 'high' | 'critical';
+    title: string;
+    url: string;
+    fixAvailable?: {
+      version: string;
+    };
+    recommendation?: string;
+  };
+}
+
+interface AuditResult {
+  vulnerabilities?: AuditVulnerability;
+}
+
+interface NpmAuditError extends Error {
+  stdout?: string;
 }
 
 @Injectable()
 export class SecurityMonitoringService {
   private readonly logger = new Logger(SecurityMonitoringService.name);
-  private readonly reportsPath = path.join(process.cwd(), 'security-reports');
+  private reportsPath: string;
 
   constructor() {
+    // Initialize with secure literal path
+    const secureReportsDir = SecurityValidator.getLiteralPath(
+      'SECURITY_REPORTS_DIR'
+    );
+    this.reportsPath = join(process.cwd(), secureReportsDir);
     this.ensureReportsDirectory();
   }
 
-  private ensureReportsDirectory() {
-    if (!isValidPath(this.reportsPath)) {
-      throw new Error('Invalid reports path detected');
-    }
-    if (!fs.existsSync(this.reportsPath)) {
-      fs.mkdirSync(this.reportsPath, { recursive: true, mode: 0o750 });
+  private async ensureReportsDirectory(): Promise<void> {
+    try {
+      // Use secure literal path for reports directory
+      const secureReportsDir = SecurityValidator.getLiteralPath(
+        'SECURITY_REPORTS_DIR'
+      );
+      const reportsPath = join(process.cwd(), secureReportsDir);
+
+      // Validate the path operation
+      if (
+        !SecurityValidator.validateLiteralOperation(reportsPath, process.cwd())
+      ) {
+        throw new Error('Reports directory path validation failed');
+      }
+
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      await fs.mkdir(reportsPath, { recursive: true });
+      this.reportsPath = reportsPath; // Update the instance property
+    } catch (error) {
+      this.logger.error('Failed to create security reports directory:', error);
+      throw error;
     }
   }
 
@@ -71,213 +115,157 @@ export class SecurityMonitoringService {
 
   private async runVulnerabilityAudit(): Promise<string> {
     try {
-      const auditOutput = execSync('pnpm audit --json', {
-        cwd: process.cwd(),
-        encoding: 'utf-8',
-        stdio: 'pipe',
+      const { execSync } = require('child_process');
+      const auditOutput = execSync('npm audit --json', {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
       });
       return auditOutput;
     } catch (error) {
-      // pnpm audit returns non-zero exit code when vulnerabilities are found
-      // We still want to get the output in that case
-      const errorWithStdout = error as { stdout?: string; message?: string };
-      return (
-        errorWithStdout.stdout || errorWithStdout.message || 'Audit failed'
-      );
+      return (error as NpmAuditError).stdout || '';
     }
   }
 
-  private parseAuditResults(auditOutput: string): VulnerabilityAlert[] {
+  private parseAuditResults(auditOutput: string): Vulnerability[] {
     try {
-      const auditData = JSON.parse(auditOutput);
-      const vulnerabilities: VulnerabilityAlert[] = [];
+      const auditResult = JSON.parse(auditOutput) as AuditResult;
+      const vulnerabilities: Vulnerability[] = [];
 
-      if (auditData.vulnerabilities) {
+      if (auditResult.vulnerabilities) {
         for (const [packageName, vulnData] of Object.entries(
-          auditData.vulnerabilities
+          auditResult.vulnerabilities
         )) {
-          const vuln = vulnData as {
-            severity?: string;
-            title?: string;
-            url?: string;
-            patched_versions?: string;
-            fixAvailable?: { version?: string };
-          };
-          const vulnerability: VulnerabilityAlert = {
-            severity:
-              (vuln.severity as 'critical' | 'high' | 'moderate' | 'low') ||
-              'unknown',
+          const vuln = vulnData;
+          vulnerabilities.push({
+            severity: vuln.severity,
             package: packageName,
-            title: vuln.title || 'Unknown vulnerability',
+            title: vuln.title,
             url: vuln.url,
-            fixedIn: vuln.patched_versions,
-            recommendation: this.generatePackageRecommendation(
-              packageName,
-              vuln
-            ),
+            fixedIn: vuln.fixAvailable?.version,
+            recommendation:
+              vuln.recommendation || `Update ${packageName} to latest version`,
             detectedAt: new Date(),
-          };
-          vulnerabilities.push(vulnerability);
+          });
         }
       }
 
       return vulnerabilities;
-    } catch (error: unknown) {
+    } catch (error) {
       this.logger.error('Failed to parse audit results:', error);
       return [];
     }
-  }
-
-  private generatePackageRecommendation(
-    packageName: string,
-    vulnData: { severity?: string; fixAvailable?: { version?: string } }
-  ): string {
-    if (vulnData.fixAvailable?.version) {
-      return `Update ${packageName} to version ${vulnData.fixAvailable.version}`;
-    }
-
-    if (vulnData.severity === 'critical') {
-      return `Immediate action required for ${packageName} - check alternative packages`;
-    }
-
-    return `Review ${packageName} for alternatives or patches`;
   }
 
   private async generateSecurityReport(): Promise<SecurityReport> {
     const auditOutput = await this.runVulnerabilityAudit();
     const vulnerabilities = this.parseAuditResults(auditOutput);
 
-    const reportId = `report-${Date.now()}`;
-    const severityBreakdown: Record<string, number> = {};
+    const severityBreakdown = vulnerabilities.reduce(
+      (acc, vuln) => {
+        acc[vuln.severity] = (acc[vuln.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-    vulnerabilities.forEach((vuln) => {
-      severityBreakdown[vuln.severity] =
-        (severityBreakdown[vuln.severity] || 0) + 1;
-    });
+    const criticalVulns = vulnerabilities.filter(
+      (v) => v.severity === 'critical'
+    );
+    const highVulns = vulnerabilities.filter((v) => v.severity === 'high');
+    const moderateVulns = vulnerabilities.filter(
+      (v) => v.severity === 'moderate'
+    );
+
+    const recommendations = [
+      'Update all critical and high severity packages immediately',
+      'Review and moderate severity packages within 2 weeks',
+      'Implement automated dependency scanning in CI/CD',
+      'Consider using npm audit fix for automatic updates',
+    ];
 
     return {
-      id: reportId,
+      id: `security-report-${Date.now()}`,
       timestamp: new Date(),
       totalVulnerabilities: vulnerabilities.length,
       severityBreakdown,
-      criticalVulnerabilities: vulnerabilities.filter(
-        (v) => v.severity === 'critical'
-      ),
-      highVulnerabilities: vulnerabilities.filter((v) => v.severity === 'high'),
-      moderateVulnerabilities: vulnerabilities.filter(
-        (v) => v.severity === 'moderate'
-      ),
-      recommendations: this.generateOverallRecommendations(vulnerabilities),
+      criticalVulnerabilities: criticalVulns,
+      highVulnerabilities: highVulns,
+      moderateVulnerabilities: moderateVulns,
+      recommendations,
     };
   }
 
-  private generateOverallRecommendations(
-    vulnerabilities: VulnerabilityAlert[]
-  ): string[] {
-    const recommendations: string[] = [];
-    const criticalCount = vulnerabilities.filter(
-      (v) => v.severity === 'critical'
-    ).length;
-    const highCount = vulnerabilities.filter(
-      (v) => v.severity === 'high'
-    ).length;
-
-    if (criticalCount > 0) {
-      recommendations.push(
-        `Immediate attention required: ${criticalCount} critical vulnerabilities`
-      );
-    }
-
-    if (highCount > 0) {
-      recommendations.push(
-        `High priority: ${highCount} high severity vulnerabilities to address`
-      );
-    }
-
-    recommendations.push('Regular dependency updates recommended');
-    recommendations.push('Consider implementing automated security scanning');
-
-    return recommendations;
-  }
-
-  async saveReport(report: SecurityReport): Promise<void> {
-    const filename = `security-report-${report.id}.json`;
-    const filepath = path.join(this.reportsPath, filename);
-
+  private async saveReport(report: SecurityReport): Promise<void> {
     try {
-      if (!isValidPath(filepath)) {
-        throw new Error('Invalid file path for saving report');
+      const sanitizedId = report.id.replace(/[^a-zA-Z0-9\-_]/g, '');
+      const filename = `security-report-${sanitizedId}.json`;
+      const filepath = join(this.reportsPath, filename);
+
+      // Validate file path operation with literal security
+      if (
+        !SecurityValidator.validateLiteralOperation(filepath, this.reportsPath)
+      ) {
+        throw new Error('Report file save path validation failed');
       }
-      fs.writeFileSync(filepath, JSON.stringify(report, null, 2), {
+
+      // Validate file extension
+      if (!SecurityValidator.validateFileExtension(filename)) {
+        throw new Error('Invalid file extension for security report');
+      }
+
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      await fs.writeFile(filepath, JSON.stringify(report, null, 2), {
         mode: 0o640,
       });
       this.logger.log(`Security report saved: ${filename}`);
     } catch (error: unknown) {
       this.logger.error('Failed to save security report:', error);
-    }
-  }
-
-  private async alertOnCriticalVulnerabilities(
-    report: SecurityReport
-  ): Promise<void> {
-    const criticalCount = report.criticalVulnerabilities.length;
-    const highCount = report.highVulnerabilities.length;
-
-    if (criticalCount > 0 || highCount > 0) {
-      this.logger.warn(
-        `🚨 SECURITY ALERT: ${criticalCount} critical and ${highCount} high vulnerabilities detected`
-      );
-
-      // Log critical vulnerabilities for immediate attention
-      report.criticalVulnerabilities.forEach((vuln) => {
-        this.logger.error(
-          `CRITICAL: ${vuln.package} - ${vuln.title} | Fix: ${vuln.recommendation}`
-        );
-      });
-
-      report.highVulnerabilities.forEach((vuln) => {
-        this.logger.warn(
-          `HIGH: ${vuln.package} - ${vuln.title} | Fix: ${vuln.recommendation}`
-        );
-      });
+      throw error;
     }
   }
 
   async getLatestReport(): Promise<SecurityReport | null> {
     try {
-      if (!isValidPath(this.reportsPath)) {
-        throw new Error('Invalid reports path for getLatestReport');
-      }
-
-      const files = fs
-        .readdirSync(this.reportsPath, { encoding: 'utf8' })
-        .filter(
-          (file) =>
-            file.startsWith('security-report-') && file.endsWith('.json')
-        )
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const files = await fs.readdir(this.reportsPath);
+      const reportFiles = files
+        .filter((file: string) => {
+          // Validate file extension for security
+          const hasValidExtension =
+            SecurityValidator.validateFileExtension(file);
+          const hasValidPrefix = file.startsWith('security-report-');
+          return hasValidPrefix && hasValidExtension;
+        })
         .sort()
         .reverse();
 
-      if (files.length === 0) {
+      if (reportFiles.length === 0) {
         return null;
       }
 
-      const latestFile = files[0];
-      const filepath = path.join(this.reportsPath, latestFile!);
-
-      if (!isValidPath(filepath)) {
-        throw new Error('Invalid file path detected');
+      const latestFile = reportFiles[0];
+      if (!latestFile) {
+        return null;
       }
 
-      const fileContent = fs.readFileSync(filepath, 'utf-8');
+      const filepath = join(this.reportsPath, latestFile);
 
-      return JSON.parse(fileContent);
-    } catch (error) {
-      this.logger.error('Failed to retrieve latest security report:', error);
+      // Validate file read path operation
+      if (
+        !SecurityValidator.validateLiteralOperation(filepath, this.reportsPath)
+      ) {
+        throw new Error('Report file read path validation failed');
+      }
+
+      const content = await fs.readFile(filepath, 'utf8');
+      return JSON.parse(content) as SecurityReport;
+    } catch (error: unknown) {
+      this.logger.error('Failed to get latest security report:', error);
       return null;
     }
   }
 
+<<<<<<< HEAD
   async checkPackageSecurity(
     packageName: string
   ): Promise<VulnerabilityAlert[]> {
@@ -316,16 +304,16 @@ export class SecurityMonitoringService {
     }
   }
 
+=======
+>>>>>>> origin/dev
   async getReportHistory(limit: number = 10): Promise<SecurityReport[]> {
     try {
-      if (!isValidPath(this.reportsPath)) {
-        throw new Error('Invalid reports path for getReportHistory');
-      }
-
-      const files = fs
-        .readdirSync(this.reportsPath, { encoding: 'utf8' })
+      // Path is controlled constant from process.cwd() and constant string
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const files = await fs.readdir(this.reportsPath);
+      const reportFiles = files
         .filter(
-          (file) =>
+          (file: string) =>
             file.startsWith('security-report-') && file.endsWith('.json')
         )
         .sort()
@@ -334,27 +322,92 @@ export class SecurityMonitoringService {
 
       const reports: SecurityReport[] = [];
 
-      for (const file of files) {
+      for (const file of reportFiles) {
         try {
-          const filepath = path.join(this.reportsPath, file);
+          const filepath = join(this.reportsPath, file);
 
-          if (!isValidPath(filepath)) {
-            this.logger.warn(`Skipping invalid file path: ${filepath}`);
+          // Validate file read path operation
+          if (
+            !SecurityValidator.validateLiteralOperation(
+              filepath,
+              this.reportsPath
+            )
+          ) {
+            this.logger.warn(`Invalid file path detected for report: ${file}`);
             continue;
           }
 
-          const fileContent = fs.readFileSync(filepath, { encoding: 'utf-8' });
-          const report = JSON.parse(fileContent);
+          // eslint-disable-next-line security/detect-non-literal-fs-filename
+          const content = await fs.readFile(filepath, 'utf8');
+          const report = JSON.parse(content) as SecurityReport;
           reports.push(report);
         } catch (error) {
-          this.logger.error(`Failed to parse report file ${file}:`, error);
+          this.logger.warn(`Failed to parse security report ${file}:`, error);
         }
       }
 
       return reports;
-    } catch (error) {
-      this.logger.error('Failed to retrieve report history:', error);
+    } catch (error: unknown) {
+      this.logger.error('Failed to get security report history:', error);
       return [];
+    }
+  }
+
+  async checkPackageSecurity(packageName: string): Promise<Vulnerability[]> {
+    try {
+      const { execSync } = require('child_process');
+      const auditOutput = execSync(`npm audit --json ${packageName}`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+
+      const auditResult = JSON.parse(auditOutput) as AuditResult;
+      const vulnerabilities: Vulnerability[] = [];
+
+      if (auditResult.vulnerabilities) {
+        for (const [pkgName, vulnData] of Object.entries(
+          auditResult.vulnerabilities
+        )) {
+          if (pkgName === packageName) {
+            const vuln = vulnData;
+            vulnerabilities.push({
+              severity: vuln.severity,
+              package: pkgName,
+              title: vuln.title || `Vulnerability in ${pkgName}`,
+              url: vuln.url || '',
+              fixedIn: vuln.fixAvailable?.version,
+              recommendation: `Update ${pkgName} to latest version`,
+              detectedAt: new Date(),
+            });
+          }
+        }
+      }
+
+      return vulnerabilities;
+    } catch (error: unknown) {
+      this.logger.error(
+        `Failed to check package security for ${packageName}:`,
+        error
+      );
+      return [];
+    }
+  }
+
+  private async alertOnCriticalVulnerabilities(
+    report: SecurityReport
+  ): Promise<void> {
+    const criticalCount = report.criticalVulnerabilities.length;
+
+    if (criticalCount > 0) {
+      this.logger.error(
+        `🚨 CRITICAL SECURITY ALERT: Found ${criticalCount} critical vulnerabilities!`
+      );
+
+      report.criticalVulnerabilities.forEach((vuln) => {
+        this.logger.error(
+          `Critical: ${vuln.package} - ${vuln.title} (Fixed in: ${vuln.fixedIn || 'N/A'})`
+        );
+      });
     }
   }
 }

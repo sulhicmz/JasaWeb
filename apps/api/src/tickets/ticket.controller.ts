@@ -17,27 +17,13 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { EmailService } from '../common/services/email.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { CreateTicketDto } from './dto/create-ticket.dto';
+import { UpdateTicketDto } from './dto/update-ticket.dto';
 
-// Define DTO for ticket creation/update
-interface CreateTicketDto {
-  title: string;
-  description: string;
-  type: string; // bug, feature, improvement, question, task
-  priority: string; // low, medium, high, critical
-  projectId?: string;
-}
-
-interface UpdateTicketDto {
-  title?: string;
-  description?: string;
-  type?: string;
-  priority?: string;
-  status?: string; // open, in-progress, in-review, resolved, closed
-  assigneeId?: string;
-}
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('tickets')
-@UseGuards(RolesGuard) // Use the roles guard
+@UseGuards(AuthGuard, RolesGuard) // Use authentication and roles guard
 export class TicketController {
   private readonly logger = new Logger(TicketController.name);
 
@@ -381,13 +367,34 @@ export class TicketController {
     // Validate priority to prevent injection
     const validPriorities = new Set(['critical', 'high', 'medium', 'low']);
     const safePriority = validPriorities.has(priority) ? priority : 'low';
-    const timeframes: Record<string, number> = {
-      critical: 4, // 4 hours
-      high: 24, // 1 day
-      medium: 72, // 3 days
-      low: 168, // 1 week
-    };
-    const hoursToAdd = timeframes[safePriority] ?? 168; // Default to 1 week for low priority
+    // Use safe object literal to prevent prototype pollution
+    const timeframes = Object.create(null) as Record<string, number>;
+    Object.defineProperty(timeframes, 'critical', {
+      value: 4,
+      writable: false,
+      enumerable: true,
+    });
+    Object.defineProperty(timeframes, 'high', {
+      value: 24,
+      writable: false,
+      enumerable: true,
+    });
+    Object.defineProperty(timeframes, 'medium', {
+      value: 72,
+      writable: false,
+      enumerable: true,
+    });
+    Object.defineProperty(timeframes, 'low', {
+      value: 168,
+      writable: false,
+      enumerable: true,
+    });
+    const hoursToAdd = Object.prototype.hasOwnProperty.call(
+      timeframes,
+      safePriority
+    )
+      ? (timeframes as Record<string, number>)[safePriority] || 168
+      : 168; // Default to 1 week for low priority
     return new Date(now.getTime() + hoursToAdd * 60 * 60 * 1000);
   }
 }

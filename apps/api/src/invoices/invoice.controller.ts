@@ -18,7 +18,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { EmailService } from '../common/services/email.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { CreateInvoiceDto, InvoiceStatus } from './dto/create-invoice.dto';
+import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 
 @Controller('invoices')

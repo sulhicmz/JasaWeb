@@ -88,7 +88,10 @@ export class EnhancedCacheService {
           return l2Data;
         }
       } catch (error) {
-        this.logger.warn(`L2 cache error for key ${key}`, error);
+        this.logger.warn(
+          `L2 cache error for key ${key}`,
+          error as Record<string, unknown>
+        );
       }
     }
 
@@ -121,7 +124,10 @@ export class EnhancedCacheService {
       try {
         await this.cacheManager.set(key, value, ttl * 1000); // Convert to milliseconds
       } catch (error) {
-        this.logger.warn(`L2 cache set error for key ${key}`, error);
+        this.logger.warn(
+          `L2 cache set error for key ${key}`,
+          error as Record<string, unknown>
+        );
       }
     }
 
@@ -141,7 +147,10 @@ export class EnhancedCacheService {
     try {
       await this.cacheManager.del(key);
     } catch (error) {
-      this.logger.warn(`L2 cache delete error for key ${key}`, error);
+      this.logger.warn(
+        `L2 cache delete error for key ${key}`,
+        error as Record<string, unknown>
+      );
     }
   }
 
@@ -156,7 +165,10 @@ export class EnhancedCacheService {
     try {
       await this.cacheManager.clear();
     } catch (error) {
-      this.logger.warn('L2 cache clear error', error);
+      this.logger.warn(
+        'L2 cache clear error',
+        error as Record<string, unknown>
+      );
     }
   }
 
@@ -233,7 +245,10 @@ export class EnhancedCacheService {
         const data = await factory();
         await this.set(key, data, options);
       } catch (error) {
-        this.logger.warn(`Cache warm-up error for key ${key}`, error);
+        this.logger.warn(
+          `Cache warm-up error for key ${key}`,
+          error as Record<string, unknown>
+        );
       }
     });
 

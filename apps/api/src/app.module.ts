@@ -71,7 +71,6 @@ import { UserModule } from './users/user.module';
     PrismaModule,
     MultiTenantPrismaModule,
     OrganizationModule,
-    EnvironmentModule,
     AppConfigModule,
     SecurityModule,
   ],

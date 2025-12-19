@@ -7,9 +7,6 @@
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:web\"",
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd apps/api && pnpm start:dev",
-    "dev-tools:watch": "./scripts/dev-tools/watch-and-reload.sh all",
-    "dev-tools:db": "./scripts/dev-tools/database-tools.sh",
-    "dev-tools:quality": "./scripts/dev-tools/code-quality.sh all",
     "build": "pnpm run build:api && pnpm run build:web",
     "build:web": "cd apps/web && pnpm run build",
     "build:api": "cd apps/api && pnpm run build",
@@ -17,8 +14,9 @@
     "start:web": "cd apps/web && pnpm start",
     "start:api": "cd apps/api && pnpm start:prod",
     "test": "cd apps/api && pnpm test",
-    "test:api": "cd apps/api && pnpm test",
-    "test:web": "cd apps/web && pnpm test",
+    "test:run": "pnpm test --run",
+    "test:watch": "pnpm test --watch",
+    "test:coverage": "cd apps/api && pnpm test --coverage",
     "lint": "pnpm exec eslint . --max-warnings 500",
     "lint:fix": "pnpm exec eslint . --fix",
     "format": "prettier --write .",
@@ -41,11 +39,7 @@
     "security:audit:json": "pnpm audit --audit-level moderate --json > audit-results.json || true",
     "security:audit:high": "pnpm audit --audit-level high",
     "security:check": "pnpm security:audit && pnpm security:outdated",
-    "security:outdated": "pnpm outdated",
-    "security:scan": "ts-node scripts/security-scan.ts",
-    "security:scan:ci": "ts-node scripts/security-scan.ts && pnpm security:audit:high && pnpm security:audit:json",
-    "security:vulnerability:scan": "ts-node scripts/vulnerability-scanner.ts",
-    "security:vulnerability:fix": "ts-node scripts/vulnerability-scanner.ts --fix"
+    "security:outdated": "pnpm outdated"
   },
   "keywords": [
     "astro",
@@ -58,7 +52,9 @@
   "author": "JasaWeb",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^30.0.0",
+    "@eslint/js": "^9.39.1",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -69,6 +65,7 @@
     "jsdom": "^27.3.0",
     "prettier": "^3.7.4",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.0",
     "vite": "^7.3.0",
@@ -104,5 +101,8 @@
       "ws": "8.18.0",
       "astro": "5.15.9"
     }
+  },
+  "dependencies": {
+    "jiti": "^2.6.1"
   }
 }

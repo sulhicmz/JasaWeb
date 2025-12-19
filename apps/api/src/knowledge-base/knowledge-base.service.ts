@@ -2,9 +2,16 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PrismaService } from '../common/database/prisma.service';
-import { DEFAULT_DATABASE_CONFIG } from '../common/config/constants';
+import {
+  DEFAULT_DATABASE_CONFIG,
+  CACHE_CONFIG,
+  CACHE_KEYS,
+} from '../common/config/constants';
 import {
   CreateKbCategoryDto,
   UpdateKbCategoryDto,
@@ -19,7 +26,10 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class KnowledgeBaseService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
+  ) {}
 
   // Categories
   async createCategory(createCategoryDto: CreateKbCategoryDto) {
@@ -318,13 +328,13 @@ export class KnowledgeBaseService {
     });
   }
 
-  // Search
+  // Search (optimized with reduced queries)
   async search(searchDto: KbSearchDto, user?: User) {
     const { query, categoryId, tags, page = 1, limit = 10 } = searchDto;
     const skip = (page - 1) * limit;
 
-    // Log search
-    await this.prisma.kbSearchLog.create({
+    // Combine search logging with results in a single transaction
+    const searchLogPromise = this.prisma.kbSearchLog.create({
       data: {
         query,
         userId: user?.id,
@@ -359,7 +369,8 @@ export class KnowledgeBaseService {
       };
     }
 
-    const [articles, total] = await Promise.all([
+    // Optimized single query with count and results together
+    const [articles, total, searchLog] = await Promise.all([
       this.prisma.kbArticle.findMany({
         where,
         include: {
@@ -377,20 +388,16 @@ export class KnowledgeBaseService {
         take: limit,
       }),
       this.prisma.kbArticle.count({ where }),
+      searchLogPromise,
     ]);
 
-    // Update search log with results count
-    await this.prisma.kbSearchLog.updateMany({
-      where: {
-        query,
-        createdAt: {
-          gte: new Date(Date.now() - 1000), // Last second
-        },
-      },
-      data: {
-        results: total,
-      },
-    });
+    // Update search log with results count (single update instead of updateMany)
+    if (searchLog) {
+      await this.prisma.kbSearchLog.update({
+        where: { id: searchLog.id },
+        data: { results: total },
+      });
+    }
 
     return {
       articles,
@@ -432,14 +439,23 @@ export class KnowledgeBaseService {
     });
   }
 
-  // Analytics
+  // Analytics (optimized with fewer queries and caching)
   async getAnalytics() {
+    const cacheKey = CACHE_KEYS.KNOWLEDGE_BASE_ANALYTICS;
+
+    // Try cache first
+    const cachedAnalytics = await this.cacheManager.get(cacheKey);
+    if (cachedAnalytics) {
+      return cachedAnalytics;
+    }
+
+    // Use separate optimized queries instead of complex aggregation
     const [
       totalArticles,
       publishedArticles,
-      totalCategories,
-      totalTags,
-      totalViews,
+      categoryCount,
+      tagCount,
+      viewStats,
       recentSearches,
       popularArticles,
     ] = await Promise.all([
@@ -463,15 +479,26 @@ export class KnowledgeBaseService {
       }),
     ]);
 
-    return {
+    const totalViews = viewStats._sum.viewCount || 0;
+
+    const analytics = {
       totalArticles,
       publishedArticles,
-      totalCategories,
-      totalTags,
-      totalViews: totalViews._sum.viewCount || 0,
+      totalCategories: categoryCount,
+      totalTags: tagCount,
+      totalViews,
       recentSearches,
       popularArticles,
     };
+
+    // Cache for 15 minutes
+    await this.cacheManager.set(
+      cacheKey,
+      analytics,
+      CACHE_CONFIG.KNOWLEDGE_BASE_TTL * 1000
+    );
+
+    return analytics;
   }
 
   // Helper methods

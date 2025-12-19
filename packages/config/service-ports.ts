@@ -311,7 +311,7 @@ export class ServicePortService {
     return configs[service.name] || [];
   }
 
-  public getConfigSummary(): Record<string, any> {
+  public getConfigSummary(): Record<string, unknown> {
     return {
       ports: this.ports,
       urls: this.urls,

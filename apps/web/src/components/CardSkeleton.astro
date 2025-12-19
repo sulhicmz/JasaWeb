@@ -1,15 +1,127 @@
 ---
-// src/components/CardSkeleton.astro
+// Enhanced CardSkeleton.astro - Professional card loading skeleton
 export interface Props {
   class?: string;
+  variant?: 'default' | 'service' | 'project' | 'team';
+  lines?: number;
 }
 
-const { class: className = '' } = Astro.props;
+const { class: className = '', variant = 'default', lines = 3 } = Astro.props;
+
+// Enhanced shimmer styles
+const shimmerStyles = `
+  @keyframes skeleton-shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+  .enhanced-skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(30, 41, 59, 0.8) 0%,
+      rgba(51, 65, 85, 0.9) 50%,
+      rgba(30, 41, 59, 0.8) 100%
+    );
+    background-size: 1000px 100%;
+    animation: skeleton-shimmer 2s ease-in-out infinite;
+  }
+`;
+
+function getVariantClass(variant: string) {
+  switch (variant) {
+    case 'service':
+      return 'p-8 rounded-2xl';
+    case 'project':
+      return 'p-6 rounded-xl';
+    case 'team':
+      return 'p-6 rounded-xl text-center';
+    default:
+      return 'p-6 rounded-xl';
+  }
+}
 ---
 
-<div class={`glass-panel p-6 rounded-xl animate-pulse ${className}`}>
-  <div class="h-12 w-12 bg-gray-700 rounded-lg mb-4"></div>
-  <div class="h-6 bg-gray-700 rounded mb-2 w-3/4"></div>
-  <div class="h-4 bg-gray-700 rounded mb-2"></div>
-  <div class="h-4 bg-gray-700 rounded w-5/6"></div>
+<script define:vars={{ shimmerStyles }}>
+  // Add enhanced shimmer animation to document
+  if (!document.getElementById('enhanced-skeleton-styles')) {
+    const style = document.createElement('style');
+    style.id = 'enhanced-skeleton-styles';
+    style.textContent = shimmerStyles;
+    document.head.appendChild(style);
+  }
+</script>
+
+<div class={`glass-panel ${getVariantClass(variant)} ${className}`}>
+  {variant === 'service' && (
+    <div class="enhanced-skeleton">
+      <div class="w-16 h-16 bg-slate-700/80 rounded-xl mb-6"></div>
+      <div class="h-8 bg-slate-700/80 rounded w-3/4 mb-4"></div>
+      <div class="space-y-3 mb-8">
+        {Array.from({ length: lines || 4 }).map((_, i) => (
+          <div 
+            class="h-4 bg-slate-700/80 rounded"
+            style={`width: ${100 - (i * 5)}%`}
+          ></div>
+        ))}
+      </div>
+      <div class="h-10 bg-slate-700/80 rounded w-32"></div>
+    </div>
+  )}
+  
+  {variant === 'project' && (
+    <div class="enhanced-skeleton">
+      <div class="flex items-start justify-between mb-4">
+        <div class="h-6 bg-slate-700/80 rounded w-1/2"></div>
+        <div class="h-6 bg-slate-700/80 rounded w-20"></div>
+      </div>
+      <div class="space-y-2 mb-4">
+        {Array.from({ length: lines || 2 }).map((_, i) => (
+          <div 
+            class="h-4 bg-slate-700/80 rounded"
+            style={`width: ${100 - (i * 10)}%`}
+          ></div>
+        ))}
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="h-4 bg-slate-700/80 rounded w-24"></div>
+        <div class="h-8 bg-slate-700/80 rounded w-16"></div>
+      </div>
+    </div>
+  )}
+  
+  {variant === 'team' && (
+    <div class="enhanced-skeleton">
+      <div class="w-24 h-24 bg-slate-700/80 rounded-full mx-auto mb-4"></div>
+      <div class="h-6 bg-slate-700/80 rounded w-3/4 mx-auto mb-2"></div>
+      <div class="h-4 bg-slate-700/80 rounded w-2/3 mx-auto mb-4"></div>
+      <div class="flex justify-center space-x-3">
+        <div class="w-8 h-8 bg-slate-700/80 rounded-full"></div>
+        <div class="w-8 h-8 bg-slate-700/80 rounded-full"></div>
+        <div class="w-8 h-8 bg-slate-700/80 rounded-full"></div>
+      </div>
+    </div>
+  )}
+  
+  {variant === 'default' && (
+    <div class="enhanced-skeleton">
+      <div class="flex items-center space-x-4 mb-4">
+        <div class="w-12 h-12 bg-slate-700/80 rounded-lg"></div>
+        <div class="flex-1">
+          <div class="h-6 bg-slate-700/80 rounded w-3/4 mb-2"></div>
+          <div class="h-4 bg-slate-700/80 rounded w-1/2"></div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        {Array.from({ length: lines }).map((_, i) => (
+          <div 
+            class="h-4 bg-slate-700/80 rounded"
+            style={`width: ${100 - (i * 8)}%`}
+          ></div>
+        ))}
+      </div>
+      <div class="flex justify-between items-center mt-6">
+        <div class="h-8 bg-slate-700/80 rounded w-24"></div>
+        <div class="h-8 bg-slate-700/80 rounded w-20"></div>
+      </div>
+    </div>
+  )}
 </div>

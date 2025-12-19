@@ -17,6 +17,23 @@ import {
 } from '@jasaweb/config';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+<<<<<<< HEAD
+=======
+import {
+  storageConfigRegistry,
+  StorageType,
+  StorageConfig,
+  StorageAdapter,
+  StorageUploadOptions,
+  StorageUploadResult,
+  StorageDownloadOptions,
+  ValidationResult,
+  JasaWebConfig,
+} from '@jasaweb/config';
+import { SecurityValidator } from '../utils/security-validator';
+import type { S3Client, S3ClientConfig, _Object } from '@aws-sdk/client-s3';
+import type { getSignedUrl as GetSignedUrl } from '@aws-sdk/s3-request-presigner';
+>>>>>>> origin/dev
 
 /**
  * Storage provider interface implementation for different backends
@@ -38,20 +55,21 @@ abstract class BaseStorageAdapter implements StorageAdapter {
 
   abstract exists(key: string): Promise<boolean>;
 
-  async getSignedUrl(_key: string, _expiresIn: number): Promise<string> {
+  async getSignedUrl(key: string, _expiresIn: number): Promise<string> {
+    if (!SecurityValidator.isValidKey(key)) {
+      throw new Error('Invalid key format');
+    }
     throw new Error('Signed URLs not supported by this storage adapter');
   }
 
-  async list(
-    _prefix: string
-  ): Promise<{ key: string; size: number; lastModified: Date }[]> {
+  async list(): Promise<{ key: string; size: number; lastModified: Date }[]> {
     throw new Error('List operation not supported by this storage adapter');
   }
 }
 
 interface S3StorageConfig {
   region?: string;
-  bucket: string;
+  bucket?: string;
   accessKey?: string;
   secretKey?: string;
   endpoint?: string;
@@ -70,16 +88,43 @@ class LocalStorageAdapter extends BaseStorageAdapter {
   }
 
   private ensureDirectoryExists(): void {
-    const fs = require('fs');
+    const path = require('path') as typeof import('path');
 
-    // Validate path to prevent directory traversal
-    if (this.uploadPath.includes('..') || this.uploadPath.includes('~')) {
-      throw new Error('Invalid upload path detected');
+    // Use secure literal path validation
+    const secureUploadDir = SecurityValidator.getLiteralPath('UPLOAD_DIR');
+
+    if (!SecurityValidator.isAllowedPath(this.uploadPath)) {
+      throw new Error(
+        'Invalid upload path detected - must be within allowed directories'
+      );
     }
 
-    if (!fs.existsSync(this.uploadPath)) {
-      fs.mkdirSync(this.uploadPath, { recursive: true, mode: 0o750 });
+    const normalizedPath = path.normalize(this.uploadPath);
+    const DEFAULT_UPLOAD_DIR = secureUploadDir;
+    const uploadDir = normalizedPath.endsWith(DEFAULT_UPLOAD_DIR)
+      ? normalizedPath
+      : path.join(normalizedPath, DEFAULT_UPLOAD_DIR);
+
+    // Validate literal operation before proceeding
+    if (
+      !SecurityValidator.validateLiteralOperation(uploadDir, normalizedPath)
+    ) {
+      throw new Error('Directory creation path validation failed');
     }
+
+    const secureFileExists = SecurityValidator.createSecureFileExists();
+    const secureMkdir = SecurityValidator.createSecureMkdir();
+
+    if (!secureFileExists(uploadDir)) {
+      try {
+        secureMkdir(uploadDir);
+      } catch (error) {
+        throw new Error(
+          `Failed to create upload directory: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    }
+    this.uploadPath = normalizedPath;
   }
 
   private resolveSecurePath(key: string): string {
@@ -103,24 +148,69 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const path = require('path');
     const crypto = require('crypto');
 
+<<<<<<< HEAD
     const filePath = this.resolveSecurePath(options.key);
     const dirPath = path.dirname(filePath);
+=======
+    const sanitizedKey = SecurityValidator.sanitizeKey(options.key);
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
+>>>>>>> origin/dev
 
-    // Ensure directory exists
-    await fs.mkdir(dirPath, { recursive: true, mode: 0o750 });
+    const dirPath = path.dirname(normalizedPath);
+    const validatedDirPath = SecurityValidator.validateDirectoryPath(
+      dirPath,
+      this.uploadPath
+    );
 
-    // Write file
-    await fs.writeFile(filePath, data, { mode: 0o640 });
+    // Secure directory creation with validated literal path
+    try {
+      // Use literal path validation for secure operations
+      const validatedLiteralPath = SecurityValidator.validateLiteralOperation(
+        validatedDirPath,
+        this.uploadPath
+      )
+        ? validatedDirPath
+        : this.uploadPath;
+
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      await fs.mkdir(validatedLiteralPath, { recursive: true, mode: 0o750 });
+    } catch (error) {
+      this.logger.error('Directory creation failed:', error);
+      throw error;
+    }
+
+    // Write file with secure permissions and validated path
+    try {
+      // Final security check before write operation
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        throw new Error('File write path validation failed');
+      }
+
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      await fs.writeFile(normalizedPath, data, { mode: 0o640 });
+    } catch (error) {
+      this.logger.error('File write failed:', error);
+      throw error;
+    }
 
     // Calculate file hash for integrity
     const hash = crypto.createHash('sha256');
     hash.update(data);
     const etag = hash.digest('hex');
 
-    this.logger.log(`File uploaded locally: ${options.key}`);
+    this.logger.log(`File uploaded locally: ${sanitizedKey}`);
 
     return {
-      key: options.key,
+      key: sanitizedKey,
       size: data.length,
       etag,
     };
@@ -128,17 +218,37 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async download(key: string): Promise<Buffer> {
     const fs = require('fs').promises;
-    const fs = require('fs').promises;
     // path required but not used directly due to resolveSecurePath
 
+<<<<<<< HEAD
     const filePath = this.resolveSecurePath(key);
+=======
+    const sanitizedKey = SecurityValidator.sanitizeKey(key);
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
+>>>>>>> origin/dev
 
+    // Secure file read with validated literal path
     try {
-      return await fs.readFile(filePath);
+      // Final security check before read operation
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        throw new Error('File read path validation failed');
+      }
+
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
       if (fsError.code === 'ENOENT') {
-        throw new Error(`File not found: ${key}`);
+        throw new Error(`File not found: ${sanitizedKey}`);
       }
       throw error;
     }
@@ -146,18 +256,38 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async delete(key: string): Promise<void> {
     const fs = require('fs').promises;
-    const fs = require('fs').promises;
     // path required but not used directly
 
+<<<<<<< HEAD
     const filePath = this.resolveSecurePath(key);
+=======
+    const sanitizedKey = SecurityValidator.sanitizeKey(key);
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
+>>>>>>> origin/dev
 
+    // Secure file deletion with validated literal path
     try {
-      await fs.unlink(filePath);
-      this.logger.log(`File deleted locally: ${key}`);
+      // Final security check before delete operation
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        throw new Error('File deletion path validation failed');
+      }
+
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      await fs.unlink(normalizedPath);
+      this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
       if (fsError.code === 'ENOENT') {
-        this.logger.warn(`File not found for deletion: ${key}`);
+        this.logger.warn(`File not found for deletion: ${sanitizedKey}`);
         return;
       }
       throw error;
@@ -166,10 +296,37 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async exists(key: string): Promise<boolean> {
     const fs = require('fs').promises;
+    const path = require('path');
 
+<<<<<<< HEAD
     try {
       const filePath = this.resolveSecurePath(key);
       await fs.access(filePath);
+=======
+    if (!SecurityValidator.isValidKey(key)) {
+      return false; // Treat suspicious keys as non-existent
+    }
+
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
+
+    try {
+      // Security check before file access check
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        return false; // Treat suspicious paths as non-existent
+      }
+
+      await fs.access(normalizedPath);
+>>>>>>> origin/dev
       return true;
     } catch {
       return false;
@@ -178,31 +335,128 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 }
 
 /**
- * S3 Storage Adapter (Placeholder for future implementation)
+ * S3 Storage Adapter Implementation
  */
 class S3StorageAdapter extends BaseStorageAdapter {
   private bucket: string;
+  private accessKey?: string;
+  private secretKey?: string;
+  private endpoint?: string;
+  private s3Client: S3Client | null = null; // AWS S3 Client
+  private s3Presigner: { getSignedUrl: typeof GetSignedUrl } | null = null; // AWS S3 Request Presigner
 
   constructor(config: S3StorageConfig) {
     super();
+<<<<<<< HEAD
     this.bucket = config.bucket;
+=======
+    this.region = config.region || 'us-east-1';
+    this.bucket = config.bucket || 'default-bucket';
+    this.accessKey = config.accessKey;
+    this.secretKey = config.secretKey;
+    this.endpoint = config.endpoint;
+  }
+
+  private async initializeClient(): Promise<void> {
+    if (this.s3Client) return;
+
+    try {
+      // Dynamic imports with proper typing
+      const s3Module = await import('@aws-sdk/client-s3');
+      const presignerModule = await import('@aws-sdk/s3-request-presigner');
+
+      const { S3Client } = s3Module;
+      const { getSignedUrl } = presignerModule;
+
+      // Create S3 client configuration
+      const clientConfig: S3ClientConfig = {
+        region: this.region,
+      };
+
+      // Add custom endpoint for MinIO or S3-compatible services
+      if (this.endpoint) {
+        clientConfig.endpoint = this.endpoint;
+        clientConfig.forcePathStyle = true; // Required for MinIO
+      }
+
+      // Add credentials if available (otherwise uses default chain)
+      if (this.accessKey && this.secretKey) {
+        clientConfig.credentials = {
+          accessKeyId: this.accessKey,
+          secretAccessKey: this.secretKey,
+        };
+      }
+
+      this.s3Client = new S3Client(clientConfig);
+
+      // Initialize presigner
+      this.s3Presigner = { getSignedUrl };
+
+      this.logger.log(`S3 client initialized for bucket: ${this.bucket}`);
+    } catch (error) {
+      this.logger.error('Failed to initialize S3 client:', error);
+      throw new Error(
+        `S3 client initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+>>>>>>> origin/dev
   }
 
   async upload(
     data: Buffer,
     options: StorageUploadOptions
   ): Promise<StorageUploadResult> {
+<<<<<<< HEAD
     // Simulated S3 upload - requires actual AWS SDK implementation
     this.logger.log(`S3 upload simulated: ${options.key}`);
+=======
+    await this.initializeClient();
+>>>>>>> origin/dev
 
-    return {
-      key: options.key,
-      size: data.length,
-      bucket: this.bucket,
-    };
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+
+    try {
+      const { PutObjectCommand } = await import('@aws-sdk/client-s3');
+
+      if (!SecurityValidator.isValidKey(options.key)) {
+        throw new Error('Invalid key format for S3 upload');
+      }
+
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: options.key,
+        Body: data,
+        ContentType: options.contentType,
+        Metadata: options.metadata || {},
+      });
+
+      const result = await this.s3Client.send(command);
+
+      this.logger.log(
+        `File uploaded to S3: ${options.key} (${data.length} bytes)`
+      );
+
+      return {
+        key: options.key,
+        size: data.length,
+        bucket: this.bucket,
+        etag: result.ETag?.replace(/"/g, ''), // Remove quotes from ETag
+        url: this.endpoint
+          ? `${this.endpoint}/${this.bucket}/${options.key}`
+          : `https://${this.bucket}.s3.${this.region}.amazonaws.com/${options.key}`,
+      };
+    } catch (error) {
+      this.logger.error(`S3 upload failed for ${options.key}:`, error);
+      throw new Error(
+        `S3 upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   async download(key: string): Promise<Buffer> {
+<<<<<<< HEAD
     // Simulated S3 download - requires actual AWS SDK implementation
     this.logger.log(`S3 download simulated: ${key}`);
     return Buffer.from('mock file content');
@@ -224,6 +478,190 @@ class S3StorageAdapter extends BaseStorageAdapter {
   ): Promise<string> {
     // Simulated S3 signed URL - requires actual AWS SDK implementation
     return `https://s3-signed-url-placeholder/placeholder?expires=3600`;
+=======
+    await this.initializeClient();
+
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+
+    try {
+      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+
+      if (!SecurityValidator.isValidKey(key)) {
+        throw new Error('Invalid key format for S3 download');
+      }
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      const result = await this.s3Client.send(command);
+
+      // Convert stream to buffer
+      const chunks: Buffer[] = [];
+      const stream = result.Body as AsyncIterable<Uint8Array>;
+
+      for await (const chunk of stream) {
+        chunks.push(Buffer.from(chunk));
+      }
+
+      const buffer = Buffer.concat(chunks);
+
+      this.logger.log(
+        `File downloaded from S3: ${key} (${buffer.length} bytes)`
+      );
+      return buffer;
+    } catch (error: unknown) {
+      const awsError = error as { name?: string };
+      if (awsError.name === 'NoSuchKey') {
+        throw new Error(`File not found: ${key}`);
+      }
+      this.logger.error(`S3 download failed for ${key}:`, error);
+      throw new Error(
+        `S3 download failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.initializeClient();
+
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+
+    try {
+      const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+
+      if (!SecurityValidator.isValidKey(key)) {
+        throw new Error('Invalid key format for S3 delete');
+      }
+
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+
+      this.logger.log(`File deleted from S3: ${key}`);
+    } catch (error) {
+      this.logger.error(`S3 delete failed for ${key}:`, error);
+      throw new Error(
+        `S3 delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    await this.initializeClient();
+
+    if (!this.s3Client) {
+      return false;
+    }
+
+    try {
+      const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
+
+      if (!SecurityValidator.isValidKey(key)) {
+        return false; // Treat suspicious keys as non-existent
+      }
+
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+      return true;
+    } catch (error: unknown) {
+      const awsError = error as { name?: string };
+      if (awsError.name === 'NotFound' || awsError.name === 'NoSuchKey') {
+        return false;
+      }
+      this.logger.error(`S3 exists check failed for ${key}:`, error);
+      return false;
+    }
+  }
+
+  override async getSignedUrl(key: string, expiresIn: number): Promise<string> {
+    await this.initializeClient();
+
+    if (!this.s3Client || !this.s3Presigner) {
+      throw new Error('S3 client or presigner not initialized');
+    }
+
+    try {
+      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+
+      if (!SecurityValidator.isValidKey(key)) {
+        throw new Error('Invalid key format for S3 signed URL');
+      }
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      const signedUrl = await this.s3Presigner.getSignedUrl(
+        this.s3Client,
+        command,
+        { expiresIn }
+      );
+
+      this.logger.log(
+        `Generated signed URL for S3: ${key} (expires in ${expiresIn}s)`
+      );
+      return signedUrl;
+    } catch (error) {
+      this.logger.error(`S3 signed URL generation failed for ${key}:`, error);
+      throw new Error(
+        `S3 signed URL generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  override async list(): Promise<
+    { key: string; size: number; lastModified: Date }[]
+  > {
+    await this.initializeClient();
+
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+
+    try {
+      const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
+
+      const command = new ListObjectsV2Command({
+        Bucket: this.bucket,
+      });
+
+      const result = await this.s3Client.send(command);
+
+      const objects =
+        result.Contents?.map((obj: _Object) => ({
+          key: obj.Key!,
+          size: obj.Size || 0,
+          lastModified: obj.LastModified || new Date(),
+        })) || [];
+
+      this.logger.log(
+        `Listed ${objects.length} objects from S3 bucket: ${this.bucket}`
+      );
+      return objects;
+    } catch (error) {
+      this.logger.error(
+        `S3 list operation failed for bucket ${this.bucket}:`,
+        error
+      );
+      throw new Error(
+        `S3 list operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+>>>>>>> origin/dev
   }
 }
 
@@ -297,17 +735,17 @@ export class DynamicFileStorageService implements OnModuleInit {
         return new LocalStorageAdapter();
 
       case 's3': {
-        const s3Config = {
+        const s3Config: S3StorageConfig = {
           region: this.configService.get('AWS_REGION') || 'us-east-1',
           bucket: this.configService.get('S3_BUCKET'),
-          accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-          secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+          accessKey: this.configService.get('AWS_ACCESS_KEY_ID'),
+          secretKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
         };
         return new S3StorageAdapter(s3Config);
       }
 
       case 'minio': {
-        const minioConfig = {
+        const minioConfig: S3StorageConfig = {
           endpoint: this.configService.get('MINIO_ENDPOINT'),
           bucket: this.configService.get('MINIO_BUCKET'),
           accessKey: this.configService.get('MINIO_ACCESS_KEY'),
@@ -462,11 +900,10 @@ export class DynamicFileStorageService implements OnModuleInit {
 
     // Custom validation
     if (validation.customValidation) {
-      const customResult = validation.customValidation(
-        this.configService.get('NODE_ENV') === 'production'
-          ? this.configService.get('PRODUCTION_CONFIG') || {}
-          : {}
-      );
+      const config: JasaWebConfig =
+        (this.configService.get('PRODUCTION_CONFIG') as JasaWebConfig) ||
+        ({} as JasaWebConfig);
+      const customResult = validation.customValidation(config);
 
       if (!customResult.isValid) {
         throw new Error(

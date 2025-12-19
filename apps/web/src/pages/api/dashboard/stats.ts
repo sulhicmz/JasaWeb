@@ -1,13 +1,20 @@
 /* global fetch Response */
 
+import { getApiUrl } from '../../../config/api.js';
+
 // API endpoint for dashboard stats
 export async function GET({ request }: { request: Request }) {
   try {
+<<<<<<< HEAD
     // Forward the request to the backend API
     const apiBaseUrl =
       import.meta.env.PUBLIC_API_URL ||
       import.meta.env.API_URL ||
       'http://localhost:3000';
+=======
+    // Forward the request to the backend API using dynamic configuration
+    const apiBaseUrl = getApiUrl();
+>>>>>>> origin/dev
     const backendUrl = `${apiBaseUrl}/dashboard/stats`;
 
     const response = await fetch(backendUrl, {
