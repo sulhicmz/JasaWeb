@@ -46,20 +46,30 @@ apps/
 
 ---
 
-## Aturan untuk AI Agents
+## ⛔ PROHIBITED ACTIONS
 
-### ✅ DO
-- Baca `task.md` sebelum mulai
-- Update `task.md` setelah selesai task
-- Commit dengan Conventional Commits: `feat:`, `fix:`, `docs:`
-- Test sebelum commit: `pnpm build`
-- Buat PR ke branch `dev`
+AI Agents **DILARANG KERAS** melakukan:
 
-### ❌ DON'T
-- Jangan modify `apps/api/` (deprecated)
-- Jangan pakai Node.js APIs (fs, path) di Workers
-- Jangan hardcode secrets
-- Jangan skip testing
+1. **Membuat file dokumentasi baru** tanpa instruksi eksplisit dari user
+2. **Menambah dependencies baru** ke package.json tanpa approval
+3. **Mengubah tech stack** dari yang sudah ditetapkan (Cloudflare/Neon/Prisma)
+4. **Modify `apps/api/`** - folder ini DEPRECATED
+5. **Menggunakan Node.js APIs** yang tidak tersedia di Workers (fs, path, child_process)
+6. **Hardcode secrets** - semua secrets harus via environment variables
+7. **Skip testing** - selalu run `pnpm build` sebelum commit
+8. **Membuat integrasi baru** dengan service eksternal tanpa approval
+
+---
+
+## ✅ ALLOWED ACTIONS
+
+AI Agents **BOLEH** melakukan:
+
+1. Mengerjakan task dari `task.md`
+2. Fix bugs yang tertulis di `bug.md`
+3. Update dokumentasi **yang sudah ada**
+4. Refactor code dalam scope task yang diberikan
+5. Commit dengan Conventional Commits
 
 ---
 

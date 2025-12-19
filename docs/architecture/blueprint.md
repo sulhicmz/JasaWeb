@@ -72,20 +72,20 @@
 
 ### Stack
 
-- **Frontend**: Next.js 14 / Astro 5 (SSR/ISR), Tailwind, shadcn/ui, Zod.
-- **Backend**: NestJS (REST/tRPC).
-- **Database**: PostgreSQL (Multi-tenant via `organization_id`).
-- **ORM**: Prisma.
-- **Cache/Queue**: Redis.
-- **Storage**: S3-compatible (MinIO/Wasabi/AWS).
-- **Auth**: Auth.js / NextAuth (Email/Google/Microsoft), 2FA TOTP, RBAC.
+- **Frontend**: Astro + React (Cloudflare Pages)
+- **Backend**: Cloudflare Workers (via Astro API Routes)
+- **Database**: Neon PostgreSQL (Multi-tenant via `organization_id`)
+- **ORM**: Prisma dengan `runtime = "cloudflare"`
+- **Cache**: Cloudflare KV
+- **Storage**: Cloudflare R2 (S3-compatible)
+- **Auth**: Custom JWT implementation dengan refresh tokens
 
 ### Infrastruktur
 
-- **Hosting**: Vercel (FE) + Fly.io/Railway (API).
-- **Container**: Docker.
-- **CDN**: Cloudflare / AWS CloudFront.
-- **Observability**: Sentry, OpenTelemetry.
+- **Hosting**: Cloudflare Pages + Workers
+- **Database**: Neon PostgreSQL + Cloudflare Hyperdrive
+- **CDN**: Cloudflare (built-in)
+- **Observability**: Cloudflare Analytics, Sentry
 
 ---
 
@@ -112,26 +112,15 @@
 
 ### **Storage Backends**
 
-- **Local**: File system storage untuk development (Priority 1 - Always available)
-- **MinIO**: S3-compatible untuk staging/development (Priority 2)
-- **Amazon S3**: Production cloud storage (Priority 3)
-- **Future**: Google Cloud Storage (Priority 4), Azure Blob Storage (Priority 5)
+- **Cloudflare R2**: Production storage (Primary)
+- **Local**: File system storage untuk development only
 
-### **Storage Configuration Flow**
+### **Storage Configuration**
 
-1. Seleksi storage type berbasis environment via `STORAGE_TYPE`
-2. Validasi otomatis environment variables yang required
-3. Fallback ke storage terbaik jika requested type unavailable
-4. Runtime health monitoring dengan automatic failover
-5. Validasi security komprehensif untuk semua operasi storage
-
-### **Security Features**
-
-- Runtime configuration validation dengan error reporting terperinci
-- Safe storage switching dengan rollback ke configuration sebelumnya
-- Comprehensive logging untuk semua storage operations
-- Protection terhadap file injection dan path traversal
-- Enkripsi support untuk storage yang compatible
+1. R2 bucket binding via `wrangler.toml`
+2. Automatic security validation untuk semua operasi
+3. Presigned URLs untuk temporary access
+4. Backup via R2 lifecycle policies
 
 ---
 
@@ -174,9 +163,9 @@
 ## 9. Teknologi Detail
 
 - **FE**: Astro 5 + React, Tailwind v4, Framer Motion.
-- **API**: NestJS 10, Class-Validator, Swagger.
-- **QA**: Vitest (Unit) + SWC (Transform), Playwright (E2E), Lighthouse (Perf).
-- **DevOps**: Trunk-based Git, Conventional Commits.
+- **API**: Cloudflare Workers via Astro SSR API Routes.
+- **QA**: Vitest (Unit), Playwright (E2E), Lighthouse (Perf).
+- **DevOps**: Trunk-based Git, Conventional Commits, Cloudflare Pages CI/CD.
 
 ---
 
