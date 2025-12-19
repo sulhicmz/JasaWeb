@@ -139,6 +139,40 @@ vi.mock('@prisma/client', () => ({
   })),
 }));
 
+// Mock @jasaweb/config
+vi.mock('@jasaweb/config', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  storageConfigRegistry: {
+    autoSelectBestStorage: vi.fn(() => ({
+      previousType: 'local',
+      newType: 'local',
+      reason: 'Test environment',
+    })),
+    getCurrentStorageConfig: vi.fn(() => ({
+      type: 'local',
+      displayName: 'Local Storage',
+    })),
+    validateCurrentStorage: vi.fn(() => ({
+      isValid: true,
+      errors: [],
+      warnings: [],
+    })),
+    getCurrentStorageType: vi.fn(() => 'local'),
+    getAvailableStorageConfigs: vi.fn(() => []),
+    getStorageSummary: vi.fn(() => ({})),
+  },
+  StorageType: {
+    LOCAL: 'local',
+    S3: 's3',
+    MINIO: 'minio',
+  },
+}));
+
 // Mock bcrypt
 vi.mock('bcrypt', () => ({
   hash: vi.fn(),
@@ -157,6 +191,40 @@ vi.mock('@nestjs/jwt', () => ({
     verify: vi.fn(),
     verifyAsync: vi.fn(),
   })),
+}));
+
+// Mock @jasaweb/config
+vi.mock('@jasaweb/config', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  storageConfigRegistry: {
+    autoSelectBestStorage: vi.fn(() => ({
+      previousType: 'local',
+      newType: 'local',
+      reason: 'Test environment',
+    })),
+    getCurrentStorageConfig: vi.fn(() => ({
+      type: 'local',
+      displayName: 'Local Storage',
+    })),
+    validateCurrentStorage: vi.fn(() => ({
+      isValid: true,
+      errors: [],
+      warnings: [],
+    })),
+    getCurrentStorageType: vi.fn(() => 'local'),
+    getAvailableStorageConfigs: vi.fn(() => []),
+    getStorageSummary: vi.fn(() => ({})),
+  },
+  StorageType: {
+    LOCAL: 'local',
+    S3: 's3',
+    MINIO: 'minio',
+  },
 }));
 
 // Mock @nestjs/config

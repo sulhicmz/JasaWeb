@@ -102,7 +102,7 @@ export class AppConfigService {
     return getWebUrl();
   }
 
-  private getDefaultCorsOrigins(isDevelopment: boolean): string[] {
+  private getDefaultCorsOrigins(_isDevelopment: boolean): string[] {
     return UrlBuilder.getAllowedOrigins();
   }
 

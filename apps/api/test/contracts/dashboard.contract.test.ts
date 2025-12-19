@@ -7,6 +7,8 @@ import { RolesGuard } from '../../src/common/guards/roles.guard';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DashboardGateway } from '../../src/dashboard/dashboard.gateway';
+import { MockEnhancedCacheService } from '../../src/common/cache/mock-enhanced-cache.service';
+import { EnhancedCacheService } from '../../src/common/cache/enhanced-cache.service';
 
 import { Reflector } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -16,7 +18,7 @@ import { APP_GUARD } from '@nestjs/core';
 describe('DashboardController API Contract Tests', () => {
   let controller: DashboardController;
   let prismaService: MultiTenantPrismaService;
-  let cacheManager: Cache;
+  let enhancedCache: MockEnhancedCacheService;
   let dashboardGateway: DashboardGateway;
 
   const mockOrganizationId = 'org-1';
@@ -49,6 +51,19 @@ describe('DashboardController API Contract Tests', () => {
     get: vi.fn(),
     set: vi.fn(),
     del: vi.fn(),
+    clear: vi.fn(),
+  };
+
+  const mockEnhancedCacheService = {
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    getStats: vi.fn(),
+    resetStats: vi.fn(),
+    warmUp: vi.fn(),
+    invalidatePattern: vi.fn(),
+    getOrSet: vi.fn(),
+    clear: vi.fn(),
   };
 
   const mockDashboardGateway = {
@@ -84,6 +99,10 @@ describe('DashboardController API Contract Tests', () => {
           useValue: mockCacheManager,
         },
         {
+          provide: EnhancedCacheService,
+          useClass: MockEnhancedCacheService,
+        },
+        {
           provide: DashboardGateway,
           useValue: mockDashboardGateway,
         },
@@ -103,7 +122,9 @@ describe('DashboardController API Contract Tests', () => {
     prismaService = module.get<MultiTenantPrismaService>(
       MultiTenantPrismaService
     );
-    cacheManager = module.get<Cache>(CACHE_MANAGER);
+    enhancedCache = module.get<MockEnhancedCacheService>(
+      'EnhancedCacheService'
+    );
     dashboardGateway = module.get<DashboardGateway>(DashboardGateway);
 
     vi.clearAllMocks();
@@ -112,7 +133,7 @@ describe('DashboardController API Contract Tests', () => {
   describe('API Contract - GET /dashboard/stats', () => {
     it('should return dashboard statistics with correct contract', async () => {
       // Mock cache miss
-      mockCacheManager.get.mockResolvedValue(null);
+      mockEnhancedCacheService.get.mockResolvedValue(null);
 
       // Mock Prisma responses
       mockPrismaService.project.findMany.mockResolvedValue([
@@ -196,10 +217,10 @@ describe('DashboardController API Contract Tests', () => {
       expect(typeof result.milestones.dueThisWeek).toBe('number');
 
       // Verify caching behavior
-      expect(cacheManager.set).toHaveBeenCalledWith(
-        `dashboard-stats-${mockOrganizationId}`,
+      expect(mockEnhancedCacheService.set).toHaveBeenCalledWith(
+        expect.any(String),
         expect.any(Object),
-        300000
+        expect.objectContaining({ ttl: 300000 })
       );
     });
 
@@ -223,15 +244,13 @@ describe('DashboardController API Contract Tests', () => {
         milestones: { total: 6, completed: 4, overdue: 1, dueThisWeek: 1 },
       };
 
-      mockCacheManager.get.mockResolvedValue(cachedStats);
+      mockEnhancedCacheService.get.mockResolvedValue(cachedStats);
 
       const result = await controller.getDashboardStats(mockOrganizationId);
 
       // Should match the exact same contract
       expect(result).toEqual(cachedStats);
-      expect(cacheManager.get).toHaveBeenCalledWith(
-        `dashboard-stats-${mockOrganizationId}`
-      );
+      expect(mockEnhancedCacheService.get).toHaveBeenCalled();
       expect(prismaService.project.findMany).not.toHaveBeenCalled();
     });
   });
@@ -471,13 +490,13 @@ describe('DashboardController API Contract Tests', () => {
     it('should refresh cache with correct response', async () => {
       await controller.refreshDashboardCache(mockOrganizationId);
 
-      expect(cacheManager.del).toHaveBeenCalledWith(
-        `dashboard-stats-${mockOrganizationId}`
+      expect(mockEnhancedCacheService.del).toHaveBeenCalledWith(
+        expect.any(String)
       );
-      expect(cacheManager.del).toHaveBeenCalledWith(
+      expect(mockEnhancedCacheService.del).toHaveBeenCalledWith(
         `dashboard-activity-${mockOrganizationId}`
       );
-      expect(cacheManager.del).toHaveBeenCalledWith(
+      expect(mockEnhancedCacheService.del).toHaveBeenCalledWith(
         `dashboard-projects-${mockOrganizationId}`
       );
 

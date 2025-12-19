@@ -66,9 +66,7 @@ export class SecurityMonitoringService {
 
   private async ensureReportsDirectory(): Promise<void> {
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is constructed from controlled process.cwd() and constant string
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.mkdir(this.reportsPath, { recursive: true });
     } catch (error) {
       this.logger.error('Failed to create security reports directory:', error);
@@ -183,9 +181,7 @@ export class SecurityMonitoringService {
       const filename = `security-report-${sanitizedId}.json`;
       const filepath = join(this.reportsPath, filename);
 
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is constructed from controlled reportsPath and sanitized filename
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       await fs.writeFile(filepath, JSON.stringify(report, null, 2), {
         mode: 0o640,
       });
@@ -198,10 +194,8 @@ export class SecurityMonitoringService {
 
   async getLatestReport(): Promise<SecurityReport | null> {
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is controlled constant from process.cwd() and constant string
-      const files = // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fs.readdir(this.reportsPath);
+      const files = await fs.readdir(this.reportsPath);
       const reportFiles = files
         .filter(
           (file: string) =>
@@ -215,10 +209,8 @@ export class SecurityMonitoringService {
       }
 
       const latestFile = reportFiles[0];
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is constructed from controlled reportsPath and filtered array result
-      const content = // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fs.readFile(
+      const content = await fs.readFile(
         join(this.reportsPath, latestFile || 'default.json'),
         'utf8'
       );
@@ -231,10 +223,8 @@ export class SecurityMonitoringService {
 
   async getReportHistory(limit: number = 10): Promise<SecurityReport[]> {
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       // Path is controlled constant from process.cwd() and constant string
-      const files = // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fs.readdir(this.reportsPath);
+      const files = await fs.readdir(this.reportsPath);
       const reportFiles = files
         .filter(
           (file: string) =>
@@ -248,10 +238,8 @@ export class SecurityMonitoringService {
 
       for (const file of reportFiles) {
         try {
-          // eslint-disable-next-line security/detect-non-literal-fs-filename
           // Path is constructed from controlled reportsPath and filtered array result
-          const content = // eslint-disable-next-line security/detect-non-literal-fs-filename
-      await fs.readFile(
+          const content = await fs.readFile(
             join(this.reportsPath, file),
             'utf8'
           );

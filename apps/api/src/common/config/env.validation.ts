@@ -6,6 +6,7 @@ export function getRequiredEnv(key: string): string {
   if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     throw new Error(`Invalid environment variable key: ${key}`);
   }
+  // eslint-disable-next-line security/detect-object-injection
   const value = process.env[key];
   if (value === undefined || value === '') {
     throw new Error(`Required environment variable ${key} is missing or empty`);
@@ -24,6 +25,7 @@ export function getOptionalEnv(
   if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     throw new Error(`Invalid environment variable key: ${key}`);
   }
+  // eslint-disable-next-line security/detect-object-injection
   const value = process.env[key];
   return value !== undefined && value !== '' ? value : defaultValue;
 }
@@ -36,6 +38,7 @@ export function getEnvNumber(key: string, defaultValue: number): number {
   if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     throw new Error(`Invalid environment variable key: ${key}`);
   }
+  // eslint-disable-next-line security/detect-object-injection
   const value = process.env[key];
   const num = value !== undefined ? parseInt(value, 10) : defaultValue;
   if (isNaN(num)) {
@@ -52,6 +55,7 @@ export function getEnvBoolean(key: string, defaultValue: boolean): boolean {
   if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     throw new Error(`Invalid environment variable key: ${key}`);
   }
+  // eslint-disable-next-line security/detect-object-injection
   const value = process.env[key];
   if (value === undefined) return defaultValue;
   return value.toLowerCase() === 'true';
