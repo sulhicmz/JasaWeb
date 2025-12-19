@@ -40,25 +40,14 @@ describe('UserService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UserService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
-        {
-          provide: PasswordService,
-          useValue: mockPasswordService,
-        },
-      ],
-    }).compile();
+    // Clear all mocks before each test
+    vi.clearAllMocks();
 
-    service = module.get<UserService>(UserService);
-
-    // Manually set the private dependencies due to injection issues
-    (service as any).prisma = mockPrismaService;
-    (service as any).passwordService = mockPasswordService;
+    // Create service directly with mocked dependencies
+    service = new UserService(
+      mockPrismaService as any,
+      mockPasswordService as any
+    );
   });
 
   afterEach(() => {
@@ -77,18 +66,20 @@ describe('UserService', () => {
     };
 
     it('should create a new user with hashed password', async () => {
-      const bcrypt = await import('bcrypt');
-      vi.mocked(bcrypt.hash).mockResolvedValue('test-hash-pass');
+      // PasswordService is mocked to return hashed-password
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       const result = await service.create(createUserDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith(createUserDto.password, 10);
+      expect(mockPasswordService.hashPassword).toHaveBeenCalledWith(
+        createUserDto.password
+      );
       expect(mockPrismaService.user.create).toHaveBeenCalledWith({
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'test-hash-pass',
+          password: 'hashed-password',
+          passwordHashVersion: 'argon2id',
         },
       });
       expect(result).toEqual(mockUser);
@@ -100,8 +91,6 @@ describe('UserService', () => {
         profilePicture: 'profile.jpg',
       };
 
-      const bcrypt = await import('bcrypt');
-      vi.mocked(bcrypt.hash).mockResolvedValue('hashedPassword');
       mockPrismaService.user.create.mockResolvedValue(mockUser);
 
       await service.create(createUserDtoWithPicture);

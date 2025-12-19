@@ -78,7 +78,7 @@ class MockAuthService {
     );
     if (!isPasswordValid.isValid) return null;
 
-    const { password, ...result } = user;
+    const { password: _, ...result } = user;
     return result;
   }
 
