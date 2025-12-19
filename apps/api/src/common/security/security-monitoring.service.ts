@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { join } from 'path';
 import { promises as fs } from 'fs';
+import { SecurityValidator } from '../utils/security-validator';
 
 export interface Vulnerability {
   severity: 'low' | 'moderate' | 'high' | 'critical';
@@ -58,16 +59,34 @@ interface NpmAuditError extends Error {
 @Injectable()
 export class SecurityMonitoringService {
   private readonly logger = new Logger(SecurityMonitoringService.name);
-  private readonly reportsPath = join(process.cwd(), 'security-reports');
+  private reportsPath: string;
 
   constructor() {
+    // Initialize with secure literal path
+    const secureReportsDir = SecurityValidator.getLiteralPath(
+      'SECURITY_REPORTS_DIR'
+    );
+    this.reportsPath = join(process.cwd(), secureReportsDir);
     this.ensureReportsDirectory();
   }
 
   private async ensureReportsDirectory(): Promise<void> {
     try {
-      // Path is constructed from controlled process.cwd() and constant string
-      await fs.mkdir(this.reportsPath, { recursive: true });
+      // Use secure literal path for reports directory
+      const secureReportsDir = SecurityValidator.getLiteralPath(
+        'SECURITY_REPORTS_DIR'
+      );
+      const reportsPath = join(process.cwd(), secureReportsDir);
+
+      // Validate the path operation
+      if (
+        !SecurityValidator.validateLiteralOperation(reportsPath, process.cwd())
+      ) {
+        throw new Error('Reports directory path validation failed');
+      }
+
+      await fs.mkdir(reportsPath, { recursive: true });
+      this.reportsPath = reportsPath; // Update the instance property
     } catch (error) {
       this.logger.error('Failed to create security reports directory:', error);
       throw error;
@@ -181,7 +200,18 @@ export class SecurityMonitoringService {
       const filename = `security-report-${sanitizedId}.json`;
       const filepath = join(this.reportsPath, filename);
 
-      // Path is constructed from controlled reportsPath and sanitized filename
+      // Validate file path operation with literal security
+      if (
+        !SecurityValidator.validateLiteralOperation(filepath, this.reportsPath)
+      ) {
+        throw new Error('Report file save path validation failed');
+      }
+
+      // Validate file extension
+      if (!SecurityValidator.validateFileExtension(filename)) {
+        throw new Error('Invalid file extension for security report');
+      }
+
       await fs.writeFile(filepath, JSON.stringify(report, null, 2), {
         mode: 0o640,
       });
@@ -194,13 +224,15 @@ export class SecurityMonitoringService {
 
   async getLatestReport(): Promise<SecurityReport | null> {
     try {
-      // Path is controlled constant from process.cwd() and constant string
       const files = await fs.readdir(this.reportsPath);
       const reportFiles = files
-        .filter(
-          (file: string) =>
-            file.startsWith('security-report-') && file.endsWith('.json')
-        )
+        .filter((file: string) => {
+          // Validate file extension for security
+          const hasValidExtension =
+            SecurityValidator.validateFileExtension(file);
+          const hasValidPrefix = file.startsWith('security-report-');
+          return hasValidPrefix && hasValidExtension;
+        })
         .sort()
         .reverse();
 
@@ -209,11 +241,20 @@ export class SecurityMonitoringService {
       }
 
       const latestFile = reportFiles[0];
-      // Path is constructed from controlled reportsPath and filtered array result
-      const content = await fs.readFile(
-        join(this.reportsPath, latestFile || 'default.json'),
-        'utf8'
-      );
+      if (!latestFile) {
+        return null;
+      }
+
+      const filepath = join(this.reportsPath, latestFile);
+
+      // Validate file read path operation
+      if (
+        !SecurityValidator.validateLiteralOperation(filepath, this.reportsPath)
+      ) {
+        throw new Error('Report file read path validation failed');
+      }
+
+      const content = await fs.readFile(filepath, 'utf8');
       return JSON.parse(content) as SecurityReport;
     } catch (error: unknown) {
       this.logger.error('Failed to get latest security report:', error);
@@ -238,11 +279,20 @@ export class SecurityMonitoringService {
 
       for (const file of reportFiles) {
         try {
-          // Path is constructed from controlled reportsPath and filtered array result
-          const content = await fs.readFile(
-            join(this.reportsPath, file),
-            'utf8'
-          );
+          const filepath = join(this.reportsPath, file);
+
+          // Validate file read path operation
+          if (
+            !SecurityValidator.validateLiteralOperation(
+              filepath,
+              this.reportsPath
+            )
+          ) {
+            this.logger.warn(`Invalid file path detected for report: ${file}`);
+            continue;
+          }
+
+          const content = await fs.readFile(filepath, 'utf8');
           const report = JSON.parse(content) as SecurityReport;
           reports.push(report);
         } catch (error) {

@@ -242,13 +242,16 @@ vi.mock('@nestjs/passport', () => ({
 vi.mock('@nestjs/common', () => ({
   Injectable: vi
     .fn()
-    .mockImplementation((options?: any) => (target: any) => target),
-  Controller: vi.fn().mockImplementation(() => (target: any) => target),
+    .mockImplementation(
+      (options?: Record<string, unknown>) => (target: unknown) => target
+    ),
+  Controller: vi.fn().mockImplementation(() => (target: unknown) => target),
   Get: vi
     .fn()
     .mockImplementation(
-      (path?: string) => (target: any, key?: string, descriptor?: any) =>
-        descriptor
+      (path?: string) =>
+        (target: unknown, key?: string, descriptor?: PropertyDescriptor) =>
+          descriptor
     ),
   Post: vi
     .fn()
@@ -331,22 +334,23 @@ vi.mock('@nestjs/common', () => ({
   ValidationPipe: vi
     .fn()
     .mockImplementation(
-      (options?: any) => (target: any, key?: string, descriptor?: any) =>
-        descriptor
+      (options?: Record<string, unknown>) =>
+        (target: unknown, key?: string, descriptor?: PropertyDescriptor) =>
+          descriptor
     ),
   ParseIntPipe: vi
     .fn()
     .mockImplementation(
-      () => (target: any, key?: string, index?: number) => {}
+      () => (target: unknown, key?: string, index?: number) => {}
     ),
   UseGuards: vi.fn().mockImplementation(
-    (...guards: any[]) =>
-      (target: any, key?: string, descriptor?: any) =>
+    (...guards: unknown[]) =>
+      (target: unknown, key?: string, descriptor?: PropertyDescriptor) =>
         descriptor
   ),
   UseInterceptors: vi.fn().mockImplementation(
-    (...interceptors: any[]) =>
-      (target: any, key?: string, descriptor?: any) =>
+    (...interceptors: unknown[]) =>
+      (target: unknown, key?: string, descriptor?: PropertyDescriptor) =>
         descriptor
   ),
   UseFilters: vi.fn().mockImplementation(

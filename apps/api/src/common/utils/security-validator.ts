@@ -29,6 +29,35 @@ export class SecurityValidator {
   private static readonly DANGEROUS_PATTERNS = ['..', '~'];
 
   /**
+   * Allowed literal paths for secure operations
+   */
+  private static readonly ALLOWED_LITERALS = {
+    UPLOAD_DIR: './uploads',
+    TEMP_DIR: '/tmp',
+    SECURITY_REPORTS_DIR: 'security-reports',
+    DEFAULT_FILENAME: 'default.json',
+    CACHE_DIR: './cache',
+    LOGS_DIR: './logs',
+  } as const;
+
+  /**
+   * Valid file extensions
+   */
+  private static readonly ALLOWED_EXTENSIONS = [
+    '.txt',
+    '.json',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+  ] as const;
+
+  /**
    * Validate and sanitize a file key
    */
   static sanitizeKey(key: string): string {
@@ -158,6 +187,47 @@ export class SecurityValidator {
       // Mock implementation - would use fs.mkdirSync in real usage
       // fs.mkdirSync(validatedPath, { recursive: true, mode: 0o750 });
     };
+  }
+
+  /**
+   * Validate file extension
+   */
+  static validateFileExtension(filename: string): boolean {
+    const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'));
+    return this.ALLOWED_EXTENSIONS.includes(ext as any);
+  }
+
+  /**
+   * Get secure literal path by key
+   */
+  static getLiteralPath(
+    key: keyof (typeof SecurityValidator)['ALLOWED_LITERALS']
+  ): string {
+    return this.ALLOWED_LITERALS[key];
+  }
+
+  /**
+   * Validate literal operation security
+   */
+  static validateLiteralOperation(path: string, basePath: string): boolean {
+    const normalizedPath = this.normalizePath(path);
+    const normalizedBase = this.normalizePath(basePath);
+
+    // Only allow paths within allowed bases
+    if (!normalizedPath.startsWith(normalizedBase)) {
+      return false;
+    }
+
+    // Check for dangerous patterns
+    if (
+      this.DANGEROUS_PATTERNS.some((pattern) =>
+        normalizedPath.includes(pattern)
+      )
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   /**

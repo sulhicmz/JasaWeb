@@ -77,6 +77,9 @@ class LocalStorageAdapter extends BaseStorageAdapter {
   private ensureDirectoryExists(): void {
     const path = require('path') as typeof import('path');
 
+    // Use secure literal path validation
+    const secureUploadDir = SecurityValidator.getLiteralPath('UPLOAD_DIR');
+
     if (!SecurityValidator.isAllowedPath(this.uploadPath)) {
       throw new Error(
         'Invalid upload path detected - must be within allowed directories'
@@ -84,10 +87,17 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     }
 
     const normalizedPath = path.normalize(this.uploadPath);
-    const DEFAULT_UPLOAD_DIR = 'uploads' as const;
+    const DEFAULT_UPLOAD_DIR = secureUploadDir;
     const uploadDir = normalizedPath.endsWith(DEFAULT_UPLOAD_DIR)
       ? normalizedPath
       : path.join(normalizedPath, DEFAULT_UPLOAD_DIR);
+
+    // Validate literal operation before proceeding
+    if (
+      !SecurityValidator.validateLiteralOperation(uploadDir, normalizedPath)
+    ) {
+      throw new Error('Directory creation path validation failed');
+    }
 
     const secureFileExists = SecurityValidator.createSecureFileExists();
     const secureMkdir = SecurityValidator.createSecureMkdir();
@@ -125,16 +135,34 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       this.uploadPath
     );
 
-    // Secure directory creation with validated path
+    // Secure directory creation with validated literal path
     try {
-      await fs.mkdir(validatedDirPath, { recursive: true, mode: 0o750 });
+      // Use literal path validation for secure operations
+      const validatedLiteralPath = SecurityValidator.validateLiteralOperation(
+        validatedDirPath,
+        this.uploadPath
+      )
+        ? validatedDirPath
+        : this.uploadPath;
+
+      await fs.mkdir(validatedLiteralPath, { recursive: true, mode: 0o750 });
     } catch (error) {
       this.logger.error('Directory creation failed:', error);
       throw error;
     }
 
-    // Write file with secure permissions
+    // Write file with secure permissions and validated path
     try {
+      // Final security check before write operation
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        throw new Error('File write path validation failed');
+      }
+
       await fs.writeFile(normalizedPath, data, { mode: 0o640 });
     } catch (error) {
       this.logger.error('File write failed:', error);
@@ -166,8 +194,18 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       filePath
     );
 
-    // Secure file read with validated path
+    // Secure file read with validated literal path
     try {
+      // Final security check before read operation
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        throw new Error('File read path validation failed');
+      }
+
       return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
@@ -189,8 +227,18 @@ class LocalStorageAdapter extends BaseStorageAdapter {
       filePath
     );
 
-    // Secure file deletion with validated path
+    // Secure file deletion with validated literal path
     try {
+      // Final security check before delete operation
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        throw new Error('File deletion path validation failed');
+      }
+
       await fs.unlink(normalizedPath);
       this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {
@@ -219,6 +267,16 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     );
 
     try {
+      // Security check before file access check
+      if (
+        !SecurityValidator.validateLiteralOperation(
+          normalizedPath,
+          this.uploadPath
+        )
+      ) {
+        return false; // Treat suspicious paths as non-existent
+      }
+
       await fs.access(normalizedPath);
       return true;
     } catch {
