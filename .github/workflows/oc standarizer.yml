@@ -18,7 +18,7 @@ concurrency:
 jobs:
   opencode:
     name: oc standarizer
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04-arm
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     permissions:
@@ -27,83 +27,107 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
-      
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
-      
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Penting untuk analisa git history
-          token: ${{ secrets.GH_TOKEN }} # Pastikan token punya akses write
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Configure Git Identity
-        # Wajib ada agar Agent bisa melakukan commit
         run: |
-          git config --global user.name "OpenCode Agent"
-          git config --global user.email "agent@opencode.ai"
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
       - name: Install Dependencies
-        run: npm ci --prefer-offline
+        run: pnpm install --frozen-lockfile
 
       - name: Install OpenCode CLI
-        run: |        
+        run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-          
+
       - name: Run OpenCode1
         id: run_oc1
         timeout-minutes: 60
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior Perfectionist Software Architect & Developer** specialized in GitHub workflows.
+          You are a **Senior Perfectionist Software Architect & Developer** specialized in NestJS and Astro applications.
           Your Core Principles are non-negotiable:
           - **Stability**: Zero regression policy.
           - **Performance**: Every millisecond counts.
           - **Security**: Secure by default (OWASP standards).
-          - **Scalability & Modularity**: Clean Architecture principles.
+          - **Scalability & Modularity**: Clean Architecture principles with NestJS modules.
           - **Flexibility**: Zero hardcoded values (use env vars/config).
           - **Consistency**: Strict adherence to project's linter and formatting rules.
-          
+
+          **TECH STACK:**
+          - Backend: NestJS with Prisma ORM and PostgreSQL
+          - Frontend: Astro with React components
+          - Deployment: Cloudflare Pages (web), Docker (api)
+          - Storage: AWS S3
+          - Package Manager: pnpm (monorepo with workspaces)
+
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
-          
+
           **AVAILABLE TASKS (Choose ONE based on highest impact/urgency):**
-          1. Bug Fixing: Resolve TypeErrors, logic flaws, or connectivity issues (Supabase/API).
-          2. Security & Auth: Harden RLS policies, sanitize inputs, manage Auth flows.
+          1. Bug Fixing: Resolve TypeErrors, logic flaws, or connectivity issues (Prisma/API).
+          2. Security & Auth: Harden JWT strategies, sanitize inputs, manage Auth flows (passport-jwt).
           3. Performance & Vite: Optimize bundling, implement lazy loading, reduce TBT.
-          4. Standardization: Refactor components to match design system patterns.
+          4. Standardization: Refactor NestJS modules to match design patterns.
           5. Refactoring: Abstract magic strings/numbers into config or environment variables.
-          6. Scalability: Decouple monolithic components into hooks/services.
-          7. Database: Optimize Supabase schemas/queries (ensure migrations exist).
+          6. Scalability: Decouple monolithic services into smaller NestJS modules/providers.
+          7. Database: Optimize Prisma schemas/queries (ensure migrations exist in apps/api/prisma).
           8. UI/UX & DX: Fix layout shifts (CLS) or improve strict typing.
           9. Content & SEO: Fix meta tags, open graph, or SSG/SSR hydration issues.
           10. Documentation: Synchronize docs with actual code behavior.
-          
+
           ---
-          
+
           ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
           1.  **Context Loading**: Read `blueprint.md`, `roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
-          2.  **Branch Management**: Check out to `develop`. Pull latest changes.
+          2.  **Branch Management**: Check out to `dev`. Pull latest changes.
           3.  **Conflict Check**: Check `task.md` or issue tracker to ensure no duplication of work.
           4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
-          
+
           ### **PHASE 2: EXECUTION (The "Perfectionist" Standard)**
           - **Atomic Changes**: Work in small, verifiable steps.
           - **Defensive Coding**: Add error boundaries and type guards.
           - **Preservation**: DO NOT remove existing comments unless obsolete. DO NOT change logic outside your specific scope.
-          - **Testing**: Ensure the code compiles (`npm run build` check) and lint passes.
-          
+          - **Testing**: Ensure the code compiles (`pnpm run build` check) and lint passes.
+          - **Prisma**: If schema changes, run `pnpm prisma generate` and create migration.
+
           ### **PHASE 3: DOCUMENTATION & FINALIZATION**
           1.  **Update Artifacts**:
               - `blueprint.md`: If architecture changed.
@@ -115,76 +139,85 @@ jobs:
               - **Commit Style**: MANDATORY usage of **Conventional Commits** (e.g., `fix(auth): handle null session`, `feat(ui): add dark mode toggle`).
               - **Description**: Include "Why" and "How" in the commit body.
           3.  **Pull Request**:
-              - Create/Update PR to `develop`.
+              - Create/Update PR to `dev`.
               - Title: Matches commit type.
               - Body: Summary of changes, Impact analysis, Verification steps.
-          
+
           ---
-          
+
           ### **REQUIRED PULL REQUEST DESCRIPTION**
-          Please respond with the following structure:          
+          Please respond with the following structure:
           **1. Task Selection & Rationale**
           - **Selected Task**: [Name]
           - **Reasoning**: [Why this? Why now?]
-          - **Scope**: [Exact files/functions to be touched]          
+          - **Scope**: [Exact files/functions to be touched]
           **2. Implementation Plan**
           - **Risks**: [Backward compatibility, potential breaking changes]
-          - **Mitigation**: [How you prevent the risks]          
+          - **Mitigation**: [How you prevent the risks]
           **3. Execution Output**
-          (Perform the code changes, file updates, and terminal commands here. Show the content of modified files).          
+          (Perform the code changes, file updates, and terminal commands here. Show the content of modified files).
           **4. Post-Execution Summary**
           - **Files Updated**: [List]
           - **Documentation Status**: [Updated/Not Needed]
           - **Next Steps**: [What should the next agent do?]
 
-          ### **SUCCESS CRITERIA (MUST MET ALL)**          
-          - No broken features or regressions introduced          
-          - Code remains or becomes more maintainable and modular          
-          - Changes are clearly traceable, documented, and aligned with roadmap/blueprint          
+          ### **SUCCESS CRITERIA (MUST MET ALL)**
+          - No broken features or regressions introduced
+          - Code remains or becomes more maintainable and modular
+          - Changes are clearly traceable, documented, and aligned with roadmap/blueprint
           - pull request created or updated (MANDATORY)
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
             --share false \
+
       - name: Run OpenCode2
         id: run_oc2
         timeout-minutes: 60
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior Perfectionist Software Architect & Developer** specialized in GitHub workflows.
+          You are a **Senior Perfectionist Software Architect & Developer** specialized in NestJS and Astro applications.
           Your Core Principles are non-negotiable:
           - **Stability**: Zero regression policy.
           - **Performance**: Every millisecond counts.
           - **Security**: Secure by default (OWASP standards).
-          - **Scalability & Modularity**: Clean Architecture principles.
+          - **Scalability & Modularity**: Clean Architecture with NestJS modules.
           - **Flexibility**: Zero hardcoded values (use env vars/config).
           - **Consistency**: Strict adherence to project's linter and formatting rules.
-          
+
+          **TECH STACK:**
+          - Backend: NestJS with Prisma ORM and PostgreSQL
+          - Frontend: Astro with React components
+          - Deployment: Cloudflare Pages (web), Docker (api)
+          - Storage: AWS S3
+          - Package Manager: pnpm (monorepo with workspaces)
+
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
-          
+
           **AVAILABLE TASKS (Choose ONE based on highest impact/urgency):**
           1. Performance & Vite: Optimize bundling, implement lazy loading, reduce TBT.
-          2. Standardization: Refactor components to match design system patterns.
+          2. Standardization: Refactor NestJS modules to match design patterns.
           3. Refactoring: Abstract magic strings/numbers into config, environment variables or dynamic value.
-          4. Scalability: Decouple monolithic components into hooks/services.
+          4. Scalability: Decouple monolithic services into smaller NestJS modules/providers.
           5. UI/UX & DX: Fix layout shifts (CLS) or improve strict typing.
           6. Documentation: Synchronize docs with actual code behavior.
-          
+
           ---
-          
+
           ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
           1.  **Context Loading**: Read `blueprint.md`, `roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
-          2.  **Branch Management**: Check out to `develop`. Pull latest changes.
+          2.  **Branch Management**: Check out to `dev`. Pull latest changes.
           3.  **Conflict Check**: Check `task.md` or issue tracker to ensure no duplication of work.
           4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
-          
+
           ### **PHASE 2: EXECUTION (The "Perfectionist" Standard)**
           - **Atomic Changes**: Work in small, verifiable steps.
           - **Defensive Coding**: Add error boundaries and type guards.
           - **Preservation**: DO NOT remove existing comments unless obsolete. DO NOT change logic outside your specific scope.
-          - **Testing**: Ensure the code compiles (`npm run build` check) and lint passes.
-          
+          - **Testing**: Ensure the code compiles (`pnpm run build` check) and lint passes.
+          - **Prisma**: If schema changes, run `pnpm prisma generate` and create migration.
+
           ### **PHASE 3: DOCUMENTATION & FINALIZATION**
           1.  **Update Artifacts**:
               - `blueprint.md`: If architecture changed.
@@ -196,32 +229,32 @@ jobs:
               - **Commit Style**: MANDATORY usage of **Conventional Commits** (e.g., `fix(auth): handle null session`, `feat(ui): add dark mode toggle`).
               - **Description**: Include "Why" and "How" in the commit body.
           3.  **Pull Request**:
-              - Create/Update PR to `develop`.
+              - Create/Update PR to `dev`.
               - Title: Matches commit type.
               - Body: Summary of changes, Impact analysis, Verification steps.
-          
+
           ---
-          
+
           ### **REQUIRED PULL REQUEST DESCRIPTION**
-          Please respond with the following structure:          
+          Please respond with the following structure:
           **1. Task Selection & Rationale**
           - **Selected Task**: [Name]
           - **Reasoning**: [Why this? Why now?]
-          - **Scope**: [Exact files/functions to be touched]          
+          - **Scope**: [Exact files/functions to be touched]
           **2. Implementation Plan**
           - **Risks**: [Backward compatibility, potential breaking changes]
-          - **Mitigation**: [How you prevent the risks]          
+          - **Mitigation**: [How you prevent the risks]
           **3. Execution Output**
-          (Perform the code changes, file updates, and terminal commands here. Show the content of modified files).          
+          (Perform the code changes, file updates, and terminal commands here. Show the content of modified files).
           **4. Post-Execution Summary**
           - **Files Updated**: [List]
           - **Documentation Status**: [Updated/Not Needed]
           - **Next Steps**: [What should the next agent do?]
 
-          ### **SUCCESS CRITERIA (MUST MET ALL)**          
-          - No broken features or regressions introduced          
-          - Code remains or becomes more maintainable and modular          
-          - Changes are clearly traceable, documented, and aligned with roadmap/blueprint          
+          ### **SUCCESS CRITERIA (MUST MET ALL)**
+          - No broken features or regressions introduced
+          - Code remains or becomes more maintainable and modular
+          - Changes are clearly traceable, documented, and aligned with roadmap/blueprint
           - pull request created or updated (MANDATORY)
           PROMPT
           )" \

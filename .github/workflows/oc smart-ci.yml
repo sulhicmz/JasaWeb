@@ -2,7 +2,7 @@ name: oc smart-ci
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, dev]
 
 concurrency:
   group: global-${{ github.workflow }}
@@ -11,57 +11,72 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  issues: write # Dibutuhkan untuk komentar PR
+  issues: write
 
 jobs:
   smart-ci:
     name: Self-Healing CI
-    runs-on: ubuntu-latest # Gunakan latest untuk kompatibilitas tools yang lebih baik
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      # Env vars lain sebaiknya diload via .env di level aplikasi atau secrets spesifik jika perlu
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Penting untuk analisa git history
-          token: ${{ secrets.GH_TOKEN }} # Pastikan token punya akses write
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Configure Git Identity
-        # Wajib ada agar Agent bisa melakukan commit
         run: |
-          git config --global user.name "OpenCode Agent"
-          git config --global user.email "agent@opencode.ai"
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
       - name: Install Dependencies
-        run: npm ci --prefer-offline
+        run: pnpm install --frozen-lockfile
 
       # --- EXECUTION PHASE (Collecting Status) ---
-      
+
       - name: Lint Check
         id: lint
         continue-on-error: true
-        # Menggunakan --if-present jauh lebih stabil daripada grep
-        run: npm run lint --if-present
+        run: pnpm run lint --if-present
 
       - name: Test Check
         id: test
         continue-on-error: true
-        run: npm test --if-present
+        run: pnpm test --if-present
 
       - name: Build Check
         id: build
         continue-on-error: true
-        run: npm run build --if-present
+        run: pnpm run build --if-present
 
       # --- AGENT PHASE ---
 
@@ -72,49 +87,46 @@ jobs:
 
       - name: Run OpenCode Agent
         id: run_agent
-        # Inject status step sebelumnya secara eksplisit ke dalam prompt
         env:
           STATUS_LINT: ${{ steps.lint.outcome }}
           STATUS_TEST: ${{ steps.test.outcome }}
           STATUS_BUILD: ${{ steps.build.outcome }}
         run: |
-          # Kita buat prompt file temporary agar YAML tetap bersih
           cat <<EOF > agent_prompt.txt
           CONTEXT:
           You are a Senior DevOps Agent inside GitHub Actions.
           Your goal is to fix CI failures automatically.
-          
+
           CURRENT STATUS:
           - Lint: $STATUS_LINT
           - Test: $STATUS_TEST
           - Build: $STATUS_BUILD
-                  
-          INSTRUCTIONS:       
+
+          INSTRUCTIONS:
           1. IF ALL STATUS are 'success':
              - Respond with: "✅ CI Passed. Merging changes."
-             - Action: 
-               - Merge the pull request/branch into 'develop'.
-               - Example command: `gh pr merge --auto --merge` (or git merge command depending on your env).
-             - Exit gracefully.          
+             - Action:
+               - Merge the pull request/branch into 'dev'.
+               - Example command: \`gh pr merge --auto --merge\` (or git merge command depending on your env).
+             - Exit gracefully.
           2. IF ANY STATUS is 'failure':
              - STEP A: Analyze Logs & Prevention
-               - Read logs. Check `git log -1`. If last commit was by AI-Auto-Fixer, STOP.          
+               - Read logs. Check \`git log -1\`. If last commit was by AI-Auto-Fixer, STOP.
              - STEP B: Fix & Verify
                - Fix the code (Syntax/Types/Imports).
-               - VERIFY: Run the failing command locally (e.g., `npm run lint`).
-               - If verify fails: Restore and Exit.          
+               - VERIFY: Run the failing command locally (e.g., \`pnpm run lint\`).
+               - If verify fails: Restore and Exit.
              - STEP C: Commit & Push
-               - `git add .`
-               - `git commit -m "fix(ci): auto-resolve build/lint errors"`
-               - `git push origin HEAD:${{ github.head_ref }}`
-          
+               - \`git add .\`
+               - \`git commit -m "fix(ci): auto-resolve build/lint errors"\`
+               - \`git push origin HEAD:${{ github.head_ref }}\`
+
           CONSTRAINTS:
           - Do not hallucinate dependencies.
           - Do not delete business logic.
           - Keep changes minimal.
           EOF
 
-          # Jalankan OpenCode dengan prompt file
           opencode run "$(cat agent_prompt.txt)" \
             --model iflowcn/glm-4.6 \
             --share false \
@@ -122,9 +134,6 @@ jobs:
       - name: Final Status Check
         if: always()
         run: |
-          # Fail job jika step asli gagal DAN Agent gagal memperbaiki (tidak ada commit baru)
           if [[ "${{ steps.lint.outcome }}" == "failure" || "${{ steps.test.outcome }}" == "failure" || "${{ steps.build.outcome }}" == "failure" ]]; then
-             # Cek apakah ada commit baru dari Agent? Jika tidak, fail.
              echo "⚠️ CI required manual intervention or agent fix."
-             # Opsional: exit 1 jika ingin strict merah di GitHub
           fi

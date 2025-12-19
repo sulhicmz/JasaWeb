@@ -2,7 +2,7 @@ name: oc analyzer
 
 on:
   schedule:
-    - cron: '* */3 * * *'
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   opencode:
     name: oc analyzer
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04-arm
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     permissions:
@@ -27,41 +27,56 @@ jobs:
       pull-requests: write
       issues: write
       actions: write
-      
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
-      
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Penting untuk analisa git history
-          token: ${{ secrets.GH_TOKEN }} # Pastikan token punya akses write
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Configure Git Identity
-        # Wajib ada agar Agent bisa melakukan commit
         run: |
-          git config --global user.name "OpenCode Agent"
-          git config --global user.email "agent@opencode.ai"
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
       - name: Install Dependencies
-        run: npm ci --prefer-offline
+        run: pnpm install --frozen-lockfile
 
       - name: Install OpenCode CLI
         run: |
-        
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-          
+
       - name: Run OpenCode
         id: run_oc
         timeout-minutes: 60
@@ -69,28 +84,35 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           You are a **Senior Software Architect & Lead Auditor**.
           Your Principle: **"Observation without Interference."** You perform deep analysis without altering business logic.
-          
+
+          **TECH STACK:**
+          - Backend: NestJS with Prisma ORM and PostgreSQL
+          - Frontend: Astro with React components
+          - Deployment: Cloudflare Pages (web), Docker (api)
+          - Storage: AWS S3
+          - Package Manager: pnpm (monorepo with workspaces)
+
           **CONTEXT:**
-          You have been summoned to evaluate the current state of the repository on the `develop` branch.
+          You have been summoned to evaluate the current state of the repository on the `dev` branch.
           Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
-          
+
           **TASK SCOPE:**
           1.  **Read & Analyze:** Review `blueprint.md`, `roadmap.md`, `AGENTS.md`, and the entire codebase.
           2.  **Verify, dont assume:** Verify all of your analyze in step 1, run build, test, lint if needed
           3.  **Evaluate:** Score the codebase (0-100) based on the criteria below.
           4.  **Document:** Generate/Update the report in `evaluasi.md` and update project meta-files.
-          
+
           **EVALUATION CRITERIA (0-100):**
           - **Stability**: Error handling coverage, crash resilience, type safety.
-          - **Performance**: Resource efficiency, rendering cycles, query optimization.
-          - **Security**: Auth flow, RLS policies, input sanitization, secret management.
-          - **Scalability**: Folder structure, separation of concerns, growth readiness.
+          - **Performance**: Resource efficiency, rendering cycles, query optimization (Prisma).
+          - **Security**: Auth flow (JWT/passport), input sanitization, secret management.
+          - **Scalability**: NestJS module structure, separation of concerns, growth readiness.
           - **Modularity**: Component/function reusability, coupling levels.
           - **Flexibility**: Config management (env vars), absence of magic strings.
           - **Consistency**: Naming conventions, linter adherence, code patterns.
-          
+
           **EXECUTION STEPS:**
-          1.  **Checkout**: Ensure you are on `develop` and up to date.
+          1.  **Checkout**: Ensure you are on `dev` and up to date.
           2.  **Audit**: Read the code. Look for patterns, anti-patterns, technical debt, and risks.
           3.  **Verify**: Verify your audit, dont assume.
           4.  **Report Generation (Target: `evaluasi.md`)**:
@@ -103,68 +125,76 @@ jobs:
               - **`AGENTS.md`**: Update this file with new "Rules of Engagement" or warnings based on your findings (e.g., "Warning: Auth module is fragile, touch with caution").
               - **`roadmap.md`**: Add specific tasks to address the weaknesses found in `evaluasi.md` (e.g., "Refactor: Decouple User Service").
               - **`task.md`**: Update status of existing tasks if verified completed.
-          
+
           **CONSTRAINTS:**
           - **DO NOT** change any `.ts`, `.tsx`, `.js`, or business logic files.
           - **DO NOT** fix bugs. Your job is to *find* and *document* them.
           - **OUTPUT**: Markdown files only (`evaluasi.md`, `AGENTS.md`, `roadmap.md`, `task.md`).
-          
+
           **SUCCESS CRITERIA:**
           - `evaluasi.md` is generated with strict, honest scoring and actionable insights.
           - `AGENTS.md` contains updated guidelines for future agents.
           - No functional code is touched.
           - Commit and push to branch 'analyzer' with message: `docs(audit): update evaluation report and agent guidelines`.
-          - Create or update a Pull Request to `develop`.
+          - Create or update a Pull Request to `dev`.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
             --share false \
-            
+
       - name: Run OpenCode1
         id: run_oc1
         timeout-minutes: 60
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior DevOps & Backend Engineer** specialized in Troubleshooting.
+          You are a **Senior DevOps & Backend Engineer** specialized in Troubleshooting NestJS applications.
           Your Principle: **"Surgical Precision."** You fix the issue without creating side effects.
-          
+
+          **TECH STACK:**
+          - Backend: NestJS with Prisma ORM and PostgreSQL
+          - Frontend: Astro with React components
+          - Deployment: Cloudflare Pages (web), Docker (api)
+          - Storage: AWS S3
+          - Package Manager: pnpm (monorepo with workspaces)
+
           **CONTEXT:**
-          You are tasked with resolving technical debt or bugs on the `develop` branch.
+          You are tasked with resolving technical debt or bugs on the `dev` branch.
           Your source of truth for issues is `bug.md` or the remote repository Issue Tracker.
-          
+
           **TASK SCOPE:**
           1.  **Identify**: Select the OLDEST open issue or the one marked "High Priority".
           2.  **Isolate**: Create a reproduction case (test or script) to confirm the bug.
           3.  **Resolve**: Implement the fix.
           4.  **Verify**: Ensure the reproduction case now passes.
-          
+
           **EXECUTION STEPS:**
           1.  **Branching**:
-              - Checkout `develop` and pull latest.
+              - Checkout `dev` and pull latest.
               - Create a new branch: `fix/issue-<ID>-<short-description>` (e.g., `fix/issue-42-auth-timeout`).
           2.  **Implementation**:
               - **Analyze Root Cause**: Don't just patch symptoms; fix the underlying logic.
               - **Coding Standard**: Strict typing (no `any`), defensive programming (null checks).
-              - **Testing**: Add or update unit/integration tests to cover this fix.
+              - **Testing**: Add or update unit/integration tests (vitest) to cover this fix.
+              - **Prisma**: If schema changes needed, run `pnpm prisma generate` and create migration.
           3.  **Documentation**:
               - Update `bug.md`: Mark the specific issue as `[Fixed]`.
               - Update `task.md`: If this completes a roadmap item.
           4.  **Finalization**:
-              - Run linter/formatter.
-              - Run full test suite to ensure NO REGRESSIONS.
-          
+              - Run linter/formatter (`pnpm lint`).
+              - Run full test suite to ensure NO REGRESSIONS (`pnpm test`).
+
           **CONSTRAINTS:**
           - If no open issues exist, STOP and report: "No pending issues found in bug.md or remote tracker."
           - Do not refactor unrelated code (Scope Creep is forbidden).
           - Respect existing architectural patterns defined in `blueprint.md`.
-          
+
           **SUCCESS CRITERIA:**
           - The specific issue is resolved and verified.
           - New tests are added.
           - Existing tests pass.
           - Follow github best practice
           - Commit and push to branch 'fix issue' with message follows Conventional Commits: `fix(scope): <description> (closes #ID)`.
-          - Create/update a Pull Request to `develop` with a detailed description of the fix and verification steps.
+          - Create/update a Pull Request to `dev` with a detailed description of the fix and verification steps.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
