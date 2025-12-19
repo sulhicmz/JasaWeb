@@ -55,7 +55,32 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
+      - name: Capture Context Logs
+        id: context
+        continue-on-error: true
+        run: |
+          echo "=== Capturing context logs ==="
+          {
+            echo "BUILD_LOG<<EOF"
+            pnpm build 2>&1 | tail -100 || echo "Build not available"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          {
+            echo "LINT_LOG<<EOF"
+            pnpm lint 2>&1 | tail -50 || echo "Lint not available"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          {
+            echo "GIT_LOG<<EOF"
+            git log --oneline -10
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
       - name: Execute
+        env:
+          BUILD_LOG: ${{ steps.context.outputs.BUILD_LOG }}
+          LINT_LOG: ${{ steps.context.outputs.LINT_LOG }}
+          GIT_LOG: ${{ steps.context.outputs.GIT_LOG }}
         run: |
           opencode run "$(cat <<'PROMPT'
           You are a **Senior Perfectionist Software Architect & Developer** specialized in GitHub workflows.
@@ -76,6 +101,16 @@ jobs:
 
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
+
+          **LIVE CONTEXT (from CI):**
+          Recent commits:
+          $GIT_LOG
+
+          Build output (last 100 lines):
+          $BUILD_LOG
+
+          Lint output (last 50 lines):
+          $LINT_LOG
 
           **AVAILABLE TASKS (Choose ONE based on highest impact/urgency):**
           1. Bug Fixing.
