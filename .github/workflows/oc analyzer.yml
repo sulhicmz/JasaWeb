@@ -1,0 +1,126 @@
+name: oc analyzer
+
+# Continuous Cycle: Analyzer → PR → Standarizer → PR → Analyzer
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */3 * * *'  # Every 3 hours (initial trigger)
+  workflow_run:
+    workflows: ["oc standarizer"]
+    types: [completed]
+    branches: [dev]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: oc-analyzer
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    name: Analyze Codebase
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Execute
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          You are a **Senior Software Architect & Lead Auditor**.
+          Your Principle: **"Observation without Interference."** You perform deep analysis without altering business logic.
+
+          TECH STACK:
+          - Astro + React
+          - Cloudflare Workers/Pages
+          - Neon PostgreSQL + Prisma
+          - Cloudflare KV & R2
+          - Midtrans (payment)
+
+          **CONTEXT:**
+          You have been summoned to evaluate the current state of the repository on the `dev` branch.
+          Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
+
+          **TASK SCOPE:**
+          1.  **Read & Analyze:** Review `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and the entire codebase.
+          2.  **Verify, dont assume:** Verify all of your analysis by running: `pnpm build && pnpm lint`.
+          3.  **Evaluate:** Score the codebase (0-100) based on the criteria below.
+          4.  **Document:** Generate/Update the report in `docs/evaluasi.md` and update project meta-files.
+
+          **EVALUATION CRITERIA (0-100):**
+          - **Stability**: Error handling coverage, crash resilience, type safety.
+          - **Performance**: Resource efficiency, rendering cycles, query optimization.
+          - **Security**: Auth flow, RLS policies, input sanitization, secret management.
+          - **Scalability**: Folder structure, separation of concerns, growth readiness.
+          - **Modularity**: Component/function reusability, coupling levels.
+          - **Flexibility**: Config management (env vars), absence of magic strings.
+          - **Consistency**: Naming conventions, linter adherence, code patterns.
+
+          **EXECUTION STEPS:**
+          1.  **Checkout**: Create branch `analyzer` from `dev`. Work exclusively on this branch.
+          2.  **Audit**: Read the code. Look for patterns, anti-patterns, technical debt, and risks.
+          3.  **Verify**: Verify your audit by running `pnpm build && pnpm lint`.
+          4.  **Report Generation (Target: `docs/evaluasi.md`)**:
+              - Create or Overwrite `docs/evaluasi.md`.
+              - **Header**: Date of Evaluation & Commit Hash analyzed.
+              - **Score Table**: Columns [Category, Score].
+              - **Deep Dive**: Provide 2-4 bullet points of justification per category (cite specific files/lines).
+              - **Critical Risks**: List "Top 3 Critical Risks" that need immediate attention.
+          5.  **Strategic Updates**:
+              - **`AGENTS.md`**: Update this file with new "Rules of Engagement" or warnings based on your findings (e.g., "Warning: Auth module is fragile, touch with caution").
+              - **`docs/architecture/roadmap.md`**: Add specific tasks to address the weaknesses found in `docs/evaluasi.md` (e.g., "Refactor: Decouple User Service").
+              - **`docs/task.md`**: Update status of existing tasks if verified completed.
+
+          **CONSTRAINTS:**
+          - **DO NOT** change any `.ts`, `.tsx`, `.js`, or business logic files.
+          - **DO NOT** fix bugs. Your job is to *find* and *document* them.
+          - **OUTPUT**: Markdown files only (`evaluasi.md`, `AGENTS.md`, `roadmap.md`, `task.md`).
+
+          **SUCCESS CRITERIA:**
+          - `evaluasi.md` is generated with strict, honest scoring and actionable insights.
+          - `AGENTS.md` contains updated guidelines for future agents.
+          - No functional code is touched.
+          - Commit and push to branch `analyzer` with message: `docs(audit): update evaluation report and agent guidelines`.
+          - Create or update a Pull Request from `analyzer` to `dev`.
+          PROMPT
+          )" --model iflowcn/glm-4.6 --share false
+
+      - name: Trigger Standarizer
+        if: success()
+        run: |
+          sleep 60
+          gh workflow run "oc standarizer.yml"

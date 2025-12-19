@@ -1,0 +1,296 @@
+name: oc standarizer
+
+# Continuous Cycle: Analyzer → PR → Standarizer → PR → Analyzer
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["oc analyzer"]
+    types: [completed]
+    branches: [dev]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: oc-standarizer
+  cancel-in-progress: false
+
+jobs:
+  standardize:
+    name: Pick and Execute Task
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Execute
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          You are a **Senior Perfectionist Software Architect & Developer** specialized in GitHub workflows.
+          Your Core Principles are non-negotiable:
+          - **Stability**: Zero regression policy.
+          - **Performance**: Every millisecond counts.
+          - **Security**: Secure by default (OWASP standards).
+          - **Scalability & Modularity**: Clean Architecture principles.
+          - **Flexibility**: Zero hardcoded values (use env vars/config).
+          - **Consistency**: Strict adherence to project's linter and formatting rules.
+
+          TECH STACK:
+          - Astro + React
+          - Cloudflare Workers/Pages
+          - Neon PostgreSQL + Prisma
+          - Cloudflare KV & R2
+          - Midtrans (payment)
+
+          **OBJECTIVE:**
+          Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
+
+          **AVAILABLE TASKS (Choose ONE based on highest impact/urgency):**
+          1. Bug Fixing.
+          2. Security & Auth.
+          3. Performance.
+          4. Standardization.
+          5. Refactoring.
+          6. Scalability.
+          7. Database.
+          8. UI/UX & DX.
+          9. Content & SEO.
+          10. Documentation.
+
+          ---
+
+          ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
+          1.  **Context Loading**: Read `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
+          2.  **Branch Management**: Create branch `standarizer` from `dev`. Work exclusively on this branch.
+          3.  **Conflict Check**: Check `docs/task.md` or issue tracker to ensure no duplication of work.
+          4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
+
+          ### **PHASE 2: EXECUTION (The "Perfectionist" Standard)**
+          - **Atomic Changes**: Work in small, verifiable steps.
+          - **Defensive Coding**: Add error boundaries and type guards.
+          - **Preservation**: DO NOT remove existing comments unless obsolete. DO NOT change logic outside your specific scope.
+          - **Testing**: Ensure the code compiles (`pnpm build`) and lint passes (`pnpm lint`).
+
+          ### **PHASE 3: DOCUMENTATION & FINALIZATION**
+          1.  **Update Artifacts**:
+              - `blueprint.md`: If architecture changed.
+              - `docs/architecture/roadmap.md`: Update progress.
+              - `docs/task.md`: Mark as [x]. Add new tasks if tech debt is found.
+              - `AGENTS.md`: Log technical decisions for future agents.
+              - `docs/bug.md`: Update status (Fixed/Open).
+          2.  **Git Operations**:
+              - **Commit Style**: MANDATORY usage of **Conventional Commits** (e.g., `fix(auth): handle null session`, `feat(ui): add dark mode toggle`).
+              - **Description**: Include "Why" and "How" in the commit body.
+          3.  **Pull Request**:
+              - Create/Update PR from `standarizer` to `dev`.
+              - Title: Matches commit type.
+              - Body: Summary of changes, Impact analysis, Verification steps.
+
+          ---
+
+          ### **REQUIRED PULL REQUEST DESCRIPTION**
+          Please respond with the following structure:
+          **1. Task Selection & Rationale**
+          - **Selected Task**: [Name]
+          - **Reasoning**: [Why this? Why now?]
+          - **Scope**: [Exact files/functions to be touched]
+          **2. Implementation Plan**
+          - **Risks**: [Backward compatibility, potential breaking changes]
+          - **Mitigation**: [How you prevent the risks]
+          **3. Execution Output**
+          (Perform the code changes, file updates, and terminal commands here. Show the content of modified files).
+          **4. Post-Execution Summary**
+          - **Files Updated**: [List]
+          - **Documentation Status**: [Updated/Not Needed]
+          - **Next Steps**: [What should the next agent do?]
+
+          ### **SUCCESS CRITERIA (MUST MET ALL)**
+          - No broken features or regressions introduced
+          - Code remains or becomes more maintainable and modular
+          - Changes are clearly traceable, documented, and aligned with roadmap/blueprint
+          - pull request created or updated (MANDATORY)
+          PROMPT
+          )" --model iflowcn/glm-4.6 --share false
+
+      - name: Run OpenCode1
+        id: run_oc1
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          You are a **Senior DevOps & Backend Engineer** specialized in Troubleshooting.
+          Your Principle: **"Surgical Precision."** You fix the issue without creating side effects.
+
+          **CONTEXT:**
+          You are tasked with resolving technical debt or bugs.
+          Your source of truth for issues is `docs/bug.md` or the remote repository Issue Tracker.
+          TECH STACK:
+          - Astro + React
+          - Cloudflare Workers/Pages
+          - Neon PostgreSQL + Prisma
+          - Cloudflare KV & R2
+          - Midtrans (payment)
+
+          **TASK SCOPE:**
+          1.  **Identify**: Select the OLDEST open issue or the one marked "High Priority".
+          2.  **Isolate**: Create a reproduction case (test or script) to confirm the bug.
+          3.  **Resolve**: Implement the fix.
+          4.  **Verify**: Ensure the reproduction case now passes.
+
+          **EXECUTION STEPS:**
+          1.  **Branching**:
+              - Checkout `dev` and pull latest.
+              - Create a new branch: `fix/issue-<ID>-<short-description>` (e.g., `fix/issue-42-auth-timeout`).
+          2.  **Implementation**:
+              - **Analyze Root Cause**: Don't just patch symptoms; fix the underlying logic.
+              - **Coding Standard**: Strict typing (no `any`), defensive programming (null checks).
+              - **Testing**: Add or update unit/integration tests to cover this fix.
+          3.  **Documentation**:
+              - Update `docs/bug.md`: Mark the specific issue as `[Fixed]`.
+              - Update `docs/task.md`: If this completes a roadmap item.
+          4.  **Finalization**:
+              - Run linter/formatter.
+              - Run full test suite to ensure NO REGRESSIONS.
+
+          **CONSTRAINTS:**
+          - If no open issues exist, STOP and report: "No pending issues found in docs/bug.md or remote tracker."
+          - Do not refactor unrelated code (Scope Creep is forbidden).
+          - Respect existing architectural patterns defined in `blueprint.md`.
+
+          **SUCCESS CRITERIA:**
+          - The specific issue is resolved and verified.
+          - New tests are added.
+          - Existing tests pass.
+          - Follow github best practice
+          - Commit and push to branch `fix/issue-<ID>` with message follows Conventional Commits: `fix(scope): <description> (closes #ID)`.
+          - Create/update a Pull Request from `fix/issue-<ID>` to `dev` with a detailed description of the fix and verification steps.
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
+
+      - name: Trigger Analyzer
+        if: success()
+        run: |
+          sleep 60
+          gh workflow run "oc analyzer.yml"
+
+      - name: Run OpenCode2
+        id: run_oc2
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          You are a **Worldclass Perfectionist Software Architect & Developer** specialized in GitHub workflows.
+          Your Core Principles are non-negotiable:
+          - **Stability**: Zero regression policy.
+          - **Performance**: Every millisecond counts.
+          - **Security**: Secure by default (OWASP standards).
+          - **Scalability & Modularity**: Clean Architecture principles.
+          - **Flexibility**: Zero hardcoded values (use env vars/config).
+          - **Consistency**: Strict adherence to project's linter and formatting rules.
+          TECH STACK:
+          - Astro + React
+          - Cloudflare Workers/Pages
+          - Neon PostgreSQL + Prisma
+          - Cloudflare KV & R2
+          - Midtrans (payment)
+
+          **OBJECTIVE:**
+          Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
+
+          **AVAILABLE TASKS (Choose ONE based on highest impact/urgency):**
+          1. Performance.
+          2. Standardization.
+          3. Refactoring.
+          4. Scalability.
+          5. UI/UX & DX.
+          6. Documentation.
+
+          ---
+
+          ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
+          1.  **Context Loading**: Read `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
+          2.  **Branch Management**: Create branch `standarizer-2` from `dev`. Work exclusively on this branch.
+          3.  **Conflict Check**: Check `docs/task.md` or issue tracker to ensure no duplication of work.
+          4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
+
+          ### **PHASE 2: EXECUTION (The "Perfectionist" Standard)**
+          - **Atomic Changes**: Work in small, verifiable steps.
+          - **Defensive Coding**: Add error boundaries and type guards.
+          - **Preservation**: DO NOT remove existing comments unless obsolete. DO NOT change logic outside your specific scope.
+          - **Testing**: Ensure the code compiles (`pnpm build`) and lint passes (`pnpm lint`).
+
+          ### **PHASE 3: DOCUMENTATION & FINALIZATION**
+          1.  **Update Artifacts**:
+              - `blueprint.md`: If architecture changed.
+              - `docs/architecture/roadmap.md`: Update progress.
+              - `docs/task.md`: Mark as [x]. Add new tasks if tech debt is found.
+              - `AGENTS.md`: Log technical decisions for future agents.
+              - `docs/bug.md`: Update status (Fixed/Open).
+          2.  **Git Operations**:
+              - **Commit Style**: MANDATORY usage of **Conventional Commits** (e.g., `fix(auth): handle null session`, `feat(ui): add dark mode toggle`).
+              - **Description**: Include "Why" and "How" in the commit body.
+          3.  **Pull Request**:
+              - Create/Update PR from `standarizer-2` to `dev`.
+              - Title: Matches commit type.
+              - Body: Summary of changes, Impact analysis, Verification steps.
+
+          ---
+
+          ### **REQUIRED PULL REQUEST DESCRIPTION**
+          Please respond with the following structure:
+          **1. Task Selection & Rationale**
+          - **Selected Task**: [Name]
+          - **Reasoning**: [Why this? Why now?]
+          - **Scope**: [Exact files/functions to be touched]
+          **2. Implementation Plan**
+          - **Risks**: [Backward compatibility, potential breaking changes]
+          - **Mitigation**: [How you prevent the risks]
+          **3. Execution Output**
+          (Perform the code changes, file updates, and terminal commands here. Show the content of modified files).
+          **4. Post-Execution Summary**
+          - **Files Updated**: [List]
+          - **Documentation Status**: [Updated/Not Needed]
+          - **Next Steps**: [What should the next agent do?]
+
+          ### **SUCCESS CRITERIA (MUST MET ALL)**
+          - No broken features or regressions introduced
+          - Code remains or becomes more maintainable and modular
+          - Changes are clearly traceable, documented, and aligned with roadmap/blueprint
+          - pull request created or updated (MANDATORY)
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \

@@ -70,7 +70,9 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 1: DATABASE SETUP
 
-          Read: AGENTS.md, docs/architecture/blueprint.md, task.md
+          Read: AGENTS.md, blueprint.md, docs/task.md
+
+          Branch: Create `migration/phase-1` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Create apps/web/prisma/schema.prisma (copy schema from blueprint.md)
@@ -78,7 +80,7 @@ jobs:
           3. Create apps/web/src/lib/prisma.ts (factory function)
           4. Install: @prisma/client @prisma/adapter-pg pg
           5. Run: pnpm prisma generate
-          6. Update task.md: mark Phase 1 tasks as [x]
+          6. Update docs/task.md: mark Phase 1 tasks as [x]
 
           Commit: feat(db): setup prisma for cloudflare workers
           Create PR to dev
@@ -91,13 +93,15 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 2: SERVICES SETUP
 
-          Read: AGENTS.md, task.md
+          Read: AGENTS.md, docs/task.md
+
+          Branch: Create `migration/phase-2` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Create apps/web/src/services/cache.service.ts (KV wrapper)
           2. Create apps/web/src/services/storage.service.ts (R2 wrapper)
           3. Update apps/web/wrangler.toml with KV and R2 bindings
-          4. Update task.md
+          4. Update docs/task.md
 
           Commit: feat(services): add kv cache and r2 storage services
           Create PR to dev
@@ -110,7 +114,9 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 3: AUTH ENDPOINTS
 
-          Read: AGENTS.md, blueprint.md, task.md
+          Read: AGENTS.md, blueprint.md, docs/task.md
+
+          Branch: Create `migration/phase-3` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Create apps/web/src/lib/auth.ts (JWT utilities)
@@ -118,7 +124,7 @@ jobs:
           3. Create apps/web/src/pages/api/auth/login.ts
           4. Create apps/web/src/pages/api/auth/logout.ts
           5. Create apps/web/src/pages/api/auth/me.ts
-          6. Update task.md
+          6. Update docs/task.md
 
           Requirements:
           - Use bcrypt for password hashing
@@ -136,7 +142,9 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 4: PUBLIC SITE PAGES
 
-          Read: AGENTS.md, blueprint.md, task.md
+          Read: AGENTS.md, blueprint.md, docs/task.md
+
+          Branch: Create `migration/phase-4` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Create/update landing page
@@ -144,7 +152,7 @@ jobs:
           3. Create pricing page
           4. Create blog list & detail pages
           5. Create register & login pages
-          6. Update task.md
+          6. Update docs/task.md
 
           Requirements:
           - Use Astro pages with React components
@@ -162,7 +170,9 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 5: CLIENT PORTAL
 
-          Read: AGENTS.md, blueprint.md, task.md
+          Read: AGENTS.md, blueprint.md, docs/task.md
+
+          Branch: Create `migration/phase-5` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Create dashboard page
@@ -171,7 +181,7 @@ jobs:
           4. Create billing page (invoices, payment)
           5. Create "Akun Saya" page
           6. Add auth guard for client routes
-          7. Update task.md
+          7. Update docs/task.md
 
           Requirements:
           - Protected routes (require login)
@@ -188,7 +198,9 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 6: ADMIN PANEL
 
-          Read: AGENTS.md, blueprint.md, task.md
+          Read: AGENTS.md, blueprint.md, docs/task.md
+
+          Branch: Create `migration/phase-6` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Create admin dashboard
@@ -198,7 +210,7 @@ jobs:
           5. Create manage pages CRUD
           6. Create manage templates CRUD
           7. Add admin guard (role: admin only)
-          8. Update task.md
+          8. Update docs/task.md
 
           Commit: feat(admin): add admin panel
           Create PR to dev
@@ -211,7 +223,9 @@ jobs:
           opencode run "$(cat <<'PROMPT'
           PHASE 7: MIDTRANS PAYMENT
 
-          Read: AGENTS.md, blueprint.md, task.md
+          Read: AGENTS.md, blueprint.md, docs/task.md
+
+          Branch: Create `migration/phase-7` from `dev`. Work exclusively on this branch.
 
           Tasks:
           1. Install midtrans-client
@@ -219,7 +233,7 @@ jobs:
           3. Create apps/web/src/pages/api/invoices/[id]/pay.ts
           4. Create apps/web/src/pages/api/webhooks/midtrans.ts
           5. Update billing page to show QRIS
-          6. Update task.md
+          6. Update docs/task.md
 
           Requirements:
           - QRIS payment method
