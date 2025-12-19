@@ -2,6 +2,11 @@ name: oc standarizer
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["oc analyzer"]
+    types: [completed]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
 
 permissions:
   contents: write
@@ -16,6 +21,7 @@ jobs:
     name: Pick and Execute Task
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || github.event.workflow_run.conclusion == 'success' }}
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -51,7 +57,7 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Execute
+      - name: Execute Task
         run: |
           opencode run "$(cat <<'PROMPT'
           ROLE: Task Executor
@@ -66,19 +72,27 @@ jobs:
           STEPS:
           1. Read AGENTS.md (rules)
           2. Read task.md (find first unchecked [ ] task)
-          3. Read blueprint.md (specs)
+          3. Read docs/architecture/blueprint.md (specs)
           4. Implement the task
           5. Test: pnpm build
           6. Update task.md: mark [x]
           7. Commit with Conventional Commits
-          8. Create PR to dev
+          8. Push to dev branch directly
+
+          IMPORTANT: After completing a task, DO NOT create PR. Just commit and push directly.
 
           CONSTRAINTS:
           - Only implement tasks from task.md
           - Do NOT add features outside blueprint
           - Do NOT modify apps/api/
-          - Do NOT add new dependencies without listing in PR
+          - Do NOT add new dependencies without listing in commit
 
-          If no unchecked tasks, report "No tasks available"
+          If no unchecked tasks, report "All tasks completed"
           PROMPT
           )" --model iflowcn/glm-4.6 --share false
+
+      - name: Trigger Next Cycle
+        if: success()
+        run: |
+          sleep 30
+          gh workflow run "oc analyzer.yml"
