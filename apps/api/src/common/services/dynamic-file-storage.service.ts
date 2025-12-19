@@ -447,7 +447,9 @@ class S3StorageAdapter extends BaseStorageAdapter {
         size: data.length,
         bucket: this.bucket,
         etag: result.ETag?.replace(/"/g, ''), // Remove quotes from ETag
-        url: `https://${this.bucket}.s3.${this.region}.amazonaws.com/${options.key}`,
+        url: this.endpoint
+          ? `${this.endpoint}/${this.bucket}/${options.key}`
+          : `https://${this.bucket}.s3.${this.region}.amazonaws.com/${options.key}`,
       };
     } catch (error) {
       this.logger.error(`S3 upload failed for ${options.key}:`, error);

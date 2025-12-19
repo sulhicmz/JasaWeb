@@ -1,13 +1,14 @@
 // Test file to check proper Prisma type imports
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL || 'postgresql://localhost:test',
-    },
-  },
-});
+// Validate DATABASE_URL for testing
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL environment variable is required for testing. Please check your .env configuration.'
+  );
+}
+
+const prisma = new PrismaClient();
 
 // Check if model methods exist
 console.log('Has project method:', typeof prisma.project === 'function');

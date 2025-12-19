@@ -266,8 +266,8 @@ const { title } = Astro.props;
   </div>
 
   <script client:load>
-    // API configuration
-    const API_BASE_URL = 'http://localhost:3001';
+    // Dynamic API configuration from environment
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
     
     // Get project ID from URL
     const projectId = window.location.pathname.split('/').pop();
