@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import {
   Injectable,
   BadRequestException,
@@ -6,6 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 
+=======
+import { BadRequestException, Injectable } from '@nestjs/common';
+>>>>>>> Stashed changes
 import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { CreateTaskDto, TaskStatus } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -70,11 +74,7 @@ export class TaskService {
     }
   }
 
-<<<<<<< HEAD
   async findAll(projectId?: string, _organizationId: string = '') {
-=======
-  async findAll(projectId?: string) {
->>>>>>> origin/main
     if (projectId) {
       // Validate project exists and belongs to organization
       const project = await this.multiTenantPrisma.project.findUnique({
@@ -126,7 +126,6 @@ export class TaskService {
     }
   }
 
-<<<<<<< HEAD
   async findOne(id: string, organizationId: string) {
     // First find the task to get its projectId
     const taskWithoutRelations = await this.multiTenantPrisma.task.findUnique({
@@ -151,9 +150,6 @@ export class TaskService {
     }
 
     // Now get the full task with relations
-=======
-  async findOne(id: string) {
->>>>>>> origin/main
     const task = await this.multiTenantPrisma.task.findUnique({
       where: { id },
       include: {
@@ -176,7 +172,6 @@ export class TaskService {
     return task;
   }
 
-<<<<<<< HEAD
   async update(
     id: string,
     updateTaskDto: UpdateTaskDto,
@@ -184,12 +179,15 @@ export class TaskService {
   ) {
     // First find the task to get its projectId
     const taskWithoutRelations = await this.multiTenantPrisma.task.findUnique({
+<<<<<<< Updated upstream
 =======
   async update(id: string, updateTaskDto: UpdateTaskDto) {
 <<<<<<< HEAD
     // Check if task exists
     const existingTask = await this.multiTenantPrisma.task.findUnique({
 >>>>>>> origin/main
+=======
+>>>>>>> Stashed changes
       where: { id },
       select: { projectId: true, id: true },
     });
@@ -241,14 +239,9 @@ export class TaskService {
     }
   }
 
-<<<<<<< HEAD
   async remove(id: string, organizationId: string) {
     // First find the task to get its projectId
     const taskWithoutRelations = await this.multiTenantPrisma.task.findUnique({
-=======
-  async remove(id: string) {
-    const task = await this.multiTenantPrisma.task.findUnique({
->>>>>>> origin/main
       where: { id },
       select: { projectId: true, id: true },
     });

@@ -129,12 +129,14 @@ export class TicketService {
     }
   }
 
-<<<<<<< HEAD
   async remove(id: string, _organizationId: string) {
+<<<<<<< Updated upstream
 =======
   async remove(id: string) {
 <<<<<<< HEAD
 >>>>>>> origin/main
+=======
+>>>>>>> Stashed changes
     return this.prisma.ticket.delete({
       where: {
         id,

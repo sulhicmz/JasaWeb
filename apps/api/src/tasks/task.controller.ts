@@ -23,7 +23,8 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { CurrentOrganizationId } from '../common/decorators/current-organization-id.decorator';
 import { Role, Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import type { CreateTaskDto, UpdateTaskDto } from './task.service';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskService } from './task.service';
 
 @Controller('tasks')

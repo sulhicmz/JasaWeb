@@ -257,9 +257,9 @@ export class AuditLoggingService {
     return {
       ...event,
       details: event.details
-<<<<<<< HEAD
         ? this.sanitizeAuditData({ details: event.details } as AuditLogEntry)
             .details
+<<<<<<< Updated upstream
 =======
         ? this.sanitizeAuditData({
             action: event.eventType,
@@ -273,6 +273,8 @@ export class AuditLoggingService {
             details: event.details,
           }).details
 >>>>>>> origin/main
+=======
+>>>>>>> Stashed changes
         : undefined,
     };
   }

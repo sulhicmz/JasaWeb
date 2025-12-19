@@ -218,7 +218,6 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
   async download(key: string): Promise<Buffer> {
     const fs = require('fs').promises;
-    const fs = require('fs').promises;
     // path required but not used directly due to resolveSecurePath
 
 <<<<<<< HEAD
@@ -256,7 +255,6 @@ class LocalStorageAdapter extends BaseStorageAdapter {
   }
 
   async delete(key: string): Promise<void> {
-    const fs = require('fs').promises;
     const fs = require('fs').promises;
     // path required but not used directly
 

@@ -1,7 +1,13 @@
+<<<<<<< Updated upstream
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app.config.service';
 import { EnvironmentUrlValidator } from '../config/environment-url-validator';
 import { logger, UrlBuilder, getApiUrl } from '../../../../../packages/config';
+=======
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { logger } from '../../../../../packages/config/logger';
+import { AppConfigService } from '../config/app.config.service';
+>>>>>>> Stashed changes
 
 export interface SecurityPolicyConfig {
   csp: {
@@ -29,6 +35,8 @@ export interface SecurityPolicyConfig {
 
 @Injectable()
 export class SecurityConfigurationService {
+  private readonly logger = new NestLogger(SecurityConfigurationService.name);
+
   constructor(private readonly appConfig: AppConfigService) {}
 
   // Enhanced CSP configuration with multi-tenant safety
@@ -259,14 +267,16 @@ export class SecurityConfigurationService {
       }
 
       return true;
-      return true;
     } catch (error) {
+<<<<<<< Updated upstream
       logger.error(
         'Security configuration validation failed:',
         error as Error | Record<string, unknown>
       );
+=======
+      this.logger.error('Security configuration validation failed:', error);
+>>>>>>> Stashed changes
       return false;
-    }
     }
   }
 
