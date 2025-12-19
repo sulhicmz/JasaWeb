@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../../config/api';
 
 interface Activity {
   id: string;
@@ -27,7 +28,7 @@ const ActivityFeed: React.FC = () => {
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        'http://localhost:3001/dashboard/recent-activity?limit=10',
+        `${getApiUrl()}/dashboard/recent-activity?limit=10`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

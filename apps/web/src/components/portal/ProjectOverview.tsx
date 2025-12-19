@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../../config/api';
 
 interface Project {
   id: string;
@@ -39,7 +40,7 @@ const ProjectOverview: React.FC = () => {
 
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        'http://localhost:3001/dashboard/projects-overview?limit=6',
+        `${getApiUrl()}/dashboard/projects-overview?limit=6`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

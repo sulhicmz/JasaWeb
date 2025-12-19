@@ -1,5 +1,5 @@
 {
-  "extends": "../../packages/config/tsconfig.json",
+  "extends": "../../tsconfig.node.json",
   "compilerOptions": {
     "module": "ES2022",
     "noEmit": true,
@@ -7,8 +7,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@jasaweb/*": ["../../packages/*"]
+      "@jasaweb/*": ["../../packages/*"],
+      "@jasaweb/config": ["../../packages/config/src/index.ts"]
     }
   },
-  "include": ["src/**/*", "src/**/*.tsx"]
+  "include": ["src/**/*", "src/**/*.tsx", "../../packages/config/src/**/*"]
 }

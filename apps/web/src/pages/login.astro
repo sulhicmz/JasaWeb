@@ -101,8 +101,8 @@ const pageTitle = 'Login ke Portal Klien - JasaWeb';
   <div id="messageContainer" class="fixed top-4 right-4 z-50"></div>
 
   <script client:load>
-    // Dynamic API configuration from environment
-    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:3000';
+    // Dynamic API configuration from environment - following centralized config pattern
+    const API_BASE_URL = import.meta.env.PUBLIC_API_URL || import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3000';
 
     // Check if user is already logged in
     document.addEventListener('DOMContentLoaded', function() {

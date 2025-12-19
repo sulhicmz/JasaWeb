@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getApiUrl } from '../../config/api';
 
 interface Milestone {
   id: string;
@@ -55,8 +56,8 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
     try {
       const token = localStorage.getItem('authToken');
       const url = editingMilestone
-        ? `http://localhost:3001/milestones/${editingMilestone.id}`
-        : 'http://localhost:3001/milestones';
+        ? `${getApiUrl()}/milestones/${editingMilestone.id}`
+        : `${getApiUrl()}/milestones`;
 
       const method = editingMilestone ? 'PATCH' : 'POST';
       const body = {
@@ -93,15 +94,12 @@ const MilestoneManager: React.FC<MilestoneManagerProps> = ({
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(
-        `http://localhost:3001/milestones/${milestoneId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${getApiUrl()}/milestones/${milestoneId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         onMilestoneUpdate();
