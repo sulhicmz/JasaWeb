@@ -3,7 +3,7 @@
  * Production-ready configuration management using the centralized envConfig service
  */
 
-import { envConfig } from './envConfig';
+import { browserConfig } from './browserConfig';
 
 interface ApiEndpoints {
   auth: {
@@ -93,13 +93,13 @@ export class ApiConfigService {
   }
 
   private buildApiConfig(): ApiConfig {
-    const env = envConfig.getConfig();
+    const config = browserConfig.getConfig();
 
-    const baseUrl = env.PUBLIC_API_URL as string;
-    const prefix = env.API_PREFIX as string;
-    const timeout = env.API_TIMEOUT as number;
-    const retries = env.API_RETRIES as number;
-    const retryDelay = env.API_RETRY_DELAY as number;
+    const baseUrl = config.api.PUBLIC_API_URL;
+    const prefix = config.api.API_PREFIX;
+    const timeout = config.api.API_TIMEOUT;
+    const retries = config.api.API_RETRIES;
+    const retryDelay = config.api.API_RETRY_DELAY;
 
     return {
       baseUrl: this.normalizeUrl(baseUrl),
@@ -163,28 +163,28 @@ export class ApiConfigService {
   }
 
   private buildRateLimitConfig(): RateLimitConfig {
-    const env = envConfig.getConfig();
+    const config = browserConfig.getConfig();
 
     return {
-      enabled: env.API_RATE_LIMIT_ENABLED as boolean,
-      windowMs: env.API_RATE_LIMIT_WINDOW as number,
-      maxRequests: env.API_RATE_LIMIT_MAX as number,
-      skipSuccessfulRequests: env.API_RATE_LIMIT_SKIP_SUCCESS as boolean,
-      skipFailedRequests: env.API_RATE_LIMIT_SKIP_FAILED as boolean,
+      enabled: config.api.API_RATE_LIMIT_ENABLED,
+      windowMs: config.api.API_RATE_LIMIT_WINDOW,
+      maxRequests: config.api.API_RATE_LIMIT_MAX,
+      skipSuccessfulRequests: config.api.API_RATE_LIMIT_SKIP_SUCCESS,
+      skipFailedRequests: config.api.API_RATE_LIMIT_SKIP_FAILED,
     };
   }
 
   private buildWebSocketConfig(): WebSocketConfig {
-    const env = envConfig.getConfig();
-    const wsUrl = env.WS_URL as string;
-    const baseUrl = env.PUBLIC_API_URL as string;
+    const config = browserConfig.getConfig();
+    const wsUrl = config.api.WS_URL;
+    const baseUrl = config.api.PUBLIC_API_URL;
 
     return {
-      enabled: env.WS_ENABLED as boolean,
+      enabled: config.api.WS_ENABLED,
       url: wsUrl || this.normalizeUrl(baseUrl).replace('http', 'ws'),
-      reconnectAttempts: env.WS_RECONNECT_ATTEMPTS as number,
-      reconnectDelay: env.WS_RECONNECT_DELAY as number,
-      heartbeatInterval: env.WS_HEARTBEAT_INTERVAL as number,
+      reconnectAttempts: config.api.WS_RECONNECT_ATTEMPTS,
+      reconnectDelay: config.api.WS_RECONNECT_DELAY,
+      heartbeatInterval: config.api.WS_HEARTBEAT_INTERVAL,
     };
   }
 
@@ -193,9 +193,9 @@ export class ApiConfigService {
   }
 
   private getUserAgent(): string {
-    const env = envConfig.getConfig();
-    const siteName = env.SITE_NAME as string;
-    const version = env.APP_VERSION as string;
+    const config = browserConfig.getConfig();
+    const siteName = config.base.SITE_NAME;
+    const version = config.base.APP_VERSION;
     return `${siteName}-Web/${version}`;
   }
 
@@ -246,10 +246,10 @@ export class ApiConfigService {
   }
 
   public getConfigSummary(): Record<string, unknown> {
-    const envSummary = envConfig.getConfig();
+    const config = browserConfig.getConfig();
 
     return {
-      ...envSummary,
+      ...config,
       api: {
         baseUrl: this.obscureUrl(this.config.baseUrl),
         prefix: this.config.prefix,
