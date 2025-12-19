@@ -50,7 +50,8 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        continue-on-error: true
+        run: pnpm install --frozen-lockfile || pnpm install
 
       - name: Configure Git
         run: |

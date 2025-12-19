@@ -51,12 +51,8 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pg": "^8.11.0",
-<<<<<<< HEAD
-    "reflect-metadata": "^0.1.14",
-=======
     "redis": "^5.10.0",
     "reflect-metadata": "^0.2.2",
->>>>>>> origin/dev
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
     "uuid": "^13.0.0"
