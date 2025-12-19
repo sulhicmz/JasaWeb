@@ -1,10 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import {
   ProjectService,
   CreateProjectDto,
   UpdateProjectDto,
 } from './project.service';
-import { MultiTenantPrismaService } from '../common/database/multi-tenant-prisma.service';
 import { NotFoundException } from '@nestjs/common';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
@@ -15,6 +13,9 @@ import {
 
 describe('ProjectService', () => {
   let service: ProjectService;
+  let mockMultiTenantPrismaService: ReturnType<
+    typeof createMockMultiTenantPrismaService
+  >;
 
   const mockProject = createTestProject({
     id: '1',
@@ -34,36 +35,11 @@ describe('ProjectService', () => {
     invoices: [],
   };
 
-  const mockMultiTenantPrismaService = createMockMultiTenantPrismaService();
+  beforeEach(() => {
+    mockMultiTenantPrismaService = createMockMultiTenantPrismaService();
 
-  beforeEach(async () => {
-    const mockRequest = {
-      organizationId: 'org1',
-      user: {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        name: 'Test User',
-      },
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProjectService,
-        {
-          provide: MultiTenantPrismaService,
-          useValue: mockMultiTenantPrismaService,
-        },
-        {
-          provide: 'REQUEST',
-          useValue: mockRequest,
-        },
-      ],
-    }).compile();
-
-    service = module.get<ProjectService>(ProjectService);
-    multiTenantPrisma = module.get<MultiTenantPrismaService>(
-      MultiTenantPrismaService
-    );
+    // Create service instance manually
+    service = new ProjectService(mockMultiTenantPrismaService);
   });
 
   afterEach(() => {
@@ -123,12 +99,13 @@ describe('ProjectService', () => {
       const projects = [mockProject];
       mockMultiTenantPrismaService.project.findMany.mockResolvedValue(projects);
 
-      const result = await service.findAll();
+      const result = await service.findAll('summary', 'org1');
 
       expect(result).toEqual(projects);
       expect(
         mockMultiTenantPrismaService.project.findMany
       ).toHaveBeenCalledWith({
+        where: { organizationId: 'org1' },
         select: expect.objectContaining({
           id: true,
           name: true,

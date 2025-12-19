@@ -87,6 +87,7 @@ describe('SecurityInterceptor', () => {
         handle: vi.fn(),
       };
 
+      reflector = module.get<Reflector>(Reflector) as any;
       reflector.get.mockReturnValue({});
     });
 

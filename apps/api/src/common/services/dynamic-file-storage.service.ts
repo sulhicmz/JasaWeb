@@ -19,20 +19,7 @@ import {
   JasaWebConfig,
 } from '@jasaweb/config';
 import { SecurityValidator } from '../utils/security-validator';
-import type {
-  S3Client,
-  S3ClientConfig,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-  HeadObjectCommand,
-  ListObjectsV2Command,
-  GetObjectCommandOutput,
-  PutObjectCommandOutput,
-  HeadObjectCommandOutput,
-  ListObjectsV2CommandOutput,
-  _Object,
-} from '@aws-sdk/client-s3';
+import type { S3Client, S3ClientConfig, _Object } from '@aws-sdk/client-s3';
 import type { getSignedUrl as GetSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
@@ -55,7 +42,7 @@ abstract class BaseStorageAdapter implements StorageAdapter {
 
   abstract exists(key: string): Promise<boolean>;
 
-  async getSignedUrl(key: string, _expiresIn: number): Promise<string> {
+  async getSignedUrl(key: string, expiresIn: number): Promise<string> {
     if (!SecurityValidator.isValidKey(key)) {
       throw new Error('Invalid key format');
     }

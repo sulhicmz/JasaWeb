@@ -56,7 +56,7 @@ export class AppConfigService {
     const corsOriginEnv = getOptionalEnv('CORS_ORIGIN');
     this.corsOrigins = corsOriginEnv
       ? corsOriginEnv.split(',').map((origin: string) => origin.trim())
-      : this.getDefaultCorsOrigins(isDevelopment);
+      : this.getDefaultCorsOrigins();
 
     // Frontend Configuration
     this.webBaseUrl = getOptionalEnv(
@@ -102,7 +102,7 @@ export class AppConfigService {
     return getWebUrl();
   }
 
-  private getDefaultCorsOrigins(_isDevelopment: boolean): string[] {
+  private getDefaultCorsOrigins(): string[] {
     return UrlBuilder.getAllowedOrigins();
   }
 

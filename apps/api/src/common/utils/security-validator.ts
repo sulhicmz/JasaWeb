@@ -81,10 +81,7 @@ export class SecurityValidator {
     }
 
     // For safe paths, return the normalized path
-    if (
-      normalizedFile.startsWith(normalizedBase) ||
-      !normalizedFile.includes('..')
-    ) {
+    if (normalizedFile.startsWith(normalizedBase)) {
       return normalizedFile;
     }
 
@@ -146,7 +143,7 @@ export class SecurityValidator {
         }
 
         return false;
-      } catch (error) {
+      } catch {
         return false;
       }
     };
@@ -157,14 +154,9 @@ export class SecurityValidator {
    */
   static createSecureMkdir(): (dirPath: string) => void {
     return (dirPath: string): void => {
-      const validatedPath = this.validateDirectoryPath(dirPath, '.');
-
-      try {
-        // Mock implementation - would use fs.mkdirSync in real usage
-        // fs.mkdirSync(validatedPath, { recursive: true, mode: 0o750 });
-      } catch (error) {
-        throw error;
-      }
+      this.validateDirectoryPath(dirPath, '.');
+      // Mock implementation - would use fs.mkdirSync in real usage
+      // fs.mkdirSync(validatedPath, { recursive: true, mode: 0o750 });
     };
   }
 
