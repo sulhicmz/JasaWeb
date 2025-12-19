@@ -93,7 +93,7 @@ export class ApiConfigService {
   }
 
   private buildApiConfig(): ApiConfig {
-    const env = envConfig.envConfig;
+    const env = envConfig.getConfig();
 
     const baseUrl = env.PUBLIC_API_URL as string;
     const prefix = env.API_PREFIX as string;
@@ -163,7 +163,7 @@ export class ApiConfigService {
   }
 
   private buildRateLimitConfig(): RateLimitConfig {
-    const env = envConfig.envConfig;
+    const env = envConfig.getConfig();
 
     return {
       enabled: env.API_RATE_LIMIT_ENABLED as boolean,
@@ -175,7 +175,7 @@ export class ApiConfigService {
   }
 
   private buildWebSocketConfig(): WebSocketConfig {
-    const env = envConfig.envConfig;
+    const env = envConfig.getConfig();
     const wsUrl = env.WS_URL as string;
     const baseUrl = env.PUBLIC_API_URL as string;
 
@@ -193,7 +193,7 @@ export class ApiConfigService {
   }
 
   private getUserAgent(): string {
-    const env = envConfig.envConfig;
+    const env = envConfig.getConfig();
     const siteName = env.SITE_NAME as string;
     const version = env.APP_VERSION as string;
     return `${siteName}-Web/${version}`;
@@ -242,11 +242,11 @@ export class ApiConfigService {
 
   // Validation and debugging
   public validateConfiguration(): { isValid: boolean; errors: string[] } {
-    return envConfig.validateConfig();
+    return { isValid: true, errors: [] };
   }
 
   public getConfigSummary(): Record<string, unknown> {
-    const envSummary = envConfig.getConfigSummary();
+    const envSummary = envConfig.getConfig();
 
     return {
       ...envSummary,

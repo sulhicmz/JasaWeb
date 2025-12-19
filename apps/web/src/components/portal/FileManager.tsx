@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ApiConfigService } from '../../config/apiConfig';
 import { api } from '../../services/api';
 
 interface FileItem {
@@ -120,7 +121,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(
-        `${api.getConfig().baseUrl}/files/${fileId}/download`,
+        `${ApiConfigService.getInstance().apiConfig.baseUrl}/files/${fileId}/download`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

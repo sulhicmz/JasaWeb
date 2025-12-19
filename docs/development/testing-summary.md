@@ -1,24 +1,36 @@
-# Testing Implementation Summary
+# Testing Summary - JasaWeb
 
-## 🎯 Overview
+> **🔧 Detailed Infrastructure**: See [`TEST_INFRASTRUCTURE.md`](./testing/TEST_INFRASTRUCTURE.md) for comprehensive testing setup and troubleshooting.
 
-This document summarizes the testing implementation for the JasaWeb project, which uses **Vitest** as the primary testing framework across all workspaces.
+## 🎯 Testing Overview
 
-## ✅ Current Implementation
+JasaWeb uses **Vitest** as the primary testing framework with a comprehensive mock setup for reliable, fast unit tests.
 
-### 1. Test Infrastructure
+## 📊 Test Coverage Status
 
-#### Test Configuration Files
+### ✅ Implemented Tests
 
-- ✅ `vitest.config.ts` - Vitest configuration in each workspace
-- ✅ `apps/api/test/setup.ts` - Global test setup for API
-- ✅ `apps/api/test/test-helpers.ts` - Common API test utilities
-- ✅ `apps/api/test/test-prisma.ts` - Database testing utilities
+#### API Tests (`/apps/api/src`)
 
-#### Test Utilities
+- **Authentication**: `auth.service.spec.ts`, `auth.controller.test.ts`
+- **Projects**: `project.service.test.ts`, `project.controller.test.ts`
+- **Tasks**: `task.service.test.ts`, `task.controller.test.ts`
+- **Milestones**: `milestone.service.test.ts`, `milestone.controller.test.ts`
+- **Files**: `file.service.test.ts`, `file.controller.test.ts`
+- **Analytics**: `analytics.controller.test.ts`, `analytics.service.test.ts`
+- **Health**: `health.controller.test.ts`
 
-- ✅ `packages/testing/index.ts` - Shared testing utilities
-- ✅ `packages/testing/README.md` - Testing package documentation
+#### Frontend Tests (`/apps/web/test`)
+
+- **Services**: `analyticsService.test.ts`, `notificationService.test.ts`
+- **Components**: `dashboard-charts.test.ts`
+
+#### Test Infrastructure Components
+
+- ✅ `vitest.config.ts` in each workspace
+- ✅ `apps/api/test/setup.ts` - Global test setup
+- ✅ `apps/api/test/test-helpers.ts` - Mock utilities
+- ✅ `packages/testing/` - Shared testing utilities
 
 ### 2. Test Structure
 

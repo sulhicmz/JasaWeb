@@ -1,14 +1,12 @@
 # 🏢 JasaWeb Client Management System
 
-## 🎯 Purpose
+> **📖 Related Documentation**: See [`../architecture/blueprint.md`](../architecture/blueprint.md) for complete project specifications and roadmap. This document focuses specifically on client management workflows and business processes.
+
+## 🎯 Business Overview
 
 A unified platform for managing web development services (School Websites, News Portals, Company Profiles) with integrated client portal for streamlined collaboration.
 
-> **⚠️ NOTE**: This document complements `blueprint.md` which contains the detailed project roadmap and technical specifications. This document focuses on the client management aspects and user workflows.
-
----
-
-## 📊 Success Metrics
+### 📊 Success Metrics
 
 - **Landing → Lead**: 5-8% conversion
 - **Lead → Deal**: ≥ 30% conversion
@@ -16,37 +14,24 @@ A unified platform for managing web development services (School Websites, News 
 - **Client Satisfaction**: NPS ≥ 8/10
 - **Support SLA**: ≤ 4 hour response
 
----
+### 🎪 Target Markets
 
-## 🏗️ System Architecture
+- **School Websites**: Educational institutions needing modern, accessible websites
+- **News Portals**: Media organizations requiring content management
+- **Company Profiles**: Businesses seeking professional web presence
 
-### Technology Stack
+## 🏗️ Technical Architecture Summary
 
-#### Frontend
+> **🔧 Full Architecture Details**: See [`blueprint.md`](../architecture/blueprint.md) for comprehensive technical specifications
 
-- **Framework**: Astro 4.0+ (Marketing Site)
-- **Styling**: Tailwind CSS 4.1+ (with native Vite plugin)
-- **Components**: Custom component library
-- **State Management**: Native Astro state management
-- **Forms**: Zod schema validation
+### Core Technology Stack
 
-#### Backend
-
-- **Framework**: NestJS 10.0+
-- **Language**: TypeScript 5.0+
-- **API Style**: RESTful with OpenAPI/Swagger documentation
-- **Authentication**: JWT-based with refresh tokens
-- **Authorization**: Role-Based Access Control (RBAC)
-
-#### Database
-
-- **Primary Database**: PostgreSQL 15+
-- **ORM**: Prisma 6.16+
+- **Frontend**: Astro 4.0+, Tailwind CSS 4.1+, TypeScript
+- **Backend**: NestJS 10.0+, PostgreSQL 15+, Prisma 6.16+
+- **Authentication**: JWT with refresh tokens, RBAC authorization
 - **Multi-tenancy**: Organization-based data isolation
-- **Caching**: Redis (optional)
-- **Search**: PostgreSQL full-text search
 
-#### Infrastructure
+## 👥 User Workflows & Features
 
 - **Package Manager**: pnpm 8.15+
 - **Containerization**: Docker & Docker Compose
