@@ -214,23 +214,53 @@ export class R2StorageService {
 }
 ```
 
-### Database dengan Hyperdrive
+### Database dengan Prisma + Hyperdrive
 
-```typescript
-// src/services/database.ts
-import { PrismaClient } from '@prisma/client';
+**1. schema.prisma** (Cloudflare Workers config):
+```prisma
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  runtime         = "cloudflare"
+}
 
-export function createPrismaClient(env: Env) {
-  // Gunakan Hyperdrive connection string untuk performance
-  const connectionString = env.DB?.connectionString || env.DATABASE_URL;
-
-  return new PrismaClient({
-    datasources: {
-      db: { url: connectionString },
-    },
-  });
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 ```
+
+**2. Install dependencies**:
+```bash
+pnpm add @prisma/client @prisma/adapter-pg pg
+pnpm add -D prisma
+```
+
+**3. Prisma Client Factory** (instantiate per-request):
+```typescript
+// src/lib/prisma.ts
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+
+export function createPrismaClient(env: CloudflareEnv) {
+  // Use Hyperdrive connection string for pooling & caching
+  const connectionString = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
+
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
+
+  return new PrismaClient({ adapter });
+}
+
+// Usage in API route:
+// const prisma = createPrismaClient(context.locals.runtime.env);
+// const users = await prisma.user.findMany();
+```
+
+**⚠️ Important**: Di Workers, instantiate PrismaClient per-request (tidak ada global singleton).
+
+**Reference**: https://www.prisma.io/docs/guides/cloudflare-workers
 
 ## 🌐 CI/CD dengan GitHub Actions
 

@@ -1,136 +1,302 @@
-# Qwen Code Project Context - JasaWeb
+# JasaWeb - AI Agent Guidelines
 
 ## Project Overview
 
-This is a web-based service for managing clients and providing website development services. The project is called "JasaWeb" and aims to generate qualified leads for website services (School Websites, News Portals, Company Profiles) while providing a client portal for streamlined collaboration.
+JasaWeb adalah platform web development service dengan client portal. Project ini sedang dalam proses **migrasi ke Cloudflare ecosystem**.
 
-The project is structured as an early-stage monorepo with plans for:
-
-- `apps/web` - Astro-based marketing site
-- `apps/api` - NestJS API for the client portal
-- `packages/ui` / `packages/config` - Shared assets
-
-## Project Goals & KPIs
-
-- Generate qualified leads for 3 main services: School Websites, News Portals, Company Profiles
-- Accelerate client collaboration through a Client Portal
-- Standardize delivery processes to reduce project cycle time
-- Achieve 5-8% conversion from landing page to contact form
-- Reduce average project delivery time to 8-10 weeks
-
-## Technical Architecture
-
-- **Frontend**: Astro, Tailwind CSS, shadcn/ui
-- **Backend**: Node.js (NestJS) with REST/tRPC API
-- **Database**: PostgreSQL (multi-tenant via organization_id)
-- **ORM**: Prisma
-- **Authentication**: Custom JWT implementation with email/password, magic links, and refresh tokens
-- **Storage**: S3-compatible (minIO/Wasabi/AWS)
-- **Infrastructure**: Vercel (FE) + Fly.io/Railway (API), Docker, CDN
-
-## Current Status
-
-The project MVP is complete with core functionality implemented. The codebase follows the planned monorepo structure with fully functional authentication, project management, and client portal features. Current focus is on optimization, testing, and deployment preparation.
-
-## Key Features (Planned)
-
-### Public Marketing Site
-
-- Landing pages for 3 service types (School, News, Company Profile)
-- Portfolio and case studies
-- Blog and resources
-- Contact forms and meeting booking
-
-### Client Portal
-
-- Project dashboard with milestones and status
-- File management & versioning
-- Approval workflows with comments
-- Ticket system with SLA tracking
-- Invoice & payment management
-- Reporting and analytics
-
-### Internal Admin/Ops
-
-- Lightweight CRM
-- Project management across clients
-- Component library and templates
-
-## Building and Running (Planned)
-
-The project will use a pnpm monorepo setup with the following commands once scaffolding is complete:
-
-```bash
-# Install dependencies
-pnpm install
-
-# Run the Astro marketing site locally
-pnpm dev --filter apps/web
-
-# Start the NestJS API with hot reload
-pnpm dev --filter apps/api
-
-# Build all workspaces
-pnpm build
-
-# Run linting and formatting
-pnpm lint && pnpm format
-
-# Run tests (jalankan secara terarah untuk mencegah Vitest mengeksekusi ribuan file dependensi)
-pnpm vitest run example.test.ts
+### Current Architecture (Legacy)
 ```
+apps/web    → Astro (Cloudflare Pages) ✅
+apps/api    → NestJS (Docker) ❌ DEPRECATED
+```
+
+### Target Architecture (Cloudflare Ecosystem)
+```
+apps/web    → Astro + Cloudflare Pages + Workers
+            → Database: Prisma + Neon PostgreSQL + Hyperdrive
+            → Cache: Cloudflare KV
+            → Storage: Cloudflare R2
+```
+
+---
+
+## 🚨 CRITICAL: Migration Status
+
+**BACA DULU**: `docs/deployment/migration-checklist.md`
+
+Project sedang migrasi dari:
+- ❌ NestJS → ✅ Astro API Routes (Cloudflare Workers)
+- ❌ PostgreSQL (Docker) → ✅ Neon PostgreSQL + Hyperdrive
+- ❌ Redis → ✅ Cloudflare KV
+- ❌ AWS S3/MinIO → ✅ Cloudflare R2
+
+---
+
+## Tech Stack (Target)
+
+| Component | Technology | Notes |
+|-----------|------------|-------|
+| **Frontend** | Astro + React | Deploy ke Cloudflare Pages |
+| **Backend** | Cloudflare Workers | Via Astro SSR API routes |
+| **Database** | Prisma + Neon PostgreSQL | Dengan Cloudflare Hyperdrive |
+| **Cache** | Cloudflare KV | Bukan Redis |
+| **Storage** | Cloudflare R2 | S3-compatible |
+| **Package Manager** | pnpm 8.15.0 | Monorepo workspaces |
+| **Testing** | Vitest | Unit + integration tests |
+
+---
 
 ## Development Conventions
 
 ### Coding Style
+- **Indent**: 2 spaces (Prettier default)
+- **Quotes**: Single quotes in TS/JS
+- **Components**: PascalCase
+- **Variables/Functions**: camelCase
+- **Environment Variables**: SCREAMING_SNAKE_CASE
+- **File Names**: kebab-case
 
-- Prettier defaults (two-space indent, single quotes in TS/JS)
-- Tailwind utility-first styling
-- PascalCase for React/Astro components
-- camelCase for variables/functions
-- SCREAMING_SNAKE_CASE for environment variables
+### Commit Style (MANDATORY)
+**Conventional Commits** format:
+```
+type(scope): description
 
-### File Structure
+[optional body]
 
-- Components co-located by feature: `apps/web/src/components/<domain>`
-- API modules by domain: `apps/api/src/<domain>`
-- Environment defaults in `.env.example`
-- Never commit real secrets
+[optional footer]
+```
 
-### Testing
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `refactor`: Code refactoring
+- `test`: Adding tests
+- `ci`: CI/CD changes
+- `chore`: Maintenance
 
-- Vitest for unit tests (`*.test.ts`)
-- Playwright for end-to-end tests (`apps/web/tests/e2e`)
-- Contract tests for API (`apps/api/tests/contracts`)
-- Target ≥80% coverage on critical paths
+Examples:
+```bash
+feat(auth): implement JWT refresh token rotation
+fix(storage): handle R2 upload timeout errors
+docs(migration): update cloudflare setup guide
+refactor(cache): migrate redis to cloudflare kv
+```
 
-## Security & Compliance
+### Branch Naming
+```
+feature/short-description
+fix/issue-123-description
+refactor/module-name
+docs/topic-name
+```
 
-- OWASP Top 10 compliance
-- Rate limiting and strict CORS
-- Password hashing with Argon2
-- Encryption at rest and in transit
-- Multi-tenant data isolation
-- Audit logging for critical actions
-- Privacy compliance (Indonesian PDP Act)
+---
 
-## MVP Roadmap (10-12 Week Plan)
+## File Structure
 
-### Wave 1 - MVP
+```
+jasaweb/
+├── apps/
+│   ├── web/                    # Main application (Astro + Workers)
+│   │   ├── src/
+│   │   │   ├── pages/
+│   │   │   │   ├── api/        # API Routes (Workers)
+│   │   │   │   └── ...         # Page routes
+│   │   │   ├── components/     # UI components
+│   │   │   ├── services/       # Business logic
+│   │   │   │   ├── kv-cache.service.ts
+│   │   │   │   └── r2-storage.service.ts
+│   │   │   └── types/          # TypeScript types
+│   │   ├── wrangler.toml       # Cloudflare config
+│   │   └── astro.config.mjs
+│   └── api/                    # ❌ DEPRECATED - DO NOT MODIFY
+├── packages/
+│   ├── ui/                     # Shared UI components
+│   ├── config/                 # Shared configurations
+│   └── testing/                # Testing utilities
+├── docs/
+│   └── deployment/
+│       ├── cloudflare-ecosystem.md    # Setup guide
+│       └── migration-checklist.md     # Task tracking
+└── .github/workflows/          # CI/CD
+```
 
-- Complete public site with CMS
-- Basic auth (email/password + magic link) with RBAC & multi-tenancy
-- Core modules: Projects, Milestones, Files, Approvals
-- Simple tickets (without automatic SLA) and manual invoice uploads
-- Dashboard widgets with project status
+---
 
-### Wave 2-3 - Enhancements
+## API Development Pattern
 
-- Online payment gateways
-- Automated SLA and reporting
-- Knowledge Base
-- White-label portal and corporate SSO
+### Astro API Route Template
+```typescript
+// apps/web/src/pages/api/[resource]/index.ts
+import type { APIRoute } from 'astro';
+import { createKVCache } from '@/services/kv-cache.service';
+import { createR2Storage } from '@/services/r2-storage.service';
 
-## Current Implementation Status
+export const GET: APIRoute = async ({ locals, request }) => {
+  const env = locals.runtime.env;
+  const cache = createKVCache(env);
+  const storage = createR2Storage(env);
 
-The project MVP is complete with all core modules functional. Detailed specifications are available in the `/docs/` directory and current tasks are tracked in `todo.md`. The codebase closely follows the planned monorepo architecture with successful implementation of all major components.
+  try {
+    // Your logic here
+    return new Response(JSON.stringify({ data }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+export const POST: APIRoute = async ({ locals, request }) => {
+  // Similar pattern
+};
+```
+
+### Service Pattern
+```typescript
+// Singleton-like factory pattern for Workers
+export function createService(env: CloudflareEnv) {
+  return new ServiceClass(env);
+}
+```
+
+---
+
+## Testing Guidelines
+
+### Running Tests
+```bash
+pnpm test              # Run all tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # With coverage
+```
+
+### Test File Naming
+- Unit tests: `*.test.ts`
+- Integration tests: `*.integration.test.ts`
+- E2E tests: `*.e2e.test.ts`
+
+### Test Structure
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+
+describe('ServiceName', () => {
+  let service: ServiceClass;
+
+  beforeEach(() => {
+    service = new ServiceClass(mockEnv);
+  });
+
+  describe('methodName', () => {
+    it('should do expected behavior', async () => {
+      const result = await service.methodName();
+      expect(result).toBeDefined();
+    });
+  });
+});
+```
+
+---
+
+## Security Requirements
+
+### OWASP Compliance
+- ✅ Input validation on all endpoints
+- ✅ Parameterized queries (Prisma handles this)
+- ✅ JWT with short expiry + refresh tokens
+- ✅ Rate limiting per IP
+- ✅ CORS configured for allowed origins only
+- ✅ No secrets in code (use Cloudflare Secrets)
+
+### Sensitive Data Handling
+```typescript
+// ❌ NEVER
+const secret = "hardcoded-secret";
+
+// ✅ ALWAYS
+const secret = env.JWT_SECRET;
+```
+
+### Workers-Specific Security
+- Semua secrets via `wrangler secret put`
+- Tidak ada akses filesystem (gunakan R2)
+- Tidak ada child_process (sandbox environment)
+
+---
+
+## Warnings & Gotchas
+
+### ⚠️ apps/api is DEPRECATED
+- **DO NOT** add new features ke `apps/api`
+- **DO NOT** fix bugs di `apps/api` (kecuali critical)
+- **MIGRATE** functionality ke `apps/web/src/pages/api/`
+
+### ⚠️ Workers Runtime Limitations
+Node.js APIs yang **TIDAK TERSEDIA** di Workers:
+- `fs`, `path` (gunakan R2)
+- `child_process`, `cluster`
+- `net`, `dns`, `dgram`
+- `os`, `v8`
+
+Node.js APIs yang **TERSEDIA** (dengan compatibility flag):
+- `crypto` (via Web Crypto API)
+- `Buffer` (via nodejs_compat)
+- `TextEncoder`, `TextDecoder`
+- `fetch`, `Request`, `Response`
+
+### ⚠️ Database Connections
+- **HARUS** gunakan Hyperdrive untuk connection pooling
+- Prisma di edge **HARUS** pakai `previewFeatures = ["driverAdapters"]`
+- Connection string **HARUS** dari `env.HYPERDRIVE.connectionString`
+
+---
+
+## Quick Reference Commands
+
+```bash
+# Development
+pnpm dev              # Start all apps
+pnpm dev:web          # Web only (includes API routes)
+
+# Build
+pnpm build            # Build all
+pnpm build:web        # Web only
+
+# Testing
+pnpm test             # Run tests
+pnpm lint             # Lint check
+pnpm typecheck        # TypeScript check
+
+# Database
+pnpm prisma generate  # Generate client
+pnpm prisma migrate   # Run migrations
+
+# Cloudflare
+wrangler login        # Auth
+wrangler pages deploy # Deploy
+wrangler tail         # View logs
+wrangler secret put   # Set secrets
+```
+
+---
+
+## Required Reading Before Starting
+
+1. **Migration Checklist**: `docs/deployment/migration-checklist.md`
+2. **Cloudflare Setup**: `docs/deployment/cloudflare-ecosystem.md`
+3. **Current Tasks**: `todo.md`
+4. **Architecture**: `docs/blueprint.md`
+5. **Roadmap**: `docs/roadmap.md`
+
+---
+
+## Contact & Escalation
+
+- **Repository**: github.com/sulhicmz/JasaWeb
+- **Branch untuk development**: `dev`
+- **Branch untuk production**: `main`
