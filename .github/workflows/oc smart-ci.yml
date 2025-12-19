@@ -2,7 +2,7 @@ name: oc smart-ci
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [dev]
 
 permissions:
   contents: write
@@ -20,14 +20,10 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,77 +34,15 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 8.15.0
-          run_install: false
-
-      - name: Get pnpm store directory
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "sulhicmz"
-          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        id: lint
-        continue-on-error: true
         run: pnpm lint --if-present
 
       - name: Test
-        id: test
-        continue-on-error: true
         run: pnpm test --if-present
 
       - name: Build
-        id: build
-        continue-on-error: true
         run: pnpm build --if-present
-
-      - name: Install OpenCode CLI
-        if: steps.lint.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure'
-        run: |
-          curl -fsSL https://opencode.ai/install | bash
-          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
-
-      - name: Auto-fix CI Failures
-        if: steps.lint.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure'
-        env:
-          LINT_STATUS: ${{ steps.lint.outcome }}
-          TEST_STATUS: ${{ steps.test.outcome }}
-          BUILD_STATUS: ${{ steps.build.outcome }}
-        run: |
-          opencode run "$(cat <<'PROMPT'
-          CI has failures. Fix them.
-
-          Status:
-          - Lint: $LINT_STATUS
-          - Test: $TEST_STATUS
-          - Build: $BUILD_STATUS
-
-          Steps:
-          1. Check git log -1. If last commit is auto-fix, STOP.
-          2. Fix the failing checks
-          3. Verify fix works locally
-          4. Commit: fix(ci): auto-resolve errors
-          5. Push to this branch
-
-          Constraints:
-          - Minimal changes only
-          - Do not delete business logic
-          PROMPT
-          )" --model iflowcn/glm-4.6 --share false
-
-      - name: Auto-merge if Passed
-        if: steps.lint.outcome == 'success' && steps.test.outcome == 'success' && steps.build.outcome == 'success'
-        run: |
-          echo "✅ All checks passed"
-          gh pr merge --auto --merge || echo "Auto-merge not available"
