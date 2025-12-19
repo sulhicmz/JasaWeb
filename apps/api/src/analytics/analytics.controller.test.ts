@@ -1,11 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('AnalyticsController', () => {
   let controller: AnalyticsController;
-  let mockService: any;
+  let mockService: {
+    getProjectAnalytics: ReturnType<typeof vi.fn>;
+    [key: string]: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     mockService = {

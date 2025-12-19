@@ -18,6 +18,21 @@ import {
   ValidationResult,
   JasaWebConfig,
 } from '@jasaweb/config';
+import type {
+  S3Client,
+  S3ClientConfig,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+  GetObjectCommandOutput,
+  PutObjectCommandOutput,
+  HeadObjectCommandOutput,
+  ListObjectsV2CommandOutput,
+  _Object,
+} from '@aws-sdk/client-s3';
+import type { getSignedUrl as GetSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /**
  * Storage provider interface implementation for different backends
@@ -347,8 +362,8 @@ class S3StorageAdapter extends BaseStorageAdapter {
   private accessKey?: string;
   private secretKey?: string;
   private endpoint?: string;
-  private s3Client: any; // AWS S3 Client
-  private s3Presigner: any; // AWS S3 Request Presigner
+  private s3Client: S3Client | null = null; // AWS S3 Client
+  private s3Presigner: { getSignedUrl: typeof GetSignedUrl } | null = null; // AWS S3 Request Presigner
 
   constructor(config: S3StorageConfig) {
     super();
@@ -363,11 +378,15 @@ class S3StorageAdapter extends BaseStorageAdapter {
     if (this.s3Client) return;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore - Dynamic import
       const { S3Client } = await import('@aws-sdk/client-s3');
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore - Dynamic import
       const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
 
       // Create S3 client configuration
-      const clientConfig: any = {
+      const clientConfig: S3ClientConfig = {
         region: this.region,
       };
 
@@ -404,6 +423,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
     options: StorageUploadOptions
   ): Promise<StorageUploadResult> {
     await this.initializeClient();
+
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
 
     try {
       const { PutObjectCommand } = await import('@aws-sdk/client-s3');
@@ -445,6 +468,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
   async download(key: string): Promise<Buffer> {
     await this.initializeClient();
 
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+
     try {
       const { GetObjectCommand } = await import('@aws-sdk/client-s3');
 
@@ -462,10 +489,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
 
       // Convert stream to buffer
       const chunks: Buffer[] = [];
-      const stream = result.Body as any;
+      const stream = result.Body as AsyncIterable<Uint8Array>;
 
       for await (const chunk of stream) {
-        chunks.push(chunk);
+        chunks.push(Buffer.from(chunk));
       }
 
       const buffer = Buffer.concat(chunks);
@@ -475,7 +502,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
       );
       return buffer;
     } catch (error: unknown) {
-      const awsError = error as any;
+      const awsError = error as { name?: string };
       if (awsError.name === 'NoSuchKey') {
         throw new Error(`File not found: ${key}`);
       }
@@ -488,6 +515,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
 
   async delete(key: string): Promise<void> {
     await this.initializeClient();
+
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
 
     try {
       const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
@@ -516,6 +547,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
   async exists(key: string): Promise<boolean> {
     await this.initializeClient();
 
+    if (!this.s3Client) {
+      return false;
+    }
+
     try {
       const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
 
@@ -532,7 +567,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
       await this.s3Client.send(command);
       return true;
     } catch (error: unknown) {
-      const awsError = error as any;
+      const awsError = error as { name?: string };
       if (awsError.name === 'NotFound' || awsError.name === 'NoSuchKey') {
         return false;
       }
@@ -543,6 +578,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
 
   override async getSignedUrl(key: string, expiresIn: number): Promise<string> {
     await this.initializeClient();
+
+    if (!this.s3Client || !this.s3Presigner) {
+      throw new Error('S3 client or presigner not initialized');
+    }
 
     try {
       const { GetObjectCommand } = await import('@aws-sdk/client-s3');
@@ -580,6 +619,10 @@ class S3StorageAdapter extends BaseStorageAdapter {
   > {
     await this.initializeClient();
 
+    if (!this.s3Client) {
+      throw new Error('S3 client not initialized');
+    }
+
     try {
       const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
 
@@ -590,7 +633,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
       const result = await this.s3Client.send(command);
 
       const objects =
-        result.Contents?.map((obj: any) => ({
+        result.Contents?.map((obj: _Object) => ({
           key: obj.Key!,
           size: obj.Size || 0,
           lastModified: obj.LastModified || new Date(),

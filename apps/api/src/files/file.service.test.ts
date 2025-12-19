@@ -7,12 +7,47 @@ import { FileStorageService } from '../common/services/file-storage.service';
 import { LocalFileStorageService } from '../common/services/local-file-storage.service';
 import { ConfigService } from '@nestjs/config';
 
+// Mock types for test configuration
+interface MockPrismaService {
+  file: {
+    create: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  project: {
+    findUnique: ReturnType<typeof vi.fn>;
+  };
+}
+
+interface MockFileStorageService {
+  uploadFile: ReturnType<typeof vi.fn>;
+  downloadFile: ReturnType<typeof vi.fn>;
+  deleteFile: ReturnType<typeof vi.fn>;
+  fileExists: ReturnType<typeof vi.fn>;
+  generateSignedUrl: ReturnType<typeof vi.fn>;
+  generateDownloadUrl: ReturnType<typeof vi.fn>;
+}
+
+interface MockLocalFileStorageService {
+  uploadFile: ReturnType<typeof vi.fn>;
+  downloadFile: ReturnType<typeof vi.fn>;
+  deleteFile: ReturnType<typeof vi.fn>;
+  fileExists: ReturnType<typeof vi.fn>;
+  getFile: ReturnType<typeof vi.fn>;
+}
+
+interface MockConfigService {
+  get: ReturnType<typeof vi.fn>;
+}
+
 describe('FileService', () => {
   let service: FileService;
-  let prismaService: any;
-  let fileStorageService: any;
-  let localFileStorageService: any;
-  let configService: any;
+  let prismaService: MockPrismaService;
+  let fileStorageService: MockFileStorageService;
+  let localFileStorageService: MockLocalFileStorageService;
+  let configService: MockConfigService;
 
   const mockFile: Buffer = Buffer.from('test file content');
   const mockFilePayload = {

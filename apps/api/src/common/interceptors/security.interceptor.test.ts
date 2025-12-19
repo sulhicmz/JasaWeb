@@ -4,16 +4,21 @@ import { Reflector } from '@nestjs/core';
 import { of, throwError } from 'rxjs';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { logger } from '../../../../../packages/config/logger';
-import { vi } from 'vitest';
-
+import { vi, expect, describe, it, beforeEach } from 'vitest';
 
 // Mock the logger
 vi.mock('../../../../../packages/config/logger');
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockLogger = logger as {
+  audit: ReturnType<typeof vi.fn>;
+  security: ReturnType<typeof vi.fn>;
+  error: ReturnType<typeof vi.fn>;
+};
 
 describe('SecurityInterceptor', () => {
   let interceptor: SecurityInterceptor;
-  let reflector: jest.Mocked<Reflector>;
+  let reflector: Reflector & {
+    get: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     const mockReflector = {
@@ -44,8 +49,18 @@ describe('SecurityInterceptor', () => {
   describe('intercept', () => {
     let mockContext: ExecutionContext;
     let mockCallHandler: CallHandler;
-    let mockRequest: any;
-    let mockResponse: any;
+    let mockRequest: {
+      method: string;
+      url: string;
+      get: ReturnType<typeof vi.fn>;
+      user: { id: string; organizationId: string };
+      [key: string]: unknown;
+    };
+    let mockResponse: {
+      setHeader: ReturnType<typeof vi.fn>;
+      statusCode: number;
+      locals: Record<string, unknown>;
+    };
 
     beforeEach(() => {
       mockRequest = {
@@ -58,6 +73,7 @@ describe('SecurityInterceptor', () => {
       mockResponse = {
         setHeader: vi.fn(),
         statusCode: 200,
+        locals: {},
       };
 
       mockContext = {
