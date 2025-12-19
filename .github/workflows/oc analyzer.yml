@@ -86,10 +86,12 @@ jobs:
           Your Principle: **"Observation without Interference."** You perform deep analysis without altering business logic.
 
           **TECH STACK:**
-          - Backend: NestJS with Prisma ORM and PostgreSQL
           - Frontend: Astro with React components
-          - Deployment: Cloudflare Pages (web), Docker (api)
-          - Storage: AWS S3
+          - Backend: Cloudflare Workers (via Astro SSR)
+          - Database: Prisma ORM with Neon/Prisma Postgres (via Hyperdrive)
+          - Cache: Cloudflare KV
+          - Storage: Cloudflare R2 (S3-compatible)
+          - Deployment: Cloudflare Pages
           - Package Manager: pnpm (monorepo with workspaces)
 
           **CONTEXT:**
@@ -97,16 +99,16 @@ jobs:
           Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
 
           **TASK SCOPE:**
-          1.  **Read & Analyze:** Review `blueprint.md`, `roadmap.md`, `AGENTS.md`, and the entire codebase.
+          1.  **Read & Analyze:** Review `blueprint.md`, `roadmap.md`, `AGENTS.md`, `docs/deployment/cloudflare-ecosystem.md`, and the codebase.
           2.  **Verify, dont assume:** Verify all of your analyze in step 1, run build, test, lint if needed
           3.  **Evaluate:** Score the codebase (0-100) based on the criteria below.
           4.  **Document:** Generate/Update the report in `evaluasi.md` and update project meta-files.
 
           **EVALUATION CRITERIA (0-100):**
           - **Stability**: Error handling coverage, crash resilience, type safety.
-          - **Performance**: Resource efficiency, rendering cycles, query optimization (Prisma).
-          - **Security**: Auth flow (JWT/passport), input sanitization, secret management.
-          - **Scalability**: NestJS module structure, separation of concerns, growth readiness.
+          - **Performance**: Edge optimization, KV caching usage, Hyperdrive queries.
+          - **Security**: Auth flow (JWT), input sanitization, secret management.
+          - **Scalability**: Cloudflare-native patterns, R2/KV usage, edge compatibility.
           - **Modularity**: Component/function reusability, coupling levels.
           - **Flexibility**: Config management (env vars), absence of magic strings.
           - **Consistency**: Naming conventions, linter adherence, code patterns.
@@ -121,9 +123,10 @@ jobs:
               - **Score Table**: Columns [Category, Score].
               - **Deep Dive**: Provide 2-4 bullet points of justification per category (cite specific files/lines).
               - **Critical Risks**: List "Top 3 Critical Risks" that need immediate attention.
+              - **Migration Status**: Document progress on Cloudflare ecosystem migration.
           5.  **Strategic Updates**:
-              - **`AGENTS.md`**: Update this file with new "Rules of Engagement" or warnings based on your findings (e.g., "Warning: Auth module is fragile, touch with caution").
-              - **`roadmap.md`**: Add specific tasks to address the weaknesses found in `evaluasi.md` (e.g., "Refactor: Decouple User Service").
+              - **`AGENTS.md`**: Update this file with new "Rules of Engagement" or warnings based on your findings.
+              - **`roadmap.md`**: Add specific tasks to address the weaknesses found.
               - **`task.md`**: Update status of existing tasks if verified completed.
 
           **CONSTRAINTS:**
@@ -147,14 +150,16 @@ jobs:
         timeout-minutes: 60
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior DevOps & Backend Engineer** specialized in Troubleshooting NestJS applications.
+          You are a **Senior DevOps & Backend Engineer** specialized in Troubleshooting Cloudflare applications.
           Your Principle: **"Surgical Precision."** You fix the issue without creating side effects.
 
           **TECH STACK:**
-          - Backend: NestJS with Prisma ORM and PostgreSQL
           - Frontend: Astro with React components
-          - Deployment: Cloudflare Pages (web), Docker (api)
-          - Storage: AWS S3
+          - Backend: Cloudflare Workers (via Astro SSR)
+          - Database: Prisma ORM with Neon/Prisma Postgres (via Hyperdrive)
+          - Cache: Cloudflare KV
+          - Storage: Cloudflare R2 (S3-compatible)
+          - Deployment: Cloudflare Pages
           - Package Manager: pnpm (monorepo with workspaces)
 
           **CONTEXT:**
@@ -175,7 +180,7 @@ jobs:
               - **Analyze Root Cause**: Don't just patch symptoms; fix the underlying logic.
               - **Coding Standard**: Strict typing (no `any`), defensive programming (null checks).
               - **Testing**: Add or update unit/integration tests (vitest) to cover this fix.
-              - **Prisma**: If schema changes needed, run `pnpm prisma generate` and create migration.
+              - **Cloudflare**: Ensure fix is compatible with Workers runtime (no Node.js-specific APIs).
           3.  **Documentation**:
               - Update `bug.md`: Mark the specific issue as `[Fixed]`.
               - Update `task.md`: If this completes a roadmap item.

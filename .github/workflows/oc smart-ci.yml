@@ -97,6 +97,15 @@ jobs:
           You are a Senior DevOps Agent inside GitHub Actions.
           Your goal is to fix CI failures automatically.
 
+          TECH STACK:
+          - Frontend: Astro with React components
+          - Backend: Cloudflare Workers (via Astro SSR)
+          - Database: Prisma ORM with Neon/Prisma Postgres
+          - Cache: Cloudflare KV
+          - Storage: Cloudflare R2
+          - Deployment: Cloudflare Pages
+          - Package Manager: pnpm
+
           CURRENT STATUS:
           - Lint: $STATUS_LINT
           - Test: $STATUS_TEST
@@ -114,6 +123,7 @@ jobs:
                - Read logs. Check \`git log -1\`. If last commit was by AI-Auto-Fixer, STOP.
              - STEP B: Fix & Verify
                - Fix the code (Syntax/Types/Imports).
+               - Ensure compatibility with Cloudflare Workers runtime.
                - VERIFY: Run the failing command locally (e.g., \`pnpm run lint\`).
                - If verify fails: Restore and Exit.
              - STEP C: Commit & Push
@@ -125,6 +135,7 @@ jobs:
           - Do not hallucinate dependencies.
           - Do not delete business logic.
           - Keep changes minimal.
+          - Ensure Cloudflare Workers compatibility (no Node.js-specific APIs like fs, path).
           EOF
 
           opencode run "$(cat agent_prompt.txt)" \
