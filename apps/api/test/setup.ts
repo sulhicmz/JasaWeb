@@ -137,46 +137,24 @@ vi.mock('@prisma/client', () => ({
     $disconnect: vi.fn(),
     $transaction: vi.fn(),
   })),
-}));
-
-// Mock @jasaweb/config
-vi.mock('@jasaweb/config', () => ({
-  logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  },
-  storageConfigRegistry: {
-    autoSelectBestStorage: vi.fn(() => ({
-      previousType: 'local',
-      newType: 'local',
-      reason: 'Test environment',
-    })),
-    getCurrentStorageConfig: vi.fn(() => ({
-      type: 'local',
-      displayName: 'Local Storage',
-    })),
-    validateCurrentStorage: vi.fn(() => ({
-      isValid: true,
-      errors: [],
-      warnings: [],
-    })),
-    getCurrentStorageType: vi.fn(() => 'local'),
-    getAvailableStorageConfigs: vi.fn(() => []),
-    getStorageSummary: vi.fn(() => ({})),
-  },
-  StorageType: {
-    LOCAL: 'local',
-    S3: 's3',
-    MINIO: 'minio',
-  },
+  User: vi.fn(),
+  Organization: vi.fn(),
+  Project: vi.fn(),
+  Task: vi.fn(),
+  Ticket: vi.fn(),
+  Milestone: vi.fn(),
+  Invoice: vi.fn(),
+  File: vi.fn(),
+  Approval: vi.fn(),
+  Membership: vi.fn(),
+  AuditLog: vi.fn(),
 }));
 
 // Mock bcrypt
 vi.mock('bcrypt', () => ({
   hash: vi.fn(),
   compare: vi.fn(),
+  genSalt: vi.fn(),
 }));
 
 // Mock cache-manager
@@ -191,40 +169,6 @@ vi.mock('@nestjs/jwt', () => ({
     verify: vi.fn(),
     verifyAsync: vi.fn(),
   })),
-}));
-
-// Mock @jasaweb/config
-vi.mock('@jasaweb/config', () => ({
-  logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  },
-  storageConfigRegistry: {
-    autoSelectBestStorage: vi.fn(() => ({
-      previousType: 'local',
-      newType: 'local',
-      reason: 'Test environment',
-    })),
-    getCurrentStorageConfig: vi.fn(() => ({
-      type: 'local',
-      displayName: 'Local Storage',
-    })),
-    validateCurrentStorage: vi.fn(() => ({
-      isValid: true,
-      errors: [],
-      warnings: [],
-    })),
-    getCurrentStorageType: vi.fn(() => 'local'),
-    getAvailableStorageConfigs: vi.fn(() => []),
-    getStorageSummary: vi.fn(() => ({})),
-  },
-  StorageType: {
-    LOCAL: 'local',
-    S3: 's3',
-    MINIO: 'minio',
-  },
 }));
 
 // Mock @nestjs/config
@@ -257,8 +201,17 @@ vi.mock('@nestjs/core', () => ({
       useGlobalFilters: vi.fn(),
       useGlobalInterceptors: vi.fn(),
       useGlobalGuards: vi.fn(),
+      close: vi.fn(),
     }),
   },
+  Reflector: vi.fn().mockImplementation(() => ({
+    get: vi.fn(),
+    set: vi.fn(),
+  })),
+  REQUEST: Symbol('REQUEST'),
+  APP_FILTER: Symbol('APP_FILTER'),
+  APP_INTERCEPTOR: Symbol('APP_INTERCEPTOR'),
+  APP_GUARD: Symbol('APP_GUARD'),
 }));
 
 vi.mock('@nestjs/platform-express', () => ({
@@ -270,21 +223,97 @@ vi.mock('@nestjs/passport', () => ({
     register: vi.fn(),
     login: vi.fn(),
   },
+  AuthGuard: vi.fn().mockImplementation((strategy?: string) => {
+    return class MockAuthGuard {
+      canActivate() {
+        return true;
+      }
+    };
+  }),
+  PassportAuthGuard: vi.fn().mockImplementation((strategy?: string) => {
+    return class MockPassportAuthGuard {
+      canActivate() {
+        return true;
+      }
+    };
+  }),
 }));
 
 vi.mock('@nestjs/common', () => ({
-  Injectable: vi.fn(),
-  Controller: vi.fn(),
-  Get: vi.fn(),
-  Post: vi.fn(),
-  Put: vi.fn(),
-  Delete: vi.fn(),
-  Param: vi.fn(),
-  Body: vi.fn(),
-  Query: vi.fn(),
-  Headers: vi.fn(),
-  Req: vi.fn(),
-  Res: vi.fn(),
+  Injectable: vi
+    .fn()
+    .mockImplementation((options?: any) => (target: any) => target),
+  Controller: vi.fn().mockImplementation(() => (target: any) => target),
+  Get: vi
+    .fn()
+    .mockImplementation(
+      (path?: string) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  Post: vi
+    .fn()
+    .mockImplementation(
+      (path?: string) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  Put: vi
+    .fn()
+    .mockImplementation(
+      (path?: string) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  Delete: vi
+    .fn()
+    .mockImplementation(
+      (path?: string) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  Patch: vi
+    .fn()
+    .mockImplementation(
+      (path?: string) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  Param: vi
+    .fn()
+    .mockImplementation(
+      (param?: string) => (target: any, key?: string, index?: number) => {}
+    ),
+  Body: vi
+    .fn()
+    .mockImplementation(
+      () => (target: any, key?: string, index?: number) => {}
+    ),
+  Query: vi
+    .fn()
+    .mockImplementation(
+      (query?: string) => (target: any, key?: string, index?: number) => {}
+    ),
+  Headers: vi
+    .fn()
+    .mockImplementation(
+      (header?: string) => (target: any, key?: string, index?: number) => {}
+    ),
+  Req: vi
+    .fn()
+    .mockImplementation(
+      () => (target: any, key?: string, index?: number) => {}
+    ),
+  Res: vi
+    .fn()
+    .mockImplementation(
+      () => (target: any, key?: string, index?: number) => {}
+    ),
+  Inject: vi
+    .fn()
+    .mockImplementation(
+      (token?: any) => (target: any, key?: string, index?: number) => {}
+    ),
+  Scope: {
+    DEFAULT: 'DEFAULT',
+    REQUEST: 'REQUEST',
+    TRANSIENT: 'TRANSIENT',
+  },
   HttpStatus: {
     OK: 200,
     CREATED: 201,
@@ -299,20 +328,90 @@ vi.mock('@nestjs/common', () => ({
   ForbiddenException: class ForbiddenException extends Error {},
   NotFoundException: class NotFoundException extends Error {},
   InternalServerErrorException: class InternalServerErrorException extends Error {},
-  ValidationPipe: vi.fn(),
-  ParseIntPipe: vi.fn(),
-  UseGuards: vi.fn(),
-  UseInterceptors: vi.fn(),
-  UseFilters: vi.fn(),
-  SetMetadata: vi.fn(),
+  ValidationPipe: vi
+    .fn()
+    .mockImplementation(
+      (options?: any) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  ParseIntPipe: vi
+    .fn()
+    .mockImplementation(
+      () => (target: any, key?: string, index?: number) => {}
+    ),
+  UseGuards: vi.fn().mockImplementation(
+    (...guards: any[]) =>
+      (target: any, key?: string, descriptor?: any) =>
+        descriptor
+  ),
+  UseInterceptors: vi.fn().mockImplementation(
+    (...interceptors: any[]) =>
+      (target: any, key?: string, descriptor?: any) =>
+        descriptor
+  ),
+  UseFilters: vi.fn().mockImplementation(
+    (...filters: any[]) =>
+      (target: any, key?: string, descriptor?: any) =>
+        descriptor
+  ),
+  SetMetadata: vi
+    .fn()
+    .mockImplementation(
+      (key: string, value: any) =>
+        (target: any, key2?: string, descriptor?: any) =>
+          descriptor
+    ),
+  createParamDecorator: vi.fn().mockImplementation((fn: any) => fn),
+  ExecutionContext: vi.fn().mockImplementation(() => ({
+    switchToHttp: vi.fn().mockReturnValue({
+      getRequest: vi.fn(),
+      getResponse: vi.fn(),
+    }),
+    getClass: vi.fn(),
+    getHandler: vi.fn(),
+  })),
+  Logger: vi.fn().mockImplementation((name?: string) => ({
+    log: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
+  })),
   InjectableOptions: {},
 }));
 
 vi.mock('@nestjs/websockets', () => ({
-  WebSocketGateway: vi.fn(),
-  SubscribeMessage: vi.fn(),
-  MessageBody: vi.fn(),
-  ConnectedSocket: vi.fn(),
+  WebSocketGateway: vi.fn().mockImplementation(
+    (...args: any[]) =>
+      (target: any) =>
+        target
+  ),
+  SubscribeMessage: vi
+    .fn()
+    .mockImplementation(
+      (message?: string) => (target: any, key?: string, descriptor?: any) =>
+        descriptor
+    ),
+  MessageBody: vi
+    .fn()
+    .mockImplementation(
+      () => (target: any, key?: string, index?: number) => {}
+    ),
+  ConnectedSocket: vi
+    .fn()
+    .mockImplementation(
+      () => (target: any, key?: string, index?: number) => {}
+    ),
+  WebSocketServer: vi
+    .fn()
+    .mockImplementation(() => (target: any, key?: string) => {}),
+  OnGatewayInit: vi.fn().mockImplementation(() => (target: any) => target),
+  OnGatewayConnection: vi
+    .fn()
+    .mockImplementation(() => (target: any) => target),
+  OnGatewayDisconnect: vi
+    .fn()
+    .mockImplementation(() => (target: any) => target),
   WsException: class WsException extends Error {},
 }));
 
@@ -412,13 +511,110 @@ vi.mock('@nestjs/testing', () => ({
       setCustomProviders: vi.fn().mockReturnValue({
         compile: vi.fn().mockResolvedValue({
           get: vi.fn(),
+          close: vi.fn(),
         }),
       }),
       compile: vi.fn().mockResolvedValue({
         get: vi.fn(),
+        close: vi.fn(),
       }),
     }),
   },
+}));
+
+// Mock @nestjs/cache-manager
+vi.mock('@nestjs/cache-manager', () => ({
+  CACHE_MANAGER: Symbol('CACHE_MANAGER'),
+  CacheModule: {
+    register: vi.fn(),
+    registerAsync: vi.fn(),
+  },
+  default: {
+    register: vi.fn(),
+    registerAsync: vi.fn(),
+  },
+}));
+
+// Mock @nestjs/microservices
+vi.mock('@nestjs/microservices', () => ({
+  ClientProxy: vi.fn(),
+  ClientKafka: vi.fn(),
+  ClientTCP: vi.fn(),
+  Transport: {
+    TCP: 'TCP',
+    KAFKA: 'KAFKA',
+    NATS: 'NATS',
+  },
+}));
+
+// Mock @nestjs/throttler
+vi.mock('@nestjs/throttler', () => ({
+  ThrottlerModule: {
+    register: vi.fn(),
+    registerAsync: vi.fn(),
+  },
+  ThrottlerGuard: vi.fn().mockImplementation(() => ({
+    canActivate: vi.fn(),
+  })),
+}));
+
+// Mock @nestjs/terminus
+vi.mock('@nestjs/terminus', () => ({
+  TerminusModule: {
+    forRoot: vi.fn(),
+  },
+  HealthCheckService: vi.fn(),
+  TypeOrmHealthIndicator: vi.fn(),
+  MicroserviceHealthIndicator: vi.fn(),
+}));
+
+// Mock @nestjs/schedule
+vi.mock('@nestjs/schedule', () => ({
+  ScheduleModule: {
+    forRoot: vi.fn(),
+  },
+  Cron: vi.fn(),
+  Interval: vi.fn(),
+  Timeout: vi.fn(),
+}));
+
+// Mock @nestjs-modules/mailer
+vi.mock('@nestjs-modules/mailer', () => ({
+  MailerModule: {
+    registerAsync: vi.fn(),
+  },
+  HandlebarsAdapter: vi.fn(),
+  MailerService: vi.fn().mockImplementation(() => ({
+    sendMail: vi.fn().mockResolvedValue({ messageId: 'test-message-id' }),
+  })),
+}));
+
+// Mock other Node.js modules
+vi.mock('compression', () => ({
+  default: vi.fn().mockReturnValue((req: any, res: any, next: any) => next()),
+}));
+
+vi.mock('helmet', () => ({
+  default: vi.fn().mockReturnValue((req: any, res: any, next: any) => next()),
+}));
+
+vi.mock('socket.io', () => ({
+  Server: vi.fn(),
+  Socket: vi.fn(),
+}));
+
+vi.mock('cache-manager-redis-yet', () => ({
+  redisStore: vi.fn(),
+}));
+
+vi.mock('redis', () => ({
+  createClient: vi.fn().mockReturnValue({
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+  }),
 }));
 
 // Set test environment variables

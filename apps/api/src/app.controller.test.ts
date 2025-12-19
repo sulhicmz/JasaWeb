@@ -32,7 +32,9 @@ describe('AppController', () => {
   });
 
   afterAll(async () => {
-    await module.close();
+    if (module && typeof module.close === 'function') {
+      await module.close();
+    }
   });
 
   it('should be defined', () => {

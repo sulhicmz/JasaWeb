@@ -99,7 +99,8 @@ describe('UserService', () => {
         data: {
           email: createUserDto.email,
           name: createUserDto.name,
-          password: 'hashedPassword',
+          password: 'hashed-password',
+          passwordHashVersion: 'argon2id',
           profilePicture: 'profile.jpg',
         },
       });
@@ -183,16 +184,20 @@ describe('UserService', () => {
         password: 'new-test-pass',
       };
 
-      const bcrypt = await import('bcrypt');
-      vi.mocked(bcrypt.hash).mockResolvedValue('new-test-hash');
+      mockPasswordService.hashPassword.mockResolvedValue({
+        hash: 'new-test-hash',
+        version: 'argon2id',
+      });
       mockPrismaService.user.update.mockResolvedValue(mockUser);
 
       await service.update('1', updatePasswordDto);
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('new-test-pass', 10);
+      expect(mockPasswordService.hashPassword).toHaveBeenCalledWith(
+        'new-test-pass'
+      );
       expect(mockPrismaService.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
-        data: { password: 'new-test-hash' },
+        data: { password: 'new-test-hash', passwordHashVersion: 'argon2id' },
       });
     });
 
