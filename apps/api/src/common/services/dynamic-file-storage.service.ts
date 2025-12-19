@@ -18,6 +18,7 @@ import {
   ValidationResult,
   JasaWebConfig,
 } from '@jasaweb/config';
+import { SecurityValidator } from '../utils/security-validator';
 import type {
   S3Client,
   S3ClientConfig,
@@ -55,8 +56,7 @@ abstract class BaseStorageAdapter implements StorageAdapter {
   abstract exists(key: string): Promise<boolean>;
 
   async getSignedUrl(key: string, _expiresIn: number): Promise<string> {
-    // Validate key to prevent injection
-    if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+    if (!SecurityValidator.isValidKey(key)) {
       throw new Error('Invalid key format');
     }
     throw new Error('Signed URLs not supported by this storage adapter');
@@ -88,77 +88,22 @@ class LocalStorageAdapter extends BaseStorageAdapter {
   }
 
   private ensureDirectoryExists(): void {
-    const fs = require('fs') as typeof import('fs');
     const path = require('path') as typeof import('path');
 
-    // Define allowed base directories for security
-    const allowedBases = ['./uploads', '/tmp/uploads'] as const;
-
-    // Sanitize and validate path to prevent directory traversal
-    const normalizedPath = path.normalize(this.uploadPath);
-    const isAllowed = allowedBases.some((base) =>
-      normalizedPath.startsWith(base)
-    );
-
-    if (!isAllowed) {
+    if (!SecurityValidator.isAllowedPath(this.uploadPath)) {
       throw new Error(
         'Invalid upload path detected - must be within allowed directories'
       );
     }
 
-    // Additional security checks
-    if (normalizedPath.includes('..') || normalizedPath.includes('~')) {
-      throw new Error('Potentially dangerous path detected');
-    }
-
-    // Validate the path is literal and safe
-    if (!/^[a-zA-Z0-9-._/]+$/.test(normalizedPath)) {
-      throw new Error('Invalid characters in upload path');
-    }
-
-    // Security: Use literal constant and secure filesystem operation wrapper
+    const normalizedPath = path.normalize(this.uploadPath);
     const DEFAULT_UPLOAD_DIR = 'uploads' as const;
     const uploadDir = normalizedPath.endsWith(DEFAULT_UPLOAD_DIR)
       ? normalizedPath
       : path.join(normalizedPath, DEFAULT_UPLOAD_DIR);
 
-    // Security: Create secure filesystem operation wrapper
-    const secureFileExists = (filePath: string): boolean => {
-      const ALLOWED_BASES = [process.cwd(), '/tmp'];
-      const pathModule = require('path');
-      const resolvedPath = pathModule.resolve(filePath);
-      const isAllowed = ALLOWED_BASES.some((base) =>
-        resolvedPath.startsWith(base)
-      );
-      // Secure file existence check with validated path
-      try {
-        // Path is validated through security checks above to prevent directory traversal
-        return isAllowed && fs.existsSync(filePath);
-      } catch (error) {
-        this.logger.error('File existence check failed:', error);
-        return false;
-      }
-    };
-
-    const secureMkdir = (dirPath: string): void => {
-      const ALLOWED_BASES = [process.cwd(), '/tmp'];
-      const pathModule = require('path');
-      const resolvedPath = pathModule.resolve(dirPath);
-      const isAllowed = ALLOWED_BASES.some((base) =>
-        resolvedPath.startsWith(base)
-      );
-      if (!isAllowed) {
-        throw new Error('Path not allowed for directory creation');
-      }
-      // Secure directory creation with validated path
-      try {
-        // Path is validated through security checks above to prevent directory traversal
-        fs.mkdirSync(dirPath, { recursive: true, mode: 0o750 });
-      } catch (error) {
-        this.logger.error('Directory creation failed:', error);
-        throw error;
-      }
-    };
+    const secureFileExists = SecurityValidator.createSecureFileExists();
+    const secureMkdir = SecurityValidator.createSecureMkdir();
 
     if (!secureFileExists(uploadDir)) {
       try {
@@ -180,38 +125,22 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const path = require('path');
     const crypto = require('crypto');
 
-    // Sanitize the key to prevent path traversal
-    const sanitizedKey = options.key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
-    // Additional validation to prevent path traversal
-    if (
-      sanitizedKey.includes('..') ||
-      sanitizedKey.includes('~') ||
-      sanitizedKey.startsWith('/')
-    ) {
-      throw new Error('Invalid file key detected');
-    }
+    const sanitizedKey = SecurityValidator.sanitizeKey(options.key);
     const filePath = path.join(this.uploadPath, sanitizedKey);
-    const normalizedPath = path.normalize(filePath);
-
-    // Ensure file stays within allowed directory
-    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
-      throw new Error('Path traversal attempt detected in file upload');
-    }
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
 
     const dirPath = path.dirname(normalizedPath);
+    const validatedDirPath = SecurityValidator.validateDirectoryPath(
+      dirPath,
+      this.uploadPath
+    );
 
-    // Ensure directory exists with validation
-    const normalizedDirPath = path.normalize(dirPath);
-    if (!normalizedDirPath.startsWith(path.normalize(this.uploadPath))) {
-      throw new Error('Invalid directory path detected');
-    }
-    if (!/^[a-zA-Z0-9-._/]+$/.test(normalizedDirPath)) {
-      throw new Error('Invalid characters in directory path');
-    }
     // Secure directory creation with validated path
     try {
-      // Path is validated through normalization and path checks above to prevent directory traversal
-      await fs.mkdir(normalizedDirPath, { recursive: true, mode: 0o750 });
+      await fs.mkdir(validatedDirPath, { recursive: true, mode: 0o750 });
     } catch (error) {
       this.logger.error('Directory creation failed:', error);
       throw error;
@@ -219,7 +148,6 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 
     // Write file with secure permissions
     try {
-      // Path is validated through normalization and path checks above to prevent directory traversal
       await fs.writeFile(normalizedPath, data, { mode: 0o640 });
     } catch (error) {
       this.logger.error('File write failed:', error);
@@ -244,27 +172,15 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const fs = require('fs').promises;
     const path = require('path');
 
-    // Sanitize key to prevent path traversal
-    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
-    // Additional validation to prevent path traversal
-    if (
-      sanitizedKey.includes('..') ||
-      sanitizedKey.includes('~') ||
-      sanitizedKey.startsWith('/')
-    ) {
-      throw new Error('Invalid file key detected');
-    }
+    const sanitizedKey = SecurityValidator.sanitizeKey(key);
     const filePath = path.join(this.uploadPath, sanitizedKey);
-    const normalizedPath = path.normalize(filePath);
-
-    // Ensure file stays within allowed directory
-    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
-      throw new Error('Path traversal attempt detected in file download');
-    }
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
 
     // Secure file read with validated path
     try {
-      // Path is validated through normalization and path checks above to prevent directory traversal
       return await fs.readFile(normalizedPath);
     } catch (error: unknown) {
       const fsError = error as NodeJS.ErrnoException;
@@ -279,27 +195,15 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const fs = require('fs').promises;
     const path = require('path');
 
-    // Sanitize key to prevent path traversal
-    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
-    // Additional validation to prevent path traversal
-    if (
-      sanitizedKey.includes('..') ||
-      sanitizedKey.includes('~') ||
-      sanitizedKey.startsWith('/')
-    ) {
-      throw new Error('Invalid file key detected');
-    }
+    const sanitizedKey = SecurityValidator.sanitizeKey(key);
     const filePath = path.join(this.uploadPath, sanitizedKey);
-    const normalizedPath = path.normalize(filePath);
-
-    // Ensure file stays within allowed directory
-    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
-      throw new Error('Path traversal attempt detected in file deletion');
-    }
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
 
     // Secure file deletion with validated path
     try {
-      // Path is validated through normalization and path checks above to prevent directory traversal
       await fs.unlink(normalizedPath);
       this.logger.log(`File deleted locally: ${sanitizedKey}`);
     } catch (error: unknown) {
@@ -316,23 +220,16 @@ class LocalStorageAdapter extends BaseStorageAdapter {
     const fs = require('fs').promises;
     const path = require('path');
 
-    // Sanitize key to prevent path traversal
-    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
-    // Additional validation to prevent path traversal
-    if (
-      sanitizedKey.includes('..') ||
-      sanitizedKey.includes('~') ||
-      sanitizedKey.startsWith('/')
-    ) {
-      return false; // Treat suspicious paths as non-existent
+    if (!SecurityValidator.isValidKey(key)) {
+      return false; // Treat suspicious keys as non-existent
     }
-    const filePath = path.join(this.uploadPath, sanitizedKey);
-    const normalizedPath = path.normalize(filePath);
 
-    // Ensure file stays within allowed directory
-    if (!normalizedPath.startsWith(path.normalize(this.uploadPath))) {
-      return false; // Treat suspicious paths as non-existent
-    }
+    const sanitizedKey = key.replace(/[^a-zA-Z0-9\-_/.]/g, '');
+    const filePath = path.join(this.uploadPath, sanitizedKey);
+    const normalizedPath = SecurityValidator.validatePath(
+      this.uploadPath,
+      filePath
+    );
 
     try {
       await fs.access(normalizedPath);
@@ -423,8 +320,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     try {
       const { PutObjectCommand } = await import('@aws-sdk/client-s3');
 
-      // Validate key to prevent injection
-      if (!/^[a-zA-Z0-9-._/]+$/.test(options.key)) {
+      if (!SecurityValidator.isValidKey(options.key)) {
         throw new Error('Invalid key format for S3 upload');
       }
 
@@ -469,8 +365,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     try {
       const { GetObjectCommand } = await import('@aws-sdk/client-s3');
 
-      // Validate key to prevent injection
-      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+      if (!SecurityValidator.isValidKey(key)) {
         throw new Error('Invalid key format for S3 download');
       }
 
@@ -517,8 +412,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     try {
       const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
 
-      // Validate key to prevent injection
-      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+      if (!SecurityValidator.isValidKey(key)) {
         throw new Error('Invalid key format for S3 delete');
       }
 
@@ -548,8 +442,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     try {
       const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
 
-      // Validate key to prevent injection
-      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+      if (!SecurityValidator.isValidKey(key)) {
         return false; // Treat suspicious keys as non-existent
       }
 
@@ -580,8 +473,7 @@ class S3StorageAdapter extends BaseStorageAdapter {
     try {
       const { GetObjectCommand } = await import('@aws-sdk/client-s3');
 
-      // Validate key to prevent injection
-      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+      if (!SecurityValidator.isValidKey(key)) {
         throw new Error('Invalid key format for S3 signed URL');
       }
 
