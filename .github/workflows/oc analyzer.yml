@@ -1,37 +1,25 @@
 name: oc analyzer
 
 on:
-  schedule:
-    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
-  issues: write
-  actions: write
 
 concurrency:
-  group: global-${{ github.workflow }}
+  group: oc-analyzer
   cancel-in-progress: false
 
 jobs:
-  opencode:
-    name: oc analyzer
+  analyze:
+    name: Analyze Codebase
     runs-on: ubuntu-24.04-arm
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
-
-    permissions:
-      id-token: write
-      contents: write
-      pull-requests: write
-      issues: write
-      actions: write
+    timeout-minutes: 60
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     steps:
       - name: Checkout Code
@@ -52,19 +40,16 @@ jobs:
           run_install: false
 
       - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
-      - name: Configure Git Identity
+      - name: Configure Git
         run: |
           git config --global user.name "sulhicmz"
           git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
@@ -77,130 +62,35 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Run OpenCode
-        id: run_oc
-        timeout-minutes: 60
+      - name: Run Analyzer
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior Software Architect & Lead Auditor**.
-          Your Principle: **"Observation without Interference."** You perform deep analysis without altering business logic.
+          You are a **Codebase Analyzer**.
 
           **TECH STACK:**
-          - Frontend: Astro with React components
-          - Backend: Cloudflare Workers (via Astro SSR)
-          - Database: Prisma ORM with Neon/Prisma Postgres (via Hyperdrive)
+          - Frontend: Astro + React (Cloudflare Pages)
+          - Backend: Cloudflare Workers
+          - Database: Neon PostgreSQL + Prisma ORM
           - Cache: Cloudflare KV
-          - Storage: Cloudflare R2 (S3-compatible)
-          - Deployment: Cloudflare Pages
-          - Package Manager: pnpm (monorepo with workspaces)
+          - Storage: Cloudflare R2
 
-          **CONTEXT:**
-          You have been summoned to evaluate the current state of the repository on the `dev` branch.
-          Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
+          **TASK:** Evaluate the codebase and update evaluasi.md
 
-          **TASK SCOPE:**
-          1.  **Read & Analyze:** Review `blueprint.md`, `roadmap.md`, `AGENTS.md`, `docs/deployment/cloudflare-ecosystem.md`, and the codebase.
-          2.  **Verify, dont assume:** Verify all of your analyze in step 1, run build, test, lint if needed
-          3.  **Evaluate:** Score the codebase (0-100) based on the criteria below.
-          4.  **Document:** Generate/Update the report in `evaluasi.md` and update project meta-files.
+          **STEPS:**
+          1. Read: AGENTS.md, task.md, bug.md
+          2. Run: pnpm build, pnpm test, pnpm lint
+          3. Evaluate (0-100): Stability, Performance, Security, Scalability, Modularity
+          4. Update evaluasi.md with scores and justification
+          5. Update task.md if you find new tasks
+          6. Update bug.md if you find bugs
 
-          **EVALUATION CRITERIA (0-100):**
-          - **Stability**: Error handling coverage, crash resilience, type safety.
-          - **Performance**: Edge optimization, KV caching usage, Hyperdrive queries.
-          - **Security**: Auth flow (JWT), input sanitization, secret management.
-          - **Scalability**: Cloudflare-native patterns, R2/KV usage, edge compatibility.
-          - **Modularity**: Component/function reusability, coupling levels.
-          - **Flexibility**: Config management (env vars), absence of magic strings.
-          - **Consistency**: Naming conventions, linter adherence, code patterns.
-
-          **EXECUTION STEPS:**
-          1.  **Checkout**: Ensure you are on `dev` and up to date.
-          2.  **Audit**: Read the code. Look for patterns, anti-patterns, technical debt, and risks.
-          3.  **Verify**: Verify your audit, dont assume.
-          4.  **Report Generation (Target: `evaluasi.md`)**:
-              - Create or Overwrite `evaluasi.md`.
-              - **Header**: Date of Evaluation & Commit Hash analyzed.
-              - **Score Table**: Columns [Category, Score].
-              - **Deep Dive**: Provide 2-4 bullet points of justification per category (cite specific files/lines).
-              - **Critical Risks**: List "Top 3 Critical Risks" that need immediate attention.
-              - **Migration Status**: Document progress on Cloudflare ecosystem migration.
-          5.  **Strategic Updates**:
-              - **`AGENTS.md`**: Update this file with new "Rules of Engagement" or warnings based on your findings.
-              - **`roadmap.md`**: Add specific tasks to address the weaknesses found.
-              - **`task.md`**: Update status of existing tasks if verified completed.
+          **OUTPUT:**
+          - Update evaluasi.md
+          - Commit: `docs(eval): update codebase evaluation`
+          - Create PR to `dev`
 
           **CONSTRAINTS:**
-          - **DO NOT** change any `.ts`, `.tsx`, `.js`, or business logic files.
-          - **DO NOT** fix bugs. Your job is to *find* and *document* them.
-          - **OUTPUT**: Markdown files only (`evaluasi.md`, `AGENTS.md`, `roadmap.md`, `task.md`).
-
-          **SUCCESS CRITERIA:**
-          - `evaluasi.md` is generated with strict, honest scoring and actionable insights.
-          - `AGENTS.md` contains updated guidelines for future agents.
-          - No functional code is touched.
-          - Commit and push to branch 'analyzer' with message: `docs(audit): update evaluation report and agent guidelines`.
-          - Create or update a Pull Request to `dev`.
+          - DO NOT modify code files
+          - Only update .md documentation files
           PROMPT
-          )" \
-            --model iflowcn/glm-4.6 \
-            --share false \
-
-      - name: Run OpenCode1
-        id: run_oc1
-        timeout-minutes: 60
-        run: |
-          opencode run "$(cat <<'PROMPT'
-          You are a **Senior DevOps & Backend Engineer** specialized in Troubleshooting Cloudflare applications.
-          Your Principle: **"Surgical Precision."** You fix the issue without creating side effects.
-
-          **TECH STACK:**
-          - Frontend: Astro with React components
-          - Backend: Cloudflare Workers (via Astro SSR)
-          - Database: Prisma ORM with Neon/Prisma Postgres (via Hyperdrive)
-          - Cache: Cloudflare KV
-          - Storage: Cloudflare R2 (S3-compatible)
-          - Deployment: Cloudflare Pages
-          - Package Manager: pnpm (monorepo with workspaces)
-
-          **CONTEXT:**
-          You are tasked with resolving technical debt or bugs on the `dev` branch.
-          Your source of truth for issues is `bug.md` or the remote repository Issue Tracker.
-
-          **TASK SCOPE:**
-          1.  **Identify**: Select the OLDEST open issue or the one marked "High Priority".
-          2.  **Isolate**: Create a reproduction case (test or script) to confirm the bug.
-          3.  **Resolve**: Implement the fix.
-          4.  **Verify**: Ensure the reproduction case now passes.
-
-          **EXECUTION STEPS:**
-          1.  **Branching**:
-              - Checkout `dev` and pull latest.
-              - Create a new branch: `fix/issue-<ID>-<short-description>` (e.g., `fix/issue-42-auth-timeout`).
-          2.  **Implementation**:
-              - **Analyze Root Cause**: Don't just patch symptoms; fix the underlying logic.
-              - **Coding Standard**: Strict typing (no `any`), defensive programming (null checks).
-              - **Testing**: Add or update unit/integration tests (vitest) to cover this fix.
-              - **Cloudflare**: Ensure fix is compatible with Workers runtime (no Node.js-specific APIs).
-          3.  **Documentation**:
-              - Update `bug.md`: Mark the specific issue as `[Fixed]`.
-              - Update `task.md`: If this completes a roadmap item.
-          4.  **Finalization**:
-              - Run linter/formatter (`pnpm lint`).
-              - Run full test suite to ensure NO REGRESSIONS (`pnpm test`).
-
-          **CONSTRAINTS:**
-          - If no open issues exist, STOP and report: "No pending issues found in bug.md or remote tracker."
-          - Do not refactor unrelated code (Scope Creep is forbidden).
-          - Respect existing architectural patterns defined in `blueprint.md`.
-
-          **SUCCESS CRITERIA:**
-          - The specific issue is resolved and verified.
-          - New tests are added.
-          - Existing tests pass.
-          - Follow github best practice
-          - Commit and push to branch 'fix issue' with message follows Conventional Commits: `fix(scope): <description> (closes #ID)`.
-          - Create/update a Pull Request to `dev` with a detailed description of the fix and verification steps.
-          PROMPT
-          )" \
-            --model iflowcn/glm-4.6 \
-            --share false \
+          )" --model iflowcn/glm-4.6 --share false

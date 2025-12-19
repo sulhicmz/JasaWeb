@@ -4,20 +4,20 @@ on:
   pull_request:
     branches: [main, dev]
 
-concurrency:
-  group: global-${{ github.workflow }}
-  cancel-in-progress: false
-
 permissions:
   contents: write
   pull-requests: write
-  issues: write
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
-  smart-ci:
-    name: Self-Healing CI
+  ci:
+    name: CI Check
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    timeout-minutes: 30
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
@@ -41,19 +41,16 @@ jobs:
           run_install: false
 
       - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
-      - name: Configure Git Identity
+      - name: Configure Git
         run: |
           git config --global user.name "sulhicmz"
           git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
@@ -61,90 +58,57 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      # --- EXECUTION PHASE (Collecting Status) ---
-
-      - name: Lint Check
+      - name: Lint
         id: lint
         continue-on-error: true
-        run: pnpm run lint --if-present
+        run: pnpm lint --if-present
 
-      - name: Test Check
+      - name: Test
         id: test
         continue-on-error: true
         run: pnpm test --if-present
 
-      - name: Build Check
+      - name: Build
         id: build
         continue-on-error: true
-        run: pnpm run build --if-present
-
-      # --- AGENT PHASE ---
+        run: pnpm build --if-present
 
       - name: Install OpenCode CLI
+        if: steps.lint.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure'
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Run OpenCode Agent
-        id: run_agent
+      - name: Auto-fix CI Failures
+        if: steps.lint.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure'
         env:
-          STATUS_LINT: ${{ steps.lint.outcome }}
-          STATUS_TEST: ${{ steps.test.outcome }}
-          STATUS_BUILD: ${{ steps.build.outcome }}
+          LINT_STATUS: ${{ steps.lint.outcome }}
+          TEST_STATUS: ${{ steps.test.outcome }}
+          BUILD_STATUS: ${{ steps.build.outcome }}
         run: |
-          cat <<EOF > agent_prompt.txt
-          CONTEXT:
-          You are a Senior DevOps Agent inside GitHub Actions.
-          Your goal is to fix CI failures automatically.
+          opencode run "$(cat <<'PROMPT'
+          CI has failures. Fix them.
 
-          TECH STACK:
-          - Frontend: Astro with React components
-          - Backend: Cloudflare Workers (via Astro SSR)
-          - Database: Prisma ORM with Neon/Prisma Postgres
-          - Cache: Cloudflare KV
-          - Storage: Cloudflare R2
-          - Deployment: Cloudflare Pages
-          - Package Manager: pnpm
+          Status:
+          - Lint: $LINT_STATUS
+          - Test: $TEST_STATUS
+          - Build: $BUILD_STATUS
 
-          CURRENT STATUS:
-          - Lint: $STATUS_LINT
-          - Test: $STATUS_TEST
-          - Build: $STATUS_BUILD
+          Steps:
+          1. Check git log -1. If last commit is auto-fix, STOP.
+          2. Fix the failing checks
+          3. Verify fix works locally
+          4. Commit: fix(ci): auto-resolve errors
+          5. Push to this branch
 
-          INSTRUCTIONS:
-          1. IF ALL STATUS are 'success':
-             - Respond with: "✅ CI Passed. Merging changes."
-             - Action:
-               - Merge the pull request/branch into 'dev'.
-               - Example command: \`gh pr merge --auto --merge\` (or git merge command depending on your env).
-             - Exit gracefully.
-          2. IF ANY STATUS is 'failure':
-             - STEP A: Analyze Logs & Prevention
-               - Read logs. Check \`git log -1\`. If last commit was by AI-Auto-Fixer, STOP.
-             - STEP B: Fix & Verify
-               - Fix the code (Syntax/Types/Imports).
-               - Ensure compatibility with Cloudflare Workers runtime.
-               - VERIFY: Run the failing command locally (e.g., \`pnpm run lint\`).
-               - If verify fails: Restore and Exit.
-             - STEP C: Commit & Push
-               - \`git add .\`
-               - \`git commit -m "fix(ci): auto-resolve build/lint errors"\`
-               - \`git push origin HEAD:${{ github.head_ref }}\`
+          Constraints:
+          - Minimal changes only
+          - Do not delete business logic
+          PROMPT
+          )" --model iflowcn/glm-4.6 --share false
 
-          CONSTRAINTS:
-          - Do not hallucinate dependencies.
-          - Do not delete business logic.
-          - Keep changes minimal.
-          - Ensure Cloudflare Workers compatibility (no Node.js-specific APIs like fs, path).
-          EOF
-
-          opencode run "$(cat agent_prompt.txt)" \
-            --model iflowcn/glm-4.6 \
-            --share false \
-
-      - name: Final Status Check
-        if: always()
+      - name: Auto-merge if Passed
+        if: steps.lint.outcome == 'success' && steps.test.outcome == 'success' && steps.build.outcome == 'success'
         run: |
-          if [[ "${{ steps.lint.outcome }}" == "failure" || "${{ steps.test.outcome }}" == "failure" || "${{ steps.build.outcome }}" == "failure" ]]; then
-             echo "⚠️ CI required manual intervention or agent fix."
-          fi
+          echo "✅ All checks passed"
+          gh pr merge --auto --merge || echo "Auto-merge not available"
