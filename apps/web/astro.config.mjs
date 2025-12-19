@@ -1,16 +1,13 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
-import cloudflare from '@astrojs/cloudflare';
+import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
-  adapter: cloudflare(),
+  adapter: node({ mode: 'standalone' }),
   image: {
-    service: {
-      entrypoint: 'astro/assets/services/sharp',
-    },
     // Optimize image processing
     domains: ['localhost', 'jasaweb.id'],
     format: ['webp', 'avif', 'jpeg'],
@@ -51,9 +48,53 @@ export default defineConfig({
             ) {
               return 'vendor-polyfills';
             }
-            // Other third-party dependencies
+            // Date/time utilities
+            if (
+              id.includes('luxon') ||
+              id.includes('date-fns') ||
+              id.includes('dayjs')
+            ) {
+              return 'vendor-date';
+            }
+            // Authentication and security
+            if (
+              id.includes('passport') ||
+              id.includes('jsonwebtoken') ||
+              id.includes('bcrypt')
+            ) {
+              return 'vendor-auth';
+            }
+            // Database and ORM
+            if (
+              id.includes('prisma') ||
+              id.includes('pg') ||
+              id.includes('mongodb')
+            ) {
+              return 'vendor-db';
+            }
+            // NestJS framework
+            if (id.includes('@nestjs')) {
+              return 'vendor-nestjs';
+            }
+            // Other heavy utilities
+            if (id.includes('lodash') || id.includes('underscore')) {
+              return 'vendor-utils';
+            }
+            // Email services
+            if (id.includes('nodemailer') || id.includes('@sendgrid')) {
+              return 'vendor-email';
+            }
+            // Validation libraries
+            if (
+              id.includes('joi') ||
+              id.includes('zod') ||
+              id.includes('class-validator')
+            ) {
+              return 'vendor-validation';
+            }
+            // Other third-party dependencies (smaller chunk)
             if (id.includes('node_modules')) {
-              return 'vendor-other';
+              return 'vendor-misc';
             }
           },
         },

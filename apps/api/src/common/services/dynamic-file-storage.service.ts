@@ -54,7 +54,7 @@ abstract class BaseStorageAdapter implements StorageAdapter {
 
 interface S3StorageConfig {
   region?: string;
-  bucket: string;
+  bucket?: string;
   accessKey?: string;
   secretKey?: string;
   endpoint?: string;
@@ -339,60 +339,276 @@ class LocalStorageAdapter extends BaseStorageAdapter {
 }
 
 /**
- * S3 Storage Adapter (Placeholder for future implementation)
+ * S3 Storage Adapter Implementation
  */
 class S3StorageAdapter extends BaseStorageAdapter {
   private region: string;
   private bucket: string;
+  private accessKey?: string;
+  private secretKey?: string;
+  private endpoint?: string;
+  private s3Client: any; // AWS S3 Client
+  private s3Presigner: any; // AWS S3 Request Presigner
 
   constructor(config: S3StorageConfig) {
     super();
     this.region = config.region || 'us-east-1';
-    this.bucket = config.bucket;
+    this.bucket = config.bucket || 'default-bucket';
+    this.accessKey = config.accessKey;
+    this.secretKey = config.secretKey;
+    this.endpoint = config.endpoint;
+  }
+
+  private async initializeClient(): Promise<void> {
+    if (this.s3Client) return;
+
+    try {
+      const { S3Client } = await import('@aws-sdk/client-s3');
+      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+
+      // Create S3 client configuration
+      const clientConfig: any = {
+        region: this.region,
+      };
+
+      // Add custom endpoint for MinIO or S3-compatible services
+      if (this.endpoint) {
+        clientConfig.endpoint = this.endpoint;
+        clientConfig.forcePathStyle = true; // Required for MinIO
+      }
+
+      // Add credentials if available (otherwise uses default chain)
+      if (this.accessKey && this.secretKey) {
+        clientConfig.credentials = {
+          accessKeyId: this.accessKey,
+          secretAccessKey: this.secretKey,
+        };
+      }
+
+      this.s3Client = new S3Client(clientConfig);
+
+      // Initialize presigner
+      this.s3Presigner = { getSignedUrl };
+
+      this.logger.log(`S3 client initialized for bucket: ${this.bucket}`);
+    } catch (error) {
+      this.logger.error('Failed to initialize S3 client:', error);
+      throw new Error(
+        `S3 client initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   async upload(
-    _data: Buffer,
+    data: Buffer,
     options: StorageUploadOptions
   ): Promise<StorageUploadResult> {
-    // NOTE: S3 upload is not yet implemented - this is a mock implementation
-    // To implement: Add AWS SDK dependency and use PutObjectCommand
-    this.logger.log(`S3 upload simulated: ${options.key}`);
+    await this.initializeClient();
 
-    return {
-      key: options.key,
-      size: _data.length,
-      bucket: this.bucket,
-    };
+    try {
+      const { PutObjectCommand } = await import('@aws-sdk/client-s3');
+
+      // Validate key to prevent injection
+      if (!/^[a-zA-Z0-9-._/]+$/.test(options.key)) {
+        throw new Error('Invalid key format for S3 upload');
+      }
+
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: options.key,
+        Body: data,
+        ContentType: options.contentType,
+        Metadata: options.metadata || {},
+      });
+
+      const result = await this.s3Client.send(command);
+
+      this.logger.log(
+        `File uploaded to S3: ${options.key} (${data.length} bytes)`
+      );
+
+      return {
+        key: options.key,
+        size: data.length,
+        bucket: this.bucket,
+        etag: result.ETag?.replace(/"/g, ''), // Remove quotes from ETag
+        url: `https://${this.bucket}.s3.${this.region}.amazonaws.com/${options.key}`,
+      };
+    } catch (error) {
+      this.logger.error(`S3 upload failed for ${options.key}:`, error);
+      throw new Error(
+        `S3 upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   async download(key: string): Promise<Buffer> {
-    // NOTE: S3 download is not yet implemented - this is a mock implementation
-    // To implement: Add AWS SDK dependency and use GetObjectCommand
-    this.logger.log(`S3 download simulated: ${key}`);
-    throw new Error('S3 download not implemented yet');
+    await this.initializeClient();
+
+    try {
+      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+
+      // Validate key to prevent injection
+      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+        throw new Error('Invalid key format for S3 download');
+      }
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      const result = await this.s3Client.send(command);
+
+      // Convert stream to buffer
+      const chunks: Buffer[] = [];
+      const stream = result.Body as any;
+
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+
+      const buffer = Buffer.concat(chunks);
+
+      this.logger.log(
+        `File downloaded from S3: ${key} (${buffer.length} bytes)`
+      );
+      return buffer;
+    } catch (error: unknown) {
+      const awsError = error as any;
+      if (awsError.name === 'NoSuchKey') {
+        throw new Error(`File not found: ${key}`);
+      }
+      this.logger.error(`S3 download failed for ${key}:`, error);
+      throw new Error(
+        `S3 download failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   async delete(key: string): Promise<void> {
-    // NOTE: S3 delete is not yet implemented - this is a mock implementation
-    // To implement: Add AWS SDK dependency and use DeleteObjectCommand
-    this.logger.log(`S3 delete simulated: ${key}`);
+    await this.initializeClient();
+
+    try {
+      const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+
+      // Validate key to prevent injection
+      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+        throw new Error('Invalid key format for S3 delete');
+      }
+
+      const command = new DeleteObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+
+      this.logger.log(`File deleted from S3: ${key}`);
+    } catch (error) {
+      this.logger.error(`S3 delete failed for ${key}:`, error);
+      throw new Error(
+        `S3 delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
-  async exists(_key: string): Promise<boolean> {
-    // NOTE: S3 exists check is not yet implemented - this is a mock implementation
-    // To implement: Add AWS SDK dependency and use HeadObjectCommand
-    return false;
+  async exists(key: string): Promise<boolean> {
+    await this.initializeClient();
+
+    try {
+      const { HeadObjectCommand } = await import('@aws-sdk/client-s3');
+
+      // Validate key to prevent injection
+      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+        return false; // Treat suspicious keys as non-existent
+      }
+
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      await this.s3Client.send(command);
+      return true;
+    } catch (error: unknown) {
+      const awsError = error as any;
+      if (awsError.name === 'NotFound' || awsError.name === 'NoSuchKey') {
+        return false;
+      }
+      this.logger.error(`S3 exists check failed for ${key}:`, error);
+      return false;
+    }
   }
 
   override async getSignedUrl(key: string, expiresIn: number): Promise<string> {
-    // Validate key to prevent injection
-    if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
-      throw new Error('Invalid key format');
+    await this.initializeClient();
+
+    try {
+      const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+
+      // Validate key to prevent injection
+      if (!/^[a-zA-Z0-9-._/]+$/.test(key)) {
+        throw new Error('Invalid key format for S3 signed URL');
+      }
+
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      const signedUrl = await this.s3Presigner.getSignedUrl(
+        this.s3Client,
+        command,
+        { expiresIn }
+      );
+
+      this.logger.log(
+        `Generated signed URL for S3: ${key} (expires in ${expiresIn}s)`
+      );
+      return signedUrl;
+    } catch (error) {
+      this.logger.error(`S3 signed URL generation failed for ${key}:`, error);
+      throw new Error(
+        `S3 signed URL generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
-    // NOTE: S3 signed URL generation is not yet implemented - this is a mock implementation
-    // To implement: Add AWS SDK dependency and use getSignedUrl with GetObjectCommand
-    return `https://s3-signed-url-placeholder/placeholder?expires=${expiresIn}`;
+  }
+
+  override async list(): Promise<
+    { key: string; size: number; lastModified: Date }[]
+  > {
+    await this.initializeClient();
+
+    try {
+      const { ListObjectsV2Command } = await import('@aws-sdk/client-s3');
+
+      const command = new ListObjectsV2Command({
+        Bucket: this.bucket,
+      });
+
+      const result = await this.s3Client.send(command);
+
+      const objects =
+        result.Contents?.map((obj: any) => ({
+          key: obj.Key!,
+          size: obj.Size || 0,
+          lastModified: obj.LastModified || new Date(),
+        })) || [];
+
+      this.logger.log(
+        `Listed ${objects.length} objects from S3 bucket: ${this.bucket}`
+      );
+      return objects;
+    } catch (error) {
+      this.logger.error(
+        `S3 list operation failed for bucket ${this.bucket}:`,
+        error
+      );
+      throw new Error(
+        `S3 list operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 }
 
@@ -466,17 +682,17 @@ export class DynamicFileStorageService implements OnModuleInit {
         return new LocalStorageAdapter();
 
       case 's3': {
-        const s3Config = {
+        const s3Config: S3StorageConfig = {
           region: this.configService.get('AWS_REGION') || 'us-east-1',
           bucket: this.configService.get('S3_BUCKET'),
-          accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-          secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+          accessKey: this.configService.get('AWS_ACCESS_KEY_ID'),
+          secretKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
         };
         return new S3StorageAdapter(s3Config);
       }
 
       case 'minio': {
-        const minioConfig = {
+        const minioConfig: S3StorageConfig = {
           endpoint: this.configService.get('MINIO_ENDPOINT'),
           bucket: this.configService.get('MINIO_BUCKET'),
           accessKey: this.configService.get('MINIO_ACCESS_KEY'),
