@@ -1,86 +1,46 @@
-# Roadmap & Timeline - JasaWeb
+# Roadmap - JasaWeb
 
-## 1. Roadmap & Prioritas
+## Timeline
 
-### MVP (Gelombang 1)
-- **Public Site**: Lengkap dengan CMS konten.
-- **Auth**: Dasar (email/password + magic link), RBAC & multi-tenant.
-- **Modul Inti**: Projects, Milestones, Files, Approvals dasar.
-- **Tickets**: Sederhana (tanpa SLA otomatis).
-- **Invoices**: Manual (upload PDF).
-- **Dashboard**: Widget status proyek & link lingkungan.
-- **Integrasi**: GA4 & email transactional, backup dasar.
+### Phase 1: Infrastructure (Week 1)
+- [ ] Setup Prisma schema
+- [ ] Setup Cloudflare KV & R2 services
+- [ ] Setup auth (JWT)
 
-### Next (Gelombang 2–3)
-- **Payments**: Gateway pembayaran online.
-- **Automation**: SLA otomatis, laporan.
-- **Knowledge Base**: Panduan & artikel helpdesk.
-- **Features**: Komentar beranotasi pada pratinjau.
-- **Reporting**: Web Vitals & uptime.
-- **Enterprise**: White-label portal, SSO perusahaan.
-- **Advanced**: Automasi notifikasi (digest), API publik & webhook, Meilisearch.
+### Phase 2: Public Site (Week 2)
+- [ ] Landing page
+- [ ] Template gallery
+- [ ] Pricing page
+- [ ] Blog pages
+- [ ] Register & Login
 
----
+### Phase 3: Client Portal (Week 3)
+- [ ] Dashboard
+- [ ] Web Saya (projects)
+- [ ] Billing
+- [ ] Akun Saya
 
-## 2. Timeline Implementasi (Estimasi 10–12 Minggu)
+### Phase 4: Admin Panel (Week 4)
+- [ ] Manage clients
+- [ ] Manage projects
+- [ ] Manage blog
+- [ ] Manage pages
+- [ ] Manage templates
 
-| Minggu | Fokus Utama | Aktivitas Detail |
-| :--- | :--- | :--- |
-| **1–2** | **Discovery & Setup** | Discovery, IA, wireframe, arsitektur, spike teknis. |
-| **3–4** | **Design & Infra** | Desain UI + design system, setup repo & CI/CD. |
-| **5–8** | **Implementasi MVP** | Development public site + client portal inti. |
-| **9** | **QA & Security** | QA regression, hardening security, konten, migrasi awal. |
-| **10** | **UAT** | UAT klien pilot, perbaikan, persiapan rilis. |
-| **11–12** | **Launch** | Go-live, hypercare, dokumentasi, training. |
+### Phase 5: Payment (Week 5)
+- [ ] Midtrans integration
+- [ ] QRIS payment
+- [ ] Webhook handler
 
----
-
-## 3. Backlog Terstruktur (Epics → Tasks)
-
-### E1. Foundation & Infra
-- [ ] Setup monorepo (apps/web, apps/api, packages/ui)
-- [ ] CI/CD pipeline + lint/test/build
-- [ ] Konfigurasi database & Prisma schema dasar
-
-### E2. Auth & RBAC
-- [ ] Implementasi sign-in email/magic link
-- [ ] Organisasi & membership
-- [ ] RBAC middleware & guard
-- [ ] 2FA TOTP
-
-### E3. Public Marketing Site
-- [ ] IA + sitemap + routing
-- [ ] Hero & landing (segmen 3 layanan)
-- [ ] Halaman layanan (Sekolah/Berita/Company)
-- [ ] Portofolio + studi kasus
-- [ ] Blog + CMS (admin)
-- [ ] Kontak + form booking
-
-### E4. Client Portal — Inti
-- [ ] Layout portal & navigasi
-- [ ] Modul Projects & Milestones
-- [ ] Modul Files (upload, preview, versi)
-- [ ] Modul Approvals (request, approve/reject)
-- [ ] Dashboard widget dasar
-
-### E5. Support & Billing
-- [ ] Modul Tickets sederhana
-- [ ] Modul Invoices (manual upload)
-
-### E6. Reporting & Integrasi
-- [ ] Integrasi GA4 server-side events
-- [ ] Web Vitals snapshot & uptime (SDK)
-
-### E7. Hardening & UAT
-- [ ] Audit security & a11y
-- [ ] QA regression & UAT pilot
-- [ ] Dokumentasi & training
+### Phase 6: Testing & Launch (Week 6)
+- [ ] End-to-end testing
+- [ ] Bug fixes
+- [ ] Production deployment
 
 ---
 
-## 4. Estimasi Biaya (Placeholder)
+## Estimated Timeline: 6 Weeks
 
-- **Discovery & Desain**: 15–20%
-- **Implementasi MVP**: 55–65%
-- **QA, Launch, Hypercare**: 15–20%
-- **Ops/Bulanan (hosting, support)**: Tergantung paket SLA.
+---
+
+**Last Updated**: 2025-12-20
