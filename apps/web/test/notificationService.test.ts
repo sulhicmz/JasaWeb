@@ -34,7 +34,10 @@ Object.defineProperty(document, 'hidden', {
 global.Notification = {
   permission: 'default',
   requestPermission: vi.fn().mockResolvedValue('granted'),
-} as any;
+} as Notification & {
+  permission: NotificationPermission;
+  requestPermission: () => Promise<NotificationPermission>;
+};
 
 // Mock socket.io-client
 vi.mock('socket.io-client', () => ({
@@ -108,7 +111,7 @@ describe('NotificationService', () => {
       // Mock appendChild to avoid actually adding to DOM (and verify call)
       const mockAppendChild = vi
         .spyOn(document.body, 'appendChild')
-        .mockImplementation(() => null as any);
+        .mockImplementation(() => document.createElement('div'));
 
       notificationService.showRealtimeNotification('Test message', 'success');
 
@@ -133,7 +136,7 @@ describe('NotificationService', () => {
       // Mock appendChild
       const mockAppendChild = vi
         .spyOn(document.body, 'appendChild')
-        .mockImplementation(() => null as any);
+        .mockImplementation(() => document.createElement('div'));
 
       Object.defineProperty(document, 'hidden', {
         value: true,
@@ -159,11 +162,14 @@ describe('NotificationService', () => {
     });
   });
 
-  describe('dashboard integration', () => {
+describe('dashboard integration', () => {
     it('should refresh dashboard stats when connected', () => {
       const mockEmit = vi.fn();
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.dashboardSocket = { connected: true, emit: mockEmit };
+      // Type assertion for testing private properties
+      (notificationService as { dashboardSocket: Socket }).dashboardSocket = { 
+        connected: true, 
+        emit: mockEmit 
+      } as Socket;
 
       vi.mocked(localStorage.getItem).mockReturnValue('org-123');
 
@@ -172,6 +178,38 @@ describe('NotificationService', () => {
       expect(mockEmit).toHaveBeenCalledWith('refresh-stats', {
         organizationId: 'org-123',
       });
+    });
+
+    it('should subscribe to dashboard updates', () => {
+      const mockEmit = vi.fn();
+      // Type assertion for testing private properties
+      (notificationService as { dashboardSocket: Socket }).dashboardSocket = { 
+        connected: true, 
+        emit: mockEmit 
+      } as Socket;
+
+      notificationService.subscribeToDashboard('org-123');
+
+      expect(mockEmit).toHaveBeenCalledWith('subscribe-dashboard', {
+        organizationId: 'org-123',
+      });
+    });
+
+    it('should get connection status', () => {
+      // Type assertion for testing private properties
+      (notificationService as { dashboardSocket: Socket }).dashboardSocket = {
+        connected: true,
+        id: 'test-socket-id',
+      } as Socket;
+
+      const status = notificationService.getDashboardConnectionStatus();
+
+      expect(status).toEqual({
+        connected: true,
+        socketId: 'test-socket-id',
+      });
+    });
+  });
     });
 
     it('should subscribe to dashboard updates', () => {
@@ -207,10 +245,9 @@ describe('NotificationService', () => {
       const mockDisconnect1 = vi.fn();
       const mockDisconnect2 = vi.fn();
 
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.socket = { disconnect: mockDisconnect1 };
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.dashboardSocket = { disconnect: mockDisconnect2 };
+      // Type assertions for testing private properties
+      (notificationService as { socket: Socket | null }).socket = { disconnect: mockDisconnect1 } as Socket;
+      (notificationService as { dashboardSocket: Socket | null }).dashboardSocket = { disconnect: mockDisconnect2 } as Socket;
 
       notificationService.disconnect();
 
@@ -221,17 +258,14 @@ describe('NotificationService', () => {
     });
 
     it('should check connection status', () => {
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.socket = { connected: true };
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.dashboardSocket = { connected: true };
+      // Type assertions for testing private properties
+      (notificationService as { socket: Socket }).socket = { connected: true } as Socket;
+      (notificationService as { dashboardSocket: Socket }).dashboardSocket = { connected: true } as Socket;
 
       expect(notificationService.isConnected()).toBe(true);
 
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.socket = { connected: false };
-      // @ts-expect-error - Mocking private property for testing
-      notificationService.dashboardSocket = { connected: true };
+      (notificationService as { socket: Socket }).socket = { connected: false } as Socket;
+      (notificationService as { dashboardSocket: Socket }).dashboardSocket = { connected: true } as Socket;
 
       expect(notificationService.isConnected()).toBe(false);
     });

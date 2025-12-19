@@ -1,11 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 
 interface Project {
   id: string;
   status: string;
   name?: string;
-  [key: string]: any;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
 }
 
 interface Ticket {
@@ -13,14 +15,22 @@ interface Ticket {
   status: string;
   priority: string;
   title?: string;
-  [key: string]: any;
+  description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
+  projectId?: string;
 }
 
 interface Invoice {
   id: string;
   status: string;
   amount: number;
-  [key: string]: any;
+  dueDate?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
+  projectId?: string;
 }
 
 interface StatusData {
