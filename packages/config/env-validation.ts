@@ -339,9 +339,31 @@ export const ENV_SCHEMA: Record<string, EnvSchema> = {
   NODE_ENV: {
     type: 'string',
     required: false,
-    pattern: /^(development|production|test)$/,
     defaultValue: 'development',
-    description: 'Application environment (development, production, or test)',
+    pattern: /^(development|production|test)$/,
+    description: 'Application environment',
+  },
+
+  // Test Variables (only for testing)
+  TEST_STRING: {
+    type: 'string',
+    required: false,
+    description: 'Test string variable',
+  },
+  TEST_NUMBER: {
+    type: 'number',
+    required: false,
+    description: 'Test number variable',
+  },
+  TEST_BOOLEAN: {
+    type: 'boolean',
+    required: false,
+    description: 'Test boolean variable',
+  },
+  NON_EXISTENT: {
+    type: 'string',
+    required: false,
+    description: 'Test non-existent variable',
   },
   PORT: {
     type: 'number',

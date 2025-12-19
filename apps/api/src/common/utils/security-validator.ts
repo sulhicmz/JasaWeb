@@ -123,32 +123,39 @@ export class SecurityValidator {
   static isAllowedPath(basePath: string): boolean {
     const normalizedPath = this.normalizePath(basePath);
 
-    return this.ALLOWED_BASES.some((allowedBase) =>
-      normalizedPath.startsWith(allowedBase)
-    );
+    return this.ALLOWED_BASES.some((allowedBase) => {
+      // Ensure exact match or proper subdirectory check
+      const normalizedBase = this.normalizePath(allowedBase);
+      return (
+        normalizedPath === normalizedBase ||
+        normalizedPath.startsWith(normalizedBase + '/')
+      );
+    });
   }
 
   /**
    * Validate directory creation path
    */
   static validateDirectoryPath(dirPath: string, basePath: string): string {
-    const resolvedPath = this.resolvePath(dirPath);
-
-    if (!this.isAllowedPath(resolvedPath)) {
-      throw new Error('Path not allowed for directory creation');
-    }
-
     const normalizedPath = this.normalizePath(dirPath);
 
+    // Check for traversal attacks
+    if (normalizedPath.includes('..')) {
+      throw new Error('Path traversal attempt detected');
+    }
+
+    // Check for dangerous characters
     if (normalizedPath.includes('<script>')) {
       throw new Error('Invalid characters in directory path');
     }
 
+    // Validate against base path
+    const normalizedBase = this.normalizePath(basePath);
     if (
-      normalizedPath.indexOf(this.normalizePath(basePath)) !== 0 &&
-      !normalizedPath.startsWith(basePath)
+      !normalizedPath.startsWith(normalizedBase) &&
+      !normalizedPath.startsWith(normalizedBase + '/')
     ) {
-      throw new Error('Invalid directory path detected');
+      throw new Error('Path outside allowed base directory');
     }
 
     return normalizedPath;

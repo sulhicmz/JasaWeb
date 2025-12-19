@@ -1,12 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
-import { apiVitestConfig } from '@jasaweb/testing';
 
 export default defineConfig({
-  ...apiVitestConfig,
   test: {
-    ...apiVitestConfig.test,
-    setupFiles: ['./test/setup.ts'],
+    globals: true,
+    environment: 'node',
+    setupFiles: ['./test/helpers/setup.ts'],
     bail: 0, // Don't stop on first failure for API testing
   },
   optimizeDeps: {
