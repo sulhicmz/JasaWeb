@@ -84,5 +84,5 @@ Source: `AGENTS.md` + `/docs/` directory. This checklist unifies tooling (pnpm, 
 
 ---
 
-_Last updated: 2025-12-18_  
+_Last updated: 2025-12-19_  
 _Status: MVP complete, optimization and deployment in progress_

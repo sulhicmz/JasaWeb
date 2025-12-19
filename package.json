@@ -38,11 +38,7 @@
     "security:audit:json": "pnpm audit --audit-level moderate --json > audit-results.json || true",
     "security:audit:high": "pnpm audit --audit-level high",
     "security:check": "pnpm security:audit && pnpm security:outdated",
-    "security:outdated": "pnpm outdated",
-    "security:scan": "ts-node scripts/security-scan.ts",
-    "security:scan:ci": "ts-node scripts/security-scan.ts && pnpm security:audit:high && pnpm security:audit:json",
-    "security:vulnerability:scan": "ts-node scripts/vulnerability-scanner.ts",
-    "security:vulnerability:fix": "ts-node scripts/vulnerability-scanner.ts --fix"
+    "security:outdated": "pnpm outdated"
   },
   "keywords": [
     "astro",
