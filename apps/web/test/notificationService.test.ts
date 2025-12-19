@@ -239,7 +239,7 @@ describe('dashboard integration', () => {
       });
     });
   });
-
+  
   describe('connection management', () => {
     it('should disconnect all sockets', () => {
       const mockDisconnect1 = vi.fn();

@@ -3,7 +3,7 @@
  * Production-ready environment configuration with build-safe defaults
  */
 
-import { jasaWebConfig } from '@jasaweb/config';
+import { browserConfig } from './browserConfig';
 
 interface EnvironmentConfig {
   NODE_ENV: string;
@@ -32,7 +32,7 @@ interface EnvironmentConfig {
 export class EnvConfigService {
   private static instance: EnvConfigService;
   private readonly config: EnvironmentConfig;
-  private readonly unifiedConfig = jasaWebConfig.getConfig();
+  private readonly unifiedConfig = browserConfig.getConfig();
 
   private constructor() {
     this.config = this.buildConfig();
