@@ -201,8 +201,7 @@ pnpm test:coverage
 apps/api/test/
 ├── setup.ts              # Global test setup and mocks
 ├── test-helpers.ts       # Mock factories and utilities
-├── test-prisma.ts        # Prisma test configuration
-├── setup.ts              # Test setup for Vitest
+├── test-config-helper.ts # Test configuration utilities
 └── contracts/            # API contract tests
 ```
 
