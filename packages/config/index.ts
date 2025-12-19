@@ -1,14 +1,15 @@
 // Export validation utilities first
 export {
-  EnvSchema,
-  ENV_SCHEMA,
-  EnvValidationError,
-  validateEnvironmentVariables,
   getRequiredEnv,
   getOptionalEnv,
   getEnvNumber,
   getEnvBoolean,
   generateSecureSecret,
+  getEnvArray,
+  getEnvUrl,
+  getEnvNumberMin,
+  getEnvEmail,
+  validateEmail,
 } from './env-validation';
 
 // Export business configuration types and functions

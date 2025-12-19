@@ -86,7 +86,10 @@ export class SecurityConfigService {
     return {
       jwt: {
         secret: this.configService.getOrThrow<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN', '1h'),
+        expiresIn: this.configService.get<string>(
+          'JWT_EXPIRES_IN',
+          process.env.NODE_ENV === 'production' ? '15m' : '1h'
+        ),
         issuer: this.configService.get<string>('JWT_ISSUER', 'jasaweb-api'),
         audience: this.configService.get<string>(
           'JWT_AUDIENCE',
@@ -112,11 +115,17 @@ export class SecurityConfigService {
       },
       rateLimit: {
         windowMs: parseInt(
-          this.configService.get<string>('RATE_LIMIT_WINDOW_MS', '60000'),
+          this.configService.get<string>(
+            'RATE_LIMIT_WINDOW_MS',
+            process.env.NODE_ENV === 'production' ? '900000' : '60000'
+          ),
           10
         ),
         max: parseInt(
-          this.configService.get<string>('RATE_LIMIT_MAX', '100'),
+          this.configService.get<string>(
+            'RATE_LIMIT_MAX',
+            process.env.NODE_ENV === 'production' ? '100' : '1000'
+          ),
           10
         ),
         authEndpoints: {

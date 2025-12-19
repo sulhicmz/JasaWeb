@@ -57,7 +57,9 @@ export const DEFAULT_EMAIL_CONFIG = {
     process.env.SMTP_HOST ||
     (process.env.NODE_ENV === 'production' ? undefined : 'localhost'),
   PORT: Number(process.env.SMTP_PORT) || 587,
-  FROM: process.env.EMAIL_FROM || 'noreply@jasaweb.dev',
+  FROM:
+    process.env.EMAIL_FROM ||
+    `"${process.env.EMAIL_FROM_NAME || 'JasaWeb'}" <${process.env.NOREPLY_EMAIL || 'noreply@jasaweb.dev'}>`,
 } as const;
 
 /**
@@ -88,8 +90,8 @@ export const APP_URLS = (() => {
  * File Upload Configuration
  */
 export const FILE_UPLOAD_CONFIG = {
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_MIME_TYPES: [
+  MAX_FILE_SIZE: Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // 10MB
+  ALLOWED_MIME_TYPES: process.env.ALLOWED_FILE_TYPES?.split(',') || [
     'image/jpeg',
     'image/png',
     'image/gif',
@@ -98,18 +100,18 @@ export const FILE_UPLOAD_CONFIG = {
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ],
-  UPLOAD_PATH: './uploads',
+  UPLOAD_PATH: process.env.UPLOAD_PATH || './uploads',
 } as const;
 
 /**
  * Cache Configuration
  */
 export const CACHE_CONFIG = {
-  DEFAULT_TTL: 300, // 5 minutes
-  DASHBOARD_STATS_TTL: 600, // 10 minutes (increased for better performance)
-  PROJECT_CACHE_TTL: 180, // 3 minutes
-  KNOWLEDGE_BASE_TTL: 900, // 15 minutes
-  SEARCH_RESULTS_TTL: 300, // 5 minutes
+  DEFAULT_TTL: Number(process.env.CACHE_DEFAULT_TTL) || 300, // 5 minutes
+  DASHBOARD_STATS_TTL: Number(process.env.CACHE_DASHBOARD_TTL) || 600, // 10 minutes
+  PROJECT_CACHE_TTL: Number(process.env.CACHE_PROJECT_TTL) || 180, // 3 minutes
+  KNOWLEDGE_BASE_TTL: Number(process.env.CACHE_KNOWLEDGE_BASE_TTL) || 900, // 15 minutes
+  SEARCH_RESULTS_TTL: Number(process.env.CACHE_SEARCH_RESULTS_TTL) || 300, // 5 minutes
 } as const;
 
 /**
@@ -132,19 +134,20 @@ export const CACHE_KEYS = {
  * Security Configuration
  */
 export const SECURITY_CONFIG = {
-  JWT_SECRET_MIN_LENGTH: 32,
-  BCRYPT_ROUNDS: 12,
-  MAX_LOGIN_ATTEMPTS: 5,
-  LOCKOUT_DURATION_MS: 15 * 60 * 1000, // 15 minutes
+  JWT_SECRET_MIN_LENGTH: Number(process.env.JWT_SECRET_MIN_LENGTH) || 32,
+  BCRYPT_ROUNDS: Number(process.env.BCRYPT_ROUNDS) || 12,
+  MAX_LOGIN_ATTEMPTS: Number(process.env.MAX_LOGIN_ATTEMPTS) || 5,
+  LOCKOUT_DURATION_MS:
+    Number(process.env.LOCKOUT_DURATION_MS) || 15 * 60 * 1000, // 15 minutes
 } as const;
 
 /**
  * API Rate Limiting Configuration
  */
 export const RATE_LIMIT_CONFIG = {
-  WINDOW_MS: 15 * 60 * 1000, // 15 minutes
-  MAX_REQUESTS: 100,
-  MAX_AUTH_REQUESTS: 10, // Lower limit for auth endpoints
+  WINDOW_MS: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  MAX_REQUESTS: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  MAX_AUTH_REQUESTS: Number(process.env.RATE_LIMIT_MAX_AUTH_REQUESTS) || 10, // Lower limit for auth endpoints
 } as const;
 
 /**

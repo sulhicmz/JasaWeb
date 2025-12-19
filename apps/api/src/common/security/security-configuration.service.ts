@@ -40,21 +40,27 @@ export class SecurityConfigurationService {
       scriptSrc: [
         "'self'",
         "'unsafe-inline'", // Temporary for development
-        'https://cdnjs.cloudflare.com',
-        'https://www.googletagmanager.com',
+        ...(process.env.CSP_SCRIPT_SRC?.split(',') || [
+          'https://cdnjs.cloudflare.com',
+          'https://www.googletagmanager.com',
+        ]),
         ...(isDevelopment ? ['ws://localhost:*'] : []),
       ].filter(Boolean) as string[],
       styleSrc: [
         "'self'",
         "'unsafe-inline'", // Required for Tailwind CSS
-        'https://fonts.googleapis.com',
+        ...(process.env.CSP_STYLE_SRC?.split(',') || [
+          'https://fonts.googleapis.com',
+        ]),
       ],
       imgSrc: [
         "'self'",
         'data:',
         'blob:',
-        'https://*.jasaweb.com',
-        'https://res.cloudinary.com',
+        ...(process.env.CSP_IMG_SRC?.split(',') || [
+          'https://*.jasaweb.com',
+          'https://res.cloudinary.com',
+        ]),
       ],
       connectSrc: [
         "'self'",
@@ -62,7 +68,13 @@ export class SecurityConfigurationService {
         getApiUrl(),
         isDevelopment && 'ws://localhost:*', // Development WebSocket
       ].filter(Boolean) as string[],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      fontSrc: [
+        "'self'",
+        ...(process.env.CSP_FONT_SRC?.split(',') || [
+          'https://fonts.gstatic.com',
+        ]),
+        'data:',
+      ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
@@ -142,7 +154,7 @@ export class SecurityConfigurationService {
       ],
       exposedHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining'],
       credentials: true,
-      maxAge: 24 * 60 * 60, // 24 hours
+      maxAge: Number(process.env.CORS_MAX_AGE) || 24 * 60 * 60, // 24 hours
       preflightContinue: false,
       optionsSuccessStatus: 204,
     };
@@ -159,7 +171,9 @@ export class SecurityConfigurationService {
       const isDevelopment = process.env.NODE_ENV === 'development';
       const isProduction = process.env.NODE_ENV === 'production';
 
-      const origins: string[] = [
+      const origins: string[] = process.env.CORS_ALLOWED_ORIGINS?.split(
+        ','
+      ) || [
         // Production URLs
         'https://jasaweb.com',
         'https://www.jasaweb.com',

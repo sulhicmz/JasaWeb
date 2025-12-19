@@ -32,7 +32,7 @@ import { DEFAULT_EMAIL_CONFIG } from '../config/constants';
           defaults: {
             from: configService.get<string>(
               'EMAIL_FROM',
-              '"JasaWeb" <noreply@jasaweb.com>'
+              `"${process.env.EMAIL_FROM_NAME || 'JasaWeb'}" <${process.env.NOREPLY_EMAIL || 'noreply@jasaweb.dev'}>`
             ),
           },
           template: {
