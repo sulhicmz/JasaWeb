@@ -23,12 +23,13 @@ import {
   getEnvBoolean,
   generateSecureSecret,
 } from './env-validation';
+import { getApiUrl, getWebUrl } from './url-config';
 
 /**
  * Helper function to get optional environment variable with guaranteed string return
  */
 function getEnvString(key: string, defaultValue: string): string {
-  return getEnvString(key, defaultValue) ?? defaultValue;
+  return getOptionalEnv(key) ?? defaultValue;
 }
 
 // Re-export types for external usage
@@ -848,9 +849,9 @@ export class JasaWebConfigService {
 
       api: {
         API_PORT: getEnvNumber('API_PORT', 3000),
-        API_BASE_URL: getEnvString('API_BASE_URL', 'http://localhost:3000')!,
+        API_BASE_URL: getEnvString('API_BASE_URL', getApiUrl())!,
         API_PREFIX: getEnvString('API_PREFIX', 'api'),
-        PUBLIC_API_URL: getEnvString('PUBLIC_API_URL', 'http://localhost:3000'),
+        PUBLIC_API_URL: getEnvString('PUBLIC_API_URL', getApiUrl()),
         WEB_BASE_URL: getEnvString('WEB_BASE_URL', 'http://localhost:4321'),
         FRONTEND_URL: getEnvString('FRONTEND_URL', 'http://localhost:4321'),
 
@@ -1150,7 +1151,7 @@ export class JasaWebConfigService {
         `${this.config.base.SITE_URL}`,
         `${this.config.api.PUBLIC_API_URL}`,
         'http://localhost:4321',
-        'http://localhost:3000',
+        getApiUrl(),
         'http://localhost:3001',
         'http://127.0.0.1:4321',
         'http://127.0.0.1:3000',
@@ -1162,9 +1163,9 @@ export class JasaWebConfigService {
     return [
       this.config.base.SITE_URL,
       this.config.api.PUBLIC_API_URL,
-      'https://jasaweb.com',
-      'https://www.jasaweb.com',
-      'https://api.jasaweb.com',
+      getWebUrl(),
+      `https://www.${getWebUrl().replace('https://', '')}`,
+      getApiUrl(),
     ];
   }
 

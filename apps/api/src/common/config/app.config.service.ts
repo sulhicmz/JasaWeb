@@ -16,6 +16,8 @@ import {
   SecurityConfig,
   NetworkConfig,
   CacheConfig,
+  getApiUrl,
+  getWebUrl,
 } from '@jasaweb/config';
 import { DEFAULT_DATABASE_CONFIG, APP_URLS } from './constants';
 
@@ -90,14 +92,14 @@ export class AppConfigService {
     if (isDevelopment) {
       return APP_URLS.API_URL;
     }
-    return 'https://api.jasaweb.com';
+    return getApiUrl();
   }
 
   private getDefaultWebUrl(isDevelopment: boolean): string {
     if (isDevelopment) {
       return APP_URLS.FRONTEND_URL;
     }
-    return 'https://jasaweb.com';
+    return getWebUrl();
   }
 
   private getDefaultCorsOrigins(isDevelopment: boolean): string[] {

@@ -123,5 +123,17 @@ export {
   HEALTH_CHECKS,
 } from './src/environment-aware-config';
 
+// Export dynamic URL configuration
+export {
+  urlConfig,
+  getApiUrl,
+  getWebUrl,
+  getCdnUrl,
+  getWebSocketUrl,
+  getAllowedOrigins,
+} from './src/url-config';
+
+export type { UrlConfig } from './src/url-config';
+
 // Default export for compatibility
 export { BUSINESS_CONFIG as default } from './src/business-config';

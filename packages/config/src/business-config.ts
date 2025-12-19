@@ -9,6 +9,8 @@
  * - Security compliance
  */
 
+import { getApiUrl, getWebUrl } from './url-config';
+
 export interface SiteConfig {
   name: string;
   description: string;
@@ -105,11 +107,9 @@ export const BUSINESS_CONFIG: BusinessConfig = {
       process.env.SITE_META_DESCRIPTION ||
       'Professional web development services for schools, news portals, and company profiles',
     urls: {
-      production: process.env.PRODUCTION_SITE_URL || 'https://jasaweb.com',
+      production: process.env.PRODUCTION_SITE_URL || getWebUrl(),
       development: process.env.DEV_SITE_URL || 'http://localhost:4321',
-      api:
-        process.env.API_URL ||
-        (isDevelopment ? 'http://localhost:3000' : 'https://api.jasaweb.com'),
+      api: process.env.API_URL || getApiUrl(),
       cdn: process.env.CDN_URL || 'https://cdn.jasaweb.com',
     },
     social: {

@@ -180,11 +180,19 @@ function createWebConfig(): WebConfig {
 
 function createFallbackConfig(): WebConfig {
   return {
-    siteUrl: 'https://jasaweb.com',
+    siteUrl:
+      process.env.PUBLIC_SITE_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? 'https://jasaweb.com'
+        : 'http://localhost:4321'),
     siteName: 'JasaWeb',
     siteDescription: 'Professional Web Development Services',
     siteAuthor: 'JasaWeb Team',
-    apiUrl: 'https://api.jasaweb.com',
+    apiUrl:
+      process.env.PUBLIC_API_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? 'https://api.jasaweb.com'
+        : 'http://localhost:3000'),
     apiPrefix: 'api',
     isDev: false,
     logLevel: 'info',

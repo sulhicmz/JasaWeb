@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app.config.service';
 import { EnvironmentUrlValidator } from '../config/environment-url-validator';
-import { logger, UrlBuilder } from '../../../../../packages/config';
+import { logger, UrlBuilder, getApiUrl } from '../../../../../packages/config';
 
 export interface SecurityPolicyConfig {
   csp: {
@@ -59,7 +59,7 @@ export class SecurityConfigurationService {
       connectSrc: [
         "'self'",
         'wss:', // WebSocket connections
-        'https://api.jasaweb.com',
+        getApiUrl(),
         isDevelopment && 'ws://localhost:*', // Development WebSocket
       ].filter(Boolean) as string[],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],

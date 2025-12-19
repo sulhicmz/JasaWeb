@@ -115,7 +115,11 @@ export class NotificationService {
 
     const apiConfig = {
       apiConfig: {
-        baseUrl: import.meta.env.PUBLIC_API_URL || 'http://localhost:3000',
+        baseUrl:
+          import.meta.env.PUBLIC_API_URL ||
+          (import.meta.env.MODE === 'production'
+            ? 'https://api.jasaweb.com'
+            : 'http://localhost:3000'),
       },
     };
     const apiUrl = apiConfig.apiConfig.baseUrl;
@@ -147,7 +151,11 @@ export class NotificationService {
 
     const apiConfig = {
       apiConfig: {
-        baseUrl: import.meta.env.PUBLIC_API_URL || 'http://localhost:3000',
+        baseUrl:
+          import.meta.env.PUBLIC_API_URL ||
+          (import.meta.env.MODE === 'production'
+            ? 'https://api.jasaweb.com'
+            : 'http://localhost:3000'),
       },
     };
     const apiUrl = apiConfig.apiConfig.baseUrl;

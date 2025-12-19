@@ -8,7 +8,11 @@ export async function GET({ request, url }: { request: Request; url: URL }) {
 
     // Forward the request to the backend API
     const apiBaseUrl =
-      import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3000';
+      import.meta.env.PUBLIC_API_BASE_URL ||
+      import.meta.env.PUBLIC_API_URL ||
+      (import.meta.env.MODE === 'production'
+        ? 'https://api.jasaweb.com'
+        : 'http://localhost:3000');
     const backendUrl = `${apiBaseUrl}/dashboard/projects-overview?limit=${limit}`;
 
     const response = await fetch(backendUrl, {
