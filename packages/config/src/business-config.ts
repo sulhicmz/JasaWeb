@@ -108,7 +108,7 @@ export const BUSINESS_CONFIG: BusinessConfig = {
       'Professional web development services for schools, news portals, and company profiles',
     urls: {
       production: process.env.PRODUCTION_SITE_URL || getWebUrl(),
-      development: process.env.DEV_SITE_URL || 'http://localhost:4321',
+      development: process.env.DEV_SITE_URL || getWebUrl(),
       api: process.env.API_URL || getApiUrl(),
       cdn: process.env.CDN_URL || 'https://cdn.jasaweb.com',
     },
@@ -166,8 +166,8 @@ export const BUSINESS_CONFIG: BusinessConfig = {
         process.env.CORS_MAX_AGE || (isProduction ? '86400' : '3600')
       ),
       allowedOrigins: process.env.CORS_ALLOWED_ORIGINS?.split(',') || [
-        'http://localhost:4321',
-        'http://localhost:3000',
+        getWebUrl(),
+        getApiUrl(),
         'https://jasaweb.com',
         'https://www.jasaweb.com',
       ],

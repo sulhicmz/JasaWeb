@@ -843,7 +843,7 @@ export class JasaWebConfigService {
           'Professional Web Development Services'
         ),
         SITE_AUTHOR: getEnvString('SITE_AUTHOR', 'JasaWeb Team'),
-        SITE_URL: getEnvString('SITE_URL', 'http://localhost:4321'),
+        SITE_URL: getEnvString('SITE_URL', getWebUrl()),
         APP_VERSION: getEnvString('APP_VERSION', '1.0.0'),
       },
 
@@ -852,8 +852,8 @@ export class JasaWebConfigService {
         API_BASE_URL: getEnvString('API_BASE_URL', getApiUrl())!,
         API_PREFIX: getEnvString('API_PREFIX', 'api'),
         PUBLIC_API_URL: getEnvString('PUBLIC_API_URL', getApiUrl()),
-        WEB_BASE_URL: getEnvString('WEB_BASE_URL', 'http://localhost:4321'),
-        FRONTEND_URL: getEnvString('FRONTEND_URL', 'http://localhost:4321'),
+        WEB_BASE_URL: getEnvString('WEB_BASE_URL', getWebUrl()),
+        FRONTEND_URL: getEnvString('FRONTEND_URL', getWebUrl()),
 
         API_TIMEOUT: getEnvNumber('API_TIMEOUT', 30000),
         API_RETRIES: getEnvNumber('API_RETRIES', 3),
@@ -912,7 +912,7 @@ export class JasaWebConfigService {
         MAX_LOGIN_ATTEMPTS: getEnvNumber('MAX_LOGIN_ATTEMPTS', 5),
         LOCKOUT_DURATION: getEnvNumber('LOCKOUT_DURATION', 900000),
 
-        CORS_ORIGIN: getEnvString('CORS_ORIGIN', 'http://localhost:4321'),
+        CORS_ORIGIN: getEnvString('CORS_ORIGIN', getWebUrl()),
       },
 
       storage: {
@@ -1150,9 +1150,8 @@ export class JasaWebConfigService {
       return [
         `${this.config.base.SITE_URL}`,
         `${this.config.api.PUBLIC_API_URL}`,
-        'http://localhost:4321',
+        getWebUrl(),
         getApiUrl(),
-        'http://localhost:3001',
         'http://127.0.0.1:4321',
         'http://127.0.0.1:3000',
         'http://127.0.0.1:3001',

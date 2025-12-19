@@ -91,6 +91,43 @@ export function validateEnv(config: Record<string, unknown>) {
     'SMTP_SECURE',
     'POSTGRES_HOST',
     'POSTGRES_PORT',
+    // Storage configuration
+    'STORAGE_TYPE',
+    'MINIO_ENDPOINT',
+    'MINIO_ACCESS_KEY',
+    'MINIO_SECRET_KEY',
+    'MINIO_BUCKET',
+    'MINIO_ROOT_USER',
+    'MINIO_ROOT_PASSWORD',
+    'AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY',
+    'AWS_REGION',
+    'AWS_S3_BUCKET',
+    // Analytics configuration
+    'GOOGLE_ANALYTICS_ID',
+    'ANALYTICS_ENABLED',
+    'PLAUSIBLE_DOMAIN',
+    'PLAUSIBLE_API_HOST',
+    // Production URLs
+    'PRODUCTION_API_URL',
+    'PRODUCTION_WEB_URL',
+    'PRODUCTION_CDN_URL',
+    // Staging URLs
+    'STAGING_API_URL',
+    'STAGING_WEB_URL',
+    'STAGING_CDN_URL',
+    // Development configuration
+    'DEV_API_PORT',
+    'DEV_WEB_PORT',
+    'DEV_API_HOST',
+    'DEV_WEB_HOST',
+    // Test configuration
+    'TEST_API_URL',
+    'TEST_WEB_URL',
+    // CORS additional origins
+    'ADDITIONAL_CORS_ORIGINS',
+    'INCLUDE_STAGING_ORIGINS',
+    'INCLUDE_PRODUCTION_ORIGINS',
   ] as const;
 
   const allowedEnvKeysSet = new Set(allowedEnvKeys);
