@@ -1,15 +1,31 @@
 ---
 /**
  * Template Gallery Page
- * REFACTORED: Uses PageLayout, config.ts, and UI components per AGENTS.md
+ * REFACTORED: Database-driven templates with PageLayout and UI components
  */
 import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
-import { templates, getCategoryLabel, type TemplateItem, type ServiceId, templateCategories } from '../lib/config';
+import { getCategoryLabel, type ServiceId, templateCategories } from '../lib/config';
+import { TemplateService } from '../services/template';
+import { getPrisma } from '../lib/prisma';
 
 const categories = templateCategories;
+
+// Fetch templates from database
+const prisma = getPrisma({} as any);
+const templates = await prisma.template.findMany({
+  select: {
+    id: true,
+    name: true,
+    category: true,
+    imageUrl: true,
+    demoUrl: true,
+    createdAt: true,
+  },
+  orderBy: { createdAt: 'desc' }
+});
 ---
 
 <PageLayout title="Template Gallery" description="Pilih template website terbaik untuk kebutuhan Anda" currentPath="/template">
@@ -33,7 +49,7 @@ const categories = templateCategories;
     </div>
 
     <div class="templates-grid" id="templatesGrid">
-      {templates.map((template: TemplateItem) => (
+      {templates.map((template) => (
         <Card variant="interactive" padding="none" class="template-card" data-category={template.category}>
           <div class="template-image">
             <div class="template-placeholder">

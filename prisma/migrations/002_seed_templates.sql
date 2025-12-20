@@ -1,0 +1,52 @@
+-- Migrate templates from config.ts to database
+-- Provides initial seed data for Template model
+
+INSERT INTO templates (id, name, category, image_url, demo_url, created_at) VALUES
+(
+  gen_random_uuid(),
+  'EduPrime',
+  'sekolah',
+  '/templates/eduprime.jpg',
+  '#',
+  NOW()
+),
+(
+  gen_random_uuid(),
+  'SchoolHub',
+  'sekolah',
+  '/templates/schoolhub.jpg',
+  '#',
+  NOW()
+),
+(
+  gen_random_uuid(),
+  'NewsFlow',
+  'berita',
+  '/templates/newsflow.jpg',
+  '#',
+  NOW()
+),
+(
+  gen_random_uuid(),
+  'MediaPulse',
+  'berita',
+  '/templates/mediapulse.jpg',
+  '#',
+  NOW()
+),
+(
+  gen_random_uuid(),
+  'CorporateX',
+  'company',
+  '/templates/corporatex.jpg',
+  '#',
+  NOW()
+),
+(
+  gen_random_uuid(),
+  'BrandPro',
+  'company',
+  '/templates/brandpro.jpg',
+  '#',
+  NOW()
+);
