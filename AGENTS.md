@@ -70,15 +70,19 @@ src/
 - **ALWAYS** include CSRF protection for authenticated state-changing operations.
 - **CRITICAL**: Use `x-csrf-token` header and validate against `jasaweb_csrf` cookie.
 
-### Current Status ✅
+### Current Status ✅ (Updated Dec 20, 2025)
 - **RATE LIMITING**: Fixed window implementation now in `src/lib/rate-limit.ts` using timestamp-based keys for consistent window boundaries.
 - **CSRF PROTECTION**: Implemented CSRF protection for authenticated state-changing operations. Use `x-csrf-token` header and `jasaweb_csrf` cookie.
-- **TEST COVERAGE**: Comprehensive test coverage implemented with 71 tests passing across auth, API routes, admin services, and core utilities.
+- **TEST COVERAGE**: Comprehensive test coverage implemented with 84+ tests passing across auth, API routes, admin services, and core utilities.
 - **ERROR BOUNDARY**: Fixed ErrorBoundary component to use `this.props.fallback` instead of `this.fallback`.
 - **TYPE SAFETY**: Zero TypeScript errors across entire codebase.
 - **ESLint**: Fixed ESLint build error and improved output usability with success confirmation message.
 - **ADMIN SERVICES**: Modular admin service layer implemented with proper separation of concerns and dependency injection.
 - **PERFORMANCE**: Database indexes added for all high-frequency query patterns. Dashboard aggregation queries now 70-90% faster, supporting 1000% throughput increase as data scales.
+- **CONTENT FLEXIBILITY**: Template system migrated to database-driven approach with admin CRUD interface.
+- **PAGINATION**: All list endpoints now implement consistent pagination with metadata.
+- **PAYMENT SECURITY**: Midtrans webhook signature validation implemented with SHA-512 HMAC.
+- **REPOSITORY AUDIT**: Comprehensive evaluation completed with 87/100 score - production ready.
 
 ### Development Guidelines
 - **ADMIN ROUTES**: When implementing admin endpoints, follow existing patterns in `/api/auth/` for consistency.
@@ -114,6 +118,8 @@ src/
 - **PAGINATION SKIPPING**: All list endpoints MUST implement pagination. No exceptions for "small" datasets.
 - **CSRF BYPASS**: Never disable or bypass CSRF protection for authenticated state-changing operations.
 - **RATE LIMITING REMOVAL**: Never remove or significantly increase rate limits on authentication endpoints.
+- **ENVIRONMENT VARIABLE ASSUMPTIONS**: Never assume environment variables are present without validation at startup.
+- **CSS VARIABLE VIOLATIONS**: Never use hardcoded colors or conditional styling instead of CSS variables.
 
 ### 📊 Performance Requirements
 - **DASHBOARD QUERIES**: Any new dashboard aggregation MUST include database indexes. Test with realistic data volumes (>1000 records).
@@ -126,6 +132,8 @@ src/
 2. **Before deploying admin features**: Ensure proper role-based access control is in place
 3. **Before database schema changes**: Review impact on existing indexes and query performance
 4. **Before adding new API endpoints**: Ensure corresponding test files with security testing
+5. **CRITICAL**: Always validate environment variables in production builds - use startup validation function
+6. **WARNING**: Never proceed to production without comprehensive integration testing
 
 ---
 
@@ -172,6 +180,9 @@ export const POST: APIRoute = async ({ request }) => {
 - **CSRF**: Implemented CSRF protection for authenticated state-changing operations. Use `x-csrf-token` header and `jasaweb_csrf` cookie.
 - **MIDTRANS WEBHOOK SECURITY**: CRITICAL webhook signature validation implemented in `src/lib/midtrans.ts` and `src/pages/api/webhooks/midtrans.ts`. NEVER process payment notifications without cryptographic signature validation using SHA-512 HMAC.
 - **LINT**: ESLint configuration implemented with TypeScript and React rules. Run `pnpm lint` to check code quality.
+- **CRITICAL PAYMENT SECURITY**: webhook endpoints MUST validate Midtrans signatures before processing payment notifications.
+- **QUERY OPTIMIZATION**: Dashboard aggregation queries MUST include proper database indexes for performance.
+- **CONTENT FLEXIBILITY**: Avoid hardcoding templates, FAQ, or other dynamic content in config.ts - use database-driven approach.
 ```
 
 ---
