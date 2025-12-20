@@ -3,6 +3,10 @@ name: oc smart-ci
 on:
   pull_request:
     branches: [main, dev]
+  workflow_run:
+    workflows: ["oc standarizer"]
+    types: [completed]
+    branches: [dev]
 
 permissions:
   contents: write
