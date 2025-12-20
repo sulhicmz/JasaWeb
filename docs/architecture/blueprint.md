@@ -202,7 +202,25 @@ POST /api/webhooks/midtrans  # Payment notification
 
 ---
 
-## 7. Biaya Bulanan
+## 5. Recent Modular Architecture Updates (Current)
+
+### Enhanced UI Component System ✅ (Dec 2025)
+- **Form Components**: 
+  - `Form.astro`: Reusable form wrapper with consistent spacing
+  - `FormGroup.astro`: Input grouping with label/hint support and proper TypeScript interfaces
+  - `FormInput.astro`: Standardized inputs with type safety and validation props
+- **ProjectCard.astro**: Reusable project display component with status mapping
+- **Impact**: Eliminated form duplication across 3+ pages, standardized project display
+
+### Service Layer Expansion ✅ (Dec 2025)
+- **`template.ts`**: Template filtering business logic extracted from inline JavaScript
+- **`project.ts`**: Project status mapping and display utilities server-side support
+- **`config.ts`**: Added `templateCategories` for centralized configuration management
+- **Improved Separation**: BusinessLogic → Services → Components → Pages
+
+---
+
+## 6. Biaya Bulanan
 
 | Service | Biaya |
 |---------|-------|

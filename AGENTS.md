@@ -94,6 +94,21 @@ src/
 - **WEBHOOK ENDPOINTS**: Always validate incoming webhook signatures against Midtrans secret key. Never trust webhook data without cryptographic verification.
 - **FINANCIAL DATA**: All payment-related operations must be idempotent and include comprehensive audit logging.
 
+### 📦 Available UI Components (Updated Dec 2025)
+- `Button.astro` - Primary/secondary variants, sizes, states
+- `Card.astro` - Interactive variants, padding options
+- `Badge.astro` - Status indicators
+- `Section.astro` - Layout sections with background variants
+- `Form.astro` - Reusable form wrapper with consistent spacing
+- `FormGroup.astro` - Input grouping with label/hint support, required indicators, disabled states
+- `FormInput.astro` - Standardized inputs with type safety (text, email, tel, password, number)
+- `ProjectCard.astro` - Project display with status mapping and responsive design
+
+### 🔧 Service Layer (New Dec 2025)
+- `template.ts` - Template filtering and display business logic
+- `project.ts` - Project status mapping and card generation utilities
+- All services follow strict TypeScript patterns and proper error handling
+
 ### 🚫 Forbidden Patterns
 - **HARDCODED DYNAMIC CONTENT**: NEVER add templates, FAQ, pricing, or any business data that should be manageable by admin users. Use database tables instead.
 - **PAGINATION SKIPPING**: All list endpoints MUST implement pagination. No exceptions for "small" datasets.

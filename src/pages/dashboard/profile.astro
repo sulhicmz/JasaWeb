@@ -6,6 +6,9 @@
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
 import Button from '../../components/ui/Button.astro';
+import Form from '../../components/ui/Form.astro';
+import FormGroup from '../../components/ui/FormGroup.astro';
+import FormInput from '../../components/ui/FormInput.astro';
 
 const user = Astro.locals.user;
 ---
@@ -14,49 +17,80 @@ const user = Astro.locals.user;
   <div class="profile-grid">
     <Card padding="lg">
       <h2>Informasi Profil</h2>
-      <form id="profileForm" class="form">
-        <div class="form-group">
-          <label for="name">Nama Lengkap</label>
-          <input type="text" id="name" name="name" value={user?.name || ''} required />
-        </div>
+      <Form id="profileForm" class="form">
+            <FormGroup label="Nama Lengkap" labelFor="name" required>
+              <FormInput
+                type="text"
+                id="name"
+                name="name"
+                value={user?.name || ''}
+                required
+              />
+            </FormGroup>
 
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" value={user?.email || ''} disabled />
-          <span class="form-hint">Email tidak dapat diubah</span>
-        </div>
+            <FormGroup 
+              label="Email" 
+              labelFor="email"
+              hint="Email tidak dapat diubah"
+              disabled
+            >
+              <FormInput
+                type="email"
+                id="email"
+                name="email"
+                value={user?.email || ''}
+                disabled
+              />
+            </FormGroup>
 
-        <div class="form-group">
-          <label for="phone">No. WhatsApp</label>
-          <input type="tel" id="phone" name="phone" placeholder="08123456789" />
-        </div>
+            <FormGroup label="No. WhatsApp" labelFor="phone">
+              <FormInput
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="08123456789"
+              />
+            </FormGroup>
 
-        <Button type="submit" variant="primary">Simpan Perubahan</Button>
-        <div id="profileMessage" class="form-message"></div>
-      </form>
+            <Button type="submit" variant="primary">Simpan Perubahan</Button>
+            <div id="profileMessage" class="form-message"></div>
+          </Form>
     </Card>
 
     <Card padding="lg">
       <h2>Ubah Password</h2>
-      <form id="passwordForm" class="form">
-        <div class="form-group">
-          <label for="currentPassword">Password Saat Ini</label>
-          <input type="password" id="currentPassword" name="currentPassword" required />
-        </div>
+      <Form id="passwordForm" class="form">
+            <FormGroup label="Password Saat Ini" labelFor="currentPassword" required>
+              <FormInput
+                type="password"
+                id="currentPassword"
+                name="currentPassword"
+                required
+              />
+            </FormGroup>
 
-        <div class="form-group">
-          <label for="newPassword">Password Baru</label>
-          <input type="password" id="newPassword" name="newPassword" minlength="8" required />
-        </div>
+            <FormGroup label="Password Baru" labelFor="newPassword" required>
+              <FormInput
+                type="password"
+                id="newPassword"
+                name="newPassword"
+                minlength={8}
+                required
+              />
+            </FormGroup>
 
-        <div class="form-group">
-          <label for="confirmPassword">Konfirmasi Password</label>
-          <input type="password" id="confirmPassword" name="confirmPassword" required />
-        </div>
+            <FormGroup label="Konfirmasi Password" labelFor="confirmPassword" required>
+              <FormInput
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                required
+              />
+            </FormGroup>
 
-        <Button type="submit" variant="secondary">Ubah Password</Button>
-        <div id="passwordMessage" class="form-message"></div>
-      </form>
+            <Button type="submit" variant="secondary">Ubah Password</Button>
+            <div id="passwordMessage" class="form-message"></div>
+          </Form>
     </Card>
   </div>
 </PortalLayout>
@@ -77,41 +111,6 @@ const user = Astro.locals.user;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-group label {
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .form-group input {
-    padding: 0.75rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text);
-    font-size: 0.875rem;
-  }
-
-  .form-group input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-  }
-
-  .form-group input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .form-hint {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
   }
 
   .form-message {

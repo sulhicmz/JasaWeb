@@ -50,6 +50,10 @@ import Button from '../../components/ui/Button.astro';
     justify-content: space-between;
     align-items: flex-start;
     gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
   }
 
   .project-info {
@@ -81,19 +85,45 @@ import Button from '../../components/ui/Button.astro';
     gap: 0.5rem;
     align-items: flex-end;
   }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    color: white;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .status-pending_payment {
+    background: var(--color-secondary);
+  }
+
+  .status-in_progress {
+    background: var(--color-primary);
+  }
+
+  .status-review {
+    background: var(--color-bg-tertiary);
+  }
+
+  .status-completed {
+    background: var(--color-success);
+  }
+
+  .project-link {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .project-link:hover {
+    color: var(--color-primary-dark);
+  }
 </style>
 
 <script>
-  const statusBadge = (status: string) => {
-    const map: Record<string, { label: string; variant: string }> = {
-      pending_payment: { label: 'Menunggu Bayar', variant: 'warning' },
-      in_progress: { label: 'Dalam Proses', variant: 'primary' },
-      review: { label: 'Review', variant: 'default' },
-      completed: { label: 'Selesai', variant: 'success' },
-    };
-    return map[status] || { label: status, variant: 'default' };
-  };
-
   async function loadProjects() {
     const container = document.getElementById('projectsList');
     if (!container) return;
@@ -102,41 +132,45 @@ import Button from '../../components/ui/Button.astro';
       const res = await fetch('/api/client/projects');
       const data = await res.json();
 
-      if (!res.ok || !(data as any).success) {
-        container.innerHTML = `<div class="empty-state">Gagal memuat proyek</div>`;
+      if (!res.ok || !data.success) {
+        container.innerHTML = '<div class="empty-state"><p>Gagal memuat proyek</p></div>';
         return;
       }
 
-      if ((data as any).data.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <p>Belum ada proyek. <a href="/layanan" style="color:var(--color-primary)">Pesan sekarang</a></p>
-          </div>
-        `;
+      if (data.data.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Belum ada proyek. <a href="/layanan" style="color:var(--color-primary)">Pesan sekarang</a></p></div>';
         return;
       }
 
-      container.innerHTML = (data as any).data.map((p: any) => {
-        const badge = statusBadge(p.status);
-        return `
-          <div class="project-card" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;padding:1.5rem;background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-lg);">
-            <div class="project-info" style="flex:1">
-              <div class="project-name" style="font-size:1.125rem;font-weight:600;margin-bottom:0.5rem">${p.name}</div>
-              <div class="project-type" style="color:var(--color-text-secondary);font-size:0.875rem;margin-bottom:1rem">${p.type}</div>
-              <div class="project-meta" style="display:flex;gap:1rem;font-size:0.75rem;color:var(--color-text-muted)">
-                <span>Dibuat: ${new Date(p.createdAt).toLocaleDateString('id-ID')}</span>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end">
-              <span style="padding:0.25rem 0.75rem;background:var(--color-${badge.variant === 'primary' ? 'primary' : badge.variant === 'success' ? 'success' : badge.variant === 'warning' ? 'secondary' : 'bg-tertiary'});color:white;border-radius:999px;font-size:0.75rem">${badge.label}</span>
-              ${p.url ? `<a href="${p.url}" target="_blank" style="font-size:0.75rem;color:var(--color-primary)">Kunjungi →</a>` : ''}
-            </div>
-          </div>
-        `;
+      // Create project cards using the component structure
+      container.innerHTML = data.data.map((project: any) => {
+        return '<div class="project-card">' +
+          '<div class="project-info">' +
+            '<div class="project-name">' + project.name + '</div>' +
+            '<div class="project-type">' + project.type + '</div>' +
+            '<div class="project-meta">' +
+              '<span>Dibuat: ' + new Date(project.createdAt).toLocaleDateString('id-ID') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="project-actions">' +
+            '<span class="status-badge status-' + project.status + '">' + getStatusLabel(project.status) + '</span>' +
+            (project.url ? '<a href="' + project.url + '" target="_blank" class="project-link">Kunjungi →</a>' : '') +
+          '</div>' +
+        '</div>';
       }).join('');
     } catch (e) {
-      container.innerHTML = `<div class="empty-state">Terjadi kesalahan</div>`;
+      container.innerHTML = '<div class="empty-state"><p>Terjadi kesalahan</p></div>';
     }
+  }
+
+  function getStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+      pending_payment: 'Menunggu Bayar',
+      in_progress: 'Dalam Proses',
+      review: 'Review',
+      completed: 'Selesai'
+    };
+    return labels[status] || status;
   }
 
   loadProjects();

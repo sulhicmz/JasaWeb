@@ -1,0 +1,69 @@
+---
+/**
+ * Reusable Form Group Component
+ * Extracted from duplicate .form-group patterns across auth pages
+ * Follows AGENTS.md modular component standards
+ */
+export interface Props {
+  label?: string;
+  labelFor?: string;
+  hint?: string;
+  required?: boolean;
+  disabled?: boolean;
+  class?: string;
+  children?: any;
+}
+
+const { 
+  label, 
+  labelFor, 
+  hint, 
+  required = false, 
+  disabled = false, 
+  class: className, 
+  children 
+} = Astro.props;
+---
+
+<div class={`form-group ${className || ''} ${disabled ? 'disabled' : ''}`}>
+  {label && (
+    <label for={labelFor}>
+      {label}
+      {required && <span class="required">*</span>}
+    </label>
+  )}
+  {children}
+  {hint && <span class="form-hint">{hint}</span>}
+</div>
+
+<style>
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .form-group.disabled {
+    opacity: 0.7;
+  }
+
+  .form-group.disabled label {
+    color: var(--color-text-muted);
+  }
+
+  .required {
+    color: var(--color-error);
+    margin-left: 0.25rem;
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+</style>

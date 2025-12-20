@@ -1,0 +1,71 @@
+---
+/**
+ * Reusable Form Input Component
+ * Extracted from duplicate input patterns across auth pages
+ * Follows AGENTS.md modular component standards
+ */
+export interface Props {
+  type: 'text' | 'email' | 'tel' | 'password' | 'number';
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+  minlength?: number;
+  value?: string;
+  class?: string;
+}
+
+const {
+  type,
+  id,
+  name,
+  placeholder,
+  required = false,
+  disabled = false,
+  minlength,
+  value,
+  class: className,
+} = Astro.props;
+---
+
+<input
+  type={type}
+  id={id}
+  name={name}
+  placeholder={placeholder}
+  required={required}
+  disabled={disabled}
+  minlength={minlength}
+  value={value}
+  class={`form-input ${className || ''}`}
+/>
+
+<style>
+  .form-input {
+    padding: 0.75rem 1rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    transition: border-color var(--transition-fast);
+    width: 100%;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+
+  .form-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--color-bg-secondary);
+  }
+
+  .form-input::placeholder {
+    color: var(--color-text-muted);
+  }
+</style>
