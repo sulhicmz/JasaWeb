@@ -212,6 +212,8 @@ describe('Client Portal API Routes - Integration', () => {
                 createdAt: new Date('2024-01-01')
             };
 
+            mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+
             const { GET: profileHandler } = await import('@/pages/api/client/profile');
             const mockLocals = { user: mockUser, runtime: { env: {} } };
 
@@ -229,7 +231,7 @@ describe('Client Portal API Routes - Integration', () => {
                 name: 'Test Client',
                 role: 'client',
                 phone: '+1234567890',
-                createdAt: mockUser.createdAt
+                createdAt: mockUser.createdAt.toISOString()
             });
         });
 
@@ -287,9 +289,7 @@ describe('Client Portal API Routes - Integration', () => {
                     id: true,
                     name: true,
                     email: true,
-                    role: true,
                     phone: true,
-                    createdAt: true
                 }
             });
         });
@@ -320,9 +320,18 @@ describe('Client Portal API Routes - Integration', () => {
                 password: 'old-hashed-password'
             };
 
+            const currentUser = {
+                id: 'user-123',
+                email: 'client@example.com',
+                name: 'Test Client',
+                role: 'client',
+                password: 'old-hashed-password'
+            };
+
             mockAuthFunctions.verifyPassword.mockResolvedValue(true);
             mockAuthFunctions.hashPassword.mockResolvedValue('new-hashed-password');
 
+            mockPrisma.user.findUnique.mockResolvedValue(currentUser);
             mockPrisma.user.update.mockResolvedValue({
                 id: 'user-123',
                 name: 'Test Client',
@@ -349,7 +358,7 @@ describe('Client Portal API Routes - Integration', () => {
             
             const result = await response.json();
             expect(result.success).toBe(true);
-            expect(result.data.message).toBe('Password berhasil diperbarui');
+            expect(result.data.message).toBe('Password berhasil diubah');
 
             expect(mockAuthFunctions.verifyPassword).toHaveBeenCalledWith('oldpassword', 'old-hashed-password');
             expect(mockAuthFunctions.hashPassword).toHaveBeenCalledWith('newpassword123');
@@ -365,6 +374,15 @@ describe('Client Portal API Routes - Integration', () => {
                 password: 'old-hashed-password'
             };
 
+            const currentUser = {
+                id: 'user-123',
+                email: 'client@example.com',
+                name: 'Test Client',
+                role: 'client',
+                password: 'old-hashed-password'
+            };
+
+            mockPrisma.user.findUnique.mockResolvedValue(currentUser);
             mockAuthFunctions.verifyPassword.mockResolvedValue(false);
 
             const { PUT: passwordHandler } = await import('@/pages/api/client/password');
@@ -385,7 +403,7 @@ describe('Client Portal API Routes - Integration', () => {
             // Assert
             expect(response.status).toBe(400);
             const data = await response.json();
-            expect(data.error).toBe('Password saat ini tidak valid');
+            expect(data.error).toBe('Password saat ini salah');
         });
 
         it('should validate password length', async () => {
@@ -416,7 +434,7 @@ describe('Client Portal API Routes - Integration', () => {
             // Assert
             expect(response.status).toBe(400);
             const data = await response.json();
-            expect(data.error).toBe('Password minimal 8 karakter');
+            expect(data.error).toBe('Password baru minimal 8 karakter');
         });
 
         it('should reject unauthenticated requests', async () => {

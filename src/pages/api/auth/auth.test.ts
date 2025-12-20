@@ -16,7 +16,7 @@ const mockPrisma = {
 const mockHashPassword = vi.fn();
 const mockVerifyPassword = vi.fn();
 const mockGenerateToken = vi.fn();
-const mockCheckRateLimit = vi.fn(() => null);
+const mockCheckRateLimit = vi.fn<() => Promise<Response | null>>();
 
 vi.mock('@/lib/prisma', () => ({
     getPrisma: vi.fn(() => mockPrisma)
