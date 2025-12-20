@@ -29,11 +29,12 @@
 - [x] **PERFORMANCE**: Optimize Vite build configuration for Cloudflare Workers runtime.
 - [x] **PERFORMANCE**: Clean up TypeScript warnings and build warnings for cleaner production builds.
 - [x] **SECURITY**: Implement comprehensive audit logging system for compliance and security monitoring.
+- [x] **CRITICAL**: Fix webhook environment variable access pattern - secured Midtrans server key from client build exposure
 
 ## New Tasks (Latest Audit - Dec 20, 2025) 🔄
 - [ ] **HIGH**: Create explicit TypeScript interfaces for Cloudflare Workers types to eliminate 16 `any` usage instances
-- [ ] **MEDIUM**: Standardize environment variable access pattern to use `locals.runtime.env` across all API routes
-- [ ] **MEDIUM**: Enforce consistent error handling using `handleApiError()` utility across all API endpoints
+- [x] **MEDIUM**: Standardize environment variable access pattern to use `locals.runtime.env` across all API routes
+- [x] **MEDIUM**: Enforce consistent error handling using `handleApiError()` utility across all API endpoints
 - [ ] **LOW**: Add comprehensive JSDoc documentation for all UI components
 - [ ] **LOW**: Expand test coverage for error boundaries and failure scenarios
 
