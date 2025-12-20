@@ -89,6 +89,28 @@ src/
 - **QUERY OPTIMIZATION**: Dashboard aggregation queries MUST include proper database indexes for performance.
 - **CONTENT FLEXIBILITY**: Avoid hardcoding templates, FAQ, or other dynamic content in config.ts - use database-driven approach.
 
+### ⚠️ Critical Security Warnings
+- **PAYMENT INTEGRATION**: Any agent working on Midtrans integration MUST implement webhook signature validation BEFORE processing any payment notifications. Failure to do so creates critical financial vulnerability.
+- **WEBHOOK ENDPOINTS**: Always validate incoming webhook signatures against Midtrans secret key. Never trust webhook data without cryptographic verification.
+- **FINANCIAL DATA**: All payment-related operations must be idempotent and include comprehensive audit logging.
+
+### 🚫 Forbidden Patterns
+- **HARDCODED DYNAMIC CONTENT**: NEVER add templates, FAQ, pricing, or any business data that should be manageable by admin users. Use database tables instead.
+- **PAGINATION SKIPPING**: All list endpoints MUST implement pagination. No exceptions for "small" datasets.
+- **CSRF BYPASS**: Never disable or bypass CSRF protection for authenticated state-changing operations.
+- **RATE LIMITING REMOVAL**: Never remove or significantly increase rate limits on authentication endpoints.
+
+### 📊 Performance Requirements
+- **DASHBOARD QUERIES**: Any new dashboard aggregation MUST include database indexes. Test with realistic data volumes (>1000 records).
+- **BUNDLE SIZE**: Client-side bundle must stay under 250KB. Use code splitting for large components.
+- **API LATENCY**: Database queries should not exceed 200ms average response time. Use Prisma query optimization.
+
+### 🔐 Development Security Protocols
+1. **Before committing payment code**: Verify webhook signature validation is implemented and tested
+2. **Before deploying admin features**: Ensure proper role-based access control is in place
+3. **Before database schema changes**: Review impact on existing indexes and query performance
+4. **Before adding new API endpoints**: Ensure corresponding test files with security testing
+
 ---
 
 ## 3. Component Patterns

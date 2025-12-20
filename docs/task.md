@@ -27,14 +27,18 @@
 - [x] **CRITICAL**: Add comprehensive admin test suite (21 tests, 71 total passing)
 - [x] **AUDIT**: Comprehensive repository evaluation completed (Score: 78/100)
 - [x] **HIGH**: Implement project management admin endpoints (/api/admin/projects) with full CRUD operations
+- [x] **AUDIT**: Updated evaluation report with detailed analysis of 78/100 codebase score
+- [x] **AUDIT**: Enhanced AGENTS.md with critical security warnings and forbidden patterns
+- [x] **AUDIT**: Updated roadmap with payment security and content flexibility requirements
 
 ## Remaining Tasks 🔄
+- [ ] **CRITICAL**: Integrate Midtrans payment SDK WITH WEBHOOK SIGNATURE VALIDATION (FINANCIAL SECURITY)
+- [ ] **CRITICAL**: Migrate hardcoded templates/FAQ to database-driven system (content flexibility)
+- [ ] **HIGH**: Add API pagination to all list endpoints (performance requirement)
 - [ ] **HIGH**: Create admin dashboard UI components (React/Astro)
 - [ ] **HIGH**: Add blog/CMS management admin endpoints  
-- [ ] **CRITICAL**: Integrate Midtrans payment SDK WITH WEBHOOK SIGNATURE VALIDATION
 - [ ] **MEDIUM**: Add template management CRUD operations
 - [ ] **MEDIUM**: Add image optimization for Cloudflare Workers
 - [ ] **MEDIUM**: Implement structured API logging and monitoring
 - [x] **CRITICAL**: Add database indexes for dashboard query performance optimization (70-90% performance improvement on dashboard aggregations)
-- [ ] **CRITICAL**: Migrate hardcoded templates/FAQ to database-driven system
 - [ ] **LOW**: Add performance monitoring dashboard

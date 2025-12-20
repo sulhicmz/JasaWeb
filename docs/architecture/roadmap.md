@@ -37,25 +37,30 @@
 - [x] **CRITICAL**: Add database indexes for dashboard query optimization
 - [ ] **MEDIUM**: Implement API pagination across all list endpoints
 
-### Phase 5: Payment (Week 5) ❌
+### Phase 5: Payment & Content Flexibility (Week 5) ❌
+- [ ] **CRITICAL**: Midtrans webhook signature validation (FINANCIAL SECURITY REQUIREMENT)
 - [ ] **HIGH**: Midtrans SDK integration and configuration
 - [ ] **HIGH**: QRIS payment flow implementation
-- [ ] **CRITICAL**: Webhook signature validation handler (SECURITY REQUIREMENT)
-- [ ] **HIGH**: Invoice creation and status tracking
+- [ ] **HIGH**: Invoice creation and status tracking with idempotency
+- [ ] **HIGH**: Migrate hardcoded templates/FAQ data to database for dynamic management
+- [ ] **HIGH**: Implement admin interface for dynamic content management
 - [ ] **MEDIUM**: Payment history and receipt generation
 - [ ] **MEDIUM**: Implement audit logging for all payment transactions
+- [ ] **MEDIUM**: Add API pagination to all list endpoints (performance requirement)
 - [ ] **LOW**: Payment retry and failure handling
-- [ ] **CRITICAL**: Migrate hardcoded templates/FAQ data to database for dynamic management
 
-### Phase 6: Testing & Launch (Week 6) ❌
+### Phase 6: Production Readiness & Testing (Week 6) ❌
 - [x] Fix TypeScript type system (0 errors)
 - [x] Install and configure Vitest properly
 - [x] Fix middleware auth flow (locals.request issue)
+- [ ] **CRITICAL**: Security audit of payment integration before deployment
+- [ ] **HIGH**: Performance testing with realistic data volumes (>1000 records)
+- [ ] **HIGH**: Load testing for API endpoints and dashboard queries
 - [ ] Setup Vitest + testing-library for components
-- [ ] API integration tests (auth endpoints, CRUD operations)
-- [ ] End-to-end testing (critical user flows)
-- [ ] Security hardening (CSRF tokens, rate limiting fix)
-- [ ] Production deployment
+- [ ] API integration tests (auth endpoints, CRUD operations, payment flows)
+- [ ] End-to-end testing (critical user flows including payment)
+- [ ] Security penetration testing (CSRF, rate limiting, auth bypass)
+- [ ] Production deployment configuration and monitoring setup
 
 ---
 
