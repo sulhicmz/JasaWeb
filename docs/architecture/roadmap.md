@@ -34,14 +34,18 @@
 - [ ] **MEDIUM**: Create blog post CRUD operations (/api/admin/posts)
 - [ ] **MEDIUM**: Implement CMS page management (/api/admin/pages)
 - [ ] **LOW**: Template management CRUD (/api/admin/templates)
+- [ ] **CRITICAL**: Add database indexes for dashboard query optimization
+- [ ] **MEDIUM**: Implement API pagination across all list endpoints
 
 ### Phase 5: Payment (Week 5) ❌
 - [ ] **HIGH**: Midtrans SDK integration and configuration
 - [ ] **HIGH**: QRIS payment flow implementation
-- [ ] **HIGH**: Webhook signature validation handler
+- [ ] **CRITICAL**: Webhook signature validation handler (SECURITY REQUIREMENT)
 - [ ] **HIGH**: Invoice creation and status tracking
 - [ ] **MEDIUM**: Payment history and receipt generation
+- [ ] **MEDIUM**: Implement audit logging for all payment transactions
 - [ ] **LOW**: Payment retry and failure handling
+- [ ] **CRITICAL**: Migrate hardcoded templates/FAQ data to database for dynamic management
 
 ### Phase 6: Testing & Launch (Week 6) ❌
 - [x] Fix TypeScript type system (0 errors)
