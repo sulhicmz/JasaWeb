@@ -118,9 +118,9 @@ export function isValidPhone(phone: string): boolean {
 /**
  * Parse and validate request body
  */
-export async function parseBody<T>(request: Request): Promise<T | null> {
+export async function parseBody(request: Request): Promise<Record<string, unknown> | null> {
     try {
-        return await request.json() as T;
+        return await request.json() as Record<string, unknown>;
     } catch {
         return null;
     }

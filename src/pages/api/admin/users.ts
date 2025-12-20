@@ -15,7 +15,7 @@ import {
 } from '@/lib/api';
 import { requireAdmin, validateAdminAccess } from '@/services/admin/auth';
 import { createAdminService } from '@/services/admin/users';
-import type { CreateUserData } from '@/services/admin/users';
+
 
 // ==============================================
 // GET: List Users with Pagination
@@ -65,7 +65,7 @@ export const POST: APIRoute = async (context) => {
         const authError = requireAdmin(context);
         if (authError) return authError;
 
-        const body = await parseBody<CreateUserData>(context.request);
+        const body = await parseBody(context.request);
 
         if (!body) {
             return errorResponse('Request body tidak valid');
@@ -78,17 +78,17 @@ export const POST: APIRoute = async (context) => {
         }
 
         // Validate email format
-        if (!isValidEmail(body.email)) {
+        if (!isValidEmail(body.email as string)) {
             return errorResponse('Format email tidak valid');
         }
 
         // Validate role
-        if (!['admin', 'client'].includes(body.role)) {
+        if (!['admin', 'client'].includes(body.role as string)) {
             return errorResponse('Role harus "admin" atau "client"');
         }
 
         // Validate password length
-        if (body.password.length < 8) {
+        if ((body.password as string).length < 8) {
             return errorResponse('Password minimal 8 karakter');
         }
 
@@ -96,13 +96,18 @@ export const POST: APIRoute = async (context) => {
         const adminService = createAdminService(prisma);
 
         // Check if email already exists
-        const existingUser = await adminService.isEmailExists(body.email);
+        const existingUser = await adminService.isEmailExists(body.email as string);
         if (existingUser) {
             return errorResponse('Email sudah terdaftar');
         }
 
         // Create user using service layer
-        const user = await adminService.createUser(body);
+        const user = await adminService.createUser({
+            name: body.name as string,
+            email: body.email as string,
+            password: body.password as string,
+            role: body.role as 'admin' | 'client'
+        });
 
         return jsonResponse({ message: 'User berhasil dibuat', user }, 201);
     } catch (error) {

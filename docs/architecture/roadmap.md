@@ -33,8 +33,8 @@
 - [x] **HIGH**: Add project management API (/api/admin/projects)
 - [x] **CRITICAL**: Create admin dashboard UI components with role-based access control
 - [x] **HIGH**: Implement admin portal layout with navigation and user management
-- [ ] **MEDIUM**: Create blog post CRUD operations (/api/admin/posts)
-- [ ] **MEDIUM**: Implement CMS page management (/api/admin/pages)
+- [x] **MEDIUM**: Create blog post CRUD operations (/api/admin/posts) - Complete with pagination, search, status filtering
+- [x] **MEDIUM**: Implement CMS page management (/api/admin/pages) - Complete CRUD with slug management
 - [ ] **LOW**: Template management CRUD (/api/admin/templates)
 - [x] **CRITICAL**: Add database indexes for dashboard query optimization
 - [x] **MEDIUM**: Implement API pagination across all list endpoints
@@ -76,7 +76,7 @@
 | 1 | 100% | Core infra complete |
 | 2 | 100% | Public site live |
 | 3 | 95% | Standardization complete, Billing pending |
-| 4 | 85% | Admin UI complete, CMS management pending |
+| 4 | 95% | Admin UI and CMS management complete, ready for payment integration |
 | 5 | 15% | Template flexibility implemented, payment integration next |
 | 6 | 10% | Comprehensive audit completed, integration testing needed |
 
