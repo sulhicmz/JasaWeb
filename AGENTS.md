@@ -132,7 +132,7 @@ src/
 2. **Before deploying admin features**: Ensure proper role-based access control is in place
 3. **Before database schema changes**: Review impact on existing indexes and query performance
 4. **Before adding new API endpoints**: Ensure corresponding test files with security testing
-5. **CRITICAL**: Always validate environment variables in production builds - use startup validation function
+5. ✅ **IMPLEMENTED**: Environment variable validation function in `src/lib/config.ts` - validates all required variables on startup
 6. **WARNING**: Never proceed to production without comprehensive integration testing
 
 ---

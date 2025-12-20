@@ -4,6 +4,185 @@
  */
 
 // ==============================================
+// ENVIRONMENT VARIABLE VALIDATION
+// ==============================================
+
+interface EnvValidationResult {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+}
+
+interface EnvSpec {
+    name: string;
+    required: boolean;
+    description: string;
+    validator?: (value: string) => boolean;
+}
+
+/**
+ * Environment Variable Specification
+ * Centralized configuration of all required and optional environment variables
+ */
+const ENV_VARS: EnvSpec[] = [
+    // Core Application
+    {
+        name: 'NODE_ENV',
+        required: false,
+        description: 'Application environment (development/production)',
+        validator: (value) => ['development', 'production', 'test'].includes(value),
+    },
+    
+    // Database (Neon PostgreSQL)
+    {
+        name: 'DATABASE_URL',
+        required: true,
+        description: 'Neon PostgreSQL connection string',
+        validator: (value) => value.startsWith('postgresql://') && value.includes('sslmode=require'),
+    },
+    
+    // Authentication
+    {
+        name: 'JWT_SECRET',
+        required: true,
+        description: 'JWT signing secret (min 32 characters)',
+        validator: (value) => value.length >= 32,
+    },
+    
+    // Midtrans Payment Gateway
+    {
+        name: 'MIDTRANS_SERVER_KEY',
+        required: true,
+        description: 'Midtrans server key for payment processing',
+        validator: (value) => value.startsWith('SB-Mid-server-') || value.startsWith('Mid-server-'),
+    },
+    {
+        name: 'MIDTRANS_CLIENT_KEY',
+        required: true,
+        description: 'Midtrans client key for frontend payment integration',
+        validator: (value) => value.startsWith('SB-Mid-client-') || value.startsWith('Mid-client-'),
+    },
+    {
+        name: 'MIDTRANS_IS_PRODUCTION',
+        required: false,
+        description: 'Midtrans production mode flag (true/false)',
+        validator: (value) => ['true', 'false'].includes(value.toLowerCase()),
+    },
+    
+    // Optional: Cloudflare (usually managed by platform)
+    {
+        name: 'CLOUDFLARE_API_TOKEN',
+        required: false,
+        description: 'Cloudflare API Token for R2/KV operations (if needed)',
+    },
+];
+
+/**
+ * Validate a single environment variable
+ */
+function validateEnvVar(spec: EnvSpec, value: string | undefined): { isValid: boolean; error?: string } {
+    if (spec.required && !value) {
+        return {
+            isValid: false,
+            error: `Required environment variable '${spec.name}' is missing`
+        };
+    }
+    
+    if (!value && !spec.required) {
+        return { isValid: true };
+    }
+    
+    if (spec.validator && value && !spec.validator(value)) {
+        return {
+            isValid: false,
+            error: `Environment variable '${spec.name}' has invalid value. Expected: ${spec.description}`
+        };
+    }
+    
+    return { isValid: true };
+}
+
+/**
+ * Validate all environment variables
+ * This should be called during application startup
+ */
+export function validateEnvironment(): EnvValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    for (const spec of ENV_VARS) {
+        const value = import.meta.env[spec.name];
+        const result = validateEnvVar(spec, value);
+        
+        if (!result.isValid) {
+            errors.push(result.error!);
+        }
+        
+        // Check for common misconfigurations
+        if (value && spec.name.includes('SECRET') && value.length < 32) {
+            warnings.push(`'${spec.name}' should be at least 32 characters for security`);
+        }
+        
+        if (value && spec.name.includes('KEY') && value.includes('xxx')) {
+            warnings.push(`'${spec.name}' appears to be using placeholder value`);
+        }
+    }
+    
+    // Additional cross-variable validation
+    const isProduction = import.meta.env.NODE_ENV === 'production';
+    
+    if (isProduction) {
+        const requiredInProd = ['DATABASE_URL', 'JWT_SECRET', 'MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY'];
+        for (const varName of requiredInProd) {
+            if (!import.meta.env[varName]) {
+                errors.push(`'${varName}' is required in production environment`);
+            }
+        }
+    }
+    
+    // Check for development vs production Midtrans configuration
+    const midtransServerKey = import.meta.env.MIDTRANS_SERVER_KEY;
+    const midtransIsProduction = import.meta.env.MIDTRANS_IS_PRODUCTION === 'true';
+    
+    if (midtransServerKey) {
+        const isSandboxKey = midtransServerKey.startsWith('SB-Mid-server-');
+        if (isSandboxKey && midtransIsProduction) {
+            warnings.push('Using sandbox Midtrans key in production environment');
+        }
+        if (!isSandboxKey && !midtransIsProduction) {
+            warnings.push('Using production Midtrans key in development environment');
+        }
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors,
+        warnings,
+    };
+}
+
+/**
+ * Get environment configuration summary (safe to display)
+ */
+export function getEnvironmentInfo(): {
+    environment: string;
+    database: 'configured' | 'missing';
+    payment: 'configured' | 'missing';
+    auth: 'configured' | 'missing';
+} {
+    const database = import.meta.env.DATABASE_URL ? 'configured' : 'missing';
+    const payment = (import.meta.env.MIDTRANS_SERVER_KEY && import.meta.env.MIDTRANS_CLIENT_KEY) ? 'configured' : 'missing';
+    const auth = import.meta.env.JWT_SECRET ? 'configured' : 'missing';
+    
+    return {
+        environment: import.meta.env.NODE_ENV || 'unknown',
+        database,
+        payment,
+        auth,
+    };
+}
+
+// ==============================================
 // SITE METADATA
 // ==============================================
 export const siteConfig = {

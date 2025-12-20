@@ -18,7 +18,7 @@
 - [ ] **ADMIN**: Implement Blog/CMS management endpoints (Posts & Pages CRUD).
 - [ ] **PAYMENT**: QRIS flow implementation including invoice generation and idempotency.
 - [ ] **SECURITY**: Implement audit logging for sensitive admin actions.
-- [ ] **STABILITY**: Implement environment variable startup validation.
+- [x] **STABILITY**: Implement environment variable startup validation.
 
 ## Medium Priority 🔄
 - [ ] **OPTIMIZATION**: Image optimization using Cloudflare Workers for template galleries.
