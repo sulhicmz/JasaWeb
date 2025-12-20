@@ -4,11 +4,12 @@
  */
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
-import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
-import { parseQuery, createPrismaQuery, createResponse, addSearchCondition } from '@/lib/pagination';
 
-export const GET: APIRoute = async ({ request }) => {
-    try {
+import { parseQuery, createPrismaQuery, createResponse, addSearchCondition } from '@/lib/pagination';
+import { withCache } from '@/lib/cache';
+
+export const GET: APIRoute = async ({ request, locals }) => {
+    return withCache(request, { env: locals.runtime.env }, async () => {
         // Parse query parameters using pagination service
         const url = new URL(request.url);
         const query = parseQuery(url, {
@@ -20,12 +21,12 @@ export const GET: APIRoute = async ({ request }) => {
         });
 
         // Validate category if provided
-        const category = query.filters.category;
+        const category = query.filters.category as string | undefined;
         if (category && !['sekolah', 'berita', 'company'].includes(category)) {
-            return errorResponse('Kategori harus "sekolah", "berita", atau "company"');
+            throw new Error('Kategori harus "sekolah", "berita", atau "company"');
         }
 
-        const prisma = getPrisma({} as any);
+        const prisma = getPrisma(locals);
 
         // Build where clause with search
         let where = { ...query.filters };
@@ -55,11 +56,9 @@ export const GET: APIRoute = async ({ request }) => {
         // Create paginated response
         const response = createResponse(templates, total, query.pagination);
 
-        return jsonResponse({
+        return {
             templates: response.data,
             pagination: response.pagination,
-        });
-    } catch (error) {
-        return handleApiError(error);
-    }
+        };
+    }, { ttl: 1800 }); // 30 minutes cache for templates
 };

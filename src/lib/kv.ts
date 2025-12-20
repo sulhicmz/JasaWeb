@@ -3,7 +3,7 @@
  * Provides type-safe caching operations
  */
 
-type KVNamespace = any;
+import type { KVNamespace } from './types';
 
 export interface CacheOptions {
     /** TTL in seconds */
@@ -76,7 +76,7 @@ export async function cacheInvalidateByPrefix(
     prefix: string
 ): Promise<void> {
     const list = await kv.list({ prefix });
-    await Promise.all(list.keys.map((k: any) => kv.delete(k.name)));
+    await Promise.all(list.keys.map((k) => kv.delete(k.name)));
 }
 
 // Cache key builders

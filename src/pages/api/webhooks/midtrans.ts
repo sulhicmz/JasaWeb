@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { jsonResponse, errorResponse } from '@/lib/api';
+import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 import { validateMidtransSignature, parseMidtransWebhook, MIDTRANS_STATUS_MAP } from '@/lib/midtrans';
 import { createPrismaClient } from '@/lib/prisma';
 import type { PrismaClient } from '@prisma/client';
@@ -31,8 +31,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return errorResponse('Invalid webhook payload format', 400);
     }
 
-    // CRITICAL: Validate webhook signature
-    const serverKey = import.meta.env.MIDTRANS_SERVER_KEY;
+    // CRITICAL: Validate webhook signature using secure environment access
+    const serverKey = locals.runtime.env.MIDTRANS_SERVER_KEY;
     if (!serverKey) {
       console.error('CRITICAL: MIDTRANS_SERVER_KEY not configured');
       return errorResponse('Payment service unavailable', 503);
@@ -56,7 +56,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     
   } catch (error) {
     console.error('Webhook processing error:', error);
-    return errorResponse('Internal server error', 500);
+    return handleApiError(error);
   } finally {
     await prisma.$disconnect();
   }
@@ -68,7 +68,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
  */
 async function processPaymentNotification(
   prisma: PrismaClient, 
-  payload: any,
+  payload: { order_id: string; transaction_status: string; gross_amount: string; signature_key: string },
   request: Request,
   locals: App.Locals
 ) {
@@ -98,21 +98,13 @@ async function processPaymentNotification(
     return errorResponse('Amount validation failed', 400);
   }
 
-  // Validate amount matches (prevent tampering)
-  if (parseFloat(gross_amount) !== Number(invoice.amount)) {
-    console.error(`Amount mismatch for order ${order_id}: expected ${invoice.amount}, got ${gross_amount}`);
-    return errorResponse('Amount validation failed', 400);
-  }
-
 // Update invoice status (idempotent operation)
   const oldStatus = invoice.status;
   const oldProjectStatus = invoice.project.status;
   await prisma.invoice.update({
     where: { id: invoice.id },
     data: {
-      status: {
-        set: mappedStatus as any
-      },
+      status: mappedStatus,
       paidAt: mappedStatus === 'paid' ? new Date() : invoice.paidAt
     }
   });

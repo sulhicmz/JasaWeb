@@ -15,8 +15,8 @@ export function withAudit(
   return async (
     context: { request: Request; locals: App.Locals },
     handler: (context: { request: Request; locals: App.Locals }) => Promise<Response>,
-    beforeState?: any,
-    afterState?: any
+    beforeState?: Record<string, unknown>,
+    afterState?: Record<string, unknown>
   ): Promise<Response> => {
     const { request, locals } = context;
     const user = locals.user;
@@ -88,8 +88,8 @@ export class AuditLogger {
     action: AuditAction;
     resource: string;
     resourceId?: string;
-    oldValues?: any;
-    newValues?: any;
+    oldValues?: Record<string, unknown>;
+    newValues?: Record<string, unknown>;
   }) {
     const user = locals.user;
     if (user?.role === 'admin') {
@@ -104,8 +104,8 @@ export class AuditLogger {
   static async logPayment(locals: App.Locals, request: Request, data: {
     action: 'PAYMENT_INIT' | 'PAYMENT_SUCCESS' | 'PAYMENT_FAILED';
     resourceId?: string;
-    oldValues?: any;
-    newValues?: any;
+    oldValues?: Record<string, unknown>;
+    newValues?: Record<string, unknown>;
   }) {
     const user = locals.user;
     if (user) {

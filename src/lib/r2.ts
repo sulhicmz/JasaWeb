@@ -3,9 +3,7 @@
  * Provides file upload/download utilities
  */
 
-type R2Bucket = any;
-type R2ObjectBody = any;
-type R2Objects = any;
+import type { R2Bucket, R2ObjectBody, R2Objects } from './types';
 
 export interface UploadOptions {
     contentType?: string;

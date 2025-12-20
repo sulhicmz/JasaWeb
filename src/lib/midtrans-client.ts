@@ -5,16 +5,16 @@
 
 import { CoreApi } from 'midtrans-client';
 import type { Project, Invoice } from '@prisma/client';
-import type { PaymentResponse } from '@/lib/types';
+import type { PaymentResponse, RuntimeEnv } from '@/lib/types';
 
 /**
  * Midtrans service interface
  */
 export interface MidtransService {
     createQrisPayment(invoice: Invoice & { project: Project }, userDetails?: { email: string; name: string; phone?: string | null }): Promise<PaymentResponse>;
-    getPaymentStatus(orderId: string): Promise<any>;
-    cancelPayment(orderId: string): Promise<any>;
-    refundPayment(orderId: string, amount?: number): Promise<any>;
+    getPaymentStatus(orderId: string): Promise<Record<string, unknown>>;
+    cancelPayment(orderId: string): Promise<Record<string, unknown>>;
+    refundPayment(orderId: string, amount?: number): Promise<Record<string, unknown>>;
 }
 
 /**
@@ -23,7 +23,7 @@ export interface MidtransService {
  * CRITICAL: Always use runtime.env for secrets in Cloudflare Workers
  * NEVER use import.meta.env for secrets in production
  */
-function createMidtransClient(runtime?: any): CoreApi {
+function createMidtransClient(runtime?: Partial<RuntimeEnv>): CoreApi {
     const isProduction = runtime?.MIDTRANS_IS_PRODUCTION === 'true' || 
                         import.meta.env.MIDTRANS_IS_PRODUCTION === 'true';
     
@@ -47,17 +47,26 @@ function createMidtransClient(runtime?: any): CoreApi {
 export class MidtransPaymentService implements MidtransService {
     private midtransClient: CoreApi & {
         transaction: {
-            status(transactionId: string): Promise<any>;
-            cancel(transactionId: string): Promise<any>;
-            refund(transactionId: string, parameter?: any): Promise<any>;
-            approve(transactionId: string): Promise<any>;
-            deny(transactionId: string): Promise<any>;
-            expire(transactionId: string): Promise<any>;
+            status(transactionId: string): Promise<Record<string, unknown>>;
+            cancel(transactionId: string): Promise<Record<string, unknown>>;
+            refund(transactionId: string, parameter?: Record<string, unknown>): Promise<Record<string, unknown>>;
+            approve(transactionId: string): Promise<Record<string, unknown>>;
+            deny(transactionId: string): Promise<Record<string, unknown>>;
+            expire(transactionId: string): Promise<Record<string, unknown>>;
         };
     };
 
-    constructor(runtime?: any) {
-        this.midtransClient = createMidtransClient(runtime) as any;
+    constructor(runtime?: Partial<RuntimeEnv>) {
+        this.midtransClient = createMidtransClient(runtime) as CoreApi & {
+            transaction: {
+                status(transactionId: string): Promise<Record<string, unknown>>;
+                cancel(transactionId: string): Promise<Record<string, unknown>>;
+                refund(transactionId: string, parameter?: Record<string, unknown>): Promise<Record<string, unknown>>;
+                approve(transactionId: string): Promise<Record<string, unknown>>;
+                deny(transactionId: string): Promise<Record<string, unknown>>;
+                expire(transactionId: string): Promise<Record<string, unknown>>;
+            }
+        };
     }
 
     /**
@@ -175,7 +184,7 @@ export class MidtransPaymentService implements MidtransService {
      */
     async refundPayment(orderId: string, amount?: number) {
         try {
-            const parameter: any = {};
+            const parameter: Record<string, unknown> = {};
             if (amount) {
                 parameter.amount = amount;
             }
@@ -192,7 +201,7 @@ export class MidtransPaymentService implements MidtransService {
 /**
  * Factory function to create Midtrans service
  */
-export function createMidtransService(runtime?: any): MidtransService {
+export function createMidtransService(runtime?: Partial<RuntimeEnv>): MidtransService {
     return new MidtransPaymentService(runtime);
 }
 

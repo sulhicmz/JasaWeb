@@ -18,7 +18,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
         // Rate limiting for password change
         const rateLimit = await checkRateLimit(
             request,
-            locals.runtime.env.KV,
+            locals.runtime.env.CACHE,
             'password-change',
             RateLimits.auth
         );

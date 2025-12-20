@@ -46,7 +46,7 @@ export class BlogService extends BaseCrudService<Post, CreatePostData, UpdatePos
         });
     }
 
-    protected buildSearchFields(search: string): any[] {
+    protected buildSearchFields(search: string): Record<string, unknown>[] {
         return [
             { title: { contains: search, mode: 'insensitive' } },
             { content: { contains: search, mode: 'insensitive' } }
@@ -77,7 +77,7 @@ export class BlogService extends BaseCrudService<Post, CreatePostData, UpdatePos
     }
 
     async update(id: string, data: UpdatePostData): Promise<Post> {
-        const updateData: any = { ...data };
+        const updateData: Record<string, unknown> = { ...data };
         
         // Generate new slug if title is changed
         if (data.title) {

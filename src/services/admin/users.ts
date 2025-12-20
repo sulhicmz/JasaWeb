@@ -158,7 +158,7 @@ export class AdminUserService {
         const skip = (page - 1) * limit;
 
         // Build where clause
-        const where: any = {};
+        const where: Record<string, unknown> = {};
         
         if (role) {
             where.role = role;

@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         });
 
         // Validate status if provided
-        const status = query.filters.status;
+        const status = query.filters.status as string | undefined;
         if (status && !['unpaid', 'paid'].includes(status)) {
             return errorResponse('Status harus "unpaid" atau "paid"');
         }
@@ -38,14 +38,11 @@ export const GET: APIRoute = async ({ request, locals }) => {
         const prisma = getPrisma(locals);
 
         // Add search if provided (search in project name)
-        let where = { ...query.filters };
+        const where: Record<string, unknown> = { ...query.filters };
         if (query.search) {
-            where = {
-                ...where,
-                project: {
-                    ...where.project,
-                    name: { contains: query.search, mode: 'insensitive' as const }
-                }
+            where.project = {
+                userId: user.id,
+                name: { contains: query.search, mode: 'insensitive' as const }
             };
         }
 

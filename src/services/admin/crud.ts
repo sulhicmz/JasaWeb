@@ -11,15 +11,30 @@ import { errorResponse } from '@/lib/api';
 // CRUD INTERFACES
 // ==============================================
 
+// Enhanced filter types for better type safety
+export interface FilterConstraints {
+    equals?: string | number | boolean | null;
+    in?: Array<string | number>;
+    not?: string | number | null;
+    contains?: string;
+    startsWith?: string;
+    endsWith?: string;
+    gt?: number;
+    gte?: number;
+    lt?: number;
+    lte?: number;
+}
+
 export interface ListOptions {
     page?: number;
     limit?: number;
     search?: string;
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
-    filters?: Record<string, any>;
+    filters?: Record<string, unknown>;
 }
 
+// Pagination result interface (defined locally to avoid circular imports)
 export interface PaginationResult<T> {
     items: T[];
     total: number;
@@ -44,11 +59,11 @@ export class BaseCrudService<T, CreateData, UpdateData> {
     constructor(
         protected prisma: PrismaClient,
         protected modelName: keyof PrismaClient,
-        protected defaultSelect: any
+        protected defaultSelect: Record<string, unknown>
     ) {}
 
-    protected buildWhereClause(options: ListOptions): any {
-        const where: any = {};
+    protected buildWhereClause(options: ListOptions): Record<string, unknown> {
+        const where: Record<string, unknown> = {};
 
         // Add search functionality (search in common fields)
         if (options.search) {
@@ -63,7 +78,7 @@ export class BaseCrudService<T, CreateData, UpdateData> {
         return where;
     }
 
-    protected buildSearchFields(_search: string): any[] {
+    protected buildSearchFields(_search: string): Record<string, unknown>[] {
         // Override in implementing classes for specific search fields
         return [];
     }
@@ -85,8 +100,15 @@ export class BaseCrudService<T, CreateData, UpdateData> {
 
         const where = this.buildWhereClause(opts);
 
-        // Type-safe dynamic access to Prisma model
-        const model = this.prisma[this.modelName] as any;
+        // Type-safe dynamic access to Prisma model using unknown casting
+        const model = this.prisma[this.modelName] as unknown as {
+            findMany: (args: unknown) => Promise<T[]>;
+            findUnique: (args: unknown) => Promise<T | null>;
+            create: (args: unknown) => Promise<T>;
+            update: (args: unknown) => Promise<T>;
+            delete: (args: unknown) => Promise<unknown>;
+            count: (args: unknown) => Promise<number>;
+        };
 
         // Get items and total count in parallel
         const [items, total] = await Promise.all([
@@ -110,7 +132,9 @@ export class BaseCrudService<T, CreateData, UpdateData> {
     }
 
     async findById(id: string): Promise<T | null> {
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            findUnique: (args: unknown) => Promise<T | null>;
+        };
         return model.findUnique({
             where: { id },
             select: this.defaultSelect
@@ -118,7 +142,9 @@ export class BaseCrudService<T, CreateData, UpdateData> {
     }
 
     async create(data: CreateData): Promise<T> {
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            create: (args: unknown) => Promise<T>;
+        };
         return model.create({
             data,
             select: this.defaultSelect
@@ -126,7 +152,9 @@ export class BaseCrudService<T, CreateData, UpdateData> {
     }
 
     async update(id: string, data: UpdateData): Promise<T> {
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            update: (args: unknown) => Promise<T>;
+        };
         return model.update({
             where: { id },
             data,
@@ -135,7 +163,9 @@ export class BaseCrudService<T, CreateData, UpdateData> {
     }
 
     async delete(id: string): Promise<void> {
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            delete: (args: unknown) => Promise<unknown>;
+        };
         await model.delete({
             where: { id }
         });

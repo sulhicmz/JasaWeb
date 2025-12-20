@@ -61,7 +61,7 @@ try {
         {
           key: "name",
           label: "Project",
-          render: (project) => `
+          render: (project: Project) => `
             <div>
               <div class="font-medium text-white">${project.name}</div>
               ${project.url ? `
@@ -77,7 +77,7 @@ try {
         {
           key: "user.name",
           label: "Client",
-          render: (project) => `
+          render: (project: Project) => `
             <div class="text-[var(--color-text)]">${project.user.name}</div>
             <div class="text-[var(--color-text-secondary)] text-sm">${project.user.email}</div>
           `
@@ -90,7 +90,7 @@ try {
         {
           key: "status",
           label: "Status",
-          render: (project) => {
+          render: (project: Project) => {
             const statusVariant = project.status === 'completed' ? 'success' :
                                project.status === 'in_progress' ? 'primary' :
                                project.status === 'review' ? 'warning' : 'error';
@@ -105,7 +105,7 @@ try {
       ]}
       actions={[
         {
-          href: (project) => `/dashboard/admin/projects/${project.id}`,
+          href: (project: Project) => `/dashboard/admin/projects/${project.id}`,
           text: "Edit",
           variant: "outline",
           size: "sm"
