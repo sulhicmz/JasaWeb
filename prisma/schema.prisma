@@ -23,6 +23,10 @@ model User {
   projects Project[]
 
   @@map("users")
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+  @@index([role, createdAt])
 }
 
 enum Role {
@@ -48,6 +52,11 @@ model Project {
   invoices Invoice[]
 
   @@map("projects")
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 enum ProjectType {
@@ -79,6 +88,10 @@ model Invoice {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("invoices")
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
 }
 
 enum InvoiceStatus {
@@ -114,6 +127,10 @@ model Post {
   createdAt     DateTime   @default(now()) @map("created_at")
 
   @@map("posts")
+  @@index([slug])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, publishedAt])
 }
 
 enum PostStatus {
@@ -133,4 +150,5 @@ model Page {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("pages")
+  @@index([slug])
 }

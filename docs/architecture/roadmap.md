@@ -34,7 +34,7 @@
 - [ ] **MEDIUM**: Create blog post CRUD operations (/api/admin/posts)
 - [ ] **MEDIUM**: Implement CMS page management (/api/admin/pages)
 - [ ] **LOW**: Template management CRUD (/api/admin/templates)
-- [ ] **CRITICAL**: Add database indexes for dashboard query optimization
+- [x] **CRITICAL**: Add database indexes for dashboard query optimization
 - [ ] **MEDIUM**: Implement API pagination across all list endpoints
 
 ### Phase 5: Payment (Week 5) ❌
