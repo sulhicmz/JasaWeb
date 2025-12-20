@@ -287,5 +287,4 @@ jobs:
       - name: Trigger Analyzer
         if: success()
         run: |
-          sleep 60
           gh workflow run "oc analyzer.yml"
