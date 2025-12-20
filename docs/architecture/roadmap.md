@@ -21,9 +21,11 @@
 - [ ] Billing (pending Phase 5)
 
 ### Phase 4: Admin Panel (Week 4) ⏳
-- [ ] Fix: Type system errors in middleware and API routes
-- [ ] Fix: ErrorBoundary component props access
-- [ ] Fix: Rate limiting sliding window behavior
+- [x] Fix: Type system errors in middleware and API routes
+- [x] Fix: ErrorBoundary component props access
+- [ ] Fix: Rate limiting sliding window behavior → implement fixed window
+- [ ] Add CSRF protection for authenticated routes
+- [ ] Expand test coverage to API routes and components
 - [ ] Dashboard overview
 - [ ] Manage clients (CRUD)
 - [ ] Manage projects (status, URL, credentials)
@@ -38,13 +40,13 @@
 - [ ] Invoice management
 
 ### Phase 6: Testing & Launch (Week 6) ❌
-- [ ] Fix TypeScript type system (33 errors)
-- [ ] Install and configure Vitest properly
-- [ ] Fix middleware auth flow (locals.request issue)
-- [ ] Setup Vitest + testing-library
-- [ ] API integration tests
-- [ ] End-to-end testing
-- [ ] Security hardening (CSRF, rate limiting fix)
+- [x] Fix TypeScript type system (0 errors)
+- [x] Install and configure Vitest properly
+- [x] Fix middleware auth flow (locals.request issue)
+- [ ] Setup Vitest + testing-library for components
+- [ ] API integration tests (auth endpoints, CRUD operations)
+- [ ] End-to-end testing (critical user flows)
+- [ ] Security hardening (CSRF tokens, rate limiting fix)
 - [ ] Production deployment
 
 ---
@@ -56,7 +58,7 @@
 | 1 | 100% | Core infra complete |
 | 2 | 100% | Public site live |
 | 3 | 95% | Standardization complete, Billing pending |
-| 4 | 20% | TypeScript errors fixed, build stable, ready for development |
+| 4 | 30% | TypeScript errors fixed, build stable, security improvements needed |
 | 5 | 0% | Blocked on Phase 4 |
 | 6 | 0% | Final phase |
 
