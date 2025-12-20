@@ -515,11 +515,13 @@ import Card from '../../components/ui/Card.astro';
     pageInfo!.textContent = `Halaman ${pagination.page} dari ${pagination.totalPages}`;
   }
 
-  // Change page
+  // Change page - used via onclick in HTML
   function changePage(direction: number) {
     currentPage += direction;
     loadInvoices();
   }
+  // Explicitly assign to global scope for onclick usage
+  (window as any).changePage = changePage;
 
   // Show invoice details
   async function showInvoiceDetails(invoiceId: string) {
@@ -588,6 +590,8 @@ import Card from '../../components/ui/Card.astro';
       modal.style.display = 'flex';
     }
   }
+  // Explicitly assign to global scope for onclick usage
+  (window as any).showInvoiceDetails = showInvoiceDetails;
 
   // Create payment
   async function createPayment(invoiceId: string) {
@@ -657,6 +661,8 @@ import Card from '../../components/ui/Card.astro';
       modal.style.display = 'flex';
     }
   }
+  // Explicitly assign to global scope for onclick usage
+  (window as any).createPayment = createPayment;
 
   // Payment timer
   function startPaymentTimer() {
@@ -731,6 +737,8 @@ import Card from '../../components/ui/Card.astro';
     const modal = document.getElementById('invoiceModal');
     modal!.style.display = 'none';
   }
+  // Explicitly assign to global scope for onclick usage
+  (window as any).closeInvoiceModal = closeInvoiceModal;
 
   // Add badge styles dynamically
   const style = document.createElement('style');
