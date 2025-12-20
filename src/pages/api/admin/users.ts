@@ -9,10 +9,9 @@ import {
     jsonResponse, 
     errorResponse, 
     handleApiError, 
-    validateRequired, 
-    isValidEmail,
     parseBody 
 } from '@/lib/api';
+import { ValidationService } from '@/services/validation/ValidationService';
 import { requireAdmin, validateAdminAccess } from '@/services/admin/auth';
 import { createAdminService } from '@/services/admin/users';
 import { AuditLogger } from '@/lib/audit-middleware';
@@ -78,25 +77,10 @@ export const POST: APIRoute = async (context) => {
             return errorResponse('Request body tidak valid');
         }
 
-        // Validate required fields
-        const validationError = validateRequired(body, ['name', 'email', 'password', 'role']);
-        if (validationError) {
-            return errorResponse(validationError);
-        }
-
-        // Validate email format
-        if (!isValidEmail(body.email as string)) {
-            return errorResponse('Format email tidak valid');
-        }
-
-        // Validate role
-        if (!['admin', 'client'].includes(body.role as string)) {
-            return errorResponse('Role harus "admin" atau "client"');
-        }
-
-        // Validate password length
-        if ((body.password as string).length < 8) {
-            return errorResponse('Password minimal 8 karakter');
+        // Validate all user data using ValidationService
+        const validation = ValidationService.validateUser(body);
+        if (!validation.success) {
+            return errorResponse(validation.error || 'Validasi gagal');
         }
 
         const prisma = getPrisma(context.locals);

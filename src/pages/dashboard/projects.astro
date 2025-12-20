@@ -124,6 +124,55 @@ import Button from '../../components/ui/Button.astro';
 </style>
 
 <script>
+  // @ts-nocheck - Inline script with dynamic typing  
+  // Project utilities extracted from DashboardService
+  function getProjectStatusLabel(status: string) {
+    const labels = {
+      pending_payment: 'Menunggu Bayar',
+      in_progress: 'Dalam Proses',
+      review: 'Review',
+      completed: 'Selesai'
+    };
+    return (labels as any)[status] || status;
+  }
+
+  function transformProjectForDisplay(project: any) {
+    return {
+      id: project.id,
+      name: project.name,
+      type: project.type,
+      status: project.status,
+      statusLabel: getProjectStatusLabel(project.status),
+      createdAt: new Date(project.createdAt).toLocaleDateString('id-ID'),
+      url: project.url || null
+    };
+  }
+
+  function generateProjectCardsHTML(projects: any[]) {
+    if (projects.length === 0) {
+      return '<div class="empty-state"><p>Belum ada proyek. <a href="/layanan" style="color:var(--color-primary)">Pesan sekarang</a></p></div>';
+    }
+
+    return projects.map(project => {
+      const displayData = transformProjectForDisplay(project);
+      return `
+        <div class="project-card">
+          <div class="project-info">
+            <div class="project-name">${displayData.name}</div>
+            <div class="project-type">${displayData.type}</div>
+            <div class="project-meta">
+              <span>Dibuat: ${displayData.createdAt}</span>
+            </div>
+          </div>
+          <div class="project-actions">
+            <span class="status-badge status-${displayData.status}">${displayData.statusLabel}</span>
+            ${displayData.url ? `<a href="${displayData.url}" target="_blank" class="project-link">Kunjungi →</a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
   async function loadProjects() {
     const container = document.getElementById('projectsList');
     if (!container) return;
@@ -137,40 +186,11 @@ import Button from '../../components/ui/Button.astro';
         return;
       }
 
-      if (data.data.length === 0) {
-        container.innerHTML = '<div class="empty-state"><p>Belum ada proyek. <a href="/layanan" style="color:var(--color-primary)">Pesan sekarang</a></p></div>';
-        return;
-      }
-
-      // Create project cards using the component structure
-      container.innerHTML = data.data.map((project: any) => {
-        return '<div class="project-card">' +
-          '<div class="project-info">' +
-            '<div class="project-name">' + project.name + '</div>' +
-            '<div class="project-type">' + project.type + '</div>' +
-            '<div class="project-meta">' +
-              '<span>Dibuat: ' + new Date(project.createdAt).toLocaleDateString('id-ID') + '</span>' +
-            '</div>' +
-          '</div>' +
-          '<div class="project-actions">' +
-            '<span class="status-badge status-' + project.status + '">' + getStatusLabel(project.status) + '</span>' +
-            (project.url ? '<a href="' + project.url + '" target="_blank" class="project-link">Kunjungi →</a>' : '') +
-          '</div>' +
-        '</div>';
-      }).join('');
+      // Transform and display projects using utility functions
+      container.innerHTML = generateProjectCardsHTML(data.data);
     } catch (e) {
       container.innerHTML = '<div class="empty-state"><p>Terjadi kesalahan</p></div>';
     }
-  }
-
-  function getStatusLabel(status: string) {
-    const labels: Record<string, string> = {
-      pending_payment: 'Menunggu Bayar',
-      in_progress: 'Dalam Proses',
-      review: 'Review',
-      completed: 'Selesai'
-    };
-    return labels[status] || status;
   }
 
   loadProjects();

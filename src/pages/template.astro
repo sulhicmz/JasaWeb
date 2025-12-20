@@ -2,6 +2,7 @@
 /**
  * Template Gallery Page
  * REFACTORED: Database-driven templates with PageLayout and UI components
+ * OPTIMIZED: Integrated image optimization service for template gallery
  */
 import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
@@ -9,6 +10,7 @@ import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import { getCategoryLabel, type ServiceId, templateCategories } from '../lib/config';
 import { getPrisma } from '../lib/prisma';
+import { imageOptimization } from '../lib/image-optimization';
 
 const categories = templateCategories;
 
@@ -51,9 +53,24 @@ const templates = await prisma.template.findMany({
       {templates.map((template) => (
         <Card variant="interactive" padding="none" class="template-card" data-category={template.category}>
           <div class="template-image">
-            <div class="template-placeholder">
-              <span>{template.name}</span>
-            </div>
+            {template.imageUrl ? (
+              <img 
+                src={imageOptimization.generateOptimizedUrl(template.imageUrl, {
+                  width: 400,
+                  height: 250,
+                  quality: 85,
+                  format: 'webp'
+                })}
+                class="template-img"
+                alt={`${template.name} template preview`}
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <div class="template-placeholder">
+                <span>{template.name}</span>
+              </div>
+            )}
             <div class="template-overlay">
               <Button href={template.demoUrl} variant="primary" size="sm">
                 Lihat Demo
@@ -126,6 +143,17 @@ const templates = await prisma.template.findMany({
     overflow: hidden;
   }
 
+  .template-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+  }
+
+  .template-card:hover .template-img {
+    transform: scale(1.05);
+  }
+
   .template-placeholder {
     width: 100%;
     height: 100%;
@@ -177,19 +205,19 @@ const templates = await prisma.template.findMany({
   }
 </style>
 
-<script>
+<script is:inline>
   const filterBtns = document.querySelectorAll('.filter-btn');
   const cards = document.querySelectorAll('.template-card');
 
-  filterBtns.forEach(btn => {
+  filterBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
+      filterBtns.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       
-      const category = (btn as HTMLElement).dataset.category;
+      const category = btn.dataset?.category;
       
-      cards.forEach(card => {
-        if (category === 'all' || (card as HTMLElement).dataset.category === category) {
+      cards.forEach((card) => {
+        if (category === 'all' || card.dataset?.category === category) {
           card.classList.remove('hidden');
         } else {
           card.classList.add('hidden');

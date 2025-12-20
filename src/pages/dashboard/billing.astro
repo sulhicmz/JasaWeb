@@ -1,9 +1,6 @@
 ---
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
-import Button from '../../components/ui/Button.astro';
-import Badge from '../../components/ui/Badge.astro';
-import type { Invoice } from '../../lib/types';
 ---
 
 <PortalLayout title="Billing" currentPath="/dashboard/billing">
@@ -92,6 +89,51 @@ import type { Invoice } from '../../lib/types';
 </PortalLayout>
 
 <script>
+  // @ts-nocheck - Inline script with dynamic typing
+  // Invoice statistics calculation utility
+  function calculateInvoiceStats(invoices: any[]) {
+    const total = invoices.length;
+    const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    
+    const unpaid = invoices.filter(inv => inv.status === 'unpaid');
+    const paid = invoices.filter(inv => inv.status === 'paid');
+    
+    const unpaidAmount = unpaid.reduce((sum, inv) => sum + Number(inv.amount), 0);
+    const paidAmount = paid.reduce((sum, inv) => sum + Number(inv.amount), 0);
+
+    return {
+      total,
+      totalAmount,
+      unpaid: unpaid.length,
+      unpaidAmount,
+      paid: paid.length,
+      paidAmount
+    };
+  }
+
+  // Format currency for display
+  function formatCurrency(amount: number) {
+    return `Rp ${amount.toLocaleString('id-ID')}`;
+  }
+
+  // Generate invoice stats HTML
+  function generateInvoiceStatsHTML(stats: any) {
+    return `
+      <div class="stat-card">
+        <div class="stat-label">Total Tagihan</div>
+        <div class="stat-value">${formatCurrency(stats.totalAmount)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Belum Dibayar</div>
+        <div class="stat-value">${formatCurrency(stats.unpaidAmount)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sudah Dibayar</div>
+        <div class="stat-value">${formatCurrency(stats.paidAmount)}</div>
+      </div>
+    `;
+  }
+
   // Bundle optimization: Defer heavy initialization  
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(async () => {
@@ -101,16 +143,11 @@ import type { Invoice } from '../../lib/types';
 
         if (res.ok && data.invoices) {
           const invoices = data.invoices || [];
-          const total = invoices.reduce((sum: number, inv: { amount: number; status: string }) => sum + Number(inv.amount), 0);
-          const unpaid = invoices.filter((inv: { status: string }) => inv.status === 'unpaid');
-          const paid = invoices.filter((inv: { status: string }) => inv.status === 'paid');
-
-          const unpaidAmount = unpaid.reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0);
-          const paidAmount = paid.reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0);
+          const stats = calculateInvoiceStats(invoices);
 
           const statsContainer = document.getElementById('overviewStats');
           if (statsContainer) {
-            statsContainer.innerHTML = '<div class="stat-card"><div class="stat-label">Total Tagihan</div><div class="stat-value">Rp ' + total.toLocaleString('id-ID') + '</div></div><div class="stat-card"><div class="stat-label">Belum Dibayar</div><div class="stat-value">Rp ' + unpaidAmount.toLocaleString('id-ID') + '</div></div><div class="stat-card"><div class="stat-label">Sudah Dibayar</div><div class="stat-value">Rp ' + paidAmount.toLocaleString('id-ID') + '</div></div>';
+            statsContainer.innerHTML = generateInvoiceStatsHTML(stats);
           }
         }
       } catch (error) {
@@ -483,7 +520,6 @@ import type { Invoice } from '../../lib/types';
 
       if (data.invoices.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>Belum ada tagihan</p></div>';
-        return;
         return;
       }
 

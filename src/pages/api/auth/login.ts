@@ -9,10 +9,10 @@ import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
 import {
     jsonResponse,
     errorResponse,
-    validateRequired,
     handleApiError,
     parseBody
 } from '@/lib/api';
+import { ValidationService } from '@/services/validation/ValidationService';
 import type { LoginForm } from '@/lib/types';
 import { AuditLogger } from '@/lib/audit-middleware';
 
@@ -35,10 +35,14 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
             return errorResponse('Request body tidak valid');
         }
 
-        // Validate required fields
-        const validationError = validateRequired(body as any, ['email', 'password']);
-        if (validationError) {
-            return errorResponse(validationError);
+        // Validate required fields and format
+        const validation = ValidationService.validateCommon(body, {
+            required: ['email', 'password'],
+            email: 'email',
+            password: 'password'
+        });
+        if (!validation.success) {
+            return errorResponse(validation.error || 'Validasi gagal');
         }
 
         const prisma = getPrisma(locals);

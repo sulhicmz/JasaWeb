@@ -9,12 +9,11 @@ import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
 import {
     jsonResponse,
     errorResponse,
-    validateRequired,
-    isValidEmail,
     handleApiError,
     parseBody
 } from '@/lib/api';
 import type { RegisterForm } from '@/lib/types';
+import { ValidationService } from '@/services/validation/ValidationService';
 
 export const POST: APIRoute = async ({ request, locals }) => {
     try {
@@ -35,20 +34,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
             return errorResponse('Request body tidak valid');
         }
 
-        // Validate required fields
-        const validationError = validateRequired(body as any, ['name', 'email', 'password']);
-        if (validationError) {
-            return errorResponse(validationError);
-        }
-
-        // Validate email format
-        if (!isValidEmail(body.email)) {
-            return errorResponse('Format email tidak valid');
-        }
-
-        // Validate password length
-        if (body.password.length < 8) {
-            return errorResponse('Password minimal 8 karakter');
+        // Validate required fields and format using ValidationService
+        const validation = ValidationService.validateCommon(body, {
+            required: ['name', 'email', 'password'],
+            email: 'email',
+            password: 'password',
+            minLength: {
+                name: 3
+            }
+        });
+        if (!validation.success) {
+            return errorResponse(validation.error || 'Validasi gagal');
         }
 
         const prisma = getPrisma(locals);
