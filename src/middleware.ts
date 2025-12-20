@@ -5,6 +5,7 @@
  */
 import { defineMiddleware } from 'astro:middleware';
 import { verifyToken, AUTH_COOKIE, CSRF_COOKIE, validateCsrfToken } from './lib/auth';
+import { requiresAdminAccess } from './services/admin/auth';
 
 // Routes that require authentication
 const protectedPaths = ['/dashboard'];
@@ -48,6 +49,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
             // Verify token and inject user into locals
             const user = await verifyToken(token, env.JWT_SECRET);
             locals.user = user || undefined;
+
+            // Check for admin routes that require additional validation
+            const requiresAdmin = requiresAdminAccess(pathname);
+            if (requiresAdmin && user?.role !== 'admin') {
+                return new Response('Admin access required', { 
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
 
             // Redirect logged-in users away from auth pages
             if (isAuthPath) {

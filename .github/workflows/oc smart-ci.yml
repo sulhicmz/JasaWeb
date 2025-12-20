@@ -127,7 +127,7 @@ jobs:
           Constraints:
           - DO NOT compromise on quality. Fix the root cause.
           - Do not bypass tests.
-          - Ensure the PR to `dev` is updated.
+          - Ensure the PR to `dev` is updated and merged to keep the chain alive.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
@@ -146,3 +146,4 @@ jobs:
           else
             echo "⚠️ No open PR found for agent-workspace to dev. Check if changes were actually pushed."
           fi
+
