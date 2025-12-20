@@ -19,6 +19,7 @@
 | BUG-007 | TypeScript errors in Cloudflare services (kv.ts, r2.ts, rate-limit.ts) | 2025-12-20 |
 | BUG-008 | Rate limiting sliding window vulnerability (potential abuse) | 2025-12-20 |
 | BUG-009 | Missing CSRF protection for authenticated routes | 2025-12-20 |
+| BUG-010 | CMS Pages API missing comprehensive test coverage for delete method | 2025-12-20 |
 
 ---
 

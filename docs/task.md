@@ -18,7 +18,7 @@
 ## High Priority 🔄
 - [ ] **CRITICAL**: Migrate hardcoded templates from `config.ts:399-406` to database-driven approach.
 - [ ] **CRITICAL**: Migrate hardcoded FAQ from `config.ts:381-386` to database-driven approach.
-- [ ] **ADMIN**: Implement Blog/CMS management endpoints (Posts & Pages CRUD).
+- [x] **ADMIN**: Implement Blog/CMS management endpoints (Posts & Pages CRUD).
 - [ ] **PAYMENT**: QRIS flow implementation including invoice generation and idempotency.
 - [ ] **SECURITY**: Implement audit logging for sensitive admin actions.
 - [ ] **PAYMENT**: Payment integration test suite with Midtrans sandbox environment.
