@@ -32,7 +32,6 @@ class ImageOptimizationService {
 
   private readonly supportedFormats = ['webp', 'avif', 'jpeg', 'png'];
   private readonly maxDimension = 2048;
-  private readonly maxFileSize = 10 * 1024 * 1024; // 10MB
 
   /**
    * Generate optimized image URL using Cloudflare Image Resizing
@@ -76,7 +75,7 @@ class ImageOptimizationService {
   }
 
   /**
-   * Generate responsive image srcset for different screen sizes
+   * Generate srcset for different screen sizes
    */
   public generateSrcSet(
     originalUrl: string,
@@ -84,6 +83,11 @@ class ImageOptimizationService {
     options: ImageOptions = {}
   ): string {
     try {
+      const validation = this.validateImageUrl(originalUrl);
+      if (!validation.valid) {
+        return originalUrl;
+      }
+
       const srcsetEntries = breakpoints.map(width => {
         const optimizedUrl = this.generateOptimizedUrl(originalUrl, {
           ...options,
@@ -145,7 +149,7 @@ class ImageOptimizationService {
       src: optimizedUrl,
       alt,
       loading,
-      decoding
+      decoding: decoding as 'async' | 'sync' | 'auto'
     };
 
     // Add dimensions if provided
@@ -249,14 +253,12 @@ class ImageOptimizationService {
     color: string = '#e5e7eb'
   ): string {
     // Simple SVG placeholder
-    const svg = `
-      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    const svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="${color}"/>
         <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="#9ca3af" font-family="Arial, sans-serif" font-size="14">
           Loading...
         </text>
-      </svg>
-    `;
+      </svg>`;
 
     // Convert to base64 data URI
     const base64 = btoa(svg.replace(/[\s\t\n]/g, ''));
