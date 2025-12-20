@@ -199,72 +199,67 @@ class PerformanceCacheService {
 /**
  * Cache middleware for API routes
  */
-export function withCache<T = unknown>(
+export async function withCache<T = unknown>(
     request: Request,
     context: { env: Record<string, unknown> },
     handler: () => Promise<T>,
     options: CacheOptions = {}
 ): Promise<Response> {
-    return new Promise(async (resolve) => {
-        const cacheKV = (context.env.KV_CACHE || context.env.CACHE) as KVNamespace | undefined;
+    const cacheKV = (context.env.KV_CACHE || context.env.CACHE) as KVNamespace | undefined;
+    
+    if (!cacheKV) {
+        // No cache available, proceed normally
+        const data = await handler();
+        return new Response(JSON.stringify(data), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+    const cache = new PerformanceCacheService(cacheKV);
+
+    // Check if request is cacheable
+    if (!cache.isCacheable(request)) {
+        const data = await handler();
+        return cache.wrapResponse(data, false);
+    }
+
+    const url = new URL(request.url);
+    const cacheKey = cache.generateKey(url.pathname, Object.fromEntries(url.searchParams));
+    const ttl = options.ttl || cache.getTTLForPath(url.pathname);
+
+    try {
+        // Try to get from cache
+        const cachedData = await cache.get<T>(cacheKey);
         
-        if (!cacheKV) {
-            // No cache available, proceed normally
-            const data = await handler();
-            resolve(new Response(JSON.stringify(data), {
-                headers: { 'Content-Type': 'application/json' }
-            }));
-            return;
+        if (cachedData) {
+            return cache.wrapResponse(cachedData, true);
         }
 
-        const cache = new PerformanceCacheService(cacheKV);
+        // Cache miss, get fresh data
+        const freshData = await handler();
+        
+        // Store in cache asynchronously
+        cache.set(cacheKey, freshData, { ttl }).catch(error => {
+            console.warn('Cache storage failed:', error);
+        });
 
-        // Check if request is cacheable
-        if (!cache.isCacheable(request)) {
-            const data = await handler();
-            resolve(cache.wrapResponse(data, false));
-            return;
-        }
-
-        const url = new URL(request.url);
-        const cacheKey = cache.generateKey(url.pathname, Object.fromEntries(url.searchParams));
-        const ttl = options.ttl || cache.getTTLForPath(url.pathname);
-
+        return cache.wrapResponse(freshData, false);
+    } catch (error) {
+        console.error('Cache middleware error:', error);
+        
+        // Fallback to normal response
         try {
-            // Try to get from cache
-            const cachedData = await cache.get<T>(cacheKey);
-            
-            if (cachedData) {
-                resolve(cache.wrapResponse(cachedData, true));
-                return;
-            }
-
-            // Cache miss, get fresh data
-            const freshData = await handler();
-            
-            // Store in cache asynchronously
-            cache.set(cacheKey, freshData, { ttl }).catch(error => {
-                console.warn('Cache storage failed:', error);
+            const data = await handler();
+            return new Response(JSON.stringify(data), {
+                headers: { 'Content-Type': 'application/json' }
             });
-
-            resolve(cache.wrapResponse(freshData, false));
-        } catch (error) {
-            console.error('Cache middleware error:', error);
-            
-            // Fallback to normal response
-            try {
-                const data = await handler();
-                resolve(new Response(JSON.stringify(data), {
-                    headers: { 'Content-Type': 'application/json' }
-                }));
-            } catch (handlerError) {
-                resolve(new Response(JSON.stringify({ error: 'Internal server error' }), {
-                    status: 500,
-                    headers: { 'Content-Type': 'application/json' }
-                }));
-            }
+        } catch {
+            return new Response(JSON.stringify({ error: 'Internal server error' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
-    });
+    }
 }
 
 // Export singleton factory

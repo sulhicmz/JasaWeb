@@ -189,8 +189,7 @@ class PerformanceMonitor {
 /**
  * Middleware function for adding performance monitoring to API routes
  */
-export function withPerformanceMonitoring(request: Request, handler: () => Promise<Response>): Promise<Response> {
-  return new Promise(async (resolve) => {
+export async function withPerformanceMonitoring(request: Request, handler: () => Promise<Response>): Promise<Response> {
     const startTime = performance.now();
     const url = new URL(request.url);
     
@@ -216,7 +215,7 @@ export function withPerformanceMonitoring(request: Request, handler: () => Promi
       response.headers.set('X-Response-Time', `${responseTime}ms`);
       response.headers.set('X-Performance-Monitor', 'tracked');
 
-      resolve(response);
+      return response;
     } catch (error) {
       const endTime = performance.now();
       const responseTime = Math.round(endTime - startTime);
@@ -236,16 +235,15 @@ export function withPerformanceMonitoring(request: Request, handler: () => Promi
       performanceMonitor.recordMetric(metric);
 
       // Return error response
-      resolve(new Response(JSON.stringify({ error: 'Internal server error' }), {
+      return new Response(JSON.stringify({ error: 'Internal server error' }), {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
           'X-Response-Time': `${responseTime}ms`,
           'X-Performance-Monitor': 'error'
         }
-      }));
+      });
     }
-  });
 }
 
 /**
