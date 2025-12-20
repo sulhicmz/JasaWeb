@@ -35,18 +35,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Install Dependencies
-        continue-on-error: true
-        run: pnpm install --frozen-lockfile || pnpm install
-
       - name: Configure Git
         run: |
           git config --global user.name "sulhicmz"
@@ -57,18 +45,7 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Capture Context
-        id: context
-        run: |
-          {
-            echo "GIT_LOG<<EOF"
-            git log --oneline -2
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-
       - name: Execute
-        env:
-          GIT_LOG: ${{ steps.context.outputs.GIT_LOG }}
         run: |
           opencode run "$(cat <<'PROMPT'
           You are a **Senior Software Architect & Lead Auditor**.
@@ -84,9 +61,6 @@ jobs:
           **CONTEXT:**
           You have been summoned to evaluate the current state of the repository on the `dev` branch.
           Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
-
-          **RECENT COMMITS:**
-          $GIT_LOG
 
           **TASK SCOPE:**
           1.  **Read & Analyze:** Review `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and the entire codebase.
