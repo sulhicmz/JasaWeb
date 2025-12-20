@@ -84,9 +84,9 @@ jobs:
           Commit: feat(db): setup prisma for cloudflare workers
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
 
       - name: Phase 2 - Services
         if: inputs.phase == 'phase-2-services'
@@ -107,9 +107,9 @@ jobs:
           Commit: feat(services): add kv cache and r2 storage services
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
 
       - name: Phase 3 - Auth
         if: inputs.phase == 'phase-3-auth'
@@ -137,9 +137,9 @@ jobs:
           Commit: feat(auth): implement auth endpoints
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
       - name: Phase 4 - Public Site
         if: inputs.phase == 'phase-4-public-site'
         run: |
@@ -166,9 +166,9 @@ jobs:
           Commit: feat(public): add public site pages
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
       - name: Phase 5 - Client Portal
         if: inputs.phase == 'phase-5-client-portal'
         run: |
@@ -195,9 +195,9 @@ jobs:
           Commit: feat(portal): add client portal pages
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
       - name: Phase 6 - Admin Panel
         if: inputs.phase == 'phase-6-admin-panel'
         run: |
@@ -221,9 +221,9 @@ jobs:
           Commit: feat(admin): add admin panel
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
       - name: Phase 7 - Payment
         if: inputs.phase == 'phase-7-payment'
         run: |
@@ -250,6 +250,6 @@ jobs:
           Commit: feat(payment): integrate midtrans qris
           Create PR to dev
           PROMPT
-          )"
-          --model iflowcn/glm-4.6 \
-          --share false \
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
