@@ -13,7 +13,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: oc-standarizer
+  group: oc-agent
   cancel-in-progress: false
 
 jobs:

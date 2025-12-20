@@ -15,7 +15,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: oc-analyzer
+  group: oc-agent
   cancel-in-progress: false
 
 jobs:

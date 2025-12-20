@@ -9,8 +9,8 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: ci-${{ github.head_ref }}
-  cancel-in-progress: true
+  group: oc-agent
+  cancel-in-progress: false
 
 jobs:
   ci:

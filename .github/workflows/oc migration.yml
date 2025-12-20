@@ -21,7 +21,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: oc-migration
+  group: oc-agent
   cancel-in-progress: false
 
 jobs:
