@@ -70,9 +70,11 @@ src/
 - **WARNING**: Rate limiting implementation has sliding window behavior, not fixed window as expected.
 
 ### Critical Warnings 
-- **AUTHENTICATION MODULE IS FRAGILE**: `locals.request` property doesn't exist in type definitions. All API routes will fail until middleware types are fixed.
-- **TYPE SYSTEM BROKEN**: 33+ TypeScript errors currently exist. DO NOT assume type safety works.
-- **TESTING INFRASTRUCTURE DOWN**: Vitest is not properly installed. Tests cannot run currently.
+- **RATE LIMITING IMPLEMENTATION FLAW**: Current sliding window behavior in `src/lib/rate-limit.ts:74` may allow abuse. Use fixed window patterns or third-party service for production.
+- **CSRF PROTECTION MISSING**: No explicit CSRF protection for authenticated routes. Implement CSRF tokens for state-changing operations.
+- **LIMITED TEST COVERAGE**: Only utility functions have tests. CRITICAL paths (API routes, auth flow, components) are untested.
+- **ERROR BOUNDARY USAGE**: ErrorBoundary exists but not consistently used across React islands. Apply to all interactive components.
+- **PRODUCTION SECURITY**: Review secret management and implement JWT rotation strategy before production deployment.
 
 ---
 
@@ -112,9 +114,11 @@ export const POST: APIRoute = async ({ request }) => {
 - **ALWAYS** wrap React islands with `ErrorBoundary` from `@/components/common/ErrorBoundary`.
 - **CRITICAL**: ErrorBoundary has bugs - use `this.props.fallback` NOT `this.fallback`.
 - **ALWAYS** add unit tests for new logic in `src/lib/`.
-- **IMPORTANT**: Run `pnpm typecheck` before any commit - currently fails with 33 errors.
+- **IMPORTANT**: Run `pnpm typecheck` before any commit - currently passes with 0 errors.
 - **NEVER** use `any` type. Use proper interfaces in `types.ts`.
 - **EXCEPTION**: Cloudflare Workers types use `any` due to missing type definitions. Add inline type aliases in service files.
+- **RATE LIMITING**: Current implementation has sliding window behavior. For production, consider fixed window or third-party rate limiting service.
+- **CSRF**: Always implement CSRF tokens for authenticated state-changing operations (POST, PUT, DELETE).
 ```
 
 ---
