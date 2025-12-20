@@ -7,14 +7,9 @@ import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
-import { templates, getCategoryLabel, type TemplateItem, type ServiceId } from '../lib/config';
+import { templates, getCategoryLabel, type TemplateItem, type ServiceId, templateCategories } from '../lib/config';
 
-const categories = [
-  { value: 'all', label: 'Semua' },
-  { value: 'sekolah', label: 'Web Sekolah' },
-  { value: 'berita', label: 'Portal Berita' },
-  { value: 'company', label: 'Company Profile' },
-] as const;
+const categories = templateCategories;
 ---
 
 <PageLayout title="Template Gallery" description="Pilih template website terbaik untuk kebutuhan Anda" currentPath="/template">
@@ -27,7 +22,7 @@ const categories = [
 
   <Section spacing="lg">
     <div class="filter-bar">
-      {categories.map(cat => (
+      {categories.map((cat: any) => (
         <button 
           class:list={['filter-btn', { active: cat.value === 'all' }]}
           data-category={cat.value}

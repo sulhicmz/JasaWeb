@@ -7,6 +7,9 @@ import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
+import Form from '../components/ui/Form.astro';
+import FormGroup from '../components/ui/FormGroup.astro';
+import FormInput from '../components/ui/FormInput.astro';
 ---
 
 <PageLayout title="Daftar" description="Daftar akun JasaWeb untuk mulai membuat website" currentPath="/register">
@@ -18,67 +21,62 @@ import Button from '../components/ui/Button.astro';
           <p>Buat akun untuk mulai membuat website impian Anda</p>
         </div>
 
-        <form id="registerForm" class="auth-form">
-          <div class="form-group">
-            <label for="name">Nama Lengkap</label>
-            <input 
-              type="text" 
-              id="name" 
-              name="name" 
-              placeholder="John Doe"
-              required 
-            />
-          </div>
+        <Form id="registerForm" class="auth-form">
+            <FormGroup label="Nama Lengkap" labelFor="name" required>
+              <FormInput
+                type="text"
+                id="name"
+                name="name"
+                placeholder="John Doe"
+                required
+              />
+            </FormGroup>
 
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              placeholder="nama@email.com"
-              required 
-            />
-          </div>
+            <FormGroup label="Email" labelFor="email" required>
+              <FormInput
+                type="email"
+                id="email"
+                name="email"
+                placeholder="nama@email.com"
+                required
+              />
+            </FormGroup>
 
-          <div class="form-group">
-            <label for="phone">No. WhatsApp</label>
-            <input 
-              type="tel" 
-              id="phone" 
-              name="phone" 
-              placeholder="08123456789"
-            />
-          </div>
+            <FormGroup label="No. WhatsApp" labelFor="phone">
+              <FormInput
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="08123456789"
+              />
+            </FormGroup>
 
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              placeholder="Minimal 8 karakter"
-              minlength="8"
-              required 
-            />
-          </div>
+            <FormGroup label="Password" labelFor="password" required>
+              <FormInput
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Minimal 8 karakter"
+                minlength={8}
+                required
+              />
+            </FormGroup>
 
-          <div class="form-group">
-            <label for="confirmPassword">Konfirmasi Password</label>
-            <input 
-              type="password" 
-              id="confirmPassword" 
-              name="confirmPassword" 
-              placeholder="Ulangi password"
-              required 
-            />
-          </div>
+            <FormGroup label="Konfirmasi Password" labelFor="confirmPassword" required>
+              <FormInput
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Ulangi password"
+                required
+              />
+            </FormGroup>
 
-          <Button type="submit" variant="primary" fullWidth>Daftar Sekarang</Button>
+            <Button type="submit" variant="primary" fullWidth>Daftar Sekarang</Button>
 
-          <div id="errorMessage" class="error-message"></div>
-          <div id="successMessage" class="success-message"></div>
-        </form>
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+          </Form>
 
         <div class="auth-footer">
           <p>Sudah punya akun? <a href="/login">Masuk di sini</a></p>
@@ -120,36 +118,6 @@ import Button from '../components/ui/Button.astro';
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .form-group label {
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .form-group input {
-    padding: 0.75rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text);
-    font-size: 0.875rem;
-    transition: border-color var(--transition-fast);
-  }
-
-  .form-group input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-  }
-
-  .form-group input::placeholder {
-    color: var(--color-text-muted);
   }
 
   .error-message {

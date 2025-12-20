@@ -7,6 +7,9 @@ import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
+import Form from '../components/ui/Form.astro';
+import FormGroup from '../components/ui/FormGroup.astro';
+import FormInput from '../components/ui/FormInput.astro';
 ---
 
 <PageLayout title="Masuk" description="Masuk ke akun JasaWeb Anda" currentPath="/login">
@@ -18,37 +21,35 @@ import Button from '../components/ui/Button.astro';
           <p>Masuk ke akun Anda untuk melanjutkan</p>
         </div>
 
-        <form id="loginForm" class="auth-form">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              placeholder="nama@email.com"
-              required 
-            />
-          </div>
+        <Form id="loginForm" class="auth-form">
+            <FormGroup label="Email" labelFor="email" required>
+              <FormInput
+                type="email"
+                id="email"
+                name="email"
+                placeholder="nama@email.com"
+                required
+              />
+            </FormGroup>
 
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              placeholder="••••••••"
-              required 
-            />
-          </div>
+            <FormGroup label="Password" labelFor="password" required>
+              <FormInput
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                required
+              />
+            </FormGroup>
 
-          <div class="form-actions">
-            <a href="/forgot-password" class="forgot-link">Lupa password?</a>
-          </div>
+            <div class="form-actions">
+              <a href="/forgot-password" class="forgot-link">Lupa password?</a>
+            </div>
 
-          <Button type="submit" variant="primary" fullWidth>Masuk</Button>
+            <Button type="submit" variant="primary" fullWidth>Masuk</Button>
 
-          <div id="errorMessage" class="error-message"></div>
-        </form>
+            <div id="errorMessage" class="error-message"></div>
+          </Form>
 
         <div class="auth-footer">
           <p>Belum punya akun? <a href="/register">Daftar sekarang</a></p>
@@ -92,34 +93,14 @@ import Button from '../components/ui/Button.astro';
     gap: 1.25rem;
   }
 
-  .form-group {
+  .form-actions {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    justify-content: flex-end;
   }
 
-  .form-group label {
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .form-group input {
-    padding: 0.75rem 1rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text);
-    font-size: 0.875rem;
-    transition: border-color var(--transition-fast);
-  }
-
-  .form-group input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-  }
-
-  .form-group input::placeholder {
-    color: var(--color-text-muted);
+  .forgot-link {
+    font-size: 0.75rem;
+    color: var(--color-primary);
   }
 
   .form-actions {

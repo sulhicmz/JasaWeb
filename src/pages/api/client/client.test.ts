@@ -153,22 +153,31 @@ describe('Client Portal API Routes - Integration', () => {
                 }
             ];
 
+            mockPrisma.project.count.mockResolvedValue(2);
             mockPrisma.project.findMany.mockResolvedValue(mockProjects);
 
             const { GET: projectsHandler } = await import('@/pages/api/client/projects');
             const mockLocals = { user: mockUser, runtime: { env: {} } };
 
             // Act
-            const response = await projectsHandler({ locals: mockLocals } as any);
+            const mockRequest = new Request('http://localhost/api/client/projects?page=1&limit=10');
+            const response = await projectsHandler({ request: mockRequest, locals: mockLocals } as any);
 
             // Assert
             expect(response.status).toBe(200);
             
             const result = await response.json();
             expect(result.success).toBe(true);
-            expect(result.data).toHaveLength(2);
-            expect(result.data[0].name).toBe('Company Website');
-            expect(result.data[1].status).toBe('completed');
+            expect(result.data.projects).toHaveLength(2);
+            expect(result.data.projects[0].name).toBe('Company Website');
+            expect(result.data.projects[1].status).toBe('completed');
+            expect(result.data.pagination.total).toBe(2);
+            expect(result.data.pagination.page).toBe(1);
+            expect(result.data.pagination.limit).toBe(10);
+
+            expect(mockPrisma.project.count).toHaveBeenCalledWith({
+                where: { userId: 'user-123' }
+            });
 
             expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
                 where: { userId: 'user-123' },
@@ -181,7 +190,9 @@ describe('Client Portal API Routes - Integration', () => {
                     url: true,
                     createdAt: true,
                     updatedAt: true,
-                }
+                },
+                skip: 0,
+                take: 10,
             });
         });
 
@@ -191,7 +202,8 @@ describe('Client Portal API Routes - Integration', () => {
             const mockLocals = { user: null, runtime: { env: {} } };
 
             // Act
-            const response = await projectsHandler({ locals: mockLocals } as any);
+            const mockRequest = new Request('http://localhost/api/client/projects');
+            const response = await projectsHandler({ request: mockRequest, locals: mockLocals } as any);
 
             // Assert
             expect(response.status).toBe(401);

@@ -1,0 +1,119 @@
+---
+/**
+ * Reusable Project Card Component
+ * Extracted from inline project card generation in dashboard/projects.astro
+ * Follows AGENTS.md modular component standards
+ */
+export interface Props {
+  name: string;
+  type: string;
+  status: 'pending_payment' | 'in_progress' | 'review' | 'completed';
+  url?: string;
+  createdAt: string;
+  class?: string;
+}
+
+const { name, type, status, url, createdAt, class: className } = Astro.props;
+
+// Status mapping logic extracted from ProjectService
+const statusBadge = {
+  pending_payment: { label: 'Menunggu Bayar', variant: 'warning' },
+  in_progress: { label: 'Dalam Proses', variant: 'primary' },
+  review: { label: 'Review', variant: 'default' },
+  completed: { label: 'Selesai', variant: 'success' },
+}[status] || { label: status, variant: 'default' };
+---
+
+<div class={`project-card ${className || ''}`}>
+  <div class="project-info">
+    <div class="project-name">{name}</div>
+    <div class="project-type">{type}</div>
+    <div class="project-meta">
+      <span>Dibuat: {new Date(createdAt).toLocaleDateString('id-ID')}</span>
+    </div>
+  </div>
+  <div class="project-actions">
+    <span class="status-badge" style="background: {variantColor}">{statusBadge.label}</span>
+    {url && <a href={url} target="_blank" class="project-link">Kunjungi →</a>}
+  </div>
+</div>
+
+<style>
+  .project-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    transition: border-color var(--transition-fast);
+  }
+
+  .project-card:hover {
+    border-color: var(--color-primary);
+  }
+
+  .project-info {
+    flex: 1;
+  }
+
+  .project-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .project-type {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .project-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .project-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    color: white;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .project-link {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .project-link:hover {
+    color: var(--color-primary-dark);
+  }
+
+  @media (max-width: 768px) {
+    .project-card {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .project-actions {
+      align-items: flex-start;
+    }
+  }
+</style>

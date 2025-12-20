@@ -1,25 +1,19 @@
 /**
- * Client Projects API
- * GET: List user's projects with pagination
+ * Public Templates API
+ * GET: List templates with pagination and filtering
  */
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 
-export const GET: APIRoute = async ({ request, locals }) => {
+export const GET: APIRoute = async ({ request }) => {
     try {
-        const user = locals.user;
-
-        if (!user) {
-            return errorResponse('Unauthorized', 401);
-        }
-
         // Parse query parameters
         const url = new URL(request.url);
         const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '10');
-        const status = url.searchParams.get('status') as string || undefined;
-        const type = url.searchParams.get('type') as string || undefined;
+        const limit = parseInt(url.searchParams.get('limit') || '12');
+        const category = url.searchParams.get('category') as string || undefined;
+        const search = url.searchParams.get('search') || undefined;
         const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
         const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
 
@@ -28,32 +22,41 @@ export const GET: APIRoute = async ({ request, locals }) => {
         if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
 
         // Validate sort fields
-        const allowedSortFields = ['createdAt', 'updatedAt', 'name', 'status', 'type'];
+        const allowedSortFields = ['createdAt', 'name', 'category'];
         if (!allowedSortFields.includes(sortBy)) {
             return errorResponse('Sort field tidak valid');
         }
 
-        const prisma = getPrisma(locals);
+        // Validate category if provided
+        if (category && !['sekolah', 'berita', 'company'].includes(category)) {
+            return errorResponse('Kategori harus "sekolah", "berita", atau "company"');
+        }
+
+        const prisma = getPrisma({} as any);
 
         // Build where clause
-        const where: any = { userId: user.id };
-        if (status) where.status = status;
-        if (type) where.type = type;
+        const where: any = {};
+        if (category) where.category = category;
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' } },
+                { category: { contains: search, mode: 'insensitive' } },
+            ];
+        }
 
-        // Get total count and projects in parallel
-        const [total, projects] = await Promise.all([
-            prisma.project.count({ where }),
-            prisma.project.findMany({
+        // Get total count and templates in parallel
+        const [total, templates] = await Promise.all([
+            prisma.template.count({ where }),
+            prisma.template.findMany({
                 where,
                 orderBy: { [sortBy]: sortOrder },
                 select: {
                     id: true,
                     name: true,
-                    type: true,
-                    status: true,
-                    url: true,
+                    category: true,
+                    imageUrl: true,
+                    demoUrl: true,
                     createdAt: true,
-                    updatedAt: true,
                 },
                 skip: (page - 1) * limit,
                 take: limit,
@@ -63,7 +66,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         const totalPages = Math.ceil(total / limit);
 
         return jsonResponse({
-            projects,
+            templates,
             pagination: {
                 total,
                 page,

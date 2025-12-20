@@ -48,6 +48,16 @@ export const footerLinks = {
 // ==============================================
 export type ServiceId = 'sekolah' | 'berita' | 'company';
 
+// Template categories - extracted from inline hardcode
+export const templateCategories = [
+  { value: 'all' as const, label: 'Semua' },
+  { value: 'sekolah', label: 'Web Sekolah' },
+  { value: 'berita', label: 'Portal Berita' },
+  { value: 'company', label: 'Company Profile' },
+] as const;
+
+export type TemplateCategory = typeof templateCategories[number]['value'];
+
 export interface ServiceFeature {
     icon: string;
     title: string;

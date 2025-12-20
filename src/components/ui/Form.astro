@@ -1,0 +1,27 @@
+---
+/**
+ * Reusable Form Component
+ * Extracted from duplicate patterns across register/login/profile pages
+ * Follows AGENTS.md modular component standards
+ */
+export interface Props {
+  id?: string;
+  class?: string;
+  children?: any;
+  onSubmit?: string; // JavaScript code for form submission
+}
+
+const { id, class: className, children, onSubmit } = Astro.props;
+---
+
+<form id={id} class={`form ${className || ''}`} onsubmit={onSubmit}>
+  {children}
+</form>
+
+<style>
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+</style>

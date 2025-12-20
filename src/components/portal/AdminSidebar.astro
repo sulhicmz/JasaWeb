@@ -1,0 +1,175 @@
+---
+/**
+ * Admin Portal Sidebar Component
+ * Navigation for admin dashboard
+ */
+import { siteConfig } from '@/lib/config';
+
+export interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+
+const adminNavItems = [
+  { href: '/dashboard/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/dashboard/admin/users', label: 'Manage Users', icon: '👥' },
+  { href: '/dashboard/admin/projects', label: 'Manage Projects', icon: '📂' },
+  { href: '/dashboard/admin/posts', label: 'Blog Posts', icon: '📝' },
+  { href: '/dashboard/admin/pages', label: 'Pages', icon: '📄' },
+  { href: '/dashboard/admin/templates', label: 'Templates', icon: '🎨' },
+];
+---
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <a href="/" class="logo">
+      <span class="gradient-text">{siteConfig.name}</span>
+    </a>
+    <div class="admin-badge">Admin</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    {adminNavItems.map(item => (
+      <a 
+        href={item.href} 
+        class:list={['nav-item', { active: currentPath.includes(item.href.slice(14)) }]}
+      >
+        <span class="nav-icon">{item.icon}</span>
+        <span class="nav-label">{item.label}</span>
+      </a>
+    ))}
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/dashboard" class="client-portal-link">
+      <span>👤</span>
+      Client Portal
+    </a>
+    <form action="/api/auth/logout" method="POST">
+      <button type="submit" class="logout-btn">
+        <span>🚪</span>
+        Keluar
+      </button>
+    </form>
+  </div>
+</aside>
+
+<style>
+  .sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: var(--color-bg-secondary);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .logo {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  .admin-badge {
+    align-self: flex-start;
+    padding: 0.25rem 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    border-radius: 999px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+  }
+
+  .nav-item:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
+  .nav-item.active {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent);
+    color: var(--color-primary);
+    border-left: 3px solid var(--color-primary);
+  }
+
+  .nav-icon {
+    font-size: 1.125rem;
+  }
+
+  .sidebar-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .client-portal-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+
+  .client-portal-link:hover {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .logout-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--color-error);
+    color: var(--color-error);
+  }
+</style>
