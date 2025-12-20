@@ -89,7 +89,7 @@ jobs:
 
           ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
           1.  **Context Loading**: Read `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
-          2.  **Branch Management**: Create branch `standarizer` from `dev`. Work exclusively on this branch.
+          2.  **Branch Management**: Create branch `standarizer` from `dev`. Switch if branch already created, make sure uptodate. Work exclusively on this branch.
           3.  **Conflict Check**: Check `docs/task.md` or issue tracker to ensure no duplication of work.
           4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
 
@@ -197,12 +197,6 @@ jobs:
             --model iflowcn/glm-4.6 \
             --share false \
 
-      - name: Trigger Analyzer
-        if: success()
-        run: |
-          sleep 60
-          gh workflow run "oc analyzer.yml"
-
       - name: Run OpenCode2
         id: run_oc2
         timeout-minutes: 60
@@ -238,7 +232,7 @@ jobs:
 
           ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
           1.  **Context Loading**: Read `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
-          2.  **Branch Management**: Create branch `standarizer-2` from `dev`. Work exclusively on this branch.
+          2.  **Branch Management**: Create branch `standarizer-2` from `dev`. Switch if branch already created. Work exclusively on this branch.
           3.  **Conflict Check**: Check `docs/task.md` or issue tracker to ensure no duplication of work.
           4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
 
