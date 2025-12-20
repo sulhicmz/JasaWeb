@@ -162,41 +162,48 @@ import Button from '../components/ui/Button.astro';
 </style>
 
 <script>
-  const form = document.getElementById('loginForm') as HTMLFormElement;
-  const errorMsg = document.getElementById('errorMessage');
+  try {
+    const form = document.getElementById('loginForm') as HTMLFormElement;
+    const errorMsg = document.getElementById('errorMessage');
 
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(form);
-    const data = {
-      email: formData.get('email'),
-      password: formData.get('password'),
-    };
+    if (!form || !errorMsg) throw new Error('Required elements not found');
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+      };
 
-      const result = await res.json();
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
 
-      if (!res.ok) {
-        if (errorMsg) {
+        const result = await res.json();
+
+        if (!res.ok) {
           errorMsg.textContent = (result as any).error || 'Login gagal';
           errorMsg.classList.add('show');
+          return;
         }
-        return;
-      }
 
-      window.location.href = '/dashboard';
-    } catch (err) {
-      if (errorMsg) {
+        window.location.href = '/dashboard';
+      } catch (err) {
+        console.error('Login error:', err);
         errorMsg.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
         errorMsg.classList.add('show');
       }
-    }
-  });
+    });
+  } catch (err) {
+    console.error('Form initialization error:', err);
+    // Fallback: Show basic error message
+    document.body.insertAdjacentHTML('beforeend', 
+      '<div style="color: var(--color-error); text-align: center; padding: 1rem;">Form login tidak dapat dimuat</div>'
+    );
+  }
 </script>

@@ -158,6 +158,12 @@ import Button from '../../components/ui/Button.astro';
       }
     } catch (e) {
       console.error('Failed to load dashboard data', e);
+      // Show error state to user
+      const statsElements = ['projectCount', 'inProgressCount', 'completedCount', 'unpaidCount'];
+      statsElements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = 'Error';
+      });
     }
   }
   

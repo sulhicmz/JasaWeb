@@ -1,23 +1,7 @@
 ---
-const currentYear = new Date().getFullYear();
+import { siteConfig, footerLinks } from '@/lib/config';
 
-const footerLinks = {
-  layanan: [
-    { href: '/layanan/sekolah', label: 'Web Sekolah' },
-    { href: '/layanan/berita', label: 'Portal Berita' },
-    { href: '/layanan/company', label: 'Company Profile' },
-  ],
-  perusahaan: [
-    { href: '/tentang', label: 'Tentang Kami' },
-    { href: '/pricing', label: 'Harga' },
-    { href: '/blog', label: 'Blog' },
-  ],
-  lainnya: [
-    { href: '/template', label: 'Template' },
-    { href: '/kontak', label: 'Kontak' },
-    { href: '/faq', label: 'FAQ' },
-  ],
-};
+const currentYear = new Date().getFullYear();
 ---
 
 <footer class="footer">
@@ -25,7 +9,7 @@ const footerLinks = {
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="/" class="footer-logo">
-          <span class="gradient-text">JasaWeb</span>
+          <span class="gradient-text">{siteConfig.name}</span>
         </a>
         <p>Platform jasa pembuatan website profesional untuk sekolah, portal berita, dan perusahaan.</p>
         <div class="footer-social">
@@ -67,7 +51,7 @@ const footerLinks = {
     </div>
     
     <div class="footer-bottom">
-      <p>&copy; {currentYear} JasaWeb. All rights reserved.</p>
+      <p>&copy; {currentYear} {siteConfig.name}. All rights reserved.</p>
     </div>
   </div>
 </footer>

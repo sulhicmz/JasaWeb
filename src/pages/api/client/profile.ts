@@ -6,6 +6,7 @@
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError, parseBody } from '@/lib/api';
+import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
 
 export const GET: APIRoute = async ({ locals }) => {
     try {
@@ -42,6 +43,15 @@ export const PUT: APIRoute = async ({ request, locals }) => {
         if (!user) {
             return errorResponse('Unauthorized', 401);
         }
+
+        // Rate limiting for profile updates
+        const rateLimit = await checkRateLimit(
+            request,
+            locals.runtime.env.KV,
+            'profile-update',
+            RateLimits.api
+        );
+        if (rateLimit) return rateLimit;
 
         const body = await parseBody<{ name?: string; phone?: string }>(request);
 
