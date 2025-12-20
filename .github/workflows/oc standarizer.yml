@@ -89,7 +89,11 @@ jobs:
 
           ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
           1.  **Context Loading**: Read `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
-          2.  **Branch Management**: Create branch `standarizer` from `dev`. Switch if branch already created, make sure uptodate. Work exclusively on this branch.
+          2.  **Branch Management**: Use the shared branch `agent-workspace`.
+              - Always start by fetching all: `git fetch --all`.
+              - If `agent-workspace` exists (locally or on remote), switch to it and **pull** the latest changes: `git pull origin agent-workspace`.
+              - If it does not exist, create it from the current `dev` branch.
+              - This ensures all agents are synchronized on the same branch without constant conflicts from `dev`.
           3.  **Conflict Check**: Check `docs/task.md` or issue tracker to ensure no duplication of work.
           4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
 
@@ -110,7 +114,7 @@ jobs:
               - **Commit Style**: MANDATORY usage of **Conventional Commits** (e.g., `fix(auth): handle null session`, `feat(ui): add dark mode toggle`).
               - **Description**: Include "Why" and "How" in the commit body.
           3.  **Pull Request**:
-              - Create/Update PR from `standarizer` to `dev`.
+              - Create/Update PR from `agent-workspace` to `dev`.
               - Title: Matches commit type.
               - Body: Summary of changes, Impact analysis, Verification steps.
 
@@ -166,9 +170,11 @@ jobs:
           4.  **Verify**: Ensure the reproduction case now passes.
 
           **EXECUTION STEPS:**
-          1.  **Branching**:
-              - Checkout `dev` and pull latest.
-              - Create a new branch: `fix/issue-<ID>-<short-description>` (e.g., `fix/issue-42-auth-timeout`).
+          1.  **Branch Management**: Use the shared branch `agent-workspace`.
+              - Always start by fetching all: `git fetch --all`.
+              - If `agent-workspace` exists (locally or on remote), switch to it and **pull** the latest changes: `git pull origin agent-workspace`.
+              - If it does not exist, create it from the current `dev` branch.
+              - This ensures all agents are synchronized on the same branch without constant conflicts from `dev`.
           2.  **Implementation**:
               - **Analyze Root Cause**: Don't just patch symptoms; fix the underlying logic.
               - **Coding Standard**: Strict typing (no `any`), defensive programming (null checks).
@@ -190,8 +196,8 @@ jobs:
           - New tests are added.
           - Existing tests pass.
           - Follow github best practice
-          - Commit and push to branch `fix/issue-<ID>` with message follows Conventional Commits: `fix(scope): <description> (closes #ID)`.
-          - Create/update a Pull Request from `fix/issue-<ID>` to `dev` with a detailed description of the fix and verification steps.
+          - Commit and push to branch `agent-workspace` with message follows Conventional Commits: `fix(scope): <description> (closes #ID)`.
+          - Create/update a Pull Request from `agent-workspace` to `dev` with a detailed description of the fix and verification steps.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
@@ -232,7 +238,11 @@ jobs:
 
           ### **PHASE 1: ANALYSIS & SELECTION (Before Coding)**
           1.  **Context Loading**: Read `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and `package.json` to map dependencies.
-          2.  **Branch Management**: Create branch `standarizer-2` from `dev`. Switch if branch already created. Work exclusively on this branch.
+          2.  **Branch Management**: Use the shared branch `agent-workspace`.
+              - Always start by fetching all: `git fetch --all`.
+              - If `agent-workspace` exists (locally or on remote), switch to it and **pull** the latest changes: `git pull origin agent-workspace`.
+              - If it does not exist, create it from the current `dev` branch.
+              - This ensures all agents are synchronized on the same branch without constant conflicts from `dev`.
           3.  **Conflict Check**: Check `docs/task.md` or issue tracker to ensure no duplication of work.
           4.  **Selection Logic**: Explain WHY you selected the specific task. (e.g., "Blocking critical path", "High technical debt").
 
@@ -253,7 +263,7 @@ jobs:
               - **Commit Style**: MANDATORY usage of **Conventional Commits** (e.g., `fix(auth): handle null session`, `feat(ui): add dark mode toggle`).
               - **Description**: Include "Why" and "How" in the commit body.
           3.  **Pull Request**:
-              - Create/Update PR from `standarizer-2` to `dev`.
+              - Create/Update PR from `agent-workspace` to `dev`.
               - Title: Matches commit type.
               - Body: Summary of changes, Impact analysis, Verification steps.
 

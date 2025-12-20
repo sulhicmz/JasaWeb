@@ -86,7 +86,11 @@ jobs:
           - **Consistency**: Naming conventions, linter adherence, code patterns.
 
           **EXECUTION STEPS:**
-          1.  **Checkout**: Create branch `analyzer` from `dev`. Work exclusively on this branch.
+          1.  **Branch Management**: Use the shared branch `agent-workspace`.
+              - Always start by fetching all: `git fetch --all`.
+              - If `agent-workspace` exists (locally or on remote), switch to it and **pull** the latest changes: `git pull origin agent-workspace`.
+              - If it does not exist, create it from the current `dev` branch.
+              - This ensures all agents are synchronized on the same branch without constant conflicts from `dev`.
           2.  **Audit**: Read the code. Look for patterns, anti-patterns, technical debt, and risks.
           3.  **Verify**: Verify your audit by running `pnpm build && pnpm lint`.
           4.  **Report Generation (Target: `docs/evaluasi.md`)**:
@@ -109,8 +113,8 @@ jobs:
           - `evaluasi.md` is generated with strict, honest scoring and actionable insights.
           - `AGENTS.md` contains updated guidelines for future agents.
           - No functional code is touched.
-          - Commit and push to branch `analyzer` with message: `docs(audit): update evaluation report and agent guidelines`.
-          - Create or update a Pull Request from `analyzer` to `dev`.
+          - Commit and push to branch `agent-workspace` with message: `docs(audit): update evaluation report and agent guidelines`.
+          - **MANDATORY**: Create or update a Pull Request from `agent-workspace` to `dev`.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
