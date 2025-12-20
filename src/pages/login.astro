@@ -185,7 +185,7 @@ import Button from '../components/ui/Button.astro';
 
       if (!res.ok) {
         if (errorMsg) {
-          errorMsg.textContent = result.error || 'Login gagal';
+          errorMsg.textContent = (result as any).error || 'Login gagal';
           errorMsg.classList.add('show');
         }
         return;

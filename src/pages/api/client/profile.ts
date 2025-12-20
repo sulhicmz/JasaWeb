@@ -5,7 +5,7 @@
  */
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
-import { jsonResponse, errorResponse, handleApiError, parseBody, validateRequired } from '@/lib/api';
+import { jsonResponse, errorResponse, handleApiError, parseBody } from '@/lib/api';
 
 export const GET: APIRoute = async ({ locals }) => {
     try {
@@ -35,7 +35,7 @@ export const GET: APIRoute = async ({ locals }) => {
     }
 };
 
-export const PUT: APIRoute = async ({ locals }) => {
+export const PUT: APIRoute = async ({ request, locals }) => {
     try {
         const user = locals.user;
 
@@ -43,7 +43,7 @@ export const PUT: APIRoute = async ({ locals }) => {
             return errorResponse('Unauthorized', 401);
         }
 
-        const body = await parseBody<{ name?: string; phone?: string }>(locals.request);
+        const body = await parseBody<{ name?: string; phone?: string }>(request);
 
         if (!body) {
             return errorResponse('Request body tidak valid');

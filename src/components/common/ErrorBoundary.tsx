@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
     children?: ReactNode;
@@ -32,8 +32,8 @@ class ErrorBoundary extends Component<Props, State> {
 
     public render() {
         if (this.state.hasError) {
-            if (this.fallback) {
-                return this.fallback;
+            if (this.props.fallback) {
+                return this.props.fallback;
             }
 
             return (

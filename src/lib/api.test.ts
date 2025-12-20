@@ -11,7 +11,7 @@ describe('API Utilities', () => {
 
         it('should return error string when a field is missing', () => {
             const body = { name: 'John' };
-            const result = validateRequired(body, ['name', 'email']);
+            const result = validateRequired(body as any, ['name', 'email']);
             expect(result).toBe('email wajib diisi');
         });
     });
