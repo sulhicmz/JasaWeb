@@ -1,9 +1,6 @@
 ---
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
-import Button from '../../components/ui/Button.astro';
-import Badge from '../../components/ui/Badge.astro';
-import type { Invoice } from '../../lib/types';
 ---
 
 <PortalLayout title="Billing" currentPath="/dashboard/billing">
@@ -483,7 +480,6 @@ import type { Invoice } from '../../lib/types';
 
       if (data.invoices.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>Belum ada tagihan</p></div>';
-        return;
         return;
       }
 
