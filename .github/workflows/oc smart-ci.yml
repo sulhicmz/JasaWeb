@@ -122,6 +122,7 @@ jobs:
           3. **Verify**: Run `pnpm lint`, `pnpm test`, and `pnpm build` locally.
           4. **Final Gate**: If ANY check still fails, keep iterating until all pass.
           5. **Commit & Push**: Commit with `fix(ci): auto-resolve all check failures` and push to `agent-workspace`.
+          6. **Merge**: merge or set to automerge if all success and check passed.
 
           Constraints:
           - DO NOT compromise on quality. Fix the root cause.
