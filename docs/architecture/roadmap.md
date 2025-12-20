@@ -25,7 +25,7 @@
 - [x] Fix: ErrorBoundary component props access
 - [x] Fix: Rate limiting sliding window behavior → implement fixed window
 - [x] Add CSRF protection for authenticated routes
-- [ ] Expand test coverage to API routes and components
+- [x] Expand test coverage to API routes and components (45 tests passing)
 - [ ] Dashboard overview
 - [ ] Manage clients (CRUD)
 - [ ] Manage projects (status, URL, credentials)
