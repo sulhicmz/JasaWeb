@@ -281,21 +281,23 @@ export const POST: APIRoute = async ({ request }) => {
 - **Zero TypeScript Errors**: Full compilation passes with 0 errors and 0 warnings after type enhancement
 - **Impact**: Improved code maintainability, enhanced developer experience, reduced runtime errors
 
-**Current Quality Score**: **99/100** (Latest Audit: Dec 20, 2025 - Verified: 222/222 tests passing, Zero TS errors, Production-ready payment system, Enhanced type safety with 40% `any` reduction)
+**Current Quality Score**: **96/100** (Latest Audit: Dec 20, 2025 - Verified: 222/222 tests passing, Zero TS errors, Production-ready payment system, Comprehensive architecture evaluation completed)
 
 ---
 
-## 7. New Agent Guidelines (Latest Audit Findings)
+## 7. New Agent Guidelines (Latest Audit Findings - Dec 20, 2025)
 
 ### 🚨 Critical Warnings for All Agents
-- **TYPE SAFETY MANDATE**: ✅ RESOLVED - Comprehensive TypeScript interfaces implemented, `any` usage reduced by 27% in critical service files. Remaining 121 instances in test files and external lib interfaces are acceptable.
 - **ENVIRONMENT ACCESS ENFORCEMENT**: NEVER use `import.meta.env` in server-side code. Always use `locals.runtime.env` to prevent secret exposure to client builds.
 - **ERROR HANDLING STANDARDIZATION**: ALWAYS use `handleApiError()` utility from `src/lib/api.ts` for consistent error responses across all API endpoints.
+- **SERVICE ORGANIZATION**: When creating new services, follow proper domain organization. Use `src/services/domain/` structure instead of root-level service files.
 
 ### ⚠️ Medium Priority Guidelines
 - **Component Documentation**: All new UI components MUST include comprehensive JSDoc comments describing props, variants, and usage examples.
 - **Test Coverage Expansion**: When adding new features, ensure edge case testing for error boundaries and failure scenarios.
-- **Bundle Optimization**: Consider code splitting opportunities for admin vs client routes when adding large features.
+- **Integration Testing**: Add end-to-end tests for critical user flows (Registration → Order → Payment) when modifying core workflows.
+
+### ✅ Production Deployment Checklist
 
 ### ✅ Production Deployment Checklist
 Before any production deployment, verify:
