@@ -19,6 +19,7 @@
 - [ ] **PAYMENT**: QRIS flow implementation including invoice generation and idempotency.
 - [ ] **SECURITY**: Implement audit logging for sensitive admin actions.
 - [x] **STABILITY**: Implement environment variable startup validation.
+- [x] **PERFORMANCE**: Optimize Vite build configuration for Cloudflare Workers runtime.
 
 ## Medium Priority 🔄
 - [ ] **OPTIMIZATION**: Image optimization using Cloudflare Workers for template galleries.
