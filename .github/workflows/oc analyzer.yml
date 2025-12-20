@@ -57,21 +57,9 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
-      - name: Capture Context Logs
+      - name: Capture Context
         id: context
-        continue-on-error: true
         run: |
-          echo "=== Capturing context logs ==="
-          {
-            echo "BUILD_LOG<<EOF"
-            pnpm build 2>&1 | tail -100 || echo "Build not available"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
-          {
-            echo "LINT_LOG<<EOF"
-            pnpm lint 2>&1 | tail -50 || echo "Lint not available"
-            echo "EOF"
-          } >> $GITHUB_OUTPUT
           {
             echo "GIT_LOG<<EOF"
             git log --oneline -2
@@ -80,8 +68,6 @@ jobs:
 
       - name: Execute
         env:
-          BUILD_LOG: ${{ steps.context.outputs.BUILD_LOG }}
-          LINT_LOG: ${{ steps.context.outputs.LINT_LOG }}
           GIT_LOG: ${{ steps.context.outputs.GIT_LOG }}
         run: |
           opencode run "$(cat <<'PROMPT'
@@ -99,15 +85,8 @@ jobs:
           You have been summoned to evaluate the current state of the repository on the `dev` branch.
           Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
 
-          **LIVE CONTEXT (from CI):**
-          Recent commits:
+          **RECENT COMMITS:**
           $GIT_LOG
-
-          Build output (last 100 lines):
-          $BUILD_LOG
-
-          Lint output (last 50 lines):
-          $LINT_LOG
 
           **TASK SCOPE:**
           1.  **Read & Analyze:** Review `blueprint.md`, `docs/architecture/roadmap.md`, `AGENTS.md`, and the entire codebase.
