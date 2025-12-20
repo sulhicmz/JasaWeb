@@ -117,8 +117,8 @@ export const POST: APIRoute = async ({ request }) => {
 - **IMPORTANT**: Run `pnpm typecheck` before any commit - currently passes with 0 errors.
 - **NEVER** use `any` type. Use proper interfaces in `types.ts`.
 - **EXCEPTION**: Cloudflare Workers types use `any` due to missing type definitions. Add inline type aliases in service files.
-- **RATE LIMITING**: Current implementation has sliding window behavior. For production, consider fixed window or third-party rate limiting service.
-- **CSRF**: Always implement CSRF tokens for authenticated state-changing operations (POST, PUT, DELETE).
+- **RATE LIMITING**: Fixed window implementation now in `src/lib/rate-limit.ts` using timestamp-based keys for consistent window boundaries.
+- **CSRF**: Implemented CSRF protection for authenticated state-changing operations. Use `x-csrf-token` header and `jasaweb_csrf` cookie.
 ```
 
 ---

@@ -23,8 +23,8 @@
 ### Phase 4: Admin Panel (Week 4) ⏳
 - [x] Fix: Type system errors in middleware and API routes
 - [x] Fix: ErrorBoundary component props access
-- [ ] Fix: Rate limiting sliding window behavior → implement fixed window
-- [ ] Add CSRF protection for authenticated routes
+- [x] Fix: Rate limiting sliding window behavior → implement fixed window
+- [x] Add CSRF protection for authenticated routes
 - [ ] Expand test coverage to API routes and components
 - [ ] Dashboard overview
 - [ ] Manage clients (CRUD)
