@@ -159,7 +159,7 @@ const user = Astro.locals.user;
       const data = await res.json();
       
       if (profileMsg) {
-        profileMsg.textContent = data.message || data.error || 'Berhasil disimpan';
+        profileMsg.textContent = (data as any).message || (data as any).error || 'Berhasil disimpan';
         profileMsg.className = `form-message ${res.ok ? 'success' : 'error'}`;
       }
     } catch {
@@ -199,7 +199,7 @@ const user = Astro.locals.user;
       const data = await res.json();
       
       if (passwordMsg) {
-        passwordMsg.textContent = data.message || data.error || 'Password diubah';
+        passwordMsg.textContent = (data as any).message || (data as any).error || 'Password diubah';
         passwordMsg.className = `form-message ${res.ok ? 'success' : 'error'}`;
       }
 

@@ -5,8 +5,9 @@ import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { verifyPassword, hashPassword } from '@/lib/auth';
 import { jsonResponse, errorResponse, handleApiError, parseBody, validateRequired } from '@/lib/api';
+import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
 
-export const PUT: APIRoute = async ({ locals }) => {
+export const PUT: APIRoute = async ({ request, locals }) => {
     try {
         const user = locals.user;
 
@@ -14,13 +15,22 @@ export const PUT: APIRoute = async ({ locals }) => {
             return errorResponse('Unauthorized', 401);
         }
 
-        const body = await parseBody<{ currentPassword: string; newPassword: string }>(locals.request);
+        // Rate limiting for password change
+        const rateLimit = await checkRateLimit(
+            request,
+            locals.runtime.env.KV,
+            'password-change',
+            RateLimits.auth
+        );
+        if (rateLimit) return rateLimit;
+
+        const body = await parseBody<{ currentPassword: string; newPassword: string }>(request);
 
         if (!body) {
             return errorResponse('Request body tidak valid');
         }
 
-        const validationError = validateRequired(body, ['currentPassword', 'newPassword']);
+        const validationError = validateRequired(body as any, ['currentPassword', 'newPassword']);
         if (validationError) {
             return errorResponse(validationError);
         }

@@ -16,12 +16,12 @@ import {
 } from '@/lib/api';
 import type { RegisterForm } from '@/lib/types';
 
-export const POST: APIRoute = async ({ locals }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
     try {
         // Rate Limiting
         if (locals.runtime?.env?.CACHE) {
             const limitResult = await checkRateLimit(
-                locals.request,
+                request,
                 locals.runtime.env.CACHE,
                 'register',
                 RateLimits.auth
@@ -29,14 +29,14 @@ export const POST: APIRoute = async ({ locals }) => {
             if (limitResult) return limitResult;
         }
 
-        const body = await parseBody<RegisterForm>(locals.request);
+        const body = await parseBody<RegisterForm>(request);
 
         if (!body) {
             return errorResponse('Request body tidak valid');
         }
 
         // Validate required fields
-        const validationError = validateRequired(body, ['name', 'email', 'password']);
+        const validationError = validateRequired(body as any, ['name', 'email', 'password']);
         if (validationError) {
             return errorResponse(validationError);
         }

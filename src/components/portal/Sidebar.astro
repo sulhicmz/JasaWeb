@@ -3,6 +3,8 @@
  * Portal Sidebar Component
  * Navigation for client dashboard
  */
+import { siteConfig } from '@/lib/config';
+
 export interface Props {
   currentPath: string;
 }
@@ -20,7 +22,7 @@ const navItems = [
 <aside class="sidebar">
   <div class="sidebar-header">
     <a href="/" class="logo">
-      <span class="gradient-text">JasaWeb</span>
+      <span class="gradient-text">{siteConfig.name}</span>
     </a>
   </div>
 
