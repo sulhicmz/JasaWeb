@@ -18,11 +18,11 @@
 
 ## Remaining Tasks 🔄
 - [x] **HIGH**: Fix rate limiting sliding window implementation → fixed window
-- [x] **HIGH**: Add CSRF protection for authenticated routes
+- [x] **HIGH**: Add CSRF protection for authenticated routes  
 - [x] **HIGH**: Expand test coverage to API routes and components (45 tests passing - authentication + client dashboard projects)
+- [ ] **HIGH**: Implement admin CRUD endpoints (/api/admin/*)
+- [ ] **HIGH**: Create admin dashboard components
+- [ ] **HIGH**: Integrate Midtrans payment SDK
 - [ ] **MEDIUM**: Add image optimization for Cloudflare Workers
 - [ ] **MEDIUM**: Implement API logging and monitoring
-- [ ] **LOW**: Add performance monitoring
-- [ ] **MEDIUM**: Add image optimization for Cloudflare Workers
-- [ ] **MEDIUM**: Implement API logging and monitoring
-- [ ] **LOW**: Add performance monitoring
+- [ ] **LOW**: Add performance monitoring dashboard

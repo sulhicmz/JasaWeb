@@ -26,18 +26,21 @@
 - [x] Fix: Rate limiting sliding window behavior → implement fixed window
 - [x] Add CSRF protection for authenticated routes
 - [x] Expand test coverage to API routes and components (45 tests passing)
-- [ ] Dashboard overview
-- [ ] Manage clients (CRUD)
-- [ ] Manage projects (status, URL, credentials)
-- [ ] Manage blog (CRUD)
-- [ ] Manage pages (CMS)
-- [ ] Manage templates (CRUD)
+- [ ] **HIGH**: Implement admin authentication middleware
+- [ ] **HIGH**: Create admin dashboard overview endpoint (/api/admin/dashboard)
+- [ ] **HIGH**: Implement client management CRUD (/api/admin/users)
+- [ ] **MEDIUM**: Add project management API (/api/admin/projects)
+- [ ] **MEDIUM**: Create blog post CRUD operations (/api/admin/posts)
+- [ ] **MEDIUM**: Implement CMS page management (/api/admin/pages)
+- [ ] **LOW**: Template management CRUD (/api/admin/templates)
 
 ### Phase 5: Payment (Week 5) ❌
-- [ ] Midtrans integration
-- [ ] QRIS payment
-- [ ] Webhook handler
-- [ ] Invoice management
+- [ ] **HIGH**: Midtrans SDK integration and configuration
+- [ ] **HIGH**: QRIS payment flow implementation
+- [ ] **HIGH**: Webhook signature validation handler
+- [ ] **HIGH**: Invoice creation and status tracking
+- [ ] **MEDIUM**: Payment history and receipt generation
+- [ ] **LOW**: Payment retry and failure handling
 
 ### Phase 6: Testing & Launch (Week 6) ❌
 - [x] Fix TypeScript type system (0 errors)
