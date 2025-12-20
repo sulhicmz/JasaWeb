@@ -5,6 +5,7 @@
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
+import { parseQuery, createPrismaQuery, createResponse } from '@/lib/pagination';
 
 export const GET: APIRoute = async ({ request, locals }) => {
     try {
@@ -14,45 +15,48 @@ export const GET: APIRoute = async ({ request, locals }) => {
             return errorResponse('Unauthorized', 401);
         }
 
-        // Parse query parameters
+        // Parse query parameters using pagination service
         const url = new URL(request.url);
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '10');
-        const status = url.searchParams.get('status') as string || undefined;
-        const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
-        const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
-
-        // Validate pagination parameters
-        if (page < 1) return errorResponse('Page harus lebih dari 0');
-        if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
-
-        // Validate sort fields
-        const allowedSortFields = ['createdAt', 'amount', 'paidAt', 'status'];
-        if (!allowedSortFields.includes(sortBy)) {
-            return errorResponse('Sort field tidak valid');
-        }
+        const query = parseQuery(url, {
+            maxLimit: 50,
+            defaultSortBy: 'createdAt',
+            defaultSortOrder: 'desc',
+            allowedSortFields: ['createdAt', 'amount', 'paidAt', 'status'],
+            filters: {
+                project: {
+                    userId: user.id
+                }
+            }
+        });
 
         // Validate status if provided
+        const status = query.filters.status;
         if (status && !['unpaid', 'paid'].includes(status)) {
             return errorResponse('Status harus "unpaid" atau "paid"');
         }
 
         const prisma = getPrisma(locals);
 
-        // Build where clause - get invoices for user's projects only
-        const where: any = {
-            project: {
-                userId: user.id
-            }
-        };
-        if (status) where.status = status;
+        // Add search if provided (search in project name)
+        let where = { ...query.filters };
+        if (query.search) {
+            where = {
+                ...where,
+                project: {
+                    ...where.project,
+                    name: { contains: query.search, mode: 'insensitive' as const }
+                }
+            };
+        }
+
+        // Create Prisma query with pagination
+        const prismaQuery = createPrismaQuery(query.pagination, query.sort, where);
 
         // Get total count and invoices in parallel
         const [total, invoices] = await Promise.all([
             prisma.invoice.count({ where }),
             prisma.invoice.findMany({
-                where,
-                orderBy: { [sortBy]: sortOrder },
+                ...prismaQuery,
                 select: {
                     id: true,
                     projectId: true,
@@ -71,23 +75,15 @@ export const GET: APIRoute = async ({ request, locals }) => {
                         },
                     },
                 },
-                skip: (page - 1) * limit,
-                take: limit,
             }),
         ]);
 
-        const totalPages = Math.ceil(total / limit);
+        // Create paginated response
+        const response = createResponse(invoices, total, query.pagination);
 
         return jsonResponse({
-            invoices,
-            pagination: {
-                total,
-                page,
-                limit,
-                totalPages,
-                hasNext: page < totalPages,
-                hasPrev: page > 1,
-            },
+            invoices: response.data,
+            pagination: response.pagination,
         });
     } catch (error) {
         return handleApiError(error);

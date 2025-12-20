@@ -5,6 +5,7 @@
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
+import { parseQuery, createPrismaQuery, createResponse } from '@/lib/pagination';
 
 export const GET: APIRoute = async ({ request, locals }) => {
     try {
@@ -14,38 +15,32 @@ export const GET: APIRoute = async ({ request, locals }) => {
             return errorResponse('Unauthorized', 401);
         }
 
-        // Parse query parameters
+        // Parse query parameters using pagination service
         const url = new URL(request.url);
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '10');
-        const status = url.searchParams.get('status') as string || undefined;
-        const type = url.searchParams.get('type') as string || undefined;
-        const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
-        const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
-
-        // Validate pagination parameters
-        if (page < 1) return errorResponse('Page harus lebih dari 0');
-        if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
-
-        // Validate sort fields
-        const allowedSortFields = ['createdAt', 'updatedAt', 'name', 'status', 'type'];
-        if (!allowedSortFields.includes(sortBy)) {
-            return errorResponse('Sort field tidak valid');
-        }
+        const query = parseQuery(url, {
+            maxLimit: 50,
+            defaultSortBy: 'createdAt',
+            defaultSortOrder: 'desc',
+            allowedSortFields: ['createdAt', 'updatedAt', 'name', 'status', 'type'],
+            filters: { userId: user.id }
+        });
 
         const prisma = getPrisma(locals);
 
-        // Build where clause
-        const where: any = { userId: user.id };
-        if (status) where.status = status;
-        if (type) where.type = type;
+        // Add search if provided
+        const where = query.filters;
+        const whereWithSearch = query.search 
+            ? { ...where, name: { contains: query.search, mode: 'insensitive' as const } }
+            : where;
+
+        // Create Prisma query with pagination
+        const prismaQuery = createPrismaQuery(query.pagination, query.sort, whereWithSearch);
 
         // Get total count and projects in parallel
         const [total, projects] = await Promise.all([
-            prisma.project.count({ where }),
+            prisma.project.count({ where: whereWithSearch }),
             prisma.project.findMany({
-                where,
-                orderBy: { [sortBy]: sortOrder },
+                ...prismaQuery,
                 select: {
                     id: true,
                     name: true,
@@ -55,23 +50,15 @@ export const GET: APIRoute = async ({ request, locals }) => {
                     createdAt: true,
                     updatedAt: true,
                 },
-                skip: (page - 1) * limit,
-                take: limit,
             }),
         ]);
 
-        const totalPages = Math.ceil(total / limit);
+        // Create paginated response
+        const response = createResponse(projects, total, query.pagination);
 
         return jsonResponse({
-            projects,
-            pagination: {
-                total,
-                page,
-                limit,
-                totalPages,
-                hasNext: page < totalPages,
-                hasPrev: page > 1,
-            },
+            projects: response.data,
+            pagination: response.pagination,
         });
     } catch (error) {
         return handleApiError(error);

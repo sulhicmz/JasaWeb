@@ -50,7 +50,9 @@ export default defineConfig({
                 '@prisma/adapter-pg', 
                 'pg',
                 'crypto',
-                'bcryptjs'
+                'bcryptjs',
+                'querystring',
+                'https'
             ],
         },
         optimizeDeps: {
