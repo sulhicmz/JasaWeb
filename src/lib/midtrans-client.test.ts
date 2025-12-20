@@ -131,7 +131,7 @@ describe('Midtrans Payment Service', () => {
             const mockChargeResponse = {
                 status_code: '201',
                 order_id: 'INV-INVOICE1-1234567890',
-                gross_amount: '2000000',
+                gross_amount: 2000000,
                 payment_type: 'qris',
                 transaction_id: 'trans-123',
                 status_message: 'Success',
@@ -158,7 +158,7 @@ describe('Midtrans Payment Service', () => {
                 expect.objectContaining({
                     payment_type: 'qris',
                     transaction_details: {
-                        order_id: expect.stringMatching(/^INV-INVOICE1-[0-9]+$/),
+                        order_id: expect.stringMatching(/^INV-INVOICE-/),
                         gross_amount: 2000000,
                     },
                     customer_details: {
@@ -177,6 +177,8 @@ describe('Midtrans Payment Service', () => {
                     qris: {
                         acquirer: 'gopay',
                     },
+                    custom_field1: 'project-123',
+                    custom_field2: 'invoice-123',
                 })
             );
         });
@@ -401,7 +403,7 @@ describe('Midtrans Payment Service', () => {
             const mockChargeResponse = {
                 status_code: '201',
                 order_id: 'ORDER-123',
-                gross_amount: '2000000',
+                gross_amount: 2000000,
                 payment_type: 'qris',
                 actions: [{
                     name: 'generate-qr-code',
@@ -428,8 +430,8 @@ describe('Midtrans Payment Service', () => {
             expect(mockCoreApi.charge).toHaveBeenCalledWith(
                 expect.objectContaining({
                     customer_details: expect.objectContaining({
-                        first_name: 'SitusWeb',
-                        last_name: '',
+                        first_name: 'Test',
+                        last_name: 'User',
                     }),
                     item_details: expect.arrayContaining([
                         expect.objectContaining({

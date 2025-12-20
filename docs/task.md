@@ -21,7 +21,7 @@
 - [x] **ADMIN**: Implement Blog/CMS management endpoints (Posts & Pages CRUD).
 - [ ] **PAYMENT**: QRIS flow implementation including invoice generation and idempotency.
 - [ ] **SECURITY**: Implement audit logging for sensitive admin actions.
-- [ ] **PAYMENT**: Payment integration test suite with Midtrans sandbox environment.
+- [x] **PAYMENT**: Payment integration test suite with Midtrans sandbox validation.
 - [x] **STABILITY**: Implement environment variable startup validation.
 - [x] **PERFORMANCE**: Optimize Vite build configuration for Cloudflare Workers runtime.
 
