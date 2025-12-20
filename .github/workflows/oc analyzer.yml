@@ -3,12 +3,13 @@ name: oc analyzer
 # Continuous Cycle: Analyzer → PR → Standarizer → PR → Analyzer
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */3 * * *'  # Every 3 hours (initial trigger)
-  workflow_run:
-    workflows: ["oc standarizer"]
-    types: [completed]
+  push:
     branches: [dev]
+    paths-ignore:
+      - 'docs/**'
+      - '.github/workflows/**'
+      - 'README.md'
+      - 'AGENTS.md'
 
 permissions:
   contents: write
@@ -119,7 +120,3 @@ jobs:
           )" \
             --model iflowcn/glm-4.6 \
             --share false \
-      - name: Trigger Standarizer
-        if: success()
-        run: |
-          gh workflow run "oc standarizer.yml"
