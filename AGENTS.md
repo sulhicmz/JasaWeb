@@ -126,6 +126,7 @@ export const POST: APIRoute = async ({ request }) => {
 - **EXCEPTION**: Cloudflare Workers types use `any` due to missing type definitions. Add inline type aliases in service files.
 - **RATE LIMITING**: Fixed window implementation now in `src/lib/rate-limit.ts` using timestamp-based keys for consistent window boundaries.
 - **CSRF**: Implemented CSRF protection for authenticated state-changing operations. Use `x-csrf-token` header and `jasaweb_csrf` cookie.
+- **LINT**: ESLint configuration implemented with TypeScript and React rules. Run `pnpm lint` to check code quality.
 ```
 
 ---
