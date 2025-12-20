@@ -18,6 +18,7 @@
         "db:migrate": "prisma migrate dev",
         "db:studio": "prisma studio",
         "test": "vitest run",
+        "prepare": "prisma generate",
         "preinstall": "npx only-allow pnpm"
     },
     "dependencies": {
