@@ -177,8 +177,9 @@ jobs:
           - Changes are clearly traceable, documented, and aligned with roadmap/blueprint
           - pull request created or updated (MANDATORY)
           PROMPT
-          )" --model iflowcn/glm-4.6 --share false
-
+          )"
+          --model iflowcn/glm-4.6 \
+          --share false \
       - name: Run OpenCode1
         id: run_oc1
         timeout-minutes: 60

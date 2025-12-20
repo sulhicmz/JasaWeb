@@ -151,8 +151,9 @@ jobs:
           - Commit and push to branch `analyzer` with message: `docs(audit): update evaluation report and agent guidelines`.
           - Create or update a Pull Request from `analyzer` to `dev`.
           PROMPT
-          )" --model iflowcn/glm-4.6 --share false
-
+          )"
+          --model iflowcn/glm-4.6 \
+          --share false \
       - name: Trigger Standarizer
         if: success()
         run: |
