@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   ci:
-    name: CI Check
+    name: Smart CI
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
 

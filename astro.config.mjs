@@ -17,7 +17,15 @@ export default defineConfig({
             },
         },
         ssr: {
-            external: ['@prisma/adapter-pg', 'pg'],
+            external: [
+                '@prisma/adapter-pg', 
+                'pg',
+                'crypto',
+                'bcryptjs'
+            ],
+        },
+        optimizeDeps: {
+            exclude: ['@prisma/client'],
         },
     },
 });

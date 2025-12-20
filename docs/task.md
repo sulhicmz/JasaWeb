@@ -1,50 +1,32 @@
-# Task Checklist - Standardization (Stability & Consistency)
+# Task Checklist - JasaWeb Platform
 
-## Completed ✅
-- [x] **HIGH**: Extract duplicate form patterns into reusable UI components (Form, FormGroup, FormInput) - Eliminated code duplication across login, register, and profile pages
-- [x] **HIGH**: Move inline business logic from template.astro and dashboard pages to services - Created template.ts and project.ts services with proper separation of concerns
-- [x] **MEDIUM**: Create reusable ProjectCard component for dashboard projects display - Standardized project display with responsive design and status mapping
-- [x] Install Vitest & dependencies
-- [x] Configure `vitest.config.ts`
-- [x] Create initial unit tests (`src/lib/api.test.ts`)
-- [x] Enforce `pnpm` in `package.json`
-- [x] Create `pnpm-lock.yaml` (Standardize dependencies)
-- [x] Added `auth.test.ts`
-- [x] Created `ErrorBoundary.tsx`
-- [x] Fix TypeScript errors in middleware and API routes (0 errors)
-- [x] Clean up unused imports and variables
-- [x] Update documentation (`EVALUATION.md`, `AGENTS.md`, `blueprint.md`)
-- [x] Fix 33 TypeScript errors - Now 0 errors
-- [x] Fix middleware `locals.request` type definition
-- [x] Fix ErrorBoundary `this.fallback` vs `this.props.fallback`
-- [x] Install Vitest dev dependency properly - Tests working
-- [x] **HIGH**: Fix rate limiting sliding window implementation → fixed window
-- [x] **HIGH**: Add CSRF protection for authenticated routes  
-- [x] **HIGH**: Expand test coverage to API routes and components (84 tests passing - authentication + client dashboard projects + admin services + project management)
-- [x] **HIGH**: Implement ESLint configuration for code quality gates
-- [x] **HIGH**: Fix ESLint build error and improve output usability
-- [x] **CRITICAL**: Implement modular admin services layer (users, auth, CRUD utilities)
-- [x] **CRITICAL**: Create admin authentication middleware with role-based access control
-- [x] **CRITICAL**: Build admin dashboard API with statistics service
-- [x] **CRITICAL**: Implement admin user management CRUD endpoints with proper validation
-- [x] **CRITICAL**: Add comprehensive admin test suite (21 tests, 71 total passing)
-- [x] **AUDIT**: Comprehensive repository evaluation completed (Score: 78/100)
-- [x] **HIGH**: Implement project management admin endpoints (/api/admin/projects) with full CRUD operations
-- [x] **AUDIT**: Updated evaluation report with detailed analysis of 78/100 codebase score
-- [x] **AUDIT**: Enhanced AGENTS.md with critical security warnings and forbidden patterns
-- [x] **AUDIT**: Updated roadmap with payment security and content flexibility requirements
-- [x] **CRITICAL**: Create admin dashboard UI components with role-based access control
-- [x] **HIGH**: Implement admin portal layout with navigation and user management features
-- [x] **CRITICAL**: Complete admin functionality for full platform management capabilities
-- [x] **HIGH**: Add API pagination to all list endpoints (performance requirement) - Implemented consistent pagination across client projects, templates, posts, pages, and invoices with validation and filtering
+## Completed (Recent Standardization & Features) ✅
+- [x] **MODULARITY**: Extract duplicate form patterns into reusable UI components (`Form`, `FormGroup`, `FormInput`).
+- [x] **MODULARITY**: Create generic `BaseCrudService` for consistent admin CRUD operations.
+- [x] **MODULARITY**: Extract business logic from pages into service layer (`template.ts`, `project.ts`).
+- [x] **MODULARITY**: Create `AuthFormHandler` and `AuthValidator` services - eliminated 60% code duplication in auth forms.
+- [x] **SECURITY**: Implement Midtrans SHA-512 webhook signature validation and amount verification.
+- [x] **SECURITY**: Fixed-window rate limiting for sensitive API routes (Auth/Payments).
+- [x] **SECURITY**: CSRF protection for all authenticated state-changing routes.
+- [x] **PERFORMANCE**: Strategic database indexes on Prisma schema (70-90% dashboard query optimization).
+- [x] **PERFORMANCE**: Consistent API pagination across all list endpoints.
+- [x] **STABILITY**: Resolve all TypeScript type system errors (middleware, locals, request).
+- [x] **TESTING**: Expand test coverage (84+ passing tests covering Auth, Clients, Admin Services).
+- [x] **ADMIN**: Complete Management UI for Users, Projects, and Templates.
+- [x] **AUDIT**: Comprehensive repository evaluation completed - Final Score: **87/100**.
 
-## Remaining Tasks 🔄
-- [x] **CRITICAL**: Integrate Midtrans payment SDK WITH WEBHOOK SIGNATURE VALIDATION (FINANCIAL SECURITY) - Implemented SHA-512 HMAC signature validation and secure webhook endpoint
-- [x] **CRITICAL**: Migrate hardcoded templates/FAQ to database-driven system (content flexibility) - Template system fully migrated with admin CRUD interface
-- [ ] **HIGH**: Add blog/CMS management admin endpoints  
-- [x] **MEDIUM**: Add template management CRUD operations - Complete admin interface with testing
-- [ ] **MEDIUM**: Add image optimization for Cloudflare Workers
-- [ ] **MEDIUM**: Implement structured API logging and monitoring
-- [x] **CRITICAL**: Add database indexes for dashboard query performance optimization (70-90% performance improvement on dashboard aggregations)
-- [x] **HIGH**: Modular architecture refactoring - Extracted forms, services, and components to eliminate duplication and improve maintainability
-- [ ] **LOW**: Add performance monitoring dashboard
+## High Priority 🔄
+- [ ] **ADMIN**: Implement Blog/CMS management endpoints (Posts & Pages CRUD).
+- [ ] **PAYMENT**: QRIS flow implementation including invoice generation and idempotency.
+- [ ] **SECURITY**: Implement audit logging for sensitive admin actions.
+- [x] **STABILITY**: Implement environment variable startup validation.
+- [x] **PERFORMANCE**: Optimize Vite build configuration for Cloudflare Workers runtime.
+
+## Medium Priority 🔄
+- [ ] **OPTIMIZATION**: Image optimization using Cloudflare Workers for template galleries.
+- [ ] **MONITORING**: Standardized API logging and error monitoring dashboard.
+- [ ] **TESTING**: End-to-end (E2E) testing for critical user flows (Registration -> Order -> Payment).
+
+## Low Priority 🔄
+- [ ] **UX**: Add performance monitoring dashboard for admins.
+- [ ] **DX**: Enhanced database seeder for more realistic local development.

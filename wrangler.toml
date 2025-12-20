@@ -2,6 +2,19 @@ name = "jasaweb"
 main = "dist/_worker.js"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
+compatibility_date = "2024-12-20"
+
+# Session KV binding for authentication
+[[kv_namespaces]]
+binding = "SESSION"
+id = "YOUR_SESSION_KV_ID"
+
+# Environment bindings for Cloudflare Pages Functions
+[env.production]
+name = "jasaweb-prod"
+
+[env.production.vars]
+NODE_ENV = "production"
 
 # Hyperdrive - Neon PostgreSQL connection pooling
 [[hyperdrive]]
