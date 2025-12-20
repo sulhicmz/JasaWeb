@@ -3,13 +3,13 @@ name: oc smart-ci
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["oc standarizer"]
+    workflows: ["oc standarizer", "CI Check"]
     types: [completed]
-    branches: [dev]
 
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 concurrency:
   group: oc-agent
@@ -20,6 +20,11 @@ jobs:
     name: Smart CI
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
+    # Skip if triggered by CI Check that passed (only run for failures)
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.name == 'oc standarizer' ||
+      (github.event.workflow_run.name == 'CI Check' && github.event.workflow_run.conclusion == 'failure')
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}

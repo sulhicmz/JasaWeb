@@ -1,0 +1,86 @@
+name: CI Check
+
+on:
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: oc-agent
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Build Check
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        run: pnpm lint
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: pnpm test --if-present
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: pnpm build
+
+      - name: Check Results
+        run: |
+          if [[ "${{ steps.lint.outcome }}" == "failure" || "${{ steps.test.outcome }}" == "failure" || "${{ steps.build.outcome }}" == "failure" ]]; then
+            echo "❌ CI Check failed"
+            echo "  Lint: ${{ steps.lint.outcome }}"
+            echo "  Test: ${{ steps.test.outcome }}"
+            echo "  Build: ${{ steps.build.outcome }}"
+            echo "CHECKS_FAILED=true" >> $GITHUB_ENV
+          else
+            echo "✅ All checks passed"
+          fi
+
+      - name: Trigger oc smart-ci
+        if: env.CHECKS_FAILED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo "🚀 Triggering oc smart-ci to auto-fix..."
+          gh workflow run "oc smart-ci.yml" --ref ${{ github.head_ref || github.ref_name }}
+
+      - name: Fail if checks failed
+        if: env.CHECKS_FAILED == 'true'
+        run: exit 1
