@@ -3,6 +3,7 @@ import { jsonResponse, errorResponse } from '@/lib/api';
 import { validateMidtransSignature, parseMidtransWebhook, MIDTRANS_STATUS_MAP } from '@/lib/midtrans';
 import { createPrismaClient } from '@/lib/prisma';
 import type { PrismaClient } from '@prisma/client';
+import { AuditLogger } from '@/lib/audit-middleware';
 
 /**
  * Midtrans webhook endpoint for payment notifications
@@ -51,7 +52,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Process valid webhook
-    return await processPaymentNotification(prisma, payload);
+    return await processPaymentNotification(prisma, payload, request, locals);
     
   } catch (error) {
     console.error('Webhook processing error:', error);
@@ -67,7 +68,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
  */
 async function processPaymentNotification(
   prisma: PrismaClient, 
-  payload: any
+  payload: any,
+  request: Request,
+  locals: App.Locals
 ) {
   const { order_id, transaction_status, gross_amount } = payload;
   
@@ -95,7 +98,15 @@ async function processPaymentNotification(
     return errorResponse('Amount validation failed', 400);
   }
 
-  // Update invoice status (idempotent operation)
+  // Validate amount matches (prevent tampering)
+  if (parseFloat(gross_amount) !== Number(invoice.amount)) {
+    console.error(`Amount mismatch for order ${order_id}: expected ${invoice.amount}, got ${gross_amount}`);
+    return errorResponse('Amount validation failed', 400);
+  }
+
+// Update invoice status (idempotent operation)
+  const oldStatus = invoice.status;
+  const oldProjectStatus = invoice.project.status;
   await prisma.invoice.update({
     where: { id: invoice.id },
     data: {
@@ -106,16 +117,35 @@ async function processPaymentNotification(
     }
   });
 
+  let newProjectStatus = oldProjectStatus;
   // If payment is completed, update project status
   if (mappedStatus === 'paid' && invoice.project.status === 'pending_payment') {
     await prisma.project.update({
       where: { id: invoice.projectId },
       data: { status: 'in_progress' }
     });
+    newProjectStatus = 'in_progress';
   }
 
-  // Log successful processing (audit trail)
-  console.log(`Payment processed: order ${order_id}, status ${mappedStatus}, invoice ${invoice.id}`);
+  // Log successful processing with detailed audit trail
+  try {
+    await AuditLogger.logPayment(locals, request, {
+      action: mappedStatus === 'paid' ? 'PAYMENT_SUCCESS' : 'PAYMENT_FAILED',
+      resourceId: invoice.id,
+      oldValues: {
+        status: oldStatus,
+        projectStatus: oldProjectStatus
+      },
+      newValues: {
+        status: mappedStatus,
+        projectStatus: newProjectStatus,
+        paidAt: mappedStatus === 'paid' ? new Date() : null
+      }
+    });
+  } catch (auditError) {
+    console.error('Failed to log payment audit:', auditError);
+    // Don't fail the webhook if audit logging fails
+  }
 
   return jsonResponse({
     status: 'success',

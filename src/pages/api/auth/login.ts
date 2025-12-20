@@ -14,6 +14,7 @@ import {
     parseBody
 } from '@/lib/api';
 import type { LoginForm } from '@/lib/types';
+import { AuditLogger } from '@/lib/audit-middleware';
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
     try {
@@ -73,6 +74,11 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
         // Set auth cookie
         const isProduction = env.NODE_ENV === 'production';
         cookies.set(AUTH_COOKIE, token, getAuthCookieOptions(isProduction));
+
+        // Log login (especially for admin users)
+        if (user.role === 'admin') {
+            await AuditLogger.logAuth(locals, request, 'LOGIN');
+        }
 
         return jsonResponse({
             message: 'Login berhasil',
