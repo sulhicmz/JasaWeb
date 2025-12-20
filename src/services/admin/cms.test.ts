@@ -178,4 +178,16 @@ describe('CmsService', () => {
             expect(result).toEqual(mockPage);
         });
     });
+
+    describe('delete', () => {
+        it('should delete page by id', async () => {
+            mockPrisma.page.delete.mockResolvedValue(undefined);
+
+            await cmsService.delete('1');
+
+            expect(mockPrisma.page.delete).toHaveBeenCalledWith({
+                where: { id: '1' }
+            });
+        });
+    });
 });

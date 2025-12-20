@@ -371,41 +371,6 @@ export const pricingTiers: PricingTier[] = [
 ];
 
 // ==============================================
-// FAQ
-// ==============================================
-export interface FAQItem {
-    question: string;
-    answer: string;
-}
-
-export const faqs: FAQItem[] = [
-    { question: 'Berapa lama waktu pengerjaan?', answer: 'Pengerjaan memakan waktu 7-14 hari kerja tergantung kompleksitas project.' },
-    { question: 'Apakah termasuk hosting dan domain?', answer: 'Ya, semua paket sudah termasuk hosting 1 tahun dan domain .com gratis.' },
-    { question: 'Bagaimana cara pembayaran?', answer: 'Pembayaran dilakukan via transfer bank atau QRIS. DP 50% di awal, pelunasan setelah selesai.' },
-    { question: 'Apakah ada garansi?', answer: 'Ya, kami memberikan garansi bug fix gratis selama masa support berlaku.' },
-];
-
-// ==============================================
-// TEMPLATES (Static - will be DB later)
-// ==============================================
-export interface TemplateItem {
-    id: string;
-    name: string;
-    category: ServiceId;
-    imageUrl: string;
-    demoUrl: string;
-}
-
-export const templates: TemplateItem[] = [
-    { id: '1', name: 'EduPrime', category: 'sekolah', imageUrl: '/templates/eduprime.jpg', demoUrl: '#' },
-    { id: '2', name: 'SchoolHub', category: 'sekolah', imageUrl: '/templates/schoolhub.jpg', demoUrl: '#' },
-    { id: '3', name: 'NewsFlow', category: 'berita', imageUrl: '/templates/newsflow.jpg', demoUrl: '#' },
-    { id: '4', name: 'MediaPulse', category: 'berita', imageUrl: '/templates/mediapulse.jpg', demoUrl: '#' },
-    { id: '5', name: 'CorporateX', category: 'company', imageUrl: '/templates/corporatex.jpg', demoUrl: '#' },
-    { id: '6', name: 'BrandPro', category: 'company', imageUrl: '/templates/brandpro.jpg', demoUrl: '#' },
-];
-
-// ==============================================
 // UTILITIES
 // ==============================================
 export function formatPrice(amount: number): string {
