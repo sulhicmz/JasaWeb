@@ -3,7 +3,7 @@
  */
 
 // Re-export config types
-export type { ServiceId, ServiceConfig, ServiceFeature, PricingTier, FAQItem, TemplateItem } from './config';
+export type { ServiceId, ServiceConfig, ServiceFeature, PricingTier } from './config';
 
 // ==============================================
 // API TYPES

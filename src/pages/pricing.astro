@@ -1,14 +1,29 @@
 ---
 /**
  * Pricing Page
- * REFACTORED: Uses PageLayout, config.ts, and UI components per AGENTS.md
+ * REFACTORED: Database-driven FAQs with PageLayout and UI components per AGENTS.md
  */
 import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import Badge from '../components/ui/Badge.astro';
-import { pricingTiers, faqs, type PricingTier, type FAQItem } from '../lib/config';
+import { pricingTiers, type PricingTier } from '../lib/config';
+import { getPrisma } from '../lib/prisma';
+
+// Fetch FAQs from database
+const prisma = getPrisma({} as any);
+const faqs = await prisma.faq.findMany({
+  select: {
+    id: true,
+    question: true,
+    answer: true,
+    sortOrder: true,
+    isActive: true,
+  },
+  where: { isActive: true },
+  orderBy: { sortOrder: 'asc' }
+});
 ---
 
 <PageLayout title="Harga" description="Pilih paket harga pembuatan website sesuai kebutuhan Anda" currentPath="/pricing">
@@ -50,7 +65,7 @@ import { pricingTiers, faqs, type PricingTier, type FAQItem } from '../lib/confi
   <Section spacing="lg">
     <h2 class="section-title">FAQ</h2>
     <div class="faq-grid">
-      {faqs.map((faq: FAQItem) => (
+      {faqs.map((faq) => (
         <Card padding="md">
           <h3>{faq.question}</h3>
           <p>{faq.answer}</p>

@@ -92,7 +92,7 @@ src/
 - **CRITICAL PAYMENT SECURITY**: webhook endpoints MUST validate Midtrans signatures before processing payment notifications.
 - **QUERY OPTIMIZATION**: Dashboard aggregation queries MUST include proper database indexes for performance.
 - **CONTENT FLEXIBILITY**: Avoid hardcoding templates, FAQ, or other dynamic content in config.ts - use database-driven approach.
-- **CRITICAL CONTENT VIOLATION**: Current codebase violates DB-driven approach with hardcoded templates/FAQ in `config.ts:381-406`. PRIORITY FIX REQUIRED before any new features.
+- **CRITICAL CONTENT VIOLATION**: RESOLVED FAQ violation. Templates still hardcoded in `config.ts` - remaining violation requires database-driven approach.
 
 ### ⚠️ Critical Security Warnings
 - **PAYMENT INTEGRATION**: Any agent working on Midtrans integration MUST implement webhook signature validation BEFORE processing any payment notifications. Failure to do so creates critical financial vulnerability.

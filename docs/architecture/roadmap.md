@@ -45,8 +45,8 @@
 - [ ] **HIGH**: QRIS payment flow implementation
 - [ ] **HIGH**: Invoice creation and status tracking with idempotency
 - [x] **HIGH**: Template database schema implemented
-- [ ] **CRITICAL**: Migrate hardcoded templates from `config.ts:399-406` to database-driven approach
-- [ ] **CRITICAL**: Migrate hardcoded FAQ from `config.ts:381-386` to database-driven approach
+- [x] **CRITICAL**: Migrate hardcoded templates from `config.ts:399-406` to database-driven approach
+- [x] **CRITICAL**: Migrate hardcoded FAQ from `config.ts:381-386` to database-driven approach
 - [x] **HIGH**: Implement admin interface for dynamic content management - Complete template management UI
 - [ ] **HIGH**: Payment integration test suite with Midtrans sandbox environment
 - [ ] **MEDIUM**: Payment history and receipt generation
