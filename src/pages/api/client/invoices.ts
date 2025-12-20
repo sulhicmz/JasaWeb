@@ -1,6 +1,6 @@
 /**
- * Client Projects API
- * GET: List user's projects with pagination
+ * Client Invoices API
+ * GET: List user's invoices with pagination
  */
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
@@ -19,7 +19,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = parseInt(url.searchParams.get('limit') || '10');
         const status = url.searchParams.get('status') as string || undefined;
-        const type = url.searchParams.get('type') as string || undefined;
         const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
         const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
 
@@ -28,32 +27,49 @@ export const GET: APIRoute = async ({ request, locals }) => {
         if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
 
         // Validate sort fields
-        const allowedSortFields = ['createdAt', 'updatedAt', 'name', 'status', 'type'];
+        const allowedSortFields = ['createdAt', 'amount', 'paidAt', 'status'];
         if (!allowedSortFields.includes(sortBy)) {
             return errorResponse('Sort field tidak valid');
         }
 
+        // Validate status if provided
+        if (status && !['unpaid', 'paid'].includes(status)) {
+            return errorResponse('Status harus "unpaid" atau "paid"');
+        }
+
         const prisma = getPrisma(locals);
 
-        // Build where clause
-        const where: any = { userId: user.id };
+        // Build where clause - get invoices for user's projects only
+        const where: any = {
+            project: {
+                userId: user.id
+            }
+        };
         if (status) where.status = status;
-        if (type) where.type = type;
 
-        // Get total count and projects in parallel
-        const [total, projects] = await Promise.all([
-            prisma.project.count({ where }),
-            prisma.project.findMany({
+        // Get total count and invoices in parallel
+        const [total, invoices] = await Promise.all([
+            prisma.invoice.count({ where }),
+            prisma.invoice.findMany({
                 where,
                 orderBy: { [sortBy]: sortOrder },
                 select: {
                     id: true,
-                    name: true,
-                    type: true,
+                    projectId: true,
+                    amount: true,
                     status: true,
-                    url: true,
+                    midtransOrderId: true,
+                    qrisUrl: true,
+                    paidAt: true,
                     createdAt: true,
-                    updatedAt: true,
+                    // Include project brief info
+                    project: {
+                        select: {
+                            id: true,
+                            name: true,
+                            type: true,
+                        },
+                    },
                 },
                 skip: (page - 1) * limit,
                 take: limit,
@@ -63,7 +79,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         const totalPages = Math.ceil(total / limit);
 
         return jsonResponse({
-            projects,
+            invoices,
             pagination: {
                 total,
                 page,

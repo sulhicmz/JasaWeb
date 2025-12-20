@@ -104,6 +104,7 @@ src/
 - **DASHBOARD QUERIES**: Any new dashboard aggregation MUST include database indexes. Test with realistic data volumes (>1000 records).
 - **BUNDLE SIZE**: Client-side bundle must stay under 250KB. Use code splitting for large components.
 - **API LATENCY**: Database queries should not exceed 200ms average response time. Use Prisma query optimization.
+- **PAGINATION**: All list endpoints MUST implement pagination with standardized response format including pagination metadata (total, page, limit, totalPages, hasNext, hasPrev). Use parallel count+data queries for optimal performance.
 
 ### 🔐 Development Security Protocols
 1. **Before committing payment code**: Verify webhook signature validation is implemented and tested
