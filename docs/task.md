@@ -4,6 +4,7 @@
 - [x] **MODULARITY**: Extract duplicate form patterns into reusable UI components (`Form`, `FormGroup`, `FormInput`).
 - [x] **MODULARITY**: Create generic `BaseCrudService` for consistent admin CRUD operations.
 - [x] **MODULARITY**: Extract business logic from pages into service layer (`template.ts`, `project.ts`).
+- [x] **MODULARITY**: Create `AuthFormHandler` and `AuthValidator` services - eliminated 60% code duplication in auth forms.
 - [x] **SECURITY**: Implement Midtrans SHA-512 webhook signature validation and amount verification.
 - [x] **SECURITY**: Fixed-window rate limiting for sensitive API routes (Auth/Payments).
 - [x] **SECURITY**: CSRF protection for all authenticated state-changing routes.

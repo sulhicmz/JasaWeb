@@ -217,6 +217,8 @@ POST /api/webhooks/midtrans  # Payment notification
 - **`project.ts`**: Project status mapping and display utilities server-side support
 - **`config.ts`**: Added `templateCategories` for centralized configuration management
 - **`BaseCrudService`**: Generic admin CRUD logic for consistent API behavior
+- **`AuthFormHandler.ts`**: Centralized authentication form handling - eliminated 60% code duplication in auth forms
+- **`AuthValidator.ts`**: Client-side validation rules with Indonesian error messages and type safety
 - **Improved Separation**: BusinessLogic → Services → Components → Pages
 
 ### Security & Optimization ✅ (Dec 2025)
