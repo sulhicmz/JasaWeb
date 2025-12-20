@@ -20,6 +20,7 @@
         "db:migrate": "prisma migrate dev",
         "db:studio": "prisma studio",
         "test": "vitest run",
+        "test:perf": "vitest run --run src/lib/performance.test.ts",
         "prepare": "prisma generate",
         "preinstall": "npx only-allow pnpm"
     },
