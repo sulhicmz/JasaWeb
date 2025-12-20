@@ -5,6 +5,8 @@
 
 import { errorResponse } from './api';
 
+type KVNamespace = any;
+
 export interface RateLimitConfig {
     /** Max requests allowed within window */
     limit: number;

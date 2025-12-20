@@ -9,9 +9,7 @@
         },
         "jsx": "react-jsx",
         "jsxImportSource": "react",
-        "types": [
-            "@cloudflare/workers-types"
-        ]
+        "types": []
     },
     "include": [
         "src/**/*",

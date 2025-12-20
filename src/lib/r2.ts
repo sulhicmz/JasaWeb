@@ -3,6 +3,10 @@
  * Provides file upload/download utilities
  */
 
+type R2Bucket = any;
+type R2ObjectBody = any;
+type R2Objects = any;
+
 export interface UploadOptions {
     contentType?: string;
     customMetadata?: Record<string, string>;

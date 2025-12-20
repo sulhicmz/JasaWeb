@@ -16,6 +16,7 @@
 | BUG-004 | `layanan/company.astro` hardcoded data | 2025-12-20 |
 | BUG-005 | `login.astro` tidak menggunakan PageLayout | 2025-12-20 |
 | BUG-006 | `register.astro` tidak menggunakan PageLayout | 2025-12-20 |
+| BUG-007 | TypeScript errors in Cloudflare services (kv.ts, r2.ts, rate-limit.ts) | 2025-12-20 |
 
 ---
 
