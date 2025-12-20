@@ -117,6 +117,9 @@ model Template {
   createdAt DateTime    @default(now()) @map("created_at")
 
   @@map("templates")
+  @@index([category])
+  @@index([createdAt])
+  @@index([category, createdAt])
 }
 
 // ============================================

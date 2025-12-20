@@ -64,14 +64,14 @@ try {
         {
           key: "phone",
           label: "Phone",
-          render: (user) => user.phone || '-'
+          render: (user: User) => user.phone || '-'
         },
         {
           key: "role",
           label: "Role",
           badge: { 
             variant: "error",
-            condition: (value) => value === 'admin'
+            condition: (value: string) => value === 'admin'
           }
         },
         {
@@ -82,7 +82,7 @@ try {
       ]}
       actions={[
         {
-          href: (user) => `/dashboard/admin/users/${user.id}`,
+          href: (user: User) => `/dashboard/admin/users/${user.id}`,
           text: "Edit",
           variant: "outline",
           size: "sm"

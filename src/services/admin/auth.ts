@@ -5,6 +5,15 @@
 
 import type { APIContext } from 'astro';
 import { errorResponse } from '@/lib/api';
+import type { UserRole } from '@/lib/types';
+
+// Simplified user interface for session context (partial User)
+interface SessionUser {
+    id: string;
+    email: string;
+    name: string;
+    role: UserRole;
+}
 
 // ==============================================
 // ADMIN AUTH UTILITIES
@@ -13,7 +22,7 @@ import { errorResponse } from '@/lib/api';
 /**
  * Check if current user has admin role
  */
-export function isAdmin(user: any): boolean {
+export function isAdmin(user: SessionUser | undefined): boolean {
     return user?.role === 'admin';
 }
 
@@ -51,7 +60,7 @@ export function getAdminUser(context: APIContext) {
  * Currently: Admin can access everything, Clients can only access their own resources
  */
 export function canAccessResource(
-    user: any, 
+    user: SessionUser, 
     resourceUserId?: string,
     action: 'read' | 'write' | 'delete' = 'read'
 ): boolean {
@@ -83,7 +92,7 @@ export function canAccessResource(
 export function validateAdminAccess(context: APIContext): {
     isAuthorized: boolean;
     response?: Response;
-    user?: any;
+    user?: SessionUser;
 } {
     const user = context.locals.user;
 

@@ -32,7 +32,7 @@ const mockAdminUser = {
     id: 'admin-123',
     name: 'Admin User',
     email: 'admin@example.com',
-    role: 'admin',
+    role: 'admin' as const,
     phone: null,
     createdAt: new Date()
 };
@@ -41,7 +41,7 @@ const mockClientUser = {
     id: 'client-123',
     name: 'Client User',
     email: 'client@example.com',
-    role: 'client',
+    role: 'client' as const,
     phone: '+62 812 3456 7890',
     createdAt: new Date()
 };

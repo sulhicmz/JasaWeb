@@ -1,6 +1,9 @@
 ---
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Badge from '../../components/ui/Badge.astro';
+import type { Invoice } from '../../lib/types';
 ---
 
 <PortalLayout title="Billing" currentPath="/dashboard/billing">
@@ -87,6 +90,35 @@ import Card from '../../components/ui/Card.astro';
     </Card>
   </div>
 </PortalLayout>
+
+<script>
+  // Bundle optimization: Defer heavy initialization  
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(async () => {
+      try {
+        const res = await fetch('/api/client/invoices');
+        const data = await res.json();
+
+        if (res.ok && data.invoices) {
+          const invoices = data.invoices || [];
+          const total = invoices.reduce((sum: number, inv: { amount: number; status: string }) => sum + Number(inv.amount), 0);
+          const unpaid = invoices.filter((inv: { status: string }) => inv.status === 'unpaid');
+          const paid = invoices.filter((inv: { status: string }) => inv.status === 'paid');
+
+          const unpaidAmount = unpaid.reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0);
+          const paidAmount = paid.reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0);
+
+          const statsContainer = document.getElementById('overviewStats');
+          if (statsContainer) {
+            statsContainer.innerHTML = '<div class="stat-card"><div class="stat-label">Total Tagihan</div><div class="stat-value">Rp ' + total.toLocaleString('id-ID') + '</div></div><div class="stat-card"><div class="stat-label">Belum Dibayar</div><div class="stat-value">Rp ' + unpaidAmount.toLocaleString('id-ID') + '</div></div><div class="stat-card"><div class="stat-label">Sudah Dibayar</div><div class="stat-value">Rp ' + paidAmount.toLocaleString('id-ID') + '</div></div>';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }, 100);
+  });
+</script>
 
 <style>
   .page-header {
@@ -398,12 +430,12 @@ import Card from '../../components/ui/Card.astro';
       }
 
       const invoices = data.invoices;
-      const total = invoices.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
-      const unpaid = invoices.filter((inv: any) => inv.status === 'unpaid');
-      const paid = invoices.filter((inv: any) => inv.status === 'paid');
+      const total = invoices.reduce((sum: number, inv: { amount: number; status: string }) => sum + Number(inv.amount), 0);
+      const unpaid = invoices.filter((inv: { status: string }) => inv.status === 'unpaid');
+      const paid = invoices.filter((inv: { status: string }) => inv.status === 'paid');
 
-      const unpaidAmount = unpaid.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
-      const paidAmount = paid.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
+      const unpaidAmount = unpaid.reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0);
+      const paidAmount = paid.reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0);
 
       const statsContainer = document.getElementById('overviewStats');
       if (statsContainer) {
@@ -451,12 +483,23 @@ import Card from '../../components/ui/Card.astro';
 
       if (data.invoices.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>Belum ada tagihan</p></div>';
-        updatePagination(null);
+        return;
         return;
       }
 
       // Render invoice cards
-      container.innerHTML = data.invoices.map((invoice: any) => `
+      container.innerHTML = data.invoices.map((invoice: { 
+        id: string; 
+        amount: number; 
+        status: string; 
+        createdAt: string;
+        paidAt?: string;
+        qrisUrl?: string;
+        project: { 
+          name: string; 
+          type: string; 
+        };
+      }) => `
         <div class="invoice-card">
           <div class="invoice-info">
             <div class="invoice-project">${invoice.project.name}</div>
@@ -498,7 +541,14 @@ import Card from '../../components/ui/Card.astro';
   }
 
   // Update pagination controls
-  function updatePagination(pagination: any) {
+  function updatePagination(pagination: { 
+    page: number; 
+    limit: number; 
+    total: number; 
+    totalPages: number; 
+    hasNext: boolean; 
+    hasPrev: boolean; 
+  } | null) {
     const container = document.getElementById('pagination');
     const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
     const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;

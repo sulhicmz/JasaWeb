@@ -4,6 +4,8 @@
  * Extracted from inline JavaScript in dashboard/projects.astro
  */
 
+import type { Project } from '../lib/types';
+
 export interface ProjectStatus {
   label: string;
   variant: 'primary' | 'success' | 'warning' | 'default';
@@ -27,7 +29,7 @@ export class ProjectService {
    * Generate project card HTML
    * Extracted from inline template string generation
    */
-  static generateProjectCard(project: any): string {
+  static generateProjectCard(project: Project): string {
     const badge = this.getStatusBadge(project.status);
     const variantColor = this.getVariantColor(badge.variant);
     
@@ -82,7 +84,7 @@ export class ProjectService {
         `;
       }
 
-      return data.data.map((project: any) => this.generateProjectCard(project)).join('');
+      return data.data.map((project: Project) => this.generateProjectCard(project)).join('');
     } catch {
       return '<div class="empty-state">Terjadi kesalahan</div>';
     }
