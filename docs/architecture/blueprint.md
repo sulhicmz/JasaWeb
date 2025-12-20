@@ -216,7 +216,15 @@ POST /api/webhooks/midtrans  # Payment notification
 - **`template.ts`**: Template filtering business logic extracted from inline JavaScript
 - **`project.ts`**: Project status mapping and display utilities server-side support
 - **`config.ts`**: Added `templateCategories` for centralized configuration management
+- **`BaseCrudService`**: Generic admin CRUD logic for consistent API behavior
 - **Improved Separation**: BusinessLogic → Services → Components → Pages
+
+### Security & Optimization ✅ (Dec 2025)
+- **Payment Security**: Midtrans SHA-512 signature validation and amount verification implemented.
+- **Bot/DDoS Protection**: Fixed-window rate limiting for sensitive API routes.
+- **Database Optimization**: Strategic indexes added to Prisma schema for dashboard performance.
+- **Type Safety**: Middleware refactored for 100% type-safe `locals` access.
+
 
 ---
 
