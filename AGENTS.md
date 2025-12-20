@@ -73,7 +73,7 @@ src/
 ### Current Status ✅ (Updated Dec 20, 2025 - Latest Audit)
 - **RATE LIMITING**: Fixed window implementation now in `src/lib/rate-limit.ts` using timestamp-based keys for consistent window boundaries.
 - **CSRF PROTECTION**: Implemented CSRF protection for authenticated state-changing operations. Use `x-csrf-token` header and `jasaweb_csrf` cookie.
-- **TEST COVERAGE**: Comprehensive test coverage implemented with **184+ passing tests** across auth, API routes, admin services, payment integration, and core utilities.
+- **TEST COVERAGE**: Comprehensive test coverage implemented with **222+ passing tests** across auth, API routes, admin services, payment integration, and core utilities.
 - **PAYMENT INTEGRATION**: **PRODUCTION READY** - Complete QRIS payment flow with Midtrans integration implemented in `src/pages/api/client/payment.ts`. Includes user validation, rate limiting, and atomic invoice updates.
 - **ERROR BOUNDARY**: Fixed ErrorBoundary component to use `this.props.fallback` instead of `this.fallback`.
 - **TYPE SAFETY**: Zero TypeScript errors across entire codebase with comprehensive type checking.
@@ -83,7 +83,7 @@ src/
 - **PAGINATION**: All list endpoints now implement consistent pagination with metadata.
 - **PAYMENT SECURITY**: Midtrans webhook signature validation implemented with SHA-512 HMAC with constant-time comparison.
 - **ENVIRONMENT VALIDATION**: Comprehensive startup validation implemented in `src/lib/config.ts:31-183` with 10+ environment variables.
-- **REPOSITORY AUDIT**: Latest comprehensive evaluation completed with **93/100 score** - exceptional enterprise-ready architecture with production-ready payment system.
+- **REPOSITORY AUDIT**: Latest comprehensive evaluation completed with **96/100 score** - exceptional enterprise-ready architecture with production-ready payment system.
 - **CONTENT VIOLATIONS**: RESOLVED - Templates and FAQ hardcoded violations fixed via database schema implementation.
 
 ### Development Guidelines
@@ -261,4 +261,28 @@ export const POST: APIRoute = async ({ request }) => {
 - **Impact**: Eliminated ~200 lines of duplicate code, improved consistency, enhanced maintainability
 
 **Current Quality Score**: **96/100** (Latest Audit: Dec 20, 2025 - Verified: 222/222 tests passing, Zero TS errors, Production-ready payment system)
+
+---
+
+## 7. New Agent Guidelines (Latest Audit Findings)
+
+### 🚨 Critical Warnings for All Agents
+- **TYPE SAFETY MANDATE**: Create explicit TypeScript interfaces for Cloudflare Workers instead of using `any`. Current 16 instances of `any` usage should be eliminated for better maintainability.
+- **ENVIRONMENT ACCESS ENFORCEMENT**: NEVER use `import.meta.env` in server-side code. Always use `locals.runtime.env` to prevent secret exposure to client builds.
+- **ERROR HANDLING STANDARDIZATION**: ALWAYS use `handleApiError()` utility from `src/lib/api.ts` for consistent error responses across all API endpoints.
+
+### ⚠️ Medium Priority Guidelines
+- **Component Documentation**: All new UI components MUST include comprehensive JSDoc comments describing props, variants, and usage examples.
+- **Test Coverage Expansion**: When adding new features, ensure edge case testing for error boundaries and failure scenarios.
+- **Bundle Optimization**: Consider code splitting opportunities for admin vs client routes when adding large features.
+
+### ✅ Production Deployment Checklist
+Before any production deployment, verify:
+- [ ] All `any` types for Cloudflare Workers have explicit interfaces
+- [ ] Environment access follows `locals.runtime.env` pattern
+- [ ] Error handling uses `handleApiError()` utility
+- [ ] No hardcoded content in config files (use database)
+- [ ] All new API routes have corresponding test files
+- [ ] CSRF protection implemented for authenticated state changes
+- [ ] Rate limiting applied to sensitive endpoints
 
