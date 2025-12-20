@@ -6,17 +6,21 @@ Platform jasa pembuatan website (Sekolah, Berita, Company Profile) dengan client
 
 ## 1. Tech Stack (FINAL)
 
-| Komponen | Teknologi |
-|----------|-----------|
-| Frontend | Astro + React |
-| Backend | Cloudflare Workers (Astro API Routes) |
-| Database | Neon PostgreSQL + Prisma ORM |
-| Cache | Cloudflare KV |
-| Storage | Cloudflare R2 |
-| Payment | Midtrans (QRIS) |
-| Hosting | Cloudflare Pages |
-| **Package Manager** | **pnpm** (Strict) |
-| **Testing** | **Vitest** |
+| Komponen | Teknologi | Catatan |
+|----------|-----------|---------|
+| Frontend | Astro 5 + React 19 | Hybrid SSR/SSG |
+| **Build Engine** | **Vite** (Internal) | Bawaan Astro & Vitest. JANGAN akses secrets via `import.meta.env` |
+| Backend | Cloudflare Workers | Astro API Routes, akses secrets via `locals.runtime.env` |
+| Database | Neon PostgreSQL + Prisma ORM | Hyperdrive untuk connection pooling |
+| Cache | Cloudflare KV | Untuk session/rate-limit |
+| Storage | Cloudflare R2 | Untuk file uploads |
+| Payment | Midtrans Core API | QRIS, webhook signature wajib |
+| Hosting | Cloudflare Pages | Edge deployment |
+| Package Manager | **pnpm** (Strict) | Dilarang menggunakan npm/yarn |
+| Testing | **Vitest** | Berjalan di atas Vite |
+
+> ⚠️ **PENTING**: Semua environment variables sensitif (`JWT_SECRET`, `MIDTRANS_SERVER_KEY`, `DATABASE_URL`) WAJIB diakses melalui **Cloudflare Bindings** (`locals.runtime.env`), BUKAN `import.meta.env` atau `process.env`.
+
 
 ---
 
