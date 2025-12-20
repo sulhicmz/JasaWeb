@@ -6,7 +6,7 @@ import { getPrisma } from '@/lib/prisma';
 import { verifyPassword, hashPassword } from '@/lib/auth';
 import { jsonResponse, errorResponse, handleApiError, parseBody, validateRequired } from '@/lib/api';
 
-export const PUT: APIRoute = async ({ locals }) => {
+export const PUT: APIRoute = async ({ request, locals }) => {
     try {
         const user = locals.user;
 
@@ -14,7 +14,7 @@ export const PUT: APIRoute = async ({ locals }) => {
             return errorResponse('Unauthorized', 401);
         }
 
-        const body = await parseBody<{ currentPassword: string; newPassword: string }>(locals.request);
+        const body = await parseBody<{ currentPassword: string; newPassword: string }>(request);
 
         if (!body) {
             return errorResponse('Request body tidak valid');

@@ -5,13 +5,13 @@ describe('API Utilities', () => {
     describe('validateRequired', () => {
         it('should return null when all required fields are present', () => {
             const body = { name: 'John', email: 'john@example.com' };
-            const result = validateRequired(body, ['name', 'email']);
+            const result = validateRequired(body, ['name', 'email'] as const);
             expect(result).toBeNull();
         });
 
         it('should return error string when a field is missing', () => {
             const body = { name: 'John' };
-            const result = validateRequired(body, ['name', 'email']);
+            const result = validateRequired(body, ['name', 'email'] as const);
             expect(result).toBe('email wajib diisi');
         });
     });

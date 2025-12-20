@@ -34,12 +34,17 @@
         "pg": "^8.13.1",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "typescript": "^5.7.2"
+        "typescript": "^5.7.2",
+        "vitest": "^4.0.16"
     },
     "devDependencies": {
         "@types/bcryptjs": "^2.4.6",
         "@types/pg": "^8.11.10",
+        "@vitest/ui": "^4.0.16",
+        "happy-dom": "^20.0.11",
+        "jsdom": "^27.3.0",
         "prisma": "^6.1.0",
-        "wrangler": "^3.99.0"
+        "wrangler": "^3.99.0",
+        "yaml": "^2.8.2"
     }
 }

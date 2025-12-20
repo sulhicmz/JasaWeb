@@ -15,12 +15,12 @@ import {
 } from '@/lib/api';
 import type { LoginForm } from '@/lib/types';
 
-export const POST: APIRoute = async ({ locals, cookies }) => {
+export const POST: APIRoute = async ({ request, locals, cookies }) => {
     try {
         // Rate Limiting
         if (locals.runtime?.env?.CACHE) {
             const limitResult = await checkRateLimit(
-                locals.request,
+                request,
                 locals.runtime.env.CACHE,
                 'login',
                 RateLimits.auth
@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
             if (limitResult) return limitResult;
         }
 
-        const body = await parseBody<LoginForm>(locals.request);
+        const body = await parseBody<LoginForm>(request);
 
         if (!body) {
             return errorResponse('Request body tidak valid');

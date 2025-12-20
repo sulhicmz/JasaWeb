@@ -88,12 +88,12 @@ export interface Invoice {
 // ==============================================
 // FORM TYPES
 // ==============================================
-export interface LoginForm {
+export interface LoginForm extends Record<string, unknown> {
     email: string;
     password: string;
 }
 
-export interface RegisterForm {
+export interface RegisterForm extends Record<string, unknown> {
     name: string;
     email: string;
     phone?: string;

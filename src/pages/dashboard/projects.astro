@@ -5,7 +5,7 @@
  */
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
-import Badge from '../../components/ui/Badge.astro';
+
 import Button from '../../components/ui/Button.astro';
 ---
 
@@ -103,12 +103,12 @@ import Button from '../../components/ui/Button.astro';
       const res = await fetch('/api/client/projects');
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
+      if (!res.ok || !(data as any).success) {
         container.innerHTML = `<div class="empty-state">Gagal memuat proyek</div>`;
         return;
       }
 
-      if (data.data.length === 0) {
+      if ((data as any).data.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <p>Belum ada proyek. <a href="/layanan" style="color:var(--color-primary)">Pesan sekarang</a></p>
@@ -117,7 +117,7 @@ import Button from '../../components/ui/Button.astro';
         return;
       }
 
-      container.innerHTML = data.data.map((p: any) => {
+      container.innerHTML = (data as any).data.map((p: any) => {
         const badge = statusBadge(p.status);
         return `
           <div class="project-card" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;padding:1.5rem;background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-lg);">

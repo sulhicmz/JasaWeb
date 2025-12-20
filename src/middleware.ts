@@ -27,7 +27,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         try {
             // Verify token and inject user into locals
             const user = await verifyToken(token, env.JWT_SECRET);
-            locals.user = user;
+            locals.user = user || undefined;
 
             // Redirect logged-in users away from auth pages
             if (isAuthPath) {
@@ -36,7 +36,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         } catch {
             // Invalid token - clear cookie
             cookies.delete(AUTH_COOKIE, { path: '/' });
-            locals.user = null;
+            locals.user = undefined;
 
             if (isProtected) {
                 return context.redirect('/login');

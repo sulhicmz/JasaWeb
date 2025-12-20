@@ -233,7 +233,7 @@ import Button from '../components/ui/Button.astro';
 
       if (!res.ok) {
         if (errorMsg) {
-          errorMsg.textContent = result.error || 'Registrasi gagal';
+          errorMsg.textContent = (result as any).error || 'Registrasi gagal';
           errorMsg.classList.add('show');
         }
         return;

@@ -87,13 +87,13 @@ export function paginatedResponse<T>(
 /**
  * Validate required fields in request body
  */
-export function validateRequired<T extends Record<string, unknown>>(
-    body: T,
-    requiredFields: (keyof T)[]
+export function validateRequired(
+    body: Record<string, unknown>,
+    requiredFields: string[]
 ): string | null {
     for (const field of requiredFields) {
         if (!body[field]) {
-            return `${String(field)} wajib diisi`;
+            return `${field} wajib diisi`;
         }
     }
     return null;
