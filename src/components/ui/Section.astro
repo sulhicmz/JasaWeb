@@ -1,0 +1,60 @@
+---
+/**
+ * Reusable Section Component
+ * Consistent section spacing and background variants
+ */
+export interface Props {
+  background?: 'default' | 'gradient' | 'muted';
+  spacing?: 'sm' | 'md' | 'lg' | 'xl';
+  class?: string;
+  id?: string;
+}
+
+const { 
+  background = 'default', 
+  spacing = 'lg',
+  class: className = '',
+  id,
+} = Astro.props;
+
+const classes = [
+  'section',
+  `section-bg-${background}`,
+  `section-spacing-${spacing}`,
+  className,
+].filter(Boolean).join(' ');
+---
+
+<section class={classes} id={id}>
+  <div class="container">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .section {
+    width: 100%;
+  }
+
+  /* Spacing variants */
+  .section-spacing-sm { padding: 2rem 0; }
+  .section-spacing-md { padding: 4rem 0; }
+  .section-spacing-lg { padding: 6rem 0; }
+  .section-spacing-xl { padding: 8rem 0; }
+
+  /* Background variants */
+  .section-bg-default { background: transparent; }
+  .section-bg-gradient { 
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent);
+  }
+  .section-bg-muted { 
+    background: var(--color-bg-secondary);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+</style>

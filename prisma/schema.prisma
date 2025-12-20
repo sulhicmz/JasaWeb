@@ -1,0 +1,136 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS
+// ============================================
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      Role     @default(client)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  projects Project[]
+
+  @@map("users")
+}
+
+enum Role {
+  admin
+  client
+}
+
+// ============================================
+// PROJECTS
+// ============================================
+model Project {
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  name        String
+  type        ProjectType
+  status      ProjectStatus @default(pending_payment)
+  url         String?
+  credentials Json?
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@map("projects")
+}
+
+enum ProjectType {
+  sekolah
+  berita
+  company
+}
+
+enum ProjectStatus {
+  pending_payment
+  in_progress
+  review
+  completed
+}
+
+// ============================================
+// INVOICES
+// ============================================
+model Invoice {
+  id             String        @id @default(uuid())
+  projectId      String        @map("project_id")
+  amount         Decimal       @db.Decimal(12, 2)
+  status         InvoiceStatus @default(unpaid)
+  midtransOrderId String?      @map("midtrans_order_id")
+  qrisUrl        String?       @map("qris_url")
+  paidAt         DateTime?     @map("paid_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  unpaid
+  paid
+}
+
+// ============================================
+// TEMPLATES
+// ============================================
+model Template {
+  id        String      @id @default(uuid())
+  name      String
+  category  ProjectType
+  imageUrl  String      @map("image_url")
+  demoUrl   String      @map("demo_url")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@map("templates")
+}
+
+// ============================================
+// BLOG POSTS
+// ============================================
+model Post {
+  id            String     @id @default(uuid())
+  title         String
+  slug          String     @unique
+  content       String
+  featuredImage String?    @map("featured_image")
+  status        PostStatus @default(draft)
+  publishedAt   DateTime?  @map("published_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  @@map("posts")
+}
+
+enum PostStatus {
+  draft
+  published
+}
+
+// ============================================
+// CMS PAGES
+// ============================================
+model Page {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pages")
+}

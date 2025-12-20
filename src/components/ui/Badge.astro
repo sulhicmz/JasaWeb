@@ -1,0 +1,64 @@
+---
+/**
+ * Reusable Badge Component
+ * For status indicators and labels
+ */
+export interface Props {
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error';
+  size?: 'sm' | 'md';
+  class?: string;
+}
+
+const { 
+  variant = 'default', 
+  size = 'md',
+  class: className = '' 
+} = Astro.props;
+
+const classes = [
+  'badge',
+  `badge-${variant}`,
+  `badge-${size}`,
+  className,
+].filter(Boolean).join(' ');
+---
+
+<span class={classes}>
+  <slot />
+</span>
+
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* Sizes */
+  .badge-sm { padding: 0.25rem 0.5rem; font-size: 0.625rem; }
+  .badge-md { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+
+  /* Variants */
+  .badge-default {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+  }
+  .badge-primary {
+    background: var(--color-primary);
+    color: white;
+  }
+  .badge-success {
+    background: var(--color-success);
+    color: white;
+  }
+  .badge-warning {
+    background: var(--color-secondary);
+    color: white;
+  }
+  .badge-error {
+    background: var(--color-error);
+    color: white;
+  }
+</style>

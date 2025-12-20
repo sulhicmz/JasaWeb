@@ -1,0 +1,201 @@
+---
+/**
+ * Landing Page
+ * REFACTORED: Uses PageLayout and config.ts per AGENTS.md (BUG-001 fix)
+ */
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+import Badge from '../components/ui/Badge.astro';
+import { siteConfig, servicesArray, type ServiceConfig } from '../lib/config';
+---
+
+<PageLayout title={siteConfig.tagline} description={siteConfig.description} currentPath="/">
+  <!-- Hero Section -->
+  <Section background="default" spacing="xl" class="hero-section">
+    <div class="hero-content">
+      <Badge variant="default" class="hero-badge">✨ Platform #1 untuk Jasa Web</Badge>
+      <h1 class="hero-title">
+        Buat Website <span class="gradient-text">Profesional</span><br />
+        dengan Mudah
+      </h1>
+      <p class="hero-description">{siteConfig.description}</p>
+      <div class="hero-actions">
+        <Button href="/register" variant="primary" size="lg">
+          Mulai Sekarang
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </Button>
+        <Button href="/template" variant="secondary" size="lg">Lihat Template</Button>
+      </div>
+    </div>
+    <div class="hero-gradient"></div>
+  </Section>
+
+  <!-- Services Section -->
+  <Section spacing="lg">
+    <h2 class="section-title">Layanan Kami</h2>
+    <p class="section-subtitle">Pilih jenis website sesuai kebutuhan Anda</p>
+    
+    <div class="services-grid">
+      {servicesArray.map((service: ServiceConfig) => (
+        <Card variant={service.popular ? 'featured' : 'interactive'} padding="lg" class="service-card">
+          {service.popular && <Badge variant="primary" class="service-badge">Populer</Badge>}
+          <div class="service-icon">{service.icon}</div>
+          <h3>{service.title}</h3>
+          <p>{service.description}</p>
+          <Button href={`/layanan/${service.id}`} variant={service.popular ? 'primary' : 'secondary'}>
+            Pelajari
+          </Button>
+        </Card>
+      ))}
+    </div>
+  </Section>
+
+  <!-- CTA Section -->
+  <Section background="gradient" spacing="lg">
+    <div class="cta-content">
+      <h2>Siap Memulai?</h2>
+      <p>Daftar sekarang dan dapatkan konsultasi gratis untuk proyek website Anda.</p>
+      <Button href="/register" variant="primary" size="lg">
+        Daftar Gratis
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </Button>
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  /* Hero */
+  .hero-section {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-gradient {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .hero-content {
+    position: relative;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding-top: 2rem;
+  }
+
+  .hero-badge {
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-description {
+    font-size: 1.25rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  /* Services */
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: 3rem;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .service-card {
+    position: relative;
+    text-align: center;
+  }
+
+  .service-badge {
+    position: absolute;
+    top: -12px;
+    right: 24px;
+  }
+
+  .service-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .service-card p {
+    color: var(--color-text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* CTA */
+  .cta-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .cta-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .cta-content p {
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.25rem;
+    }
+
+    .services-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

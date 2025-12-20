@@ -1,117 +1,34 @@
 # Dependencies
 node_modules/
 .pnpm-store/
-jspm_packages/
 
-# Lock files (use pnpm-lock.yaml only)
-package-lock.json
-yarn.lock
-!pnpm-lock.yaml
-
-# Build outputs
+# Build output
 dist/
-build/
-.turbo/
-.next/
-.nuxt/
-.vercel/
 .astro/
 
-# Compiled JavaScript/TypeScript files in packages
-packages/**/*.js
-packages/**/*.js.map
-packages/**/*.d.ts
-!packages/**/*.ts
-!packages/**/*.tsx
+# Cloudflare
+.wrangler/
+.dev.vars
 
-# TypeScript build info
-*.tsbuildinfo
-**/*.tsbuildinfo
-
-# Testing
-coverage/
-.nyc_output/
-*.lcov
-test-results/
-playwright-report/
-test-results.xml
-
-# Environment files
+# Environment
 .env
 .env.*
 !.env.example
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Cache
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-.npm
-.vite/
-.tsbuildinfo
-
-# Security & Secrets
-*.pem
-*.key
-*.cert
-*.crt
-*.p12
-*.pfx
-secrets/
-.secrets
 
 # IDE
 .idea/
 *.swp
 *.swo
-*~
-.project
-.classpath
-.settings/
-.factory
-.kilocode
-.vscode
 
 # OS
 .DS_Store
 Thumbs.db
-Desktop.ini
 
-# Temporary files
-tmp/
-temp/
-*.tmp
-*.temp
-*.bak
-*.backup
-*.tgz
-.yarn-integrity
-.node_repl_history
+# Prisma
+prisma/*.db
+prisma/*.db-journal
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Docker
-.docker/
-docker-compose.override.yml
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

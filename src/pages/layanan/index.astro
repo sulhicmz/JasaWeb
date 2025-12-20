@@ -1,0 +1,159 @@
+---
+/**
+ * Layanan Index Page
+ * REFACTORED: Uses PageLayout, config.ts, and UI components per AGENTS.md
+ */
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/ui/Section.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Badge from '../../components/ui/Badge.astro';
+import { servicesArray, type ServiceConfig } from '../../lib/config';
+---
+
+<PageLayout title="Layanan" description="Pilih layanan pembuatan website sesuai kebutuhan Anda" currentPath="/layanan">
+  <Section background="gradient" spacing="md">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Layanan <span class="gradient-text">Kami</span>
+      </h1>
+      <p class="hero-description">
+        Pilih jenis website yang sesuai dengan kebutuhan Anda. 
+        Semua paket sudah termasuk hosting, domain, dan support.
+      </p>
+    </div>
+  </Section>
+
+  <Section spacing="lg">
+    <div class="services-grid">
+      {servicesArray.map((service: ServiceConfig) => (
+        <Card variant={service.popular ? 'featured' : 'interactive'} padding="lg" class="service-card">
+          {service.popular && <Badge variant="primary" class="popular-badge">Populer</Badge>}
+          <div class="service-icon">{service.icon}</div>
+          <h2>{service.title}</h2>
+          <p class="service-description">{service.description}</p>
+          
+          <ul class="feature-list">
+            {service.highlights.slice(0, 5).map((feature: string) => (
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                {feature}
+              </li>
+            ))}
+          </ul>
+          
+          <div class="service-price">
+            <span class="price">{service.priceFormatted}</span>
+          </div>
+          
+          <Button 
+            href={`/layanan/${service.id}`} 
+            variant={service.popular ? 'primary' : 'secondary'}
+            fullWidth
+          >
+            Lihat Detail
+          </Button>
+        </Card>
+      ))}
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  .hero-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .hero-description {
+    font-size: 1.125rem;
+    color: var(--color-text-secondary);
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .service-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    right: 24px;
+  }
+
+  .service-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .service-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .service-description {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    flex: 1;
+  }
+
+  .feature-list {
+    list-style: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .feature-list svg {
+    color: var(--color-success);
+    flex-shrink: 0;
+  }
+
+  .service-price {
+    margin-bottom: 1.5rem;
+  }
+
+  .price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  @media (max-width: 1024px) {
+    .services-grid {
+      grid-template-columns: 1fr;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+  }
+</style>

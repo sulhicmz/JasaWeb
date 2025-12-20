@@ -1,0 +1,168 @@
+---
+/**
+ * Client Dashboard Page
+ * Overview of user's projects and recent activity
+ */
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import Badge from '../../components/ui/Badge.astro';
+
+const user = Astro.locals.user;
+---
+
+<PortalLayout title="Dashboard" currentPath="/dashboard">
+  <div class="dashboard-grid">
+    <!-- Stats Cards -->
+    <Card padding="lg" class="stat-card">
+      <div class="stat-icon">📂</div>
+      <div class="stat-content">
+        <span class="stat-value" id="projectCount">-</span>
+        <span class="stat-label">Total Proyek</span>
+      </div>
+    </Card>
+
+    <Card padding="lg" class="stat-card">
+      <div class="stat-icon">🔄</div>
+      <div class="stat-content">
+        <span class="stat-value" id="inProgressCount">-</span>
+        <span class="stat-label">Dalam Proses</span>
+      </div>
+    </Card>
+
+    <Card padding="lg" class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <span class="stat-value" id="completedCount">-</span>
+        <span class="stat-label">Selesai</span>
+      </div>
+    </Card>
+
+    <Card padding="lg" class="stat-card">
+      <div class="stat-icon">💳</div>
+      <div class="stat-content">
+        <span class="stat-value" id="unpaidCount">-</span>
+        <span class="stat-label">Tagihan Pending</span>
+      </div>
+    </Card>
+  </div>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions">
+    <h2>Aksi Cepat</h2>
+    <div class="actions-grid">
+      <Button href="/layanan" variant="primary">Pesan Website Baru</Button>
+      <Button href="/dashboard/projects" variant="secondary">Lihat Proyek</Button>
+      <Button href="/dashboard/billing" variant="secondary">Lihat Tagihan</Button>
+    </div>
+  </section>
+
+  <!-- Recent Projects -->
+  <section class="recent-section">
+    <h2>Proyek Terbaru</h2>
+    <div id="recentProjects" class="projects-list">
+      <Card padding="md" class="empty-state">
+        <p>Belum ada proyek. <a href="/layanan">Pesan sekarang</a></p>
+      </Card>
+    </div>
+  </section>
+</PortalLayout>
+
+<style>
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+  }
+
+  .stat-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .quick-actions {
+    margin-bottom: 2rem;
+  }
+
+  .quick-actions h2,
+  .recent-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .actions-grid {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
+
+  .empty-state a {
+    color: var(--color-primary);
+  }
+
+  @media (max-width: 1024px) {
+    .dashboard-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // Fetch dashboard stats on load
+  async function loadDashboardData() {
+    try {
+      const res = await fetch('/api/client/dashboard');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('projectCount')!.textContent = data.data.totalProjects;
+          document.getElementById('inProgressCount')!.textContent = data.data.inProgress;
+          document.getElementById('completedCount')!.textContent = data.data.completed;
+          document.getElementById('unpaidCount')!.textContent = data.data.unpaidInvoices;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load dashboard data', e);
+    }
+  }
+  
+  loadDashboardData();
+</script>

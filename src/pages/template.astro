@@ -1,0 +1,190 @@
+---
+/**
+ * Template Gallery Page
+ * REFACTORED: Uses PageLayout, config.ts, and UI components per AGENTS.md
+ */
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+import { templates, getCategoryLabel, type TemplateItem, type ServiceId } from '../lib/config';
+
+const categories = [
+  { value: 'all', label: 'Semua' },
+  { value: 'sekolah', label: 'Web Sekolah' },
+  { value: 'berita', label: 'Portal Berita' },
+  { value: 'company', label: 'Company Profile' },
+] as const;
+---
+
+<PageLayout title="Template Gallery" description="Pilih template website terbaik untuk kebutuhan Anda" currentPath="/template">
+  <Section background="gradient" spacing="md">
+    <div class="hero-content">
+      <h1>Template <span class="gradient-text">Gallery</span></h1>
+      <p>Pilih template yang sesuai dengan kebutuhan Anda. Semua template fully responsive dan SEO-friendly.</p>
+    </div>
+  </Section>
+
+  <Section spacing="lg">
+    <div class="filter-bar">
+      {categories.map(cat => (
+        <button 
+          class:list={['filter-btn', { active: cat.value === 'all' }]}
+          data-category={cat.value}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </div>
+
+    <div class="templates-grid" id="templatesGrid">
+      {templates.map((template: TemplateItem) => (
+        <Card variant="interactive" padding="none" class="template-card" data-category={template.category}>
+          <div class="template-image">
+            <div class="template-placeholder">
+              <span>{template.name}</span>
+            </div>
+            <div class="template-overlay">
+              <Button href={template.demoUrl} variant="primary" size="sm">
+                Lihat Demo
+              </Button>
+            </div>
+          </div>
+          <div class="template-info">
+            <h3>{template.name}</h3>
+            <span class="template-category">{getCategoryLabel(template.category as ServiceId)}</span>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  .hero-content {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .hero-content h1 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+  .hero-content p { color: var(--color-text-secondary); }
+
+  .filter-bar {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .filter-btn:hover,
+  .filter-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+  }
+
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .template-card {
+    overflow: hidden;
+  }
+
+  .template-card.hidden {
+    display: none;
+  }
+
+  .template-image {
+    position: relative;
+    aspect-ratio: 16/10;
+    overflow: hidden;
+  }
+
+  .template-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-bg-tertiary), var(--color-bg-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  .template-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+  }
+
+  .template-card:hover .template-overlay {
+    opacity: 1;
+  }
+
+  .template-info {
+    padding: 1.25rem;
+  }
+
+  .template-info h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .template-category {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 1024px) {
+    .templates-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .templates-grid { grid-template-columns: 1fr; }
+    .hero-content h1 { font-size: 2rem; }
+  }
+</style>
+
+<script>
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.template-card');
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      const category = btn.dataset.category;
+      
+      cards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>

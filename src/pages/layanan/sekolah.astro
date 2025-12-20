@@ -1,0 +1,137 @@
+---
+/**
+ * Web Sekolah Service Detail Page
+ * REFACTORED: Uses PageLayout and config.ts (BUG-002 fix)
+ */
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/ui/Section.astro';
+import Card from '../../components/ui/Card.astro';
+import Button from '../../components/ui/Button.astro';
+import { services, type ServiceFeature } from '../../lib/config';
+
+const service = services.sekolah;
+---
+
+<PageLayout title={service.title} description={service.description} currentPath="/layanan">
+  <Section background="gradient" spacing="md">
+    <div class="hero-content">
+      <span class="service-icon">{service.icon}</span>
+      <h1>{service.title}</h1>
+      <p class="hero-description">{service.description}</p>
+      <div class="hero-price">
+        <span class="price">{service.priceFormatted}</span>
+      </div>
+    </div>
+  </Section>
+
+  <Section spacing="lg">
+    <h2 class="section-title">Fitur Lengkap</h2>
+    <div class="features-grid">
+      {service.features.map((feature: ServiceFeature) => (
+        <Card variant="interactive" padding="md" class="feature-card">
+          <span class="feature-icon">{feature.icon}</span>
+          <h3>{feature.title}</h3>
+          <p>{feature.description}</p>
+        </Card>
+      ))}
+    </div>
+  </Section>
+
+  <Section background="gradient" spacing="lg">
+    <div class="cta-content">
+      <h2>Tertarik dengan {service.title}?</h2>
+      <p>Daftar sekarang dan mulai konsultasi gratis dengan tim kami.</p>
+      <Button href="/register" variant="primary" size="lg">Pesan Sekarang</Button>
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  .hero-content {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .service-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .hero-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .hero-description {
+    color: var(--color-text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-price {
+    margin-top: 1rem;
+  }
+
+  .price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  .section-title {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    text-align: center;
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-card p {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .cta-content {
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .cta-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .cta-content p {
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,257 @@
+---
+/**
+ * Register Page
+ * REFACTORED: Uses PageLayout per AGENTS.md (BUG-006 fix)
+ */
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+---
+
+<PageLayout title="Daftar" description="Daftar akun JasaWeb untuk mulai membuat website" currentPath="/register">
+  <Section spacing="lg" class="auth-section">
+    <div class="auth-wrapper">
+      <Card padding="lg">
+        <div class="auth-header">
+          <h1>Daftar Akun</h1>
+          <p>Buat akun untuk mulai membuat website impian Anda</p>
+        </div>
+
+        <form id="registerForm" class="auth-form">
+          <div class="form-group">
+            <label for="name">Nama Lengkap</label>
+            <input 
+              type="text" 
+              id="name" 
+              name="name" 
+              placeholder="John Doe"
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="nama@email.com"
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="phone">No. WhatsApp</label>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              placeholder="08123456789"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              placeholder="Minimal 8 karakter"
+              minlength="8"
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Konfirmasi Password</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              name="confirmPassword" 
+              placeholder="Ulangi password"
+              required 
+            />
+          </div>
+
+          <Button type="submit" variant="primary" fullWidth>Daftar Sekarang</Button>
+
+          <div id="errorMessage" class="error-message"></div>
+          <div id="successMessage" class="success-message"></div>
+        </form>
+
+        <div class="auth-footer">
+          <p>Sudah punya akun? <a href="/login">Masuk di sini</a></p>
+        </div>
+      </Card>
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  .auth-section {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+  }
+
+  .auth-wrapper {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .auth-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .auth-header p {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .form-group input {
+    padding: 0.75rem 1rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    transition: border-color var(--transition-fast);
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .form-group input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .error-message {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+  }
+
+  .error-message.show {
+    display: block;
+  }
+
+  .success-message {
+    color: var(--color-success);
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .auth-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+  }
+
+  .auth-footer p {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .auth-footer a {
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('registerForm') as HTMLFormElement;
+  const errorMsg = document.getElementById('errorMessage');
+  const successMsg = document.getElementById('successMessage');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirmPassword');
+
+    errorMsg?.classList.remove('show');
+    successMsg?.classList.remove('show');
+
+    if (password !== confirmPassword) {
+      if (errorMsg) {
+        errorMsg.textContent = 'Password tidak cocok';
+        errorMsg.classList.add('show');
+      }
+      return;
+    }
+
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      password: password,
+    };
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        if (errorMsg) {
+          errorMsg.textContent = result.error || 'Registrasi gagal';
+          errorMsg.classList.add('show');
+        }
+        return;
+      }
+
+      if (successMsg) {
+        successMsg.textContent = 'Registrasi berhasil! Mengalihkan...';
+        successMsg.classList.add('show');
+      }
+
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
+    } catch (err) {
+      if (errorMsg) {
+        errorMsg.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+        errorMsg.classList.add('show');
+      }
+    }
+  });
+</script>

@@ -1,0 +1,140 @@
+---
+/**
+ * Pricing Page
+ * REFACTORED: Uses PageLayout, config.ts, and UI components per AGENTS.md
+ */
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+import Badge from '../components/ui/Badge.astro';
+import { pricingTiers, faqs, type PricingTier, type FAQItem } from '../lib/config';
+---
+
+<PageLayout title="Harga" description="Pilih paket harga pembuatan website sesuai kebutuhan Anda" currentPath="/pricing">
+  <Section background="gradient" spacing="md">
+    <div class="hero-content">
+      <h1>Harga <span class="gradient-text">Terjangkau</span></h1>
+      <p>Pilih paket yang sesuai dengan kebutuhan dan budget Anda</p>
+    </div>
+  </Section>
+
+  <Section spacing="lg">
+    <div class="pricing-grid">
+      {pricingTiers.map((plan: PricingTier) => (
+        <Card variant={plan.popular ? 'featured' : 'default'} padding="lg" class={`pricing-card ${plan.popular ? 'popular' : ''}`}>
+          {plan.popular && <Badge variant="primary" class="popular-badge">Populer</Badge>}
+          <h2>{plan.name}</h2>
+          <p class="plan-description">{plan.description}</p>
+          <div class="plan-price">
+            <span class={`price price-${plan.color}`}>{plan.priceFormatted}</span>
+          </div>
+          <ul class="plan-features">
+            {plan.features.map((feature: string) => (
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <Button href="/register" variant={plan.popular ? 'primary' : 'secondary'} fullWidth>
+            Pilih Paket
+          </Button>
+        </Card>
+      ))}
+    </div>
+  </Section>
+
+  <Section spacing="lg">
+    <h2 class="section-title">FAQ</h2>
+    <div class="faq-grid">
+      {faqs.map((faq: FAQItem) => (
+        <Card padding="md">
+          <h3>{faq.question}</h3>
+          <p>{faq.answer}</p>
+        </Card>
+      ))}
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  .hero-content {
+    text-align: center;
+  }
+  .hero-content h1 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+  .hero-content p { color: var(--color-text-secondary); }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .pricing-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pricing-card.popular {
+    transform: scale(1.05);
+  }
+
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .pricing-card h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .plan-description { color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; }
+  
+  .plan-price { margin-bottom: 1.5rem; }
+  .price { font-size: 2rem; font-weight: 700; }
+  .price-primary { color: var(--color-primary); }
+  .price-success { color: var(--color-success); }
+  .price-warning { color: var(--color-secondary); }
+
+  .plan-features {
+    list-style: none;
+    margin-bottom: 2rem;
+    flex: 1;
+  }
+
+  .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .plan-features svg { color: var(--color-success); flex-shrink: 0; }
+
+  .section-title { font-size: 2rem; text-align: center; margin-bottom: 3rem; }
+  
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+
+  .faq-grid h3 { font-size: 1rem; margin-bottom: 0.75rem; }
+  .faq-grid p { color: var(--color-text-secondary); font-size: 0.875rem; }
+
+  @media (max-width: 1024px) {
+    .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    .pricing-card.popular { transform: none; }
+  }
+
+  @media (max-width: 768px) {
+    .hero-content h1 { font-size: 2rem; }
+    .faq-grid { grid-template-columns: 1fr; }
+  }
+</style>

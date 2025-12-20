@@ -1,0 +1,202 @@
+---
+/**
+ * Login Page
+ * REFACTORED: Uses PageLayout per AGENTS.md (BUG-005 fix)
+ */
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/ui/Section.astro';
+import Card from '../components/ui/Card.astro';
+import Button from '../components/ui/Button.astro';
+---
+
+<PageLayout title="Masuk" description="Masuk ke akun JasaWeb Anda" currentPath="/login">
+  <Section spacing="lg" class="auth-section">
+    <div class="auth-wrapper">
+      <Card padding="lg">
+        <div class="auth-header">
+          <h1>Selamat Datang</h1>
+          <p>Masuk ke akun Anda untuk melanjutkan</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="nama@email.com"
+              required 
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              name="password" 
+              placeholder="••••••••"
+              required 
+            />
+          </div>
+
+          <div class="form-actions">
+            <a href="/forgot-password" class="forgot-link">Lupa password?</a>
+          </div>
+
+          <Button type="submit" variant="primary" fullWidth>Masuk</Button>
+
+          <div id="errorMessage" class="error-message"></div>
+        </form>
+
+        <div class="auth-footer">
+          <p>Belum punya akun? <a href="/register">Daftar sekarang</a></p>
+        </div>
+      </Card>
+    </div>
+  </Section>
+</PageLayout>
+
+<style>
+  .auth-section {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+  }
+
+  .auth-wrapper {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .auth-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .auth-header p {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .form-group input {
+    padding: 0.75rem 1rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    transition: border-color var(--transition-fast);
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .form-group input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .forgot-link {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+  }
+
+  .error-message {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+  }
+
+  .error-message.show {
+    display: block;
+  }
+
+  .auth-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+  }
+
+  .auth-footer p {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .auth-footer a {
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  const form = document.getElementById('loginForm') as HTMLFormElement;
+  const errorMsg = document.getElementById('errorMessage');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const data = {
+      email: formData.get('email'),
+      password: formData.get('password'),
+    };
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        if (errorMsg) {
+          errorMsg.textContent = result.error || 'Login gagal';
+          errorMsg.classList.add('show');
+        }
+        return;
+      }
+
+      window.location.href = '/dashboard';
+    } catch (err) {
+      if (errorMsg) {
+        errorMsg.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+        errorMsg.classList.add('show');
+      }
+    }
+  });
+</script>

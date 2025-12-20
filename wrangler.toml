@@ -1,0 +1,29 @@
+name = "jasaweb"
+main = "dist/_worker.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Hyperdrive - Neon PostgreSQL connection pooling
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "YOUR_HYPERDRIVE_ID"
+
+# KV Namespace for caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_ID"
+
+# R2 Bucket for file storage
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "jasaweb-storage"
+
+[vars]
+NODE_ENV = "production"
+
+# Local development bindings
+[env.dev]
+name = "jasaweb-dev"
+
+[env.dev.vars]
+NODE_ENV = "development"

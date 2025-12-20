@@ -1,138 +1,156 @@
-# JasaWeb - AI Agent Guidelines
+# AGENTS.md - JasaWeb Coding Standards
 
-## 🎯 Project Overview
+**STRICT RULES FOR AI AGENTS & CONTRIBUTORS**
 
-Platform jasa pembuatan website dengan client portal.
-
-**Scope**: Marketing site + Client portal + Admin panel + Midtrans payment
+> These rules are NON-NEGOTIABLE. Violations break consistency.
 
 ---
 
-## Tech Stack (FINAL - JANGAN DIUBAH)
-
-| Komponen | Teknologi |
-|----------|-----------|
-| Frontend | Astro + React |
-| Backend | Cloudflare Workers (Astro API Routes) |
-| Database | Neon PostgreSQL + Prisma ORM |
-| Cache | Cloudflare KV |
-| Storage | Cloudflare R2 |
-| Payment | Midtrans (QRIS) |
-| Hosting | Cloudflare Pages |
-
----
-
-## 📁 File Referensi
-
-| File | Fungsi |
-|------|--------|
-| `docs/architecture/blueprint.md` | Spesifikasi fitur & database schema |
-| `docs/deployment/SETUP.md` | Panduan setup Cloudflare |
-| `task.md` | Checklist task |
-| `bug.md` | Bug tracker |
-
----
-
-## 🏗️ Struktur Direktori
+## 1. File Structure
 
 ```
-apps/
-├── web/                    # AKTIF
-│   ├── src/
-│   │   ├── pages/          # Astro pages
-│   │   │   └── api/        # API endpoints (Workers)
-│   │   ├── components/     # React components
-│   │   ├── lib/            # Utilities (prisma, auth)
-│   │   └── services/       # Business logic
-│   ├── prisma/             # Database schema
-│   └── wrangler.toml       # Cloudflare config
-└── api/                    # DEPRECATED - JANGAN MODIFY
+src/
+├── components/
+│   ├── ui/           # Reusable UI primitives (Button, Card, etc.)
+│   ├── Header.astro  # Global components
+│   └── Footer.astro
+├── layouts/
+│   ├── Layout.astro      # Base HTML layout
+│   └── PageLayout.astro  # Header + main + Footer wrapper
+├── lib/
+│   ├── config.ts    # Site config, services, pricing (SINGLE SOURCE OF TRUTH)
+│   ├── types.ts     # All TypeScript interfaces
+│   ├── api.ts       # API response utilities
+│   ├── auth.ts      # Authentication
+│   ├── prisma.ts    # Database client
+│   ├── kv.ts        # Cache service
+│   └── r2.ts        # Storage service
+├── pages/
+│   ├── api/         # API endpoints only
+│   └── *.astro      # Page components
 ```
 
 ---
 
-## ⛔ PROHIBITED ACTIONS
+## 2. Strict Rules
 
-AI Agents **DILARANG KERAS**:
+### Data & Config
+- **NEVER** hardcode data in pages. Use `src/lib/config.ts`.
+- **ALWAYS** import types from `src/lib/types.ts`.
+- **ALWAYS** use `siteConfig` for site name, tagline, etc.
 
-1. **Mengubah tech stack** - Stack sudah final
-2. **Menambah dependencies** tanpa approval user
-3. **Membuat file dokumentasi baru** - Update yang ada saja
-4. **Modify `apps/api/`** - Deprecated
-5. **Menambah fitur di luar blueprint** - Lihat "Out of Scope" di blueprint.md
-6. **Menggunakan Node.js APIs** - Workers tidak support fs, path, etc.
-7. **Hardcode secrets** - Gunakan environment variables
-8. **Skip testing** - Selalu `pnpm build` sebelum commit
-9. **Menambah integrasi baru** - Hanya Midtrans yang diizinkan
+### Development Tools (STRICT)
+- **ALWAYS** use `pnpm` for package management. `npm` and `yarn` are FORBIDDEN.
+- **ALWAYS** use `Vitest` for testing.
+- **ALWAYS** run `pnpm typecheck` before pushing.
 
----
+### Components
+- **ALWAYS** use `PageLayout.astro` for public pages.
+- **ALWAYS** use UI components from `src/components/ui/`.
+- **NEVER** create one-off styled buttons or cards in pages.
 
-## ✅ ALLOWED ACTIONS
+### API Responses
+- **ALWAYS** use `jsonResponse()`, `errorResponse()` from `src/lib/api.ts`.
+- **NEVER** manually construct Response objects in API routes.
+- **ALWAYS** validate with `validateRequired()` before processing.
 
-AI Agents **BOLEH**:
+### Styling
+- **ALWAYS** use CSS variables from `Layout.astro` (e.g., `var(--color-primary)`).
+- **NEVER** use hardcoded colors like `#6366f1`. Use `var(--color-primary)`.
+- **ALWAYS** follow the spacing scale: `sm`, `md`, `lg`, `xl`.
 
-1. Mengerjakan task dari `task.md`
-2. Fix bugs dari `bug.md`
-3. Update dokumentasi yang sudah ada
-4. Refactor dalam scope task
-5. Commit dengan Conventional Commits
+### Naming
+- **Files**: kebab-case (e.g., `page-layout.astro`)
+- **Components**: PascalCase (e.g., `PageLayout`)
+- **Functions**: camelCase (e.g., `getServiceById`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `AUTH_COOKIE`)
 
----
-
-## 📋 Workflow
-
-```
-1. Baca task.md → Pilih task pertama yang belum selesai
-2. Baca blueprint.md → Pahami spesifikasi
-3. Implementasi → Code changes
-4. Test → pnpm build
-5. Update task.md → Mark [x]
-6. Commit → Conventional Commits
-7. Create PR → ke branch 'dev'
-```
+### Security
+- **ALWAYS** implement `checkRateLimit` on public POST/PUT/DELETE routes.
 
 ---
 
-## 🏷️ Conventional Commits
+## 3. Component Patterns
 
-```
-feat(scope): add new feature
-fix(scope): fix bug
-docs(scope): update documentation
-refactor(scope): code refactoring
+### UI Components MUST have:
+```typescript
+export interface Props {
+  variant?: 'primary' | 'secondary' | '...';
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;  // Allow className override
+}
 ```
 
-Contoh:
+### API Routes MUST use:
+```typescript
+import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
+
+export const POST: APIRoute = async ({ request }) => {
+  try {
+    const body = await request.json();
+    const error = validateRequired(body, ['field1', 'field2']);
+    if (error) return errorResponse(error);
+    
+    // ... logic
+    return jsonResponse(result);
+  } catch (e) {
+    return handleApiError(e);
+  }
+};
 ```
-feat(auth): implement login endpoint
-fix(billing): handle midtrans webhook error
-docs(blueprint): update database schema
+
+### Rate Limiting
+- **ALWAYS** usage `checkRateLimit` for sensitive endpoints (auth, payment).
+
+### Stability & Resilience
+- **ALWAYS** wrap React islands with `ErrorBoundary` from `@/components/common/ErrorBoundary`.
+- **ALWAYS** add unit tests for new logic in `src/lib/`.
+- **NEVER** use `any` type. Use proper interfaces in `types.ts`.
 ```
 
 ---
 
-## 🔒 Security Rules
+## 4. CSS Variables Reference
 
-1. **Passwords**: Hash dengan bcrypt/argon2
-2. **JWT**: Short expiry (15min access, 7d refresh)
-3. **Input validation**: Zod untuk semua input
-4. **SQL**: Gunakan Prisma (no raw queries)
-5. **Secrets**: Semua via `wrangler secret put`
+```css
+/* Colors */
+--color-primary: #6366f1;
+--color-primary-dark: #4f46e5;
+--color-secondary: #f59e0b;
+--color-success: #10b981;
+--color-error: #ef4444;
+
+/* Backgrounds */
+--color-bg: #0f172a;
+--color-bg-secondary: #1e293b;
+--color-bg-tertiary: #334155;
+
+/* Text */
+--color-text: #f8fafc;
+--color-text-secondary: #94a3b8;
+--color-text-muted: #64748b;
+
+/* Border */
+--color-border: #334155;
+
+/* Radius */
+--radius-sm: 0.375rem;
+--radius-md: 0.5rem;
+--radius-lg: 0.75rem;
+--radius-xl: 1rem;
+
+/* Transitions */
+--transition-fast: 150ms ease;
+--transition-normal: 250ms ease;
+```
 
 ---
 
-## 🚫 Out of Scope (V1)
+## 5. Checklist Before Committing
 
-Jangan implementasi ini di V1:
-- WhatsApp notification
-- Real-time updates (WebSocket)
-- Ticket system
-- CRM
-- Complex RBAC
-- File versioning
-- Multi-tenant
-
----
-
-**Branch**: `dev`
-**Deployment**: Cloudflare Pages
+- [ ] No hardcoded strings/colors/data
+- [ ] Using PageLayout for pages
+- [ ] Using UI components from `ui/`
+- [ ] Types imported from `types.ts`
+- [ ] API uses standardized responses
+- [ ] CSS uses design tokens only

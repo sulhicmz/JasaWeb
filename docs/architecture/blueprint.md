@@ -15,6 +15,8 @@ Platform jasa pembuatan website (Sekolah, Berita, Company Profile) dengan client
 | Storage | Cloudflare R2 |
 | Payment | Midtrans (QRIS) |
 | Hosting | Cloudflare Pages |
+| **Package Manager** | **pnpm** (Strict) |
+| **Testing** | **Vitest** |
 
 ---
 

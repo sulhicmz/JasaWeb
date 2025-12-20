@@ -1,0 +1,116 @@
+---
+/**
+ * Reusable Button Component
+ * Follows strict design system guidelines
+ */
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  fullWidth?: boolean;
+  disabled?: boolean;
+  class?: string;
+}
+
+const { 
+  variant = 'primary', 
+  size = 'md', 
+  href, 
+  type = 'button',
+  fullWidth = false,
+  disabled = false,
+  class: className = '',
+} = Astro.props;
+
+const Tag = href ? 'a' : 'button';
+
+const baseClasses = 'btn';
+const variantClasses = `btn-${variant}`;
+const sizeClasses = `btn-${size}`;
+const widthClasses = fullWidth ? 'btn-full' : '';
+const disabledClasses = disabled ? 'btn-disabled' : '';
+
+const allClasses = [baseClasses, variantClasses, sizeClasses, widthClasses, disabledClasses, className]
+  .filter(Boolean)
+  .join(' ');
+---
+
+{href ? (
+  <a href={href} class={allClasses}>
+    <slot />
+  </a>
+) : (
+  <button type={type} class={allClasses} disabled={disabled}>
+    <slot />
+  </button>
+)}
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  /* Sizes */
+  .btn-sm { padding: 0.5rem 1rem; font-size: 0.75rem; }
+  .btn-md { padding: 0.75rem 1.5rem; font-size: 0.875rem; }
+  .btn-lg { padding: 1rem 2rem; font-size: 1rem; }
+
+  /* Variants */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: white;
+    border-color: var(--color-primary);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);
+  }
+
+  .btn-secondary {
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+  .btn-secondary:hover {
+    background: var(--color-bg-tertiary);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+  .btn-outline:hover {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border-color: transparent;
+  }
+  .btn-ghost:hover {
+    background: var(--color-bg-secondary);
+    color: var(--color-text);
+  }
+
+  /* States */
+  .btn-full { width: 100%; }
+  .btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+</style>

@@ -1,0 +1,144 @@
+---
+/**
+ * Projects List Page (Web Saya)
+ * Shows all user's projects
+ */
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Card from '../../components/ui/Card.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Button from '../../components/ui/Button.astro';
+---
+
+<PortalLayout title="Web Saya" currentPath="/dashboard/projects">
+  <div class="page-header">
+    <p class="page-description">Daftar website yang Anda pesan</p>
+    <Button href="/layanan" variant="primary" size="sm">+ Pesan Baru</Button>
+  </div>
+
+  <div id="projectsList" class="projects-grid">
+    <Card padding="lg" class="loading-state">
+      <p>Memuat proyek...</p>
+    </Card>
+  </div>
+</PortalLayout>
+
+<style>
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .page-description {
+    color: var(--color-text-secondary);
+  }
+
+  .projects-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .loading-state,
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 3rem;
+  }
+
+  .project-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .project-info {
+    flex: 1;
+  }
+
+  .project-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .project-type {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .project-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .project-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+  }
+</style>
+
+<script>
+  const statusBadge = (status: string) => {
+    const map: Record<string, { label: string; variant: string }> = {
+      pending_payment: { label: 'Menunggu Bayar', variant: 'warning' },
+      in_progress: { label: 'Dalam Proses', variant: 'primary' },
+      review: { label: 'Review', variant: 'default' },
+      completed: { label: 'Selesai', variant: 'success' },
+    };
+    return map[status] || { label: status, variant: 'default' };
+  };
+
+  async function loadProjects() {
+    const container = document.getElementById('projectsList');
+    if (!container) return;
+
+    try {
+      const res = await fetch('/api/client/projects');
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        container.innerHTML = `<div class="empty-state">Gagal memuat proyek</div>`;
+        return;
+      }
+
+      if (data.data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Belum ada proyek. <a href="/layanan" style="color:var(--color-primary)">Pesan sekarang</a></p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = data.data.map((p: any) => {
+        const badge = statusBadge(p.status);
+        return `
+          <div class="project-card" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;padding:1.5rem;background:var(--color-bg-secondary);border:1px solid var(--color-border);border-radius:var(--radius-lg);">
+            <div class="project-info" style="flex:1">
+              <div class="project-name" style="font-size:1.125rem;font-weight:600;margin-bottom:0.5rem">${p.name}</div>
+              <div class="project-type" style="color:var(--color-text-secondary);font-size:0.875rem;margin-bottom:1rem">${p.type}</div>
+              <div class="project-meta" style="display:flex;gap:1rem;font-size:0.75rem;color:var(--color-text-muted)">
+                <span>Dibuat: ${new Date(p.createdAt).toLocaleDateString('id-ID')}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end">
+              <span style="padding:0.25rem 0.75rem;background:var(--color-${badge.variant === 'primary' ? 'primary' : badge.variant === 'success' ? 'success' : badge.variant === 'warning' ? 'secondary' : 'bg-tertiary'});color:white;border-radius:999px;font-size:0.75rem">${badge.label}</span>
+              ${p.url ? `<a href="${p.url}" target="_blank" style="font-size:0.75rem;color:var(--color-primary)">Kunjungi →</a>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      container.innerHTML = `<div class="empty-state">Terjadi kesalahan</div>`;
+    }
+  }
+
+  loadProjects();
+</script>

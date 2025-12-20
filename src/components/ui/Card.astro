@@ -1,0 +1,59 @@
+---
+/**
+ * Reusable Card Component
+ * Consistent card container with optional hover effects
+ */
+export interface Props {
+  variant?: 'default' | 'featured' | 'interactive';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  class?: string;
+}
+
+const { 
+  variant = 'default', 
+  padding = 'md',
+  class: className = '' 
+} = Astro.props;
+
+const classes = [
+  'card',
+  `card-${variant}`,
+  `card-padding-${padding}`,
+  className,
+].filter(Boolean).join(' ');
+---
+
+<div class={classes}>
+  <slot />
+</div>
+
+<style>
+  .card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  /* Padding variants */
+  .card-padding-none { padding: 0; }
+  .card-padding-sm { padding: 1rem; }
+  .card-padding-md { padding: 1.5rem; }
+  .card-padding-lg { padding: 2rem; }
+
+  /* Style variants */
+  .card-default {}
+  
+  .card-featured {
+    border-color: var(--color-primary);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), var(--color-bg-secondary));
+  }
+
+  .card-interactive {
+    transition: all var(--transition-normal);
+    cursor: pointer;
+  }
+  .card-interactive:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+  }
+</style>
