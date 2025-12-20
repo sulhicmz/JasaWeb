@@ -21,6 +21,9 @@
 - [ ] Billing (pending Phase 5)
 
 ### Phase 4: Admin Panel (Week 4) ⏳
+- [ ] Fix: Type system errors in middleware and API routes
+- [ ] Fix: ErrorBoundary component props access
+- [ ] Fix: Rate limiting sliding window behavior
 - [ ] Dashboard overview
 - [ ] Manage clients (CRUD)
 - [ ] Manage projects (status, URL, credentials)
@@ -35,10 +38,13 @@
 - [ ] Invoice management
 
 ### Phase 6: Testing & Launch (Week 6) ❌
+- [ ] Fix TypeScript type system (33 errors)
+- [ ] Install and configure Vitest properly
+- [ ] Fix middleware auth flow (locals.request issue)
 - [ ] Setup Vitest + testing-library
 - [ ] API integration tests
 - [ ] End-to-end testing
-- [ ] Security hardening (CSRF, rate limiting)
+- [ ] Security hardening (CSRF, rate limiting fix)
 - [ ] Production deployment
 
 ---

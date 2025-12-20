@@ -8,3 +8,8 @@
 - [x] Added `auth.test.ts`
 - [x] Created `ErrorBoundary.tsx`
 - [x] Update documentation (`EVALUATION.md`, `AGENTS.md`, `blueprint.md`)
+- [ ] **CRITICAL**: Fix 33 TypeScript errors breaking type safety
+- [ ] **URGENT**: Fix middleware `locals.request` type definition
+- [ ] **URGENT**: Fix ErrorBoundary `this.fallback` vs `this.props.fallback`
+- [ ] **HIGH**: Fix rate limiting sliding window implementation
+- [ ] **HIGH**: Install Vitest dev dependency properly
