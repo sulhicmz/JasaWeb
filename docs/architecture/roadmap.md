@@ -18,7 +18,7 @@
 - [x] Dashboard
 - [x] Web Saya (projects)
 - [x] Akun Saya (profile + password)
-- [ ] Billing (pending Phase 5)
+- [x] Billing (invoice management + QRIS payment UI)
 
 ### Phase 4: Admin Panel (Week 4) ✅
 - [x] Fix: Type system errors in middleware and API routes

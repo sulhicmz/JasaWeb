@@ -20,6 +20,7 @@
 - [x] **CRITICAL**: Migrate hardcoded FAQ from `config.ts:381-386` to database-driven approach.
 - [x] **ADMIN**: Implement Blog/CMS management endpoints (Posts & Pages CRUD).
 - [x] **PAYMENT**: QRIS flow implementation including invoice generation and idempotency.
+- [x] **UI**: Create Billing page for client portal - complete invoice management and QRIS payment UI.
 - [ ] **SECURITY**: Implement audit logging for sensitive admin actions.
 - [x] **PAYMENT**: Payment integration test suite with Midtrans sandbox validation (184+ tests).
 - [x] **STABILITY**: Implement environment variable startup validation.

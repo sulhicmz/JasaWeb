@@ -1,0 +1,792 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Card from '../../components/ui/Card.astro';
+---
+
+<PortalLayout title="Billing" currentPath="/dashboard/billing">
+  <div class="page-header">
+    <p class="page-description">Kelola tagihan dan pembayaran</p>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Pembayaran QRIS</h3>
+        <button class="close-btn" onclick="closePaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="paymentContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoice Details Modal -->
+  <div id="invoiceModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Detail Invoice</h3>
+        <button class="close-btn" onclick="closeInvoiceModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="invoiceContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="billing-content">
+    <!-- Overview Card -->
+    <Card padding="lg" class="billing-overview">
+      <h2>Ringkasan Tagihan</h2>
+      <div class="overview-stats" id="overviewStats">
+        <div class="stat-card loading">
+          <div class="stat-label">Total Tagihan</div>
+          <div class="stat-value">-</div>
+        </div>
+        <div class="stat-card loading">
+          <div class="stat-label">Belum Dibayar</div>
+          <div class="stat-value">-</div>
+        </div>
+        <div class="stat-card loading">
+          <div class="stat-label">Sudah Dibayar</div>
+          <div class="stat-value">-</div>
+        </div>
+      </div>
+    </Card>
+
+    <!-- Invoices List -->
+    <Card padding="lg">
+      <div class="invoices-header">
+        <h2>Daftar Tagihan</h2>
+        <div class="filter-controls">
+          <select id="statusFilter" class="filter-select">
+            <option value="">Semua Status</option>
+            <option value="unpaid">Belum Dibayar</option>
+            <option value="paid">Sudah Dibayar</option>
+          </select>
+          <select id="sortBy" class="filter-select">
+            <option value="createdAt">Terbaru</option>
+            <option value="amount">Nominal</option>
+            <option value="paidAt">Tanggal Pembayaran</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="invoicesList" class="invoices-container">
+        <div class="loading-state">
+          <p>Memuat tagihan...</p>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination" style="display: none;">
+        <button id="prevBtn" class="pagination-btn" onclick="changePage(-1)">Sebelumnya</button>
+        <span id="pageInfo" class="page-info"></span>
+        <button id="nextBtn" class="pagination-btn" onclick="changePage(1)">Selanjutnya</button>
+      </div>
+    </Card>
+  </div>
+</PortalLayout>
+
+<style>
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .page-description {
+    color: var(--color-text-secondary);
+  }
+
+  .billing-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .billing-overview {
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Overview Stats */
+  .overview-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .stat-card {
+    background: var(--color-bg-secondary);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+  }
+
+  .stat-card.loading {
+    opacity: 0.5;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  /* Invoices Header */
+  .invoices-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-controls {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .filter-select {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+  }
+
+  /* Invoice Cards */
+  .invoices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .invoice-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .invoice-info {
+    flex: 1;
+  }
+
+  .invoice-project {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .invoice-meta {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  .invoice-amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+  }
+
+  .invoice-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .invoice-status {
+    text-align: right;
+  }
+
+  .invoice-date {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .modal-header h3 {
+    margin: 0;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: var(--color-text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  /* QR Payment */
+  .qris-container {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .qris-timer {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-error);
+    margin: 1rem 0;
+  }
+
+  .qris-instructions {
+    color: var(--color-text-secondary);
+    margin-top: 1rem;
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .pagination-btn {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .page-info {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  /* Loading & Empty States */
+  .loading-state,
+  .empty-state {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 3rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .invoices-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .filter-controls {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .invoice-card {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .invoice-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .overview-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // State management
+  let currentPage = 1;
+  let currentStatus = '';
+  let currentSort = 'createdAt';
+  
+  // Type declarations for window extensions
+  declare global {
+    interface Window {
+      paymentInterval?: ReturnType<typeof setInterval>;
+      paymentTimerInterval?: ReturnType<typeof setInterval>;
+    }
+  }
+
+  // Initialize page
+  document.addEventListener('DOMContentLoaded', () => {
+    loadOverviewStats();
+    loadInvoices();
+    
+    // Event listeners
+    document.getElementById('statusFilter')?.addEventListener('change', (e) => {
+      currentStatus = (e.target as HTMLSelectElement).value;
+      currentPage = 1;
+      loadInvoices();
+    });
+
+    document.getElementById('sortBy')?.addEventListener('change', (e) => {
+      currentSort = (e.target as HTMLSelectElement).value;
+      currentPage = 1;
+      loadInvoices();
+    });
+  });
+
+  // Load overview statistics
+  async function loadOverviewStats() {
+    try {
+      const res = await fetch('/api/client/invoices');
+      const data = await res.json();
+
+      if (!res.ok || !data.invoices) {
+        console.error('Failed to load stats');
+        return;
+      }
+
+      const invoices = data.invoices;
+      const total = invoices.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
+      const unpaid = invoices.filter((inv: any) => inv.status === 'unpaid');
+      const paid = invoices.filter((inv: any) => inv.status === 'paid');
+
+      const unpaidAmount = unpaid.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
+      const paidAmount = paid.reduce((sum: number, inv: any) => sum + Number(inv.amount), 0);
+
+      const statsContainer = document.getElementById('overviewStats');
+      if (statsContainer) {
+        statsContainer.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Total Tagihan</div>
+            <div class="stat-value">Rp ${total.toLocaleString('id-ID')}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Belum Dibayar</div>
+            <div class="stat-value">Rp ${unpaidAmount.toLocaleString('id-ID')}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sudah Dibayar</div>
+            <div class="stat-value">Rp ${paidAmount.toLocaleString('id-ID')}</div>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  }
+
+  // Load invoices list
+  async function loadInvoices() {
+    const container = document.getElementById('invoicesList');
+    if (!container) return;
+
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '10',
+        ...(currentStatus && { status: currentStatus }),
+        sortBy: currentSort,
+        sortOrder: 'desc'
+      });
+
+      const res = await fetch(`/api/client/invoices?${params}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.invoices) {
+        container.innerHTML = '<div class="empty-state"><p>Gagal memuat tagihan</p></div>';
+        return;
+      }
+
+      if (data.invoices.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Belum ada tagihan</p></div>';
+        updatePagination(null);
+        return;
+      }
+
+      // Render invoice cards
+      container.innerHTML = data.invoices.map((invoice: any) => `
+        <div class="invoice-card">
+          <div class="invoice-info">
+            <div class="invoice-project">${invoice.project.name}</div>
+            <div class="invoice-meta">
+              ${invoice.project.type} • Invoice ID: ${invoice.id.slice(-8)}
+            </div>
+            <div class="invoice-amount">Rp ${Number(invoice.amount).toLocaleString('id-ID')}</div>
+            <div class="invoice-meta">
+              Dibuat: ${new Date(invoice.createdAt).toLocaleDateString('id-ID')}
+            </div>
+          </div>
+          <div class="invoice-actions">
+            <div class="invoice-status">
+              <span class="badge ${invoice.status === 'paid' ? 'badge-success' : 'badge-secondary'}">
+                ${invoice.status === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar'}
+              </span>
+              <div class="invoice-date">
+                ${invoice.paidAt ? `Dibayar: ${new Date(invoice.paidAt).toLocaleDateString('id-ID')}` : ''}
+              </div>
+            </div>
+            <div class="invoice-buttons">
+              <button class="button button-secondary button-sm" onclick="showInvoiceDetails('${invoice.id}')">
+                Detail
+              </button>
+              ${invoice.status === 'unpaid' ? `
+                <button class="button button-primary button-sm" onclick="createPayment('${invoice.id}')">
+                  Bayar
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      updatePagination(data.pagination);
+    } catch (error) {
+      container.innerHTML = '<div class="empty-state"><p>Terjadi kesalahan</p></div>';
+    }
+  }
+
+  // Update pagination controls
+  function updatePagination(pagination: any) {
+    const container = document.getElementById('pagination');
+    const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
+    const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
+    const pageInfo = document.getElementById('pageInfo');
+
+    if (!pagination || pagination.totalPages <= 1) {
+      container!.style.display = 'none';
+      return;
+    }
+
+    container!.style.display = 'flex';
+    if (prevBtn) prevBtn.disabled = !pagination.hasPrev;
+    if (nextBtn) nextBtn.disabled = !pagination.hasNext;
+    pageInfo!.textContent = `Halaman ${pagination.page} dari ${pagination.totalPages}`;
+  }
+
+  // Change page
+  function changePage(direction: number) {
+    currentPage += direction;
+    loadInvoices();
+  }
+
+  // Show invoice details
+  async function showInvoiceDetails(invoiceId: string) {
+    const modal = document.getElementById('invoiceModal');
+    const content = document.getElementById('invoiceContent');
+
+    if (!modal || !content) return;
+
+    try {
+      const params = new URLSearchParams({ invoiceId });
+      const res = await fetch(`/api/client/payment?${params}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        content.innerHTML = '<p>Gagal memuat detail invoice</p>';
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="invoice-details">
+          <div class="detail-row">
+            <span class="label">Invoice ID:</span>
+            <span>${data.invoice.id}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Proyek:</span>
+            <span>${data.invoice.project.name}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Tipe:</span>
+            <span>${data.invoice.project.type}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Nominal:</span>
+            <span class="amount">Rp ${Number(data.invoice.amount).toLocaleString('id-ID')}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Status:</span>
+            <span class="badge ${data.invoice.status === 'paid' ? 'badge-success' : 'badge-secondary'}">
+              ${data.invoice.status === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar'}
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Dibuat:</span>
+            <span>${new Date(data.invoice.createdAt).toLocaleString('id-ID')}</span>
+          </div>
+          ${data.invoice.paidAt ? `
+            <div class="detail-row">
+              <span class="label">Dibayar:</span>
+              <span>${new Date(data.invoice.paidAt).toLocaleString('id-ID')}</span>
+            </div>
+          ` : ''}
+          ${data.paymentStatus ? `
+            <div class="detail-row">
+              <span class="label">Payment Status:</span>
+              <span>${data.paymentStatus}</span>
+            </div>
+          ` : ''}
+          ${data.expired ? '<p style="color: var(--color-error);">Invoice expired</p>' : ''}
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+    } catch (error) {
+      content.innerHTML = '<p>Terjadi kesalahan</p>';
+      modal.style.display = 'flex';
+    }
+  }
+
+  // Create payment
+  async function createPayment(invoiceId: string) {
+    const modal = document.getElementById('paymentModal');
+    const content = document.getElementById('paymentContent');
+
+    if (!modal || !content) return;
+
+    try {
+      const res = await fetch('/api/client/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoiceId })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        content.innerHTML = `
+          <div class="payment-error">
+            <p style="color: var(--color-error);">${data.error || 'Gagal membuat pembayaran'}</p>
+            <button class="button button-secondary" onclick="closePaymentModal()">Tutup</button>
+          </div>
+        `;
+        modal.style.display = 'flex';
+        return;
+      }
+
+      // Start QRIS payment flow
+      content.innerHTML = `
+        <div class="qris-container">
+          <h4>Scan QRIS untuk Pembayaran</h4>
+          <div class="qris-amount">Rp ${data.invoice.amount.toLocaleString('id-ID')}</div>
+          <div class="qris-timer" id="paymentTimer">24:00</div>
+          
+          <div class="qris-qr">
+            <img src="${data.payment.qrisUrl}" alt="QRIS Code" style="max-width: 300px; width: 100%; border-radius: var(--radius-lg);" />
+          </div>
+          
+          <div class="qris-instructions">
+            <p>1. Scan QR code dengan aplikasi e-wallet</p>
+            <p>2. Masukkan nominal yang tepat</p>
+            <p>3. Selesaikan pembayaran</p>
+          </div>
+          
+          <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;">
+            <button class="button button-secondary" onclick="checkPaymentStatus('${data.payment.orderId}')">
+              Cek Status
+            </button>
+            <button class="button button-secondary" onclick="closePaymentModal()">
+              Tutup
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+      startPaymentTimer();
+      
+      // Auto-check payment status every 5 seconds
+      window.paymentInterval = setInterval(() => {
+        checkPaymentStatus(data.payment.orderId, true);
+      }, 5000);
+
+    } catch (error) {
+      content.innerHTML = '<p style="color: var(--color-error);">Terjadi kesalahan</p>';
+      modal.style.display = 'flex';
+    }
+  }
+
+  // Payment timer
+  function startPaymentTimer() {
+    let seconds = 24 * 60 * 60; // 24 hours
+    const timerEl = document.getElementById('paymentTimer');
+    
+    if (!timerEl) return;
+
+    window.paymentTimerInterval = setInterval(() => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      
+      seconds--;
+      if (seconds < 0) {
+        if (window.paymentTimerInterval) {
+          clearInterval(window.paymentTimerInterval);
+        }
+        timerEl.textContent = 'Expired';
+      }
+    }, 1000);
+  }
+
+  // Check payment status
+  async function checkPaymentStatus(orderId: string, silent = false) {
+    try {
+      const res = await fetch(`/api/webhooks/midtrans/check-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+      });
+
+      const data = await res.json();
+
+      if (!silent && res.ok) {
+        alert(`Status: ${data.status || 'Processing'}`);
+      }
+
+      if (res.ok && data.status === 'settlement') {
+        // Payment successful
+        clearInterval(window.paymentInterval);
+        clearInterval(window.paymentTimerInterval);
+        closePaymentModal();
+        loadInvoices();
+        loadOverviewStats();
+        alert('Pembayaran berhasil! Tagihan telah diperbarui.');
+      }
+    } catch (error) {
+      if (!silent) {
+        alert('Gagal mengecek status pembayaran');
+      }
+    }
+  }
+
+  // Close modals
+  function closePaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    modal!.style.display = 'none';
+    
+    // Clear intervals
+    if (window.paymentInterval) {
+      clearInterval(window.paymentInterval);
+    }
+    if (window.paymentTimerInterval) {
+      clearInterval(window.paymentTimerInterval);
+    }
+  }
+
+  function closeInvoiceModal() {
+    const modal = document.getElementById('invoiceModal');
+    modal!.style.display = 'none';
+  }
+
+  // Add badge styles dynamically
+  const style = document.createElement('style');
+  style.textContent = `
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .badge-success {
+      background: var(--color-success);
+      color: white;
+    }
+    .badge-secondary {
+      background: var(--color-secondary);
+      color: white;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .label {
+      font-weight: 500;
+      color: var(--color-text-secondary);
+    }
+    .amount {
+      font-weight: 600;
+      font-size: 1.125rem;
+    }
+    .button {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .button-secondary {
+      background: var(--color-bg-secondary);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+    .button-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+    }
+    .button:hover {
+      opacity: 0.9;
+    }
+  `;
+  document.head.appendChild(style);
+</script>
