@@ -176,3 +176,43 @@ model Faq {
   @@index([isActive])
   @@index([isActive, sortOrder])
 }
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+model AuditLog {
+  id        String       @id @default(uuid())
+  userId    String?      @map("user_id")
+  action    AuditAction
+  resource  String
+  resourceId String?     @map("resource_id")
+  oldValues Json?        @map("old_values")
+  newValues Json?        @map("new_values")
+  ipAddress String?      @map("ip_address")
+  userAgent String?      @map("user_agent")
+  timestamp DateTime     @default(now())
+
+  @@map("audit_logs")
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([timestamp])
+  @@index([resource, resourceId])
+  @@index([timestamp, action])
+  @@index([userId, timestamp])
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  VIEW
+  PAYMENT_INIT
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  EXPORT
+  IMPORT
+  ROLE_CHANGE
+}

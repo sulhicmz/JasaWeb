@@ -8,6 +8,7 @@ import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createPrismaClient } from '@/lib/prisma';
 import { createMidtransService, validateInvoiceForPayment } from '@/lib/midtrans-client';
+import { AuditLogger } from '@/lib/audit-middleware';
 
 interface CreatePaymentRequest {
     invoiceId: string;
@@ -106,8 +107,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 },
             });
 
-            // Audit log
-            console.log(`QRIS payment created: orderId=${paymentResponse.orderId}, invoiceId=${invoice.id}, userId=${user.id}`);
+            // Audit log for payment initiation
+            await AuditLogger.logPayment(locals, request, {
+                action: 'PAYMENT_INIT',
+                resourceId: invoice.id,
+                newValues: {
+                    midtransOrderId: paymentResponse.orderId,
+                    qrisUrl: paymentResponse.qrisUrl,
+                    amount: Number(invoice.amount)
+                }
+            });
 
             return jsonResponse({
                 success: true,

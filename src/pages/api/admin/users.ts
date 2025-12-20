@@ -15,6 +15,7 @@ import {
 } from '@/lib/api';
 import { requireAdmin, validateAdminAccess } from '@/services/admin/auth';
 import { createAdminService } from '@/services/admin/users';
+import { AuditLogger } from '@/lib/audit-middleware';
 
 
 // ==============================================
@@ -48,6 +49,12 @@ export const GET: APIRoute = async (context) => {
             role,
             sortBy,
             sortOrder
+        });
+
+        // Log viewing sensitive user data
+        await AuditLogger.logAdminAction(context.locals, context.request, {
+            action: 'VIEW',
+            resource: 'users'
         });
 
         return jsonResponse(result);
@@ -107,6 +114,18 @@ export const POST: APIRoute = async (context) => {
             email: body.email as string,
             password: body.password as string,
             role: body.role as 'admin' | 'client'
+        });
+
+        // Log user creation
+        await AuditLogger.logAdminAction(context.locals, context.request, {
+            action: 'CREATE',
+            resource: 'user',
+            resourceId: user.id,
+            newValues: {
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
         });
 
         return jsonResponse({ message: 'User berhasil dibuat', user }, 201);
