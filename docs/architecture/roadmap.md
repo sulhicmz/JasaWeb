@@ -30,18 +30,22 @@
 - [x] **HIGH**: Create admin dashboard overview endpoint (/api/admin/dashboard)
 - [x] **HIGH**: Implement client management CRUD (/api/admin/users)
 - [x] **HIGH**: Create modular admin services layer (user management, CRUD utilities)
-- [ ] **MEDIUM**: Add project management API (/api/admin/projects)
+- [x] **HIGH**: Add project management API (/api/admin/projects)
 - [ ] **MEDIUM**: Create blog post CRUD operations (/api/admin/posts)
 - [ ] **MEDIUM**: Implement CMS page management (/api/admin/pages)
 - [ ] **LOW**: Template management CRUD (/api/admin/templates)
+- [x] **CRITICAL**: Add database indexes for dashboard query optimization
+- [ ] **MEDIUM**: Implement API pagination across all list endpoints
 
 ### Phase 5: Payment (Week 5) ❌
 - [ ] **HIGH**: Midtrans SDK integration and configuration
 - [ ] **HIGH**: QRIS payment flow implementation
-- [ ] **HIGH**: Webhook signature validation handler
+- [ ] **CRITICAL**: Webhook signature validation handler (SECURITY REQUIREMENT)
 - [ ] **HIGH**: Invoice creation and status tracking
 - [ ] **MEDIUM**: Payment history and receipt generation
+- [ ] **MEDIUM**: Implement audit logging for all payment transactions
 - [ ] **LOW**: Payment retry and failure handling
+- [ ] **CRITICAL**: Migrate hardcoded templates/FAQ data to database for dynamic management
 
 ### Phase 6: Testing & Launch (Week 6) ❌
 - [x] Fix TypeScript type system (0 errors)
@@ -62,7 +66,7 @@
 | 1 | 100% | Core infra complete |
 | 2 | 100% | Public site live |
 | 3 | 95% | Standardization complete, Billing pending |
-| 4 | 30% | TypeScript errors fixed, build stable, security improvements needed |
+| 4 | 40% | Project management APIs implemented, ready for UI |
 | 5 | 0% | Blocked on Phase 4 |
 | 6 | 0% | Final phase |
 
