@@ -193,7 +193,7 @@ export interface KVNamespace {
     put(key: string, value: string | ArrayBuffer | ReadableStream, options?: {
         expiration?: number;
         expirationTtl?: number;
-        metadata?: Record<string, any>;
+        metadata?: Record<string, unknown>;
     }): Promise<void>;
     delete(key: string): Promise<void>;
     list(options?: {
@@ -204,7 +204,7 @@ export interface KVNamespace {
         keys: Array<{
             name: string;
             expiration?: number;
-            metadata?: Record<string, any>;
+            metadata?: Record<string, unknown>;
         }>;
         list_complete: boolean;
         cursor?: string;
@@ -279,18 +279,18 @@ export interface R2MultipartUpload {
 export interface D1Database {
     prepare(query: string): D1PreparedStatement;
     dump(): Promise<ArrayBuffer>;
-    batch<T = any>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+    batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
 }
 
 export interface D1PreparedStatement {
-    bind(...values: any[]): D1PreparedStatement;
-    first<T = any>(column?: string): Promise<T | undefined>;
-    run<T = any>(): Promise<D1Result<T>>;
-    all<T = any>(): Promise<D1Result<T>>;
-    raw<T = any>(): Promise<T[]>;
+    bind(...values: unknown[]): D1PreparedStatement;
+    first<T = unknown>(column?: string): Promise<T | undefined>;
+    run<T = unknown>(): Promise<D1Result<T>>;
+    all<T = unknown>(): Promise<D1Result<T>>;
+    raw<T = unknown>(): Promise<T[]>;
 }
 
-export interface D1Result<T = any> {
+export interface D1Result<T = unknown> {
     results: T[];
     success: boolean;
     meta: {

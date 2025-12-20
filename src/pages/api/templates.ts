@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ request }) => {
         });
 
         // Validate category if provided
-        const category = query.filters.category;
+        const category = query.filters.category as string | undefined;
         if (category && !['sekolah', 'berita', 'company'].includes(category)) {
             return errorResponse('Kategori harus "sekolah", "berita", atau "company"');
         }

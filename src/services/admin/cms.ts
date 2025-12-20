@@ -36,7 +36,7 @@ export class CmsService extends BaseCrudService<Page, CreatePageData, UpdatePage
         });
     }
 
-    protected buildSearchFields(search: string): any[] {
+    protected buildSearchFields(search: string): Record<string, unknown>[] {
         return [
             { title: { contains: search, mode: 'insensitive' } },
             { content: { contains: search, mode: 'insensitive' } }
@@ -55,7 +55,9 @@ export class CmsService extends BaseCrudService<Page, CreatePageData, UpdatePage
     async create(data: CreatePageData): Promise<Page> {
         const slug = this.generateSlug(data.title);
         
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            create: (args: { data: CreatePageData & { slug: string }; select: Record<string, unknown> }) => Promise<Page>;
+        };
         return model.create({
             data: {
                 ...data,
@@ -66,14 +68,16 @@ export class CmsService extends BaseCrudService<Page, CreatePageData, UpdatePage
     }
 
     async update(id: string, data: UpdatePageData): Promise<Page> {
-        const updateData: any = { ...data };
+        const updateData: CreatePageData & { slug: string } = { ...data } as CreatePageData & { slug: string };
         
         // Generate new slug if title is changed
         if (data.title) {
             updateData.slug = this.generateSlug(data.title);
         }
         
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            update: (args: { where: { id: string }; data: unknown; select: Record<string, unknown> }) => Promise<Page>;
+        };
         return model.update({
             where: { id },
             data: updateData,
@@ -82,7 +86,9 @@ export class CmsService extends BaseCrudService<Page, CreatePageData, UpdatePage
     }
 
     async findBySlug(slug: string): Promise<Page | null> {
-        const model = this.prisma[this.modelName] as any;
+        const model = this.prisma[this.modelName] as unknown as {
+            findUnique: (args: { where: { slug: string }; select: Record<string, unknown> }) => Promise<Page | null>;
+        };
         return model.findUnique({
             where: { slug },
             select: this.defaultSelect

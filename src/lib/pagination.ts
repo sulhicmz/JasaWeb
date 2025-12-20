@@ -26,7 +26,7 @@ export interface PaginationMetadata {
   hasPrev: boolean;
 }
 
-export interface PaginationResult<T = any> {
+export interface PaginationResult<T = unknown> {
   data: T[];
   pagination: PaginationMetadata;
 }
@@ -41,7 +41,7 @@ export interface SortOptions {
 
 export interface QueryOptions extends PaginationOptions, SortOptions {
   search?: string;
-  filters?: Record<string, any>;
+  filters?: Record<string, unknown>;
 }
 
 class PaginationService {
@@ -125,14 +125,14 @@ class PaginationService {
     pagination: PaginationParams;
     sort: SortOptions;
     search?: string;
-    filters: Record<string, any>;
+    filters: Record<string, unknown>;
   } {
     const pagination = this.parsePagination(url, options);
     const sort = this.parseSort(url, options);
     const search = url.searchParams.get('search') || options.search || undefined;
 
     // Parse filters
-    const filters: Record<string, any> = { ...options.filters };
+    const filters: Record<string, unknown> = { ...options.filters };
     
     // Common filter patterns
     const commonFilters = ['status', 'category', 'role', 'type'];
@@ -188,7 +188,7 @@ class PaginationService {
   public createPrismaQuery(
     pagination: PaginationParams,
     sort: SortOptions,
-    additionalWhere: Record<string, any> = {}
+    additionalWhere: Record<string, unknown> = {}
   ) {
     const { skip, limit } = pagination;
     const { sortBy, sortOrder } = sort;
@@ -207,10 +207,10 @@ class PaginationService {
    * Add search condition to Prisma where clause
    */
   public addSearchCondition(
-    where: Record<string, any>,
+    where: Record<string, unknown>,
     search: string,
     searchableFields: string[]
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     if (!search || searchableFields.length === 0) {
       return where;
     }

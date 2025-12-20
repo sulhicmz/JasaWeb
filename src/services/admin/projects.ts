@@ -17,7 +17,7 @@ export interface ProjectWithUser {
     type: 'sekolah' | 'berita' | 'company';
     status: 'pending_payment' | 'in_progress' | 'review' | 'completed';
     url: string | null;
-    credentials: Record<string, string> | null;
+    credentials: Record<string, unknown> | null;
     createdAt: Date;
     updatedAt: Date;
     user: {
@@ -34,7 +34,7 @@ export interface CreateProjectData {
     userId: string;
     status?: 'pending_payment' | 'in_progress' | 'review' | 'completed';
     url?: string;
-    credentials?: Record<string, string>;
+    credentials?: Record<string, unknown>;
 }
 
 export interface UpdateProjectData {
@@ -75,11 +75,11 @@ export class ProjectService extends BaseCrudService<
                         phone: true
                     }
                 }
-            }
+            } as Record<string, unknown>
         );
     }
 
-    protected buildSearchFields(search: string): any[] {
+    protected buildSearchFields(search: string): Record<string, unknown>[] {
         return [
             { name: { contains: search, mode: 'insensitive' } },
             { user: { name: { contains: search, mode: 'insensitive' } } },
@@ -96,8 +96,8 @@ export class ProjectService extends BaseCrudService<
         };
     }
 
-    protected buildWhereClause(options: ListOptions): any {
-        const where: any = {};
+    protected buildWhereClause(options: ListOptions): Record<string, unknown> {
+        const where: Record<string, unknown> = {};
 
         // Add search functionality
         if (options.search) {
@@ -142,7 +142,7 @@ export class ProjectService extends BaseCrudService<
             totalPages: number;
         };
     }> {
-        const filters: any = {};
+        const filters: Record<string, unknown> = {};
         if (options.status) filters.status = options.status;
         if (options.type) filters.type = options.type;
         if (options.userId) filters.userId = options.userId;
@@ -173,7 +173,11 @@ export class ProjectService extends BaseCrudService<
 
     async createProject(data: CreateProjectData): Promise<ProjectWithUser> {
         // Validate user exists
-        const user = await (this.prisma as any).user.findUnique({
+        const user = await (this.prisma as PrismaClient & {
+            user: {
+                findUnique: (args: { where: { id: string } }) => Promise<{ id: string } | null>;
+            };
+        }).user.findUnique({
             where: { id: data.userId }
         });
 
@@ -192,7 +196,7 @@ export class ProjectService extends BaseCrudService<
         }
 
         // Create project
-        const projectData: any = {
+        const projectData: CreateProjectData = {
             name: data.name,
             type: data.type,
             userId: data.userId,
@@ -212,7 +216,7 @@ export class ProjectService extends BaseCrudService<
             throw new Error('Project tidak ditemukan');
         }
 
-        const updateData: any = {};
+        const updateData: Partial<UpdateProjectData> = {};
 
         // Validate and add fields
         if (data.name !== undefined) updateData.name = data.name;
@@ -240,22 +244,47 @@ export class ProjectService extends BaseCrudService<
         byType: Record<string, number>;
         recentlyUpdated: ProjectWithUser[];
     }> {
+        const prismaExtended = this.prisma as PrismaClient & {
+            project: {
+                count: () => Promise<number>;
+                groupBy: (args: { by: string[]; _count: boolean }) => Promise<Array<{
+                    status?: string;
+                    type?: string;
+                    _count: number;
+                }>>;
+                findMany: (args: {
+                    take: number;
+                    orderBy: Record<string, 'desc'>;
+                    include: {
+                        user: {
+                            select: {
+                                id: boolean;
+                                name: boolean;
+                                email: boolean;
+                                phone: boolean;
+                            };
+                        };
+                    };
+                }) => Promise<ProjectWithUser[]>;
+            };
+        };
+
         const [
             total,
             statusStats,
             typeStats,
             recentProjects
         ] = await Promise.all([
-            (this.prisma as any).project.count(),
-            (this.prisma as any).project.groupBy({
+            prismaExtended.project.count(),
+            prismaExtended.project.groupBy({
                 by: ['status'],
                 _count: true
             }),
-            (this.prisma as any).project.groupBy({
+            prismaExtended.project.groupBy({
                 by: ['type'],
                 _count: true
             }),
-            (this.prisma as any).project.findMany({
+            prismaExtended.project.findMany({
                 take: 5,
                 orderBy: { updatedAt: 'desc' },
                 include: {
@@ -271,13 +300,13 @@ export class ProjectService extends BaseCrudService<
             })
         ]);
 
-        const byStatus = statusStats.reduce((acc: Record<string, number>, item: any) => {
-            acc[item.status] = item._count;
+        const byStatus = statusStats.reduce((acc: Record<string, number>, item) => {
+            if (item.status) acc[item.status] = item._count;
             return acc;
         }, {});
 
-        const byType = typeStats.reduce((acc: Record<string, number>, item: any) => {
-            acc[item.type] = item._count;
+        const byType = typeStats.reduce((acc: Record<string, number>, item) => {
+            if (item.type) acc[item.type] = item._count;
             return acc;
         }, {});
 
@@ -285,7 +314,7 @@ export class ProjectService extends BaseCrudService<
             total,
             byStatus,
             byType,
-            recentlyUpdated: recentProjects
+            recentlyUpdated: recentProjects as ProjectWithUser[]
         };
     }
 }
