@@ -1,8 +1,7 @@
 name: oc smart-ci
 
 on:
-  pull_request:
-    branches: [main, dev]
+  workflow_dispatch:
   workflow_run:
     workflows: ["oc standarizer"]
     types: [completed]
@@ -66,6 +65,17 @@ jobs:
           git config --global user.name "sulhicmz"
           git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
 
+      - name: Branch Management
+        run: |
+          git fetch --all
+          if git branch -r | grep "origin/agent-workspace"; then
+            git checkout agent-workspace
+            git pull origin agent-workspace
+          else
+            git checkout -b agent-workspace
+          fi
+          git merge origin/dev --no-edit || echo "Merge conflict or already up to date"
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
@@ -98,7 +108,8 @@ jobs:
           BUILD_STATUS: ${{ steps.build.outcome }}
         run: |
           opencode run "$(cat <<'PROMPT'
-          CI has failures. Fix them.
+          You are a **Final Quality Gate Agent**.
+          CI has failures on the `agent-workspace` branch. Your mission is to fix them so the codebase is 100% compliant and ready for merge.
 
           Status:
           - Lint: $LINT_STATUS
@@ -106,15 +117,16 @@ jobs:
           - Build: $BUILD_STATUS
 
           Steps:
-          1. Check git log -1. If last commit is auto-fix, STOP.
-          2. Fix the failing checks
-          3. Verify fix works locally
-          4. Commit: fix(ci): auto-resolve errors
-          5. Push to this branch
+          1. **Synchronize**: Ensure you are on `agent-workspace` and have the latest.
+          2. **Fix**: Address every failure (lint errors, test failures, build breaks).
+          3. **Verify**: Run `pnpm lint`, `pnpm test`, and `pnpm build` locally.
+          4. **Final Gate**: If ANY check still fails, keep iterating until all pass.
+          5. **Commit & Push**: Commit with `fix(ci): auto-resolve all check failures` and push to `agent-workspace`.
 
           Constraints:
-          - Minimal changes only
-          - Do not delete business logic
+          - DO NOT compromise on quality. Fix the root cause.
+          - Do not bypass tests.
+          - Ensure the PR to `dev` is updated.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
