@@ -381,11 +381,11 @@ jobs:
           ---
 
           ### **PHASE 1: MODULAR ANALYSIS (The "Blueprint" Check)**
-          1. **Architecture Audit**: Read `blueprint.md`, `package.json`, and [docs/architecture/roadmap.md](cci:7://file:///d:/06.%20repo%20sulhicmz/JasaWeb/docs/architecture/roadmap.md:0:0-0:0). Identify "spaghetti" patterns or duplicated logic.
+          1. **Architecture Audit**: Read `blueprint.md`, `package.json`, and [docs/architecture/roadmap.md]. Identify "spaghetti" patterns or duplicated logic.
           2. **Sync Branch**: Use the shared `agent-workspace`.
              - `git fetch --all`.
              - Switch to `agent-workspace` (pull if exists, create from `dev` if not).
-          3. **Conflict Guard**: Ensure [docs/task.md](cci:7://file:///d:/06.%20repo%20sulhicmz/JasaWeb/docs/task.md:0:0-0:0) doesn't show an ongoing task in the same module.
+          3. **Conflict Guard**: Ensure [docs/task.md] doesn't show an ongoing task in the same module.
           4. **Rationale**: "I chose [Task] because it currently blocks [Feature] due to lack of modularity."
 
           ### **PHASE 2: EXECUTION (The "LEGO" Standard)**
@@ -398,7 +398,7 @@ jobs:
           ### **PHASE 3: ECOSYSTEM UPDATES & FINALIZATION**
           1. **Update Documentation**:
              - `blueprint.md`: Log new modules or architectural shifts.
-             - [docs/task.md](cci:7://file:///d:/06.%20repo%20sulhicmz/JasaWeb/docs/task.md:0:0-0:0): Mark done. Add "Tech Debt" entries for any non-modular code found.
+             - [docs/task.md]: Mark done. Add "Tech Debt" entries for any non-modular code found.
              - `AGENTS.md`: Update the "Modular Pattern Log" for the next agent.
           2. **Git Protocol**:
              - **Conventional Commits** ONLY (e.g., `feat(shared): add reusable PaymentButton`, `refactor(api): extract billing logic to service`).
