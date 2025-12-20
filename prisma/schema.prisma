@@ -97,6 +97,12 @@ model Invoice {
 enum InvoiceStatus {
   unpaid
   paid
+  pending
+  failed
+  cancelled
+  expired
+  refunded
+  partial_refunded
 }
 
 // ============================================
