@@ -74,7 +74,7 @@ jobs:
           } >> $GITHUB_OUTPUT
           {
             echo "GIT_LOG<<EOF"
-            git log --oneline -10
+            git log --oneline -2
             echo "EOF"
           } >> $GITHUB_OUTPUT
 
