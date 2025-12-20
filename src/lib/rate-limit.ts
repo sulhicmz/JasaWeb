@@ -20,7 +20,7 @@ export const RateLimits = {
 } as const;
 
 /**
- * Check if request exceeded rate limit
+ * Check if request exceeded rate limit using FIXED WINDOW approach
  * Returns null if allowed, Response if blocked
  */
 export async function checkRateLimit(
@@ -30,9 +30,12 @@ export async function checkRateLimit(
     config: RateLimitConfig
 ): Promise<Response | null> {
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-    const key = `ratelimit:${action}:${ip}`;
+    
+    // Fixed window: use timestamp-based keys
+    const windowStart = Math.floor(Date.now() / (config.window * 1000)) * (config.window * 1000);
+    const key = `ratelimit:${action}:${ip}:${windowStart}`;
 
-    // Get current count
+    // Get current count for this window
     const count = await kv.get(key, 'text');
     const current = count ? parseInt(count) : 0;
 
@@ -40,39 +43,9 @@ export async function checkRateLimit(
         return errorResponse('Too many requests, please try again later.', 429);
     }
 
-    // Increment count
-    // If key doesn't exist, this will create it with expiration
-    // If key exists, we overwrite (increment) but need to preserve TTL?
-    // KV simple approach: just set expiration on every write or let it expire
-    // Better approach for fixed window:
-    // If not exists, set = 1 with TTL.
-    // If exists, increment (get + put).
-
-    // Optimistic usage:
+    // Increment count with expiration matching window duration
     const newCount = current + 1;
-
-    // For the first request, set the expiration
-    if (newCount === 1) {
-        await kv.put(key, newCount.toString(), { expirationTtl: config.window });
-    } else {
-        // For subsequent requests, update value but keep TTL (KV doesn't support 'keep ttl' natively efficiently in one go without reading metadata)
-        // Simplified: Just reset TTL to window on every hit (Sliding window-ish) OR
-        // Strict Fixed Window: Check metadata.
-        // For this iteration, simplified "reset TTL" or "fixed TTL from first write" is fine.
-        // Implementing simple fixed window where TTL resets on first write only is harder without knowing remaining TTL.
-        // Let's use simple sliding-expiration: every hit extends the block? No, that's bad.
-        // Let's use: Set expiration only if creating new.
-
-        // However, standard KV `put` overwrites.
-        // Valid strategy for simple rate limit: 
-        // Just write with expirationTtl = window. 
-        // This effectively makes it "limit requests in the LAST window seconds" roughly.
-        // Actually, no. If I write with TTL 60s, it expires 60s from NOW.
-        // So 5 fast requests -> blocked.
-        // 6th request at 61s -> allowed?
-        // Yes.
-        await kv.put(key, newCount.toString(), { expirationTtl: config.window });
-    }
+    await kv.put(key, newCount.toString(), { expirationTtl: config.window });
 
     return null;
 }

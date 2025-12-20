@@ -86,6 +86,11 @@ export function extractBearerToken(header: string | null): string | null {
 export const AUTH_COOKIE = 'jasaweb_auth';
 
 /**
+ * Cookie name for CSRF token
+ */
+export const CSRF_COOKIE = 'jasaweb_csrf';
+
+/**
  * Create auth cookie options
  */
 export function getAuthCookieOptions(isProduction: boolean) {
@@ -96,4 +101,36 @@ export function getAuthCookieOptions(isProduction: boolean) {
         path: '/',
         maxAge: 60 * 60 * 24 * 7, // 7 days
     };
+}
+
+/**
+ * Create CSRF cookie options (accessible to JavaScript)
+ */
+export function getCsrfCookieOptions(isProduction: boolean) {
+    return {
+        httpOnly: false, // Must be accessible to JS
+        secure: isProduction,
+        sameSite: 'strict' as const,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+    };
+}
+
+/**
+ * Generate secure random CSRF token
+ */
+export function generateCsrfToken(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Validate CSRF token against cookie value
+ */
+export function validateCsrfToken(headerToken: string | null, cookieToken: string | null): boolean {
+    if (!headerToken || !cookieToken) {
+        return false;
+    }
+    return headerToken === cookieToken;
 }
