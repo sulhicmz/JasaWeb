@@ -147,3 +147,156 @@ export interface NavLinkProps {
     label: string;
     isActive?: boolean;
 }
+
+// ==============================================
+// CLOUDFLARE WORKERS TYPES
+// ==============================================
+export interface CloudflareRuntime {
+    // Environment variables (accessible via runtime.env)
+    env: {
+        // Database
+        DATABASE_URL?: string;
+        HYPERDRIVE?: string;
+        
+        // Authentication
+        JWT_SECRET?: string;
+        
+        // Payment
+        MIDTRANS_SERVER_KEY?: string;
+        MIDTRANS_CLIENT_KEY?: string;
+        MIDTRANS_IS_PRODUCTION?: string;
+        
+        // Services
+        SESSION?: KVNamespace;
+        CACHE?: KVNamespace;
+        STORAGE?: R2Bucket;
+        
+        // Other app variables
+        NODE_ENV?: 'development' | 'production';
+    };
+}
+
+// Interface for runtime environment (as passed to functions)
+export interface RuntimeEnv {
+    DATABASE_URL?: string;
+    HYPERDRIVE?: string;
+    JWT_SECRET?: string;
+    MIDTRANS_SERVER_KEY?: string;
+    MIDTRANS_CLIENT_KEY?: string;
+    MIDTRANS_IS_PRODUCTION?: string;
+    NODE_ENV?: 'development' | 'production';
+}
+
+// KV Namespace types
+export interface KVNamespace {
+    get(key: string, type?: 'text' | 'json' | 'arrayBuffer' | 'stream'): Promise<string | object | ArrayBuffer | ReadableStream | null>;
+    put(key: string, value: string | ArrayBuffer | ReadableStream, options?: {
+        expiration?: number;
+        expirationTtl?: number;
+        metadata?: Record<string, any>;
+    }): Promise<void>;
+    delete(key: string): Promise<void>;
+    list(options?: {
+        prefix?: string;
+        limit?: number;
+        cursor?: string;
+    }): Promise<{
+        keys: Array<{
+            name: string;
+            expiration?: number;
+            metadata?: Record<string, any>;
+        }>;
+        list_complete: boolean;
+        cursor?: string;
+    }>;
+}
+
+// R2 Bucket types
+export interface R2Bucket {
+    get(key: string): Promise<R2ObjectBody | null>;
+    put(key: string, value: ArrayBuffer | ReadableStream | string, options?: {
+        httpMetadata?: {
+            contentType?: string;
+            cacheControl?: string;
+            contentEncoding?: string;
+            contentLanguage?: string;
+        };
+        customMetadata?: Record<string, string>;
+    }): Promise<R2Object>;
+    delete(key: string): Promise<void>;
+    delete(keys: string[]): Promise<R2Objects>;
+    head(key: string): Promise<R2Object | null>;
+    list(options?: {
+        prefix?: string;
+        delimiter?: string;
+        include?: Array<'httpMetadata' | 'customMetadata'>;
+        limit?: number;
+        cursor?: string;
+    }): Promise<R2Objects>;
+    createMultipartUpload(key: string): Promise<R2MultipartUpload>;
+}
+
+export interface R2Object {
+    key: string;
+    size: number;
+    etag: string;
+    uploaded: Date;
+    httpMetadata?: {
+        contentType?: string;
+        cacheControl?: string;
+        contentEncoding?: string;
+        contentLanguage?: string;
+    };
+    customMetadata?: Record<string, string>;
+}
+
+export interface R2ObjectBody extends R2Object {
+    body: ReadableStream;
+    arrayBuffer(): Promise<ArrayBuffer>;
+    text(): Promise<string>;
+    json<T = object>(): Promise<T>;
+}
+
+export interface R2Objects {
+    objects: R2Object[];
+    truncated: boolean;
+    cursor?: string;
+}
+
+export interface R2MultipartUpload {
+    key: string;
+    uploadId: string;
+    partNumber: number;
+    abort(): Promise<void>;
+    completePart(partNumber: number, etag: string): Promise<void>;
+    uploadPart(partNumber: number, value: ArrayBuffer | ReadableStream | string): Promise<{
+        partNumber: number;
+        etag: string;
+    }>;
+}
+
+// D1 Database types (if needed in future)
+export interface D1Database {
+    prepare(query: string): D1PreparedStatement;
+    dump(): Promise<ArrayBuffer>;
+    batch<T = any>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+}
+
+export interface D1PreparedStatement {
+    bind(...values: any[]): D1PreparedStatement;
+    first<T = any>(column?: string): Promise<T | undefined>;
+    run<T = any>(): Promise<D1Result<T>>;
+    all<T = any>(): Promise<D1Result<T>>;
+    raw<T = any>(): Promise<T[]>;
+}
+
+export interface D1Result<T = any> {
+    results: T[];
+    success: boolean;
+    meta: {
+        duration: number;
+        changes?: number;
+        last_row_id?: number;
+        served_by: string;
+    };
+}

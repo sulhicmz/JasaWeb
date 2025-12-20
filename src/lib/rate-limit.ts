@@ -4,8 +4,7 @@
  */
 
 import { errorResponse } from './api';
-
-type KVNamespace = any;
+import type { KVNamespace } from './types';
 
 export interface RateLimitConfig {
     /** Max requests allowed within window */
@@ -36,7 +35,7 @@ export async function checkRateLimit(
     const key = `ratelimit:${action}:${ip}:${windowStart}`;
 
     // Get current count for this window
-    const count = await kv.get(key, 'text');
+    const count = await kv.get(key) as string | null;
     const current = count ? parseInt(count) : 0;
 
     if (current >= config.limit) {

@@ -19,8 +19,8 @@ export interface AuditLogEntry {
   action: AuditAction;
   resource: string;
   resourceId?: string;
-  oldValues?: Record<string, any>;
-  newValues?: Record<string, any>;
+  oldValues?: Record<string, unknown>;
+  newValues?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
 }

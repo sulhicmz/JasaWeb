@@ -47,7 +47,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
         // Rate limiting for profile updates
         const rateLimit = await checkRateLimit(
             request,
-            locals.runtime.env.KV,
+            locals.runtime.env.CACHE,
             'profile-update',
             RateLimits.api
         );
