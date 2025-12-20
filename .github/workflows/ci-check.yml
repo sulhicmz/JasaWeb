@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check:
-    name: Build Check
+    name: CI Check
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 10
 
