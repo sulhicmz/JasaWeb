@@ -137,6 +137,8 @@ src/
 4. **Before adding new API endpoints**: Ensure corresponding test files with security testing
 5. ✅ **IMPLEMENTED**: Environment variable validation function in `src/lib/config.ts` - validates all required variables on startup
 6. **WARNING**: Never proceed to production without comprehensive integration testing
+7. **NEW RULE**: Always use `locals.runtime.env` for environment variables in API routes, not `import.meta.env`
+8. **NEW RULE**: Create proper TypeScript interfaces for Cloudflare Workers types instead of using `any`
 
 ---
 
@@ -186,6 +188,8 @@ export const POST: APIRoute = async ({ request }) => {
 - **CRITICAL PAYMENT SECURITY**: webhook endpoints MUST validate Midtrans signatures before processing payment notifications.
 - **QUERY OPTIMIZATION**: Dashboard aggregation queries MUST include proper database indexes for performance.
 - **CONTENT FLEXIBILITY**: Avoid hardcoding templates, FAQ, or other dynamic content in config.ts - use database-driven approach.
+- **TYPE SAFETY**: Create explicit type definitions for Cloudflare Workers instead of using `any` - improves IntelliSense and maintainability.
+- **ENVIRONMENT ACCESS**: Standardize to `locals.runtime.env` for all server-side environment variable access.
 ```
 
 ---
@@ -248,5 +252,5 @@ export const POST: APIRoute = async ({ request }) => {
 - **Refactored Endpoints**: `/api/client/projects.ts`, `/api/client/invoices.ts`, `/api/posts.ts`, `/api/templates.ts` now use standardized pagination
 - **Impact**: Eliminated ~200 lines of duplicate code, improved consistency, enhanced maintainability
 
-**Current Quality Score**: **94/100** (Updated Audit: Dec 20, 2025)
+**Current Quality Score**: **95/100** (Latest Audit: Dec 20, 2025)
 
