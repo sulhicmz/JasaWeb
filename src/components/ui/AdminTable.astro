@@ -1,0 +1,263 @@
+---
+/**
+ * Admin Table Component
+ * Reusable table pattern for admin management pages with configurable columns and actions
+ */
+import Badge from './Badge.astro';
+import Button from './Button.astro';
+
+export interface Column {
+  key: string;
+  label: string;
+  render?: (item: any) => any; // Custom render function
+  badge?: {
+    variant: 'success' | 'primary' | 'warning' | 'error' | 'default';
+    condition?: (value: any) => boolean;
+  };
+  date?: boolean; // Format as date
+}
+
+export interface Action {
+  href: (item: any) => string;
+  text: string;
+  variant: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  condition?: (item: any) => boolean; // Optional condition to show/hide action
+}
+
+export interface Props {
+  data: any[];
+  columns: Column[];
+  actions?: Action[];
+  emptyMessage?: string;
+  error?: string;
+  class?: string;
+}
+
+const { 
+  data, 
+  columns, 
+  actions = [], 
+  emptyMessage = 'No data found', 
+  error = '',
+  class: className = '' 
+} = Astro.props;
+
+function renderCell(item: any, column: Column) {
+  const value = item[column.key];
+  
+  if (column.render) {
+    return column.render(item);
+  }
+  
+  if (column.badge) {
+    return `<span class="inline-flex">${value}</span>`;
+  }
+  
+  if (column.date) {
+    return new Date(value).toLocaleDateString('id-ID');
+  }
+  
+  if (value === null || value === undefined) {
+    return '-';
+  }
+  
+  return value;
+}
+---
+
+<div class:list={["admin-table-container", className]}>
+  {error && (
+    <div class="admin-table-error">
+      <p>Error: {error}</p>
+    </div>
+  )}
+
+  <div class="admin-table-wrapper">
+    {data.length === 0 ? (
+      <div class="admin-table-empty">
+        <p>{emptyMessage}</p>
+      </div>
+    ) : (
+      <table class="admin-table">
+        <thead>
+          <tr class="admin-table-header-row">
+            {columns.map((column) => (
+              <th class="admin-table-header">
+                {column.label}
+              </th>
+            ))}
+            {actions.length > 0 && (
+              <th class="admin-table-header">Actions</th>
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item) => (
+            <tr class="admin-table-row">
+              {columns.map((column) => (
+                <td class="admin-table-cell">
+                  {column.render ? (
+                    <fragment set:html={column.render(item)} />
+                  ) : column.badge ? (
+                    <Badge variant={
+                      column.badge.condition && column.badge.condition(item[column.key])
+                        ? column.badge.variant
+                        : 'default'
+                    }>
+                      {item[column.key]}
+                    </Badge>
+                  ) : column.date ? (
+                    <div class="text-[var(--color-text-secondary)] text-sm">
+                      {new Date(item[column.key]).toLocaleDateString('id-ID')}
+                    </div>
+                  ) : (
+                    <div set:html={renderCell(item, column)} />
+                  )}
+                </td>
+              ))}
+              {actions.length > 0 && (
+                <td class="admin-table-cell">
+                  <div class="admin-table-actions">
+                    {actions
+                      .filter(action => !action.condition || action.condition(item))
+                      .map((action) => (
+                        <Button 
+                          href={action.href(item)} 
+                          variant={action.variant}
+                          size={action.size || 'sm'}
+                        >
+                          {action.text}
+                        </Button>
+                      ))}
+                  </div>
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+</div>
+
+<style>
+  .admin-table-container {
+    width: 100%;
+  }
+
+  .admin-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .admin-table-header-row {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .admin-table-header {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  .admin-table-row {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color var(--transition-fast);
+  }
+
+  .admin-table-row:hover {
+    background-color: var(--color-bg-secondary);
+  }
+
+  .admin-table-row:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table-cell {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+  }
+
+  .admin-table-cell .font-medium {
+    font-weight: 500;
+    color: var(--color-text);
+  }
+
+  .admin-table-cell .text-white {
+    color: var(--color-text);
+  }
+
+  .admin-table-cell .text-[var(--color-text)] {
+    color: var(--color-text);
+  }
+
+  .admin-table-cell .text-[var(--color-text-secondary)] {
+    color: var(--color-text-secondary);
+  }
+
+  .admin-table-cell .text-sm {
+    font-size: 0.875rem;
+  }
+
+  .admin-table-cell a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .admin-table-cell a:hover {
+    text-decoration: underline;
+  }
+
+  .admin-table-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-table-error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: rgb(248, 113, 113);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-table-empty {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .admin-table-empty p {
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .admin-table-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .admin-table-cell {
+      padding: 0.5rem 0.75rem;
+    }
+
+    .admin-table-actions {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .admin-table-actions button {
+      width: 100%;
+    }
+  }
+</style>

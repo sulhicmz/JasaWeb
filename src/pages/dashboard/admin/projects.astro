@@ -2,8 +2,8 @@
 import AdminLayout from '@/layouts/AdminLayout.astro';
 import { siteConfig } from '@/lib/config';
 import Card from '@/components/ui/Card.astro';
-import Badge from '@/components/ui/Badge.astro';
-import Button from '@/components/ui/Button.astro';
+import AdminHeader from '@/components/ui/AdminHeader.astro';
+import AdminTable from '@/components/ui/AdminTable.astro';
 
 interface Project {
   id: string;
@@ -41,94 +41,77 @@ try {
 ---
 
 <AdminLayout title="Manage Projects" currentPath="/dashboard/admin/projects">
-  <div class="mb-8">
-    <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-white mb-2">Manage Projects</h1>
-        <p class="text-[var(--color-text-secondary)]">View and manage client projects</p>
-      </div>
-      <Button href="/dashboard/admin/projects/new" variant="primary">
-        Add New Project
-      </Button>
-    </div>
-  </div>
-
-  {error && (
-    <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-lg mb-6">
-      <p>Error: {error}</p>
-    </div>
-  )}
+  <AdminHeader 
+    title="Manage Projects"
+    description="View and manage client projects"
+    actions={[
+      {
+        href: "/dashboard/admin/projects/new",
+        variant: "primary",
+        text: "Add New Project"
+      }
+    ]}
+  />
 
   <Card>
-    <div class="p-6">
-      {projects.length === 0 ? (
-        <div class="text-center py-8">
-          <p class="text-[var(--color-text-secondary)]">No projects found</p>
-        </div>
-      ) : (
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-[var(--color-border)]">
-                <th class="text-left py-3 px-4 text-[var(--color-text-secondary)] font-medium">Project</th>
-                <th class="text-left py-3 px-4 text-[var(--color-text-secondary)] font-medium">Client</th>
-                <th class="text-left py-3 px-4 text-[var(--color-text-secondary)] font-medium">Type</th>
-                <th class="text-left py-3 px-4 text-[var(--color-text-secondary)] font-medium">Status</th>
-                <th class="text-left py-3 px-4 text-[var(--color-text-secondary)] font-medium">Created</th>
-                <th class="text-left py-3 px-4 text-[var(--color-text-secondary)] font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((project) => (
-                <tr class="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]">
-                  <td class="py-3 px-4">
-                    <div>
-                      <div class="font-medium text-white">{project.name}</div>
-                      {project.url && (
-                        <div class="text-[var(--color-text-secondary)] text-sm">
-                          <a href={project.url} target="_blank" class="text-[var(--color-primary)] hover:underline">
-                            {project.url}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <div class="text-[var(--color-text)]">{project.user.name}</div>
-                    <div class="text-[var(--color-text-secondary)] text-sm">{project.user.email}</div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant="default">
-                      {project.type}
-                    </Badge>
-                  </td>
-                  <td class="py-3 px-4">
-                    <Badge variant={
-                      project.status === 'completed' ? 'success' :
-                      project.status === 'in_progress' ? 'primary' :
-                      project.status === 'review' ? 'warning' : 'error'
-                    }>
-                      {project.status.replace('_', ' ')}
-                    </Badge>
-                  </td>
-                  <td class="py-3 px-4">
-                    <div class="text-[var(--color-text-secondary)] text-sm">
-                      {new Date(project.createdAt).toLocaleDateString('id-ID')}
-                    </div>
-                  </td>
-                  <td class="py-3 px-4">
-                    <div class="flex gap-2">
-                      <Button href={`/dashboard/admin/projects/${project.id}`} variant="outline" size="sm">
-                        Edit
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    <AdminTable
+      data={projects}
+      error={error}
+      columns={[
+        {
+          key: "name",
+          label: "Project",
+          render: (project) => `
+            <div>
+              <div class="font-medium text-white">${project.name}</div>
+              ${project.url ? `
+                <div class="text-[var(--color-text-secondary)] text-sm">
+                  <a href="${project.url}" target="_blank" class="text-[var(--color-primary)] hover:underline">
+                    ${project.url}
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+          `
+        },
+        {
+          key: "user.name",
+          label: "Client",
+          render: (project) => `
+            <div class="text-[var(--color-text)]">${project.user.name}</div>
+            <div class="text-[var(--color-text-secondary)] text-sm">${project.user.email}</div>
+          `
+        },
+        {
+          key: "type",
+          label: "Type",
+          badge: { variant: "default" }
+        },
+        {
+          key: "status",
+          label: "Status",
+          render: (project) => {
+            const statusVariant = project.status === 'completed' ? 'success' :
+                               project.status === 'in_progress' ? 'primary' :
+                               project.status === 'review' ? 'warning' : 'error';
+            return `<div><Badge variant="${statusVariant}">${project.status.replace('_', ' ')}</Badge></div>`;
+          }
+        },
+        {
+          key: "createdAt",
+          label: "Created",
+          date: true
+        }
+      ]}
+      actions={[
+        {
+          href: (project) => `/dashboard/admin/projects/${project.id}`,
+          text: "Edit",
+          variant: "outline",
+          size: "sm"
+        }
+      ]}
+      emptyMessage="No projects found"
+    />
   </Card>
 </AdminLayout>
