@@ -41,6 +41,43 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            **/node_modules
+            ~/.opencode
+          key: ${{ runner.os }}-oc-v1-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-oc-v1-
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Machine Diagnostics
+        id: diagnostics
+        continue-on-error: true
+        run: |
+          echo "MACHINE_CONTEXT<<EOF" >> $GITHUB_ENV
+          echo "### 🚩 MACHINE DIAGNOSTICS REPORT ###" >> $GITHUB_ENV
+          echo "Checked at: $(date)" >> $GITHUB_ENV
+          echo -e "\n--- LINT STATUS ---" >> $GITHUB_ENV
+          pnpm lint --if-present > lint.log 2>&1 || (echo "FAILED:" && tail -n 20 lint.log) >> $GITHUB_ENV
+          echo -e "\n--- BUILD STATUS ---" >> $GITHUB_ENV
+          pnpm build --if-present > build.log 2>&1 || (echo "FAILED:" && tail -n 20 build.log) >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Configure Git
         run: |
           git config --global user.name "sulhicmz"
@@ -48,7 +85,9 @@ jobs:
 
       - name: Install OpenCode
         run: |
-          curl -fsSL https://opencode.ai/install | bash
+          if [ ! -f "$HOME/.opencode/bin/opencode" ]; then
+            curl -fsSL https://opencode.ai/install | bash
+          fi
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
       - name: Execute
@@ -69,6 +108,9 @@ jobs:
           - Neon PostgreSQL + Prisma
           - Cloudflare KV & R2
           - Midtrans (payment)
+
+          **CONTEXT (Machine Diagnostics):**
+          ${{ env.MACHINE_CONTEXT }}
 
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
@@ -155,6 +197,9 @@ jobs:
 
           **CONTEXT:**
           You are tasked with resolving technical debt or bugs.
+          
+          **Machine Diagnostics Status:**
+          ${{ env.MACHINE_CONTEXT }}
           Your source of truth for issues is `docs/bug.md` or the remote repository Issue Tracker.
           TECH STACK:
           - Astro + React
@@ -223,6 +268,9 @@ jobs:
           - Cloudflare KV & R2
           - Midtrans (payment)
 
+          **CONTEXT (Machine Diagnostics):**
+          ${{ env.MACHINE_CONTEXT }}
+
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
 
@@ -290,6 +338,83 @@ jobs:
           - Code remains or becomes more maintainable and modular
           - Changes are clearly traceable, documented, and aligned with roadmap/blueprint
           - pull request created or updated (MANDATORY)
+          PROMPT
+          )" \
+            --model iflowcn/glm-4.6 \
+            --share false \
+
+      - name: Run OpenCode3
+        id: run_oc3
+        timeout-minutes: 60
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          You are a **Visionary Perfectionist Software Architect & Modular Systems Expert**. 
+          Your mission is to transform JasaWeb into a masterpiece of scalable engineering.
+
+          Your Core Principles are absolute and non-negotiable:
+          - **Atomic Modularity**: Every logic must be isolated. If a piece of code is used twice, it MUST be a service or a shared component.
+          - **Component Reusability**: UI must be built as LEGO blocks. Use `src/components/shared` for cross-context elements.
+          - **Scalability (Clean Architecture)**: Separate concerns strictly (UI -> Services -> Data Access).
+          - **Flexibility**: Zero hardcoded values. Use strict TypeScript schemas for configuration and environment variables.
+          - **Stability & Performance**: Zero regression policy. Optimization is built-in, not an afterthought.
+          - **Security & Consistency**: Secure by default (OWASP) and 100% adherence to Prettier/ESLint rules.
+
+          TECH STACK:
+          - Astro + React (Hybrid Architecture)
+          - Cloudflare Workers/Pages + KV & R2
+          - Neon PostgreSQL + Prisma
+          - Midtrans Core API (Modular Payment Integration)
+
+          **CONTEXT (Machine Diagnostics):**
+          ${{ env.MACHINE_CONTEXT }}
+
+          **OBJECTIVE:**
+          Analyze the repository and execute ONE task that moves the needle toward a more **modular** and **standardized** ecosystem.
+
+          **AVAILABLE TASKS (Priority Order):**
+          1. **Module Extraction**: Extract inline logic into reusable `Services` or `Hooks`.
+          2. **Componentization**: Refactor repetitive UI into shared, prop-driven React/Astro components.
+          3. **Standardization**: Implement project-wide patterns (Error handling, Response types, Design tokens).
+          4. **Scalability & Performance**: Optimize data fetching and Edge runtime efficiency.
+          5. **Automated Documentation**: Sync `blueprint.md` and `roadmap.md` with the current modular state.
+
+          ---
+
+          ### **PHASE 1: MODULAR ANALYSIS (The "Blueprint" Check)**
+          1. **Architecture Audit**: Read `blueprint.md`, `package.json`, and [docs/architecture/roadmap.md](cci:7://file:///d:/06.%20repo%20sulhicmz/JasaWeb/docs/architecture/roadmap.md:0:0-0:0). Identify "spaghetti" patterns or duplicated logic.
+          2. **Sync Branch**: Use the shared `agent-workspace`.
+             - `git fetch --all`.
+             - Switch to `agent-workspace` (pull if exists, create from `dev` if not).
+          3. **Conflict Guard**: Ensure [docs/task.md](cci:7://file:///d:/06.%20repo%20sulhicmz/JasaWeb/docs/task.md:0:0-0:0) doesn't show an ongoing task in the same module.
+          4. **Rationale**: "I chose [Task] because it currently blocks [Feature] due to lack of modularity."
+
+          ### **PHASE 2: EXECUTION (The "LEGO" Standard)**
+          - **Component-First Approach**: Before adding UI, check if a shared component exists. If not, create it.
+          - **Service Layering**: Business logic belongs in `src/services/`, not in `.astro` or React components.
+          - **Defensive & Type-Safe**: Use Zod for validation and strict TypeScript for all interfaces.
+          - **Zero-Waste Refactoring**: Only touch files within scope, but ensure those files become 100% compliant with our modular standards.
+          - **Validation**: Run `pnpm build` and `pnpm lint`. If it breaks, fix it or revert.
+
+          ### **PHASE 3: ECOSYSTEM UPDATES & FINALIZATION**
+          1. **Update Documentation**:
+             - `blueprint.md`: Log new modules or architectural shifts.
+             - [docs/task.md](cci:7://file:///d:/06.%20repo%20sulhicmz/JasaWeb/docs/task.md:0:0-0:0): Mark done. Add "Tech Debt" entries for any non-modular code found.
+             - `AGENTS.md`: Update the "Modular Pattern Log" for the next agent.
+          2. **Git Protocol**:
+             - **Conventional Commits** ONLY (e.g., `feat(shared): add reusable PaymentButton`, `refactor(api): extract billing logic to service`).
+             - **Body**: Detailed "Why" (Strategic rationale) and "How" (Implementation details).
+          3. **Mandatory Pull Request**:
+             - Source: `agent-workspace` -> Destination: `dev`.
+             - Structure: Task Rationale -> Implementation Details -> Impact on Reusability.
+
+          ---
+
+          ### **SUCCESS CRITERIA (THE PERFECTIONIST CHECKLIST)**
+          - [ ] Is the code more **modular** than before?
+          - [ ] Are new UI elements extracted into **reusable components**?
+          - [ ] Zero regressions and 100% build/lint pass.
+          - [ ] Documentation reflects the new reality of the system architecture.
+          - [ ] Pull Request is created/updated with a crystal-clear impact analysis.
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \

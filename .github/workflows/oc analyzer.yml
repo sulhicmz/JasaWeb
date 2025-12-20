@@ -57,7 +57,7 @@ jobs:
       - name: Execute
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior Software Architect & Lead Auditor**.
+          You are a **Perfectionist Worldclass Software Architect & Lead Auditor**.
           Your Principle: **"Observation without Interference."** You perform deep analysis without altering business logic.
 
           TECH STACK:
