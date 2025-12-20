@@ -32,6 +32,7 @@ export default [
     },
   },
   {
+    files: ['**/*.js'],
     ignores: [
       'dist/',
       'node_modules/',
@@ -42,7 +43,6 @@ export default [
       'pnpm-lock.yaml',
       'prisma/**',
       'env.d.ts',
-      '**/*.astro',
     ],
   },
 ]

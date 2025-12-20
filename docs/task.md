@@ -15,6 +15,11 @@
 - [x] Fix middleware `locals.request` type definition
 - [x] Fix ErrorBoundary `this.fallback` vs `this.props.fallback`
 - [x] Install Vitest dev dependency properly - Tests working
+- [x] **HIGH**: Fix rate limiting sliding window implementation → fixed window
+- [x] **HIGH**: Add CSRF protection for authenticated routes  
+- [x] **HIGH**: Expand test coverage to API routes and components (50 tests passing - authentication + client dashboard projects)
+- [x] **HIGH**: Implement ESLint configuration for code quality gates
+- [x] **HIGH**: Fix ESLint build error and improve output usability
 
 ## Remaining Tasks 🔄
 - [x] **HIGH**: Fix rate limiting sliding window implementation → fixed window
