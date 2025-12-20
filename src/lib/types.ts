@@ -101,6 +101,42 @@ export interface RegisterForm {
 }
 
 // ==============================================
+// PAYMENT TYPES
+// ==============================================
+export interface PaymentResponse {
+    success: boolean;
+    orderId: string;
+    qrisUrl: string;
+    grossAmount: number;
+    paymentType: string;
+    statusCode: string;
+    transactionId?: string;
+    message: string;
+}
+
+export interface CreateInvoiceRequest {
+    projectId: string;
+    amount: number;
+}
+
+export interface MidtransChargeResponse {
+    status_code: string;
+    status_message: string;
+    transaction_id: string;
+    order_id: string;
+    gross_amount: string;
+    payment_type: string;
+    transaction_time: string;
+    transaction_status: string;
+    fraud_status?: string;
+    actions?: Array<{
+        name: string;
+        method: string;
+        url: string;
+    }>;
+}
+
+// ==============================================
 // COMPONENT PROPS
 // ==============================================
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
