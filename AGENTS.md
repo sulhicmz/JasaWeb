@@ -67,6 +67,12 @@ src/
 
 ### Security
 - **ALWAYS** implement `checkRateLimit` on public POST/PUT/DELETE routes.
+- **WARNING**: Rate limiting implementation has sliding window behavior, not fixed window as expected.
+
+### Critical Warnings 
+- **AUTHENTICATION MODULE IS FRAGILE**: `locals.request` property doesn't exist in type definitions. All API routes will fail until middleware types are fixed.
+- **TYPE SYSTEM BROKEN**: 33+ TypeScript errors currently exist. DO NOT assume type safety works.
+- **TESTING INFRASTRUCTURE DOWN**: Vitest is not properly installed. Tests cannot run currently.
 
 ---
 
@@ -104,7 +110,9 @@ export const POST: APIRoute = async ({ request }) => {
 
 ### Stability & Resilience
 - **ALWAYS** wrap React islands with `ErrorBoundary` from `@/components/common/ErrorBoundary`.
+- **CRITICAL**: ErrorBoundary has bugs - use `this.props.fallback` NOT `this.fallback`.
 - **ALWAYS** add unit tests for new logic in `src/lib/`.
+- **IMPORTANT**: Run `pnpm typecheck` before any commit - currently fails with 33 errors.
 - **NEVER** use `any` type. Use proper interfaces in `types.ts`.
 - **EXCEPTION**: Cloudflare Workers types use `any` due to missing type definitions. Add inline type aliases in service files.
 ```
