@@ -89,9 +89,10 @@ jobs:
           **EXECUTION STEPS:**
           1.  **Branch Management**: Use the shared branch `agent-workspace`.
               - Always start by fetching all: `git fetch --all`.
-              - If `agent-workspace` exists (locally or on remote), switch to it and **pull** the latest changes: `git pull origin agent-workspace`.
-              - If it does not exist, create it from the current `dev` branch.
-              - This ensures all agents are synchronized on the same branch without constant conflicts from `dev`.
+              - If `agent-workspace` exists, switch to it: `git checkout agent-workspace`.
+              - If it does not exist, create it: `git checkout -b agent-workspace`.
+              - **CRITICAL**: Always merge latest dev to stay up-to-date: `git merge origin/dev --no-edit`.
+              - This prevents "PR not up to date" issues.
           2.  **Audit**: Read the code. Look for patterns, anti-patterns, technical debt, and risks.
           3.  **Verify**: Verify your audit by running `pnpm build && pnpm lint`.
           4.  **Report Generation (Target: `docs/evaluasi.md`)**:
