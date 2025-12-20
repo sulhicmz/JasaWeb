@@ -3,9 +3,9 @@
  * Template Management Page (Simplified Version)
  * Admin interface for managing templates
  */
-import AdminLayout from '../../layouts/AdminLayout.astro';
-import Section from '../../components/ui/Section.astro';
-import Button from '../../components/ui/Button.astro';
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Section from '@/components/ui/Section.astro';
+import Button from '@/components/ui/Button.astro';
 ---
 
 <AdminLayout title="Template Management" currentPath="/dashboard/admin/templates">
@@ -92,12 +92,12 @@ import Button from '../../components/ui/Button.astro';
       </div>
       <div class="api-example">
         <h3>POST /api/admin/templates</h3>
-        <pre><code>{
+        <pre><code>&lbrace;
   "name": "New Template",
   "category": "sekolah",
   "imageUrl": "https://example.com/image.jpg",
   "demoUrl": "https://demo.example.com"
-}</code></pre>
+&rbrace;</code></pre>
         <p>Create new template (admin only, requires CSRF token)</p>
       </div>
     </div>
