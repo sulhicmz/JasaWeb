@@ -37,9 +37,13 @@
         "typescript": "^5.7.2"
     },
     "devDependencies": {
+        "@testing-library/react": "^16.3.1",
         "@types/bcryptjs": "^2.4.6",
         "@types/pg": "^8.11.10",
+        "@vitest/ui": "^4.0.16",
+        "jsdom": "^27.3.0",
         "prisma": "^6.1.0",
+        "vitest": "^4.0.16",
         "wrangler": "^3.99.0"
     }
 }

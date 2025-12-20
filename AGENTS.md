@@ -114,6 +114,7 @@ export const POST: APIRoute = async ({ request }) => {
 - **ALWAYS** add unit tests for new logic in `src/lib/`.
 - **IMPORTANT**: Run `pnpm typecheck` before any commit - currently fails with 33 errors.
 - **NEVER** use `any` type. Use proper interfaces in `types.ts`.
+- **EXCEPTION**: Cloudflare Workers types use `any` due to missing type definitions. Add inline type aliases in service files.
 ```
 
 ---

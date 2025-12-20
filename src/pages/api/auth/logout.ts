@@ -4,7 +4,7 @@
  */
 import type { APIRoute } from 'astro';
 import { AUTH_COOKIE } from '@/lib/auth';
-import { successResponse, handleApiError } from '@/lib/api';
+import { handleApiError } from '@/lib/api';
 
 export const POST: APIRoute = async ({ cookies, redirect }) => {
     try {

@@ -284,3 +284,7 @@ jobs:
           )" \
             --model iflowcn/glm-4.6 \
             --share false \
+      - name: Trigger Analyzer
+        if: success()
+        run: |
+          gh workflow run "oc analyzer.yml"

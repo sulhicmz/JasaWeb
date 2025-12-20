@@ -193,65 +193,68 @@ import Button from '../components/ui/Button.astro';
 </style>
 
 <script>
-  const form = document.getElementById('registerForm') as HTMLFormElement;
-  const errorMsg = document.getElementById('errorMessage');
-  const successMsg = document.getElementById('successMessage');
+  try {
+    const form = document.getElementById('registerForm') as HTMLFormElement;
+    const errorMsg = document.getElementById('errorMessage');
+    const successMsg = document.getElementById('successMessage');
 
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(form);
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirmPassword');
+    if (!form || !errorMsg || !successMsg) throw new Error('Required elements not found');
 
-    errorMsg?.classList.remove('show');
-    successMsg?.classList.remove('show');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const password = formData.get('password');
+      const confirmPassword = formData.get('confirmPassword');
 
-    if (password !== confirmPassword) {
-      if (errorMsg) {
+      errorMsg.classList.remove('show');
+      successMsg.classList.remove('show');
+
+      if (password !== confirmPassword) {
         errorMsg.textContent = 'Password tidak cocok';
         errorMsg.classList.add('show');
-      }
-      return;
-    }
-
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      password: password,
-    };
-
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        if (errorMsg) {
-          errorMsg.textContent = result.error || 'Registrasi gagal';
-          errorMsg.classList.add('show');
-        }
         return;
       }
 
-      if (successMsg) {
+      const data = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        password: password,
+      };
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          errorMsg.textContent = (result as any).error || 'Registrasi gagal';
+          errorMsg.classList.add('show');
+          return;
+        }
+
         successMsg.textContent = 'Registrasi berhasil! Mengalihkan...';
         successMsg.classList.add('show');
-      }
 
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 1500);
-    } catch (err) {
-      if (errorMsg) {
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
+      } catch (err) {
+        console.error('Registration error:', err);
         errorMsg.textContent = 'Terjadi kesalahan. Silakan coba lagi.';
         errorMsg.classList.add('show');
       }
-    }
-  });
+    });
+  } catch (err) {
+    console.error('Form initialization error:', err);
+    // Fallback: Show basic error message
+    document.body.insertAdjacentHTML('beforeend', 
+      '<div style="color: var(--color-error); text-align: center; padding: 1rem;">Form registrasi tidak dapat dimuat</div>'
+    );
+  }
 </script>

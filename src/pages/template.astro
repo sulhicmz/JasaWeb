@@ -176,10 +176,10 @@ const categories = [
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      const category = btn.dataset.category;
+      const category = (btn as HTMLElement).dataset.category;
       
       cards.forEach(card => {
-        if (category === 'all' || card.dataset.category === category) {
+        if (category === 'all' || (card as HTMLElement).dataset.category === category) {
           card.classList.remove('hidden');
         } else {
           card.classList.add('hidden');

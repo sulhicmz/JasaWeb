@@ -118,5 +118,4 @@ jobs:
       - name: Trigger Standarizer
         if: success()
         run: |
-          sleep 60
           gh workflow run "oc standarizer.yml"
