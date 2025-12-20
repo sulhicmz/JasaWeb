@@ -108,7 +108,7 @@ function renderCell(item: any, column: Column) {
                       {item[column.key]}
                     </Badge>
                   ) : column.date ? (
-                    <div class="text-[var(--color-text-secondary)] text-sm">
+                    <div class="text-text-secondary text-sm">
                       {new Date(item[column.key]).toLocaleDateString('id-ID')}
                     </div>
                   ) : (
@@ -186,20 +186,19 @@ function renderCell(item: any, column: Column) {
     vertical-align: middle;
   }
 
-  .admin-table-cell .font-medium {
+  .admin-table-cell .font-medium,
+  .admin-table-cell .text-white,
+  .admin-table-cell .text-text,
+  .admin-table-cell .text-text-secondary {
     font-weight: 500;
+  }
+
+  .admin-table-cell .text-white,
+  .admin-table-cell .text-text {
     color: var(--color-text);
   }
 
-  .admin-table-cell .text-white {
-    color: var(--color-text);
-  }
-
-  .admin-table-cell .text-[var(--color-text)] {
-    color: var(--color-text);
-  }
-
-  .admin-table-cell .text-[var(--color-text-secondary)] {
+  .admin-table-cell .text-text-secondary {
     color: var(--color-text-secondary);
   }
 
