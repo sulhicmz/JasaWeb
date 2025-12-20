@@ -29,6 +29,14 @@ jobs:
       IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
 
     steps:
+      - name: Wait in Queue
+        uses: softprops/turnstyle@v2
+        with:
+          poll-interval-seconds: 30
+          same-branch-only: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
