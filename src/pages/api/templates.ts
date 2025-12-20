@@ -5,51 +5,42 @@
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
+import { parseQuery, createPrismaQuery, createResponse, addSearchCondition } from '@/lib/pagination';
 
 export const GET: APIRoute = async ({ request }) => {
     try {
-        // Parse query parameters
+        // Parse query parameters using pagination service
         const url = new URL(request.url);
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '12');
-        const category = url.searchParams.get('category') as string || undefined;
-        const search = url.searchParams.get('search') || undefined;
-        const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
-        const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
-
-        // Validate pagination parameters
-        if (page < 1) return errorResponse('Page harus lebih dari 0');
-        if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
-
-        // Validate sort fields
-        const allowedSortFields = ['createdAt', 'name', 'category'];
-        if (!allowedSortFields.includes(sortBy)) {
-            return errorResponse('Sort field tidak valid');
-        }
+        const query = parseQuery(url, {
+            maxLimit: 50,
+            defaultLimit: 12,
+            defaultSortBy: 'createdAt',
+            defaultSortOrder: 'desc',
+            allowedSortFields: ['createdAt', 'name', 'category'],
+        });
 
         // Validate category if provided
+        const category = query.filters.category;
         if (category && !['sekolah', 'berita', 'company'].includes(category)) {
             return errorResponse('Kategori harus "sekolah", "berita", atau "company"');
         }
 
         const prisma = getPrisma({} as any);
 
-        // Build where clause
-        const where: any = {};
-        if (category) where.category = category;
-        if (search) {
-            where.OR = [
-                { name: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
-            ];
+        // Build where clause with search
+        let where = { ...query.filters };
+        if (query.search) {
+            where = addSearchCondition(where, query.search, ['name', 'category']);
         }
+
+        // Create Prisma query with pagination
+        const prismaQuery = createPrismaQuery(query.pagination, query.sort, where);
 
         // Get total count and templates in parallel
         const [total, templates] = await Promise.all([
             prisma.template.count({ where }),
             prisma.template.findMany({
-                where,
-                orderBy: { [sortBy]: sortOrder },
+                ...prismaQuery,
                 select: {
                     id: true,
                     name: true,
@@ -58,23 +49,15 @@ export const GET: APIRoute = async ({ request }) => {
                     demoUrl: true,
                     createdAt: true,
                 },
-                skip: (page - 1) * limit,
-                take: limit,
             }),
         ]);
 
-        const totalPages = Math.ceil(total / limit);
+        // Create paginated response
+        const response = createResponse(templates, total, query.pagination);
 
         return jsonResponse({
-            templates,
-            pagination: {
-                total,
-                page,
-                limit,
-                totalPages,
-                hasNext: page < totalPages,
-                hasPrev: page > 1,
-            },
+            templates: response.data,
+            pagination: response.pagination,
         });
     } catch (error) {
         return handleApiError(error);
