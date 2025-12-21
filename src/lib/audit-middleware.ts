@@ -1,4 +1,4 @@
-import type { AuditAction } from '@/lib/audit';
+import type { AuditAction, AuditLogEntry } from '@/lib/audit';
 import { createAuditService } from '@/lib/audit';
 import { getPrisma } from '@/lib/prisma';
 
@@ -42,7 +42,7 @@ export function withAudit(
         }
 
         // Log changes if requested
-        const logData: any = {
+        const logData: AuditLogEntry = {
           userId: user.id,
           action: options.action,
           resource: options.resource,

@@ -25,6 +25,8 @@ export interface AuditLogEntry {
   userAgent?: string;
 }
 
+
+
 export class AuditService {
   private db: PrismaClient;
 
@@ -34,17 +36,17 @@ export class AuditService {
 
   async log(entry: AuditLogEntry): Promise<void> {
     try {
-      const auditLog: any = {
+      const auditLog = {
         action: entry.action,
         resource: entry.resource,
         ipAddress: entry.ipAddress || 'unknown',
         userAgent: entry.userAgent || 'unknown',
       };
 
-      if (entry.userId) auditLog.user = { connect: { id: entry.userId } };
-      if (entry.resourceId) auditLog.resourceId = entry.resourceId;
-      if (entry.oldValues) auditLog.oldValues = entry.oldValues;
-      if (entry.newValues) auditLog.newValues = entry.newValues;
+      if (entry.userId) (auditLog as any).user = { connect: { id: entry.userId } };
+      if (entry.resourceId) (auditLog as any).resourceId = entry.resourceId;
+      if (entry.oldValues) (auditLog as any).oldValues = entry.oldValues;
+      if (entry.newValues) (auditLog as any).newValues = entry.newValues;
 
       await this.db.auditLog.create({
         data: auditLog,
@@ -92,16 +94,16 @@ export class AuditService {
       limit = 50,
     } = filters;
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (userId) where.userId = userId;
     if (action) where.action = action;
     if (resource) where.resource = resource;
     if (resourceId) where.resourceId = resourceId;
     if (startDate || endDate) {
-      where.timestamp = {};
-      if (startDate) where.timestamp.gte = startDate;
-      if (endDate) where.timestamp.lte = endDate;
+      (where as any).timestamp = {};
+      if (startDate) (where.timestamp as any).gte = startDate;
+      if (endDate) (where.timestamp as any).lte = endDate;
     }
 
     const [logs, total] = await Promise.all([

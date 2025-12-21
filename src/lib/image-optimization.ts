@@ -19,7 +19,20 @@ interface OptimizedImageResult {
   height: number;
   size: number;
   format: string;
-  optimized: boolean;
+}
+
+// HTML image attributes interface
+interface ImageAttributes {
+  src: string;
+  srcset?: string;
+  sizes?: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  loading: string;
+  decoding: string;
+  class?: string;
+  [key: string]: unknown;
 }
 
 class ImageOptimizationService {
@@ -193,7 +206,7 @@ class ImageOptimizationService {
 
     const optimizedUrl = this.generateOptimizedUrl(originalUrl, options);
     
-    const attrs: any = {
+    const attrs: ImageAttributes = {
       src: optimizedUrl,
       alt,
       loading,
