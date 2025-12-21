@@ -89,35 +89,30 @@ import Card from '../../components/ui/Card.astro';
 </PortalLayout>
 
 <script>
-  // @ts-nocheck - Inline script with dynamic typing
-  // Invoice statistics calculation utility
-  function calculateInvoiceStats(invoices: any[]) {
-    const total = invoices.length;
-    const totalAmount = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    
-    const unpaid = invoices.filter(inv => inv.status === 'unpaid');
-    const paid = invoices.filter(inv => inv.status === 'paid');
-    
-    const unpaidAmount = unpaid.reduce((sum, inv) => sum + Number(inv.amount), 0);
-    const paidAmount = paid.reduce((sum, inv) => sum + Number(inv.amount), 0);
+  // Optimized invoice statistics calculation
+  function calculateStats(invoices) {
+    const totals = invoices.reduce((acc, inv) => {
+      const amount = Number(inv.amount);
+      acc.total += amount;
+      acc[inv.status] = (acc[inv.status] || 0) + amount;
+      acc.count[inv.status] = (acc.count[inv.status] || 0) + 1;
+      return acc;
+    }, { total: 0, count: {} });
 
     return {
-      total,
-      totalAmount,
-      unpaid: unpaid.length,
-      unpaidAmount,
-      paid: paid.length,
-      paidAmount
+      totalAmount: totals.total,
+      unpaidAmount: totals.unpaid || 0,
+      paidAmount: totals.paid || 0,
+      unpaidCount: totals.count.unpaid || 0,
+      paidCount: totals.count.paid || 0
     };
   }
 
-  // Format currency for display
-  function formatCurrency(amount: number) {
-    return `Rp ${amount.toLocaleString('id-ID')}`;
-  }
+  // Optimized format function
+  const formatCurrency = (amount) => `Rp ${amount.toLocaleString('id-ID')}`;
 
-  // Generate invoice stats HTML
-  function generateInvoiceStatsHTML(stats: any) {
+  // Optimized HTML generation
+  function generateStatsHTML(stats) {
     return `
       <div class="stat-card">
         <div class="stat-label">Total Tagihan</div>
@@ -134,26 +129,50 @@ import Card from '../../components/ui/Card.astro';
     `;
   }
 
-  // Bundle optimization: Defer heavy initialization  
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(async () => {
-      try {
-        const res = await fetch('/api/client/invoices');
-        const data = await res.json();
+  // Performance optimization: Use requestIdleCallback for non-critical tasks
+  const loadStats = () => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => fetchAndDisplayStats());
+    } else {
+      setTimeout(fetchAndDisplayStats, 0);
+    }
+  };
 
-        if (res.ok && data.invoices) {
-          const invoices = data.invoices || [];
-          const stats = calculateInvoiceStats(invoices);
-
+  async function fetchAndDisplayStats() {
+    try {
+      const [statsRes, invoicesRes] = await Promise.all([
+        fetch('/api/client/invoices'),
+        fetch('/api/client/invoices')
+      ]);
+      
+      if (statsRes.ok) {
+        const data = await statsRes.json();
+        if (data.invoices) {
+          const stats = calculateStats(data.invoices);
           const statsContainer = document.getElementById('overviewStats');
           if (statsContainer) {
-            statsContainer.innerHTML = generateInvoiceStatsHTML(stats);
+            statsContainer.innerHTML = generateStatsHTML(stats);
           }
         }
-      } catch (error) {
-        console.error('Error loading stats:', error);
       }
-    }, 100);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  }
+
+  // Initialize using intersection observer for better performance
+  document.addEventListener('DOMContentLoaded', () => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadStats();
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.1 });
+
+    const statsElement = document.getElementById('overviewStats');
+    if (statsElement) observer.observe(statsElement);
   });
 </script>
 
@@ -423,37 +442,48 @@ import Card from '../../components/ui/Card.astro';
 </style>
 
 <script>
-  // State management
-  let currentPage = 1;
-  let currentStatus = '';
-  let currentSort = 'createdAt';
-  
-  // Type declarations for window extensions
-  declare global {
-    interface Window {
-      paymentInterval?: ReturnType<typeof setInterval>;
-      paymentTimerInterval?: ReturnType<typeof setInterval>;
-    }
-  }
+  // Optimized state management
+  const state = {
+    currentPage: 1,
+    currentStatus: '',
+    currentSort: 'createdAt',
+    isLoading: false,
+    cache: new Map()
+  };
 
-  // Initialize page
+  // Debounce function for better performance
+  const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  // Optimized initialization with event delegation
   document.addEventListener('DOMContentLoaded', () => {
-    loadOverviewStats();
-    loadInvoices();
-    
-    // Event listeners
-    document.getElementById('statusFilter')?.addEventListener('change', (e) => {
-      currentStatus = (e.target as HTMLSelectElement).value;
-      currentPage = 1;
-      loadInvoices();
+    // Use event delegation instead of individual listeners
+    document.addEventListener('change', (e) => {
+      if (e.target.id === 'statusFilter') {
+        state.currentStatus = e.target.value;
+        state.currentPage = 1;
+        debouncedLoadInvoices();
+      } else if (e.target.id === 'sortBy') {
+        state.currentSort = e.target.value;
+        state.currentPage = 1;
+        debouncedLoadInvoices();
+      }
     });
 
-    document.getElementById('sortBy')?.addEventListener('change', (e) => {
-      currentSort = (e.target as HTMLSelectElement).value;
-      currentPage = 1;
-      loadInvoices();
-    });
+    loadInvoices();
   });
+
+  // Debounced load invoices to prevent excessive API calls
+  const debouncedLoadInvoices = debounce(loadInvoices, 300);
 
   // Load overview statistics
   async function loadOverviewStats() {

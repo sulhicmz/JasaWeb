@@ -8,9 +8,9 @@ import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
+import OptimizedImage from '../components/ui/OptimizedImage.astro';
 import { getCategoryLabel, type ServiceId, templateCategories } from '../lib/config';
 import { getPrisma } from '../lib/prisma';
-import { imageOptimization } from '../lib/image-optimization';
 
 const categories = templateCategories;
 
@@ -55,26 +55,18 @@ const templates = await prisma.template.findMany({
           <div class="template-image">
             {template.imageUrl ? (
               <>
-                <img 
-                  src={imageOptimization.generateOptimizedUrl(template.imageUrl, {
-                    width: 400,
-                    height: 250,
-                    quality: 20,
-                    format: 'webp'
-                  })}
-                  data-high-src={imageOptimization.generateOptimizedUrl(template.imageUrl, {
-                    width: 400,
-                    height: 250,
-                    quality: 85,
-                    format: 'webp'
-                  })}
-                  class="template-img progressive"
+                <OptimizedImage 
+                  src={template.imageUrl}
                   alt={`${template.name} template preview`}
-                  loading="lazy"
-                  decoding="async"
+                  width={400}
+                  height={250}
+                  class="template-img"
+                  placeholder="blur"
                 />
-                <div class="loading-overlay">
-                  <div class="loading-spinner"></div>
+                <div class="template-overlay">
+                  <Button href={template.demoUrl} variant="primary" size="sm">
+                    Lihat Demo
+                  </Button>
                 </div>
               </>
             ) : (
@@ -82,11 +74,6 @@ const templates = await prisma.template.findMany({
                 <span>{template.name}</span>
               </div>
             )}
-            <div class="template-overlay">
-              <Button href={template.demoUrl} variant="primary" size="sm">
-                Lihat Demo
-              </Button>
-            </div>
           </div>
           <div class="template-info">
             <h3>{template.name}</h3>
@@ -275,37 +262,4 @@ const templates = await prisma.template.findMany({
       });
     });
   });
-
-  // Progressive image loading
-  const progressiveImages = document.querySelectorAll('.template-img.progressive');
-  
-  const imageObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        const highSrc = img.dataset.highSrc;
-        
-        if (highSrc && img.src !== highSrc) {
-          const loadingOverlay = img.parentElement?.querySelector('.loading-overlay');
-          
-          // Load high-quality image
-          const tempImg = new Image();
-          tempImg.onload = () => {
-            img.src = highSrc;
-            img.classList.add('loaded');
-            if (loadingOverlay) {
-              loadingOverlay.classList.add('hidden');
-            }
-          };
-          tempImg.src = highSrc;
-          
-          imageObserver.unobserve(img);
-        }
-      }
-    });
-  }, {
-    rootMargin: '50px' // Start loading 50px before visible
-  });
-  
-  progressiveImages.forEach((img) => imageObserver.observe(img));
 </script>

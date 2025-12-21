@@ -1,0 +1,210 @@
+---
+/**
+ * OptimizedImage - Progressive image loading with blur-up effect
+ * Integrates with Cloudflare Image Resizing for optimal performance
+ * Features WebP optimization, lazy loading, and responsive srcset
+ */
+
+export interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  class?: string;
+  loading?: 'lazy' | 'eager';
+  priority?: boolean;
+  placeholder?: 'blur' | 'empty';
+}
+
+const { 
+  src, 
+  alt, 
+  width, 
+  height, 
+  class: className = '',
+  loading = 'lazy',
+  priority = false,
+  placeholder = 'blur'
+} = Astro.props;
+
+import { imageOptimization } from '../../lib/image-optimization';
+
+// Validate image URL
+const validation = imageOptimization.validateImageUrl(src);
+
+if (!validation.valid) {
+  // Fallback placeholder for invalid URLs
+  const placeholderSvg = imageOptimization.generatePlaceholder(width || 400, height || 300);
+  
+  return `<div class="optimized-image ${className}" style="${width ? `width: ${width}px;` : ''} ${height ? `height: ${height}px;` : ''} background: #e5e7eb; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md);">
+    <img src="${placeholderSvg}" alt="${alt}" decoding="async" />
+  </div>`;
+}
+
+// Generate optimized URLs
+const lqipUrl = imageOptimization.generateOptimizedUrl(src, {
+  width: Math.floor((width || 800) / 4),
+  height: Math.floor((height || 600) / 4),
+  quality: 20,
+  format: 'webp'
+});
+
+const highQualityUrl = imageOptimization.generateOptimizedUrl(src, {
+  width: width || 800,
+  height: height || 600,
+  quality: priority ? 90 : 85,
+  format: 'webp'
+});
+
+const srcSet = imageOptimization.generateSrcSet(src, [320, 640, 768, 1024, 1280], {
+  quality: priority ? 90 : 85,
+  format: 'webp'
+});
+
+// Generate placeholder svg if needed for blur effect
+if (placeholder === 'blur') {
+  imageOptimization.generatePlaceholder(width || 400, height || 300);
+}
+---
+
+<div class={`optimized-image-container ${className}`} data-loaded={priority ? 'true' : 'false'}>
+  {placeholder === 'blur' && !priority && (
+    <>
+      <!-- Blur placeholder -->
+      <img 
+        src={placeholderSvg} 
+        alt="" 
+        class="optimized-image-blur"
+        aria-hidden="true"
+        decoding="async"
+        {width && `width={width}`}
+        {height && `height={height}`}
+      />
+      
+      <!-- Low quality image placeholder -->
+      <img
+        src={lqipUrl}
+        alt=""
+        class="optimized-image-lqip"
+        aria-hidden="true"
+        decoding="async"
+        loading="lazy"
+        {width && `width={width}`}
+        {height && `height={height}`}
+      />
+    </>
+  )}
+  
+  <!-- High quality image -->
+  <img
+    src={priority ? highQualityUrl : lqipUrl}
+    data-src={highQualityUrl}
+    data-srcset={srcSet}
+    alt={alt}
+    class={`optimized-image ${!priority ? 'lazy' : ''}`}
+    loading={priority ? 'eager' : loading}
+    decoding="async"
+    {width && `width={width}`}
+    {height && `height={height}`}
+  />
+</div>
+
+<style>
+  .optimized-image-container {
+    position: relative;
+    overflow: hidden;
+    background: #e5e7eb;
+    border-radius: var(--radius-md);
+  }
+  
+  .optimized-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .optimized-image.lazy {
+    opacity: 0;
+  }
+  
+  .optimized-image.loaded {
+    opacity: 1;
+  }
+  
+  .optimized-image-blur,
+  .optimized-image-lqip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease-in-out;
+  }
+  
+  .optimized-image-lqip {
+    filter: blur(25px);
+    transform: scale(1.1);
+  }
+  
+  .optimized-image-container[data-loaded="true"] .optimized-image-blur,
+  .optimized-image-container[data-loaded="true"] .optimized-image-lqip {
+    display: none;
+  }
+</style>
+
+<script is:inline>
+  // Progressive image loading for non-priority images
+  const lazyImages = document.querySelectorAll('.optimized-image.lazy');
+  
+  if (lazyImages.length > 0) {
+    const imageObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          const container = img.closest('.optimized-image-container');
+          const highSrc = img.dataset.src;
+          const srcSet = img.dataset.srcset;
+          
+          // Load high quality version
+          if (highSrc && img.src !== highSrc) {
+            // Create temporary image to preload
+            const tempImg = new Image();
+            tempImg.onload = () => {
+              img.src = highSrc;
+              if (srcSet) img.srcset = srcSet;
+              img.classList.add('loaded');
+              
+              // Hide blur placeholders
+              const blurPlaceholder = container?.querySelector('.optimized-image-blur');
+              const lqipPlaceholder = container?.querySelector('.optimized-image-lqip');
+              
+              if (blurPlaceholder) {
+                blurPlaceholder.style.opacity = '0';
+              }
+              if (lqipPlaceholder) {
+                lqipPlaceholder.style.opacity = '0';
+              }
+              
+              // Mark container as loaded
+              if (container) {
+                container.setAttribute('data-loaded', 'true');
+              }
+            };
+            
+            tempImg.src = highSrc;
+            if (srcSet) tempImg.srcset = srcSet;
+          }
+          
+          imageObserver.unobserve(img);
+        }
+      });
+    }, {
+      rootMargin: '50px'
+    });
+    
+    lazyImages.forEach((img) => imageObserver.observe(img));
+  }
+</script>

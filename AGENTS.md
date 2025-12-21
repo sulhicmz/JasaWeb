@@ -114,6 +114,7 @@ src/
 - `FormGroup.astro` - Input grouping with label/hint support, required indicators, disabled states
 - `FormInput.astro` - Standardized inputs with type safety (text, email, tel, password, number)
 - `ProjectCard.astro` - Project display with status mapping and responsive design
+- `OptimizedImage.astro` - Progressive image loading with blur-up effect and WebP optimization (NEW Dec 2025)
 
 ### 🔧 Service Layer (New Dec 2025)
 - `template.ts` - Template filtering and display business logic
