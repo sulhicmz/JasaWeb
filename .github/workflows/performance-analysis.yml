@@ -1,0 +1,329 @@
+name: Performance Analysis
+
+on:
+  workflow_dispatch:
+    inputs:
+      analyze_bundle:
+        description: 'Run detailed bundle analysis'
+        required: false
+        default: true
+      performance_thresholds:
+        description: 'Validate performance thresholds'
+        required: false
+        default: true
+  pull_request:
+    branches: [dev]
+    paths: 
+      - 'src/**'
+      - 'package.json'
+      - 'tsconfig.json'
+      - 'astro.config.mjs'
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: write
+
+concurrency:
+  group: performance-analysis
+  cancel-in-progress: false
+
+jobs:
+  performance-analysis:
+    name: Build Performance Analysis
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+
+    outputs:
+      bundle-size: ${{ steps.bundle-metrics.outputs.size-kb }}
+      bundle-gzip: ${{ steps.bundle-metrics.outputs.gzip-kb }}
+      performance-score: ${{ steps.performance-score.outputs.score }}
+      optimization-recommendations: ${{ steps.recommendations.outputs.count }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-perf-analysis-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-perf-analysis-
+
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+
+      - name: Production Build with Analysis
+        run: |
+          echo "::group::Performance-Optimized Build"
+          pnpm build
+          echo "::endgroup::"
+
+      - name: Bundle Metrics Analysis
+        id: bundle-metrics
+        run: |
+          echo "::group::Comprehensive Bundle Analysis"
+          
+          if [ ! -d "dist/_astro" ]; then
+            echo "❌ No build artifacts found"
+            exit 1
+          fi
+          
+          # Analyze main bundle
+          MAIN_BUNDLE=$(find dist/_astro -name "client.*.js" | head -1)
+          if [ -n "$MAIN_BUNDLE" ]; then
+            BUNDLE_SIZE=$(stat -c%s "$MAIN_BUNDLE")
+            BUNDLE_SIZE_KB=$((BUNDLE_SIZE / 1024))
+            
+            # Gzip analysis
+            GZIP_SIZE=$(gzip -c "$MAIN_BUNDLE" | wc -c)
+            GZIP_SIZE_KB=$((GZIP_SIZE / 1024))
+            
+            echo "size-kb=${BUNDLE_SIZE_KB}" >> $GITHUB_OUTPUT
+            echo "gzip-kb=${GZIP_SIZE_KB}" >> $GITHUB_OUTPUT
+            
+            echo "📦 **Bundle Analysis Results**"
+            echo "  Raw Size: ${BUNDLE_SIZE_KB}KB"
+            echo "  Gzip Size: ${GZIP_SIZE_KB}KB"
+            echo "  Compression Ratio: $(echo "scale=1; $GZIP_SIZE_KB * 100 / $BUNDLE_SIZE_KB" | bc -l)%"
+            
+            # Performance classification
+            if [ $BUNDLE_SIZE_KB -le 150 ]; then
+              echo "status=excellent" >> $GITHUB_OUTPUT
+              echo "  Status: 🏆 Excellent (under 150KB)"
+            elif [ $BUNDLE_SIZE_KB -le 200 ]; then
+              echo "status=good" >> $GITHUB_OUTPUT
+              echo "  Status: ✅ Good (under 200KB)"
+            elif [ $BUNDLE_SIZE_KB -le 250 ]; then
+              echo "status=acceptable" >> $GITHUB_OUTPUT
+              echo "  Status: ⚠️ Acceptable (under 250KB)"
+            else
+              echo "status=needs-optimization" >> $GITHUB_OUTPUT
+              echo "  Status: 🔴 Needs Optimization (over 250KB)"
+            fi
+          else
+            echo "❌ Main bundle not found"
+            exit 1
+          fi
+          
+          # Analyze all chunks
+          echo ""
+          echo "📊 **Chunk Analysis**:"
+          find dist/_astro -name "*.js" -exec basename {} \; | while read chunk; do
+            CHUNK_PATH="dist/_astro/$chunk"
+            CHUNK_SIZE=$(stat -c%s "$CHUNK_PATH")
+            CHUNK_SIZE_KB=$((CHUNK_SIZE / 1024))
+            echo "  $chunk: ${CHUNK_SIZE_KB}KB"
+          done
+          
+          echo "::endgroup::"
+
+      - name: Performance Score Calculation
+        id: performance-score
+        run: |
+          echo "::group::Performance Score Calculation"
+          
+          BUNDLE_SIZE=${{ steps.bundle-metrics.outputs.size-kb }}
+          GZIP_SIZE=${{ steps.bundle-metrics.outputs.gzip-kb }}
+          
+          # Initialize score
+          SCORE=85
+          
+          # Bundle size scoring (max 15 points)
+          if [ $BUNDLE_SIZE -le 150 ]; then
+            SCORE=$((SCORE + 15))
+          elif [ $BUNDLE_SIZE -le 200 ]; then
+            SCORE=$((SCORE + 10))
+          elif [ $BUNDLE_SIZE -le 250 ]; then
+            SCORE=$((SCORE + 5))
+          fi
+          
+          # Gzip efficiency scoring (max 10 points)
+          COMPRESSION_RATIO=$(echo "scale=1; $GZIP_SIZE * 100 / $BUNDLE_SIZE" | bc -l)
+          if (( $(echo "$COMPRESSION_RATIO <= 35" | bc -l) )); then
+            SCORE=$((SCORE + 10))
+          elif (( $(echo "$COMPRESSION_RATIO <= 45" | bc -l) )); then
+            SCORE=$((SCORE + 7))
+          elif (( $(echo "$COMPRESSION_RATIO <= 55" | bc -l) )); then
+            SCORE=$((SCORE + 3))
+          fi
+          
+          # Cap score at 100
+          if [ $SCORE -gt 100 ]; then
+            SCORE=100
+          fi
+          
+          echo "score=$SCORE" >> $GITHUB_OUTPUT
+          echo "compression-ratio=$COMPRESSION_RATIO" >> $GITHUB_OUTPUT
+          
+          echo "🎯 **Performance Score: $SCORE/100**"
+          echo "📊 Compression Ratio: ${COMPRESSION_RATIO}%"
+          
+          # Grade classification
+          if [ $SCORE -ge 95 ]; then
+            echo "grade=A+" >> $GITHUB_OUTPUT
+            echo "🏆 Grade: A+ (Exceptional)"
+          elif [ $SCORE -ge 90 ]; then
+            echo "grade=A" >> $GITHUB_OUTPUT
+            echo "✅ Grade: A (Excellent)"
+          elif [ $SCORE -ge 85 ]; then
+            echo "grade=B+" >> $GITHUB_OUTPUT
+            echo "👍 Grade: B+ (Very Good)"
+          elif [ $SCORE -ge 80 ]; then
+            echo "grade=B" >> $GITHUB_OUTPUT
+            echo "✅ Grade: B (Good)"
+          elif [ $SCORE -ge 75 ]; then
+            echo "grade=C" >> $GITHUB_OUTPUT
+            echo "⚠️ Grade: C (Acceptable)"
+          else
+            echo "grade=D" >> $GITHUB_OUTPUT
+            echo "🔴 Grade: D (Needs Improvement)"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Optimization Recommendations
+        id: recommendations
+        run: |
+          echo "::group::Optimization Recommendations"
+          
+          BUNDLE_SIZE=${{ steps.bundle-metrics.outputs.size-kb }}
+          STATUS=${{ steps.bundle-metrics.outputs.status }}
+          SCORE=${{ steps.performance-score.outputs.score }}
+          
+          RECOMMENDATIONS=0
+          
+          echo "## 🔧 **Optimization Recommendations**"
+          echo ""
+          
+          if [ "$STATUS" = "needs-optimization" ]; then
+            echo "### 🚨 **High Priority**"
+            echo "- **Bundle exceeds 250KB**: Consider major refactoring"
+            echo "- **Implement code splitting**: Break large modules into smaller chunks"
+            echo "- **Audit dependencies**: Remove unused dependencies and imports"
+            echo "- **Dynamic imports**: Use lazy loading for route components"
+            RECOMMENDATIONS=$((RECOMMENDATIONS + 4))
+          elif [ "$STATUS" = "acceptable" ]; then
+            echo "### ⚠️ **Medium Priority**"
+            echo "- **Bundle approaching limit**: Consider proactive optimization"
+            echo "- **Tree shaking review**: Ensure unused code is being eliminated"
+            echo "- **Import optimization**: Use specific imports vs barrel imports"
+            RECOMMENDATIONS=$((RECOMMENDATIONS + 3))
+          fi
+          
+          if [ $SCORE -lt 85 ]; then
+            echo "### 🎯 **Performance Score Improvements**"
+            echo "- **Compression optimization**: Review terser/Vite compression settings"
+            echo "- **Asset optimization**: Ensure images and fonts are optimized"
+            echo "- **CSS optimization**: Consider CSS-in-JS vs static CSS trade-offs"
+            RECOMMENDATIONS=$((RECOMMENDATIONS + 3))
+          fi
+          
+          # Generic optimizations
+          echo "### 📈 **General Improvements**"
+          echo "- **Bundle analysis**: Run \`pnpm build:analyze\` for detailed chunk analysis"
+          echo "- **Source maps**: Ensure source maps are not included in production builds"
+          echo "- **Caching strategy**: Implement proper cache headers for optimal performance"
+          RECOMMENDATIONS=$((RECOMMENDATIONS + 3))
+          
+          echo "count=$RECOMMENDATIONS" >> $GITHUB_OUTPUT
+          
+          if [ $RECOMMENDATIONS -gt 6 ]; then
+            echo ""
+            echo "⚠️ **High number of recommendations (${RECOMMENDATIONS}). Consider addressing high-priority items first.**"
+          elif [ $RECOMMENDATIONS -gt 3 ]; then
+            echo ""
+            echo "👍 **Moderate optimization opportunities found.**"
+          else
+            echo ""
+            echo "🎉 **Build is well optimized! Only minor tweaks suggested.**"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Performance Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report-${{ github.run_number }}
+          path: |
+            dist/
+          retention-days: 30
+
+      - name: PR Performance Comment
+        if: github.event_name == 'pull_request'
+        run: |
+          # Create performance comment for PR
+          COMMENT_BODY=$(cat <<EOF
+            ## 🚀 **Build Performance Analysis**
+            
+            ### 📊 **Bundle Metrics**
+            - **Size**: ${{ steps.bundle-metrics.outputs.size-kb }}KB (gzip: ${{ steps.bundle-metrics.outputs.gzip-kb }}KB)
+            - **Status**: ${{ steps.bundle-metrics.outputs.status }}
+            - **Compression**: ${{ steps.performance-score.outputs.compression-ratio }}%
+            
+            ### 🎯 **Performance Score**
+            - **Score**: ${{ steps.performance-score.outputs.score }}/100
+            - **Grade**: ${{ steps.performance-score.outputs.grade }}
+            
+            ### 🔧 **Optimization Opportunities**
+            - **Recommendations**: ${{ steps.recommendations.outputs.count }} items found
+            
+            [View Detailed Performance Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          EOF
+          )
+          
+          gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_BODY" || true
+
+  performance-threshold-validation:
+    name: Performance Threshold Validation
+    runs-on: ubuntu-24.04-arm
+    needs: performance-analysis
+    if: github.event.inputs.performance_thresholds == 'true' || github.event_name != 'workflow_dispatch'
+    
+    steps:
+      - name: Validate Performance Thresholds
+        run: |
+          BUNDLE_SIZE=${{ needs.performance-analysis.outputs.bundle-size }}
+          PERFORMANCE_SCORE=${{ needs.performance-analysis.outputs.performance-score }}
+          
+          echo "## 🔍 **Performance Threshold Validation**"
+          echo ""
+          
+          # Bundle size threshold
+          if [ "${BUNDLE_SIZE%KB}" -le 200 ]; then
+            echo "✅ **Bundle Size**: ${BUNDLE_SIZE} (≤ 200KB threshold) - PASSED"
+          else
+            echo "❌ **Bundle Size**: ${BUNDLE_SIZE} (> 200KB threshold) - FAILED"
+            echo "::error::Bundle size exceeds 200KB threshold"
+            exit 1
+          fi
+          
+          # Performance score threshold
+          if [ "$PERFORMANCE_SCORE" -ge 80 ]; then
+            echo "✅ **Performance Score**: ${PERFORMANCE_SCORE}/100 (≥ 80 threshold) - PASSED"
+          else
+            echo "❌ **Performance Score**: ${PERFORMANCE_SCORE}/100 (< 80 threshold) - FAILED"
+            echo "::error::Performance score below 80 threshold"
+            exit 1
+          fi
+          
+          echo ""
+          echo "🎉 **All performance thresholds validated - Production ready!**"
