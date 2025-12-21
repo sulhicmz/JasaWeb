@@ -356,5 +356,13 @@ import Card from '../../components/ui/Card.astro';
 </style>
 
 <script type="module" is:inline>
-import './src/services/client/billing-client.ts';
+// Lazy load billing client for better performance
+(async () => {
+  try {
+    const { initBilling } = await import('./src/services/client/billing-client.ts');
+    initBilling();
+  } catch (error) {
+    console.error('Failed to load billing client:', error);
+  }
+})();
 </script>
