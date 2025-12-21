@@ -53,7 +53,6 @@ describe('ErrorBoundary Component', () => {
   });
 
   it('should update state on error', () => {
-    const errorBoundary = new ErrorBoundary({ children: null });
     const testError = new Error('Test error');
     
     const newState = ErrorBoundary.getDerivedStateFromError(testError);
