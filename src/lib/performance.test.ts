@@ -244,7 +244,7 @@ describe('Performance Tests - Unit Logic', () => {
             
             // Simulate bundle data from build process
             const mockBundleData = {
-                totalSize: 194 * 1024, // 194KB - current size
+                totalSize: 189 * 1024, // 189KB - optimized size
                 gzipSize: 58 * 1024, // 58KB estimated
                 chunks: [
                     { name: 'client/index.js', size: 120 * 1024, gzipSize: 36 * 1024, modules: ['react', 'astro'], imports: [] },

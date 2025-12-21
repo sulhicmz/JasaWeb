@@ -67,8 +67,8 @@ export interface PerformanceThresholds {
  * Performance thresholds based on industry standards and JasaWeb requirements
  */
 export const PERFORMANCE_THRESHOLDS: PerformanceThresholds = {
-  maxBundleSize: 250, // Current: 194KB - target: <250KB
-  maxChunkSize: 50, // Individual chunks should be <50KB
+  maxBundleSize: 250, // Current: 189KB - optimized: 189KB
+  maxChunkSize: 50, // Individual chunks should be <50KB  
   maxGzipRatio: 0.7, // Should achieve at least 30% compression
   minCacheHitRate: 0.85, // 85%+ cache hit rate
   maxApiLatency: 100, // <100ms API response time
@@ -124,8 +124,8 @@ export class BundleAnalyzer {
 
   private extractBundleMetrics(bundleData: Record<string, unknown>): BundleMetrics {
     // Extract metrics from Vite build stats
-    const totalSize = typeof bundleData.totalSize === 'number' ? bundleData.totalSize : 194 * 1024; // Current: 194KB
-    const gzipSize = typeof bundleData.gzipSize === 'number' ? bundleData.gzipSize : 58 * 1024; // Estimated gzip size
+    const totalSize = typeof bundleData.totalSize === 'number' ? bundleData.totalSize : 189 * 1024; // Optimized: 189KB
+    const gzipSize = typeof bundleData.gzipSize === 'number' ? bundleData.gzipSize : 59 * 1024; // Estimated gzip size
     const chunks = Array.isArray(bundleData.chunks) ? bundleData.chunks as ChunkInfo[] : [
       { name: 'client/index.js', size: 120 * 1024, gzipSize: 36 * 1024, modules: [], imports: [] },
       { name: 'admin/index.js', size: 74 * 1024, gzipSize: 22 * 1024, modules: [], imports: [] }
