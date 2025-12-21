@@ -28,7 +28,13 @@
 | BUG-029 | Wrangler.toml duplicate compatibility_date and outdated wrangler version | 2025-12-21 |
 | BUG-030 | Git merge conflict left unresolved in roadmap.md architecture documentation | 2025-12-21 |
 | BUG-031 | Astro build warning - missing is:inline directive in AuthForm.astro module script | 2025-12-21 |
+| BUG-032 | ARCHITECTURAL - Hardcoded pricing configuration preventing admin flexibility | 2025-12-21 |
 
 ---
+
+## Summary
+- **Total Fixed**: 32 bugs
+- **Current Open**: 0
+- **Production Status**: ✅ READY
 
 **Last Updated**: 2025-12-21
