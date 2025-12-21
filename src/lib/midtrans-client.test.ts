@@ -3,7 +3,7 @@
  * Comprehensive test suite for Midtrans client and payment functionality
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { 
     createMidtransService, 
     validateInvoiceForPayment, 
@@ -34,6 +34,8 @@ vi.mock('midtrans-client', () => ({
 }));
 
 describe('Midtrans Payment Service', () => {
+    let consoleSpy: ReturnType<typeof vi.spyOn>;
+    
     const mockRuntime = {
         MIDTRANS_IS_PRODUCTION: 'false',
         MIDTRANS_SERVER_KEY: 'SB-Mid-server-TEST123',
@@ -73,6 +75,13 @@ describe('Midtrans Payment Service', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        // Suppress console errors for expected payment failures
+        consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        // Restore console error logging
+        consoleSpy.mockRestore();
     });
 
     describe('createMidtransService', () => {

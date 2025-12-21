@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createHmac } from 'crypto';
 import { validateMidtransSignature, parseMidtransWebhook, MIDTRANS_STATUS_MAP } from '@/lib/midtrans';
 
 describe('Midtrans Webhook Security', () => {
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
   const SERVER_KEY = 'test_server_key_123';
   const VALID_PAYLOAD = {
     transaction_status: 'settlement',
@@ -16,6 +17,13 @@ describe('Midtrans Webhook Security', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    // Suppress console errors for expected signature validation failures
+    consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console error logging
+    consoleSpy.mockRestore();
   });
 
   describe('parseMidtransWebhook', () => {
