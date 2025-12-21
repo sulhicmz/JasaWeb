@@ -195,7 +195,7 @@ describe('Performance Optimization Tests', () => {
 
   describe('Network Performance Simulation', () => {
     it('should optimize for slow network conditions', async () => {
-      const simulateSlowFetch = (url: string, delay = 100) => {
+      const simulateSlowFetch = (_url: string, delay = 100) => {
         return new Promise(resolve => {
           setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ data: 'test' }) }), delay);
         });

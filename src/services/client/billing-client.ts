@@ -513,7 +513,7 @@ const checkPaymentStatus = async (orderId: string, silent = false): Promise<void
       loadOverviewStats();
       alert('Pembayaran berhasil! Tagihan telah diperbarui.');
     }
-  } catch (error) {
+  } catch {
     if (!silent) {
       alert('Gagal mengecek status pembayaran');
     }
