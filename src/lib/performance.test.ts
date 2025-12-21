@@ -1,9 +1,10 @@
 /**
  * Unit Performance Test Suite - JasaWeb Platform
- * Tests performance logic without database connection
+ * Tests performance logic including bundle analysis without database connection
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import { enhancedPerformanceMonitor, PERFORMANCE_THRESHOLDS } from './bundle-analyzer';
 
 const PERFORMANCE_TIMEOUT = 5000; // 5s max for API responses
 const QUERY_TIMEOUT = 200; // 200ms max for database queries (spec requirement)
@@ -234,6 +235,91 @@ describe('Performance Tests - Unit Logic', () => {
             // Overall performance validation
             const slowestTest = Math.max(...Object.values(testResults));
             expect(slowestTest).toBeLessThan(PERFORMANCE_TIMEOUT);
+        });
+    });
+
+    describe('Bundle Analysis Performance', () => {
+        it('should analyze bundle performance metrics', () => {
+            const startTime = performance.now();
+            
+            // Simulate bundle data from build process
+            const mockBundleData = {
+                totalSize: 194 * 1024, // 194KB - current size
+                gzipSize: 58 * 1024, // 58KB estimated
+                chunks: [
+                    { name: 'client/index.js', size: 120 * 1024, gzipSize: 36 * 1024, modules: ['react', 'astro'], imports: [] },
+                    { name: 'admin/index.js', size: 74 * 1024, gzipSize: 22 * 1024, modules: ['prisma', 'midtrans'], imports: [] }
+                ],
+                dependencies: [
+                    { name: 'react', size: 42 * 1024, gzipSize: 13 * 1024, version: '19.0.0', path: '/node_modules/react' },
+                    { name: '@prisma/client', size: 38 * 1024, gzipSize: 11 * 1024, version: '6.1.0', path: '/node_modules/@prisma/client' }
+                ]
+            };
+
+            enhancedPerformanceMonitor.recordBundleAnalysis(mockBundleData);
+            const report = enhancedPerformanceMonitor.getComprehensiveReport();
+
+            const analysisTime = performance.now() - startTime;
+            testResults['bundle_analysis'] = analysisTime;
+
+            console.log(`⏱️ Bundle analysis: ${analysisTime.toFixed(2)}ms`);
+            console.log(`📦 Bundle size: ${report.bundle?.summary?.totalSize}KB (gzipped: ${report.bundle?.summary?.gzipSize}KB)`);
+            console.log(`📊 Bundle score: ${report.bundle?.score}/100 (${report.bundle?.status})`);
+            console.log(`🎯 Overall score: ${report.overall.score}/100 (${report.overall.status})`);
+            
+            expect(report.bundle).toBeDefined();
+            expect(report.bundle?.summary?.totalSize).toBeLessThanOrEqual(PERFORMANCE_THRESHOLDS.maxBundleSize);
+            expect(report.bundle?.score).toBeGreaterThan(70);
+            expect(analysisTime).toBeLessThan(10); // Should be very fast
+        });
+
+        it('should validate performance thresholds', () => {
+            const startTime = performance.now();
+            
+            const validation = enhancedPerformanceMonitor.validateBuildPerformance();
+            
+            const validationTime = performance.now() - startTime;
+            testResults['threshold_validation'] = validationTime;
+
+            console.log(`⏱️ Threshold validation: ${validationTime.toFixed(2)}ms`);
+            console.log(`✅ Build valid: ${validation.isValid}`);
+            console.log(`⚠️ Warnings: ${validation.warnings.length}`);
+            console.log(`❌ Issues: ${validation.issues.length}`);
+            
+            expect(validation).toBeDefined();
+            expect(validation.isValid).toBe(true);
+            expect(validationTime).toBeLessThan(5);
+        });
+
+        it('should generate optimization recommendations', () => {
+            const startTime = performance.now();
+            
+            // Simulate a larger bundle that needs optimization
+            const largeBundleData = {
+                totalSize: 300 * 1024, // 300KB - exceeds threshold
+                gzipSize: 120 * 1024, // Poor compression
+                chunks: [
+                    { name: 'client/index.js', size: 180 * 1024, gzipSize: 72 * 1024, modules: ['react'], imports: [] },
+                    { name: 'admin/index.js', size: 120 * 1024, gzipSize: 48 * 1024, modules: ['prisma'], imports: [] }
+                ],
+                dependencies: []
+            };
+
+            enhancedPerformanceMonitor.recordBundleAnalysis(largeBundleData);
+            const report = enhancedPerformanceMonitor.getComprehensiveReport();
+
+            const analysisTime = performance.now() - startTime;
+            testResults['optimization_analysis'] = analysisTime;
+
+            console.log(`⏱️ Optimization analysis: ${analysisTime.toFixed(2)}ms`);
+            console.log(`🔧 Recommendations: ${report.overall.recommendations.length}`);
+            
+            report.overall.recommendations.forEach((rec, index) => {
+                console.log(`   ${index + 1}. [${rec.priority.toUpperCase()}] ${rec.description}`);
+            });
+            
+            expect(report.overall.recommendations.length).toBeGreaterThan(0);
+            expect(analysisTime).toBeLessThan(10);
         });
     });
 
