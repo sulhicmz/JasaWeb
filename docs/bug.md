@@ -31,11 +31,12 @@
 | BUG-032 | ARCHITECTURAL - Hardcoded pricing configuration preventing admin flexibility | 2025-12-21 |
 | BUG-033 | TypeScript error in projects.ts:238 - UpdateProjectData.url can be null but CreateProjectData.url cannot | 2025-12-21 |
 | BUG-034 | ESLint error in crud.ts:92 - Remove unused UpdateData generic parameter | 2025-12-21 |
+| BUG-035 | Build warning - unused PostStatus import in blog.ts | 2025-12-21 |
 
 ---
 
 ## Summary
-- **Total Fixed**: 34 bugs
+- **Total Fixed**: 35 bugs
 - **Current Open**: 0
 - **Production Status**: ✅ READY
 
