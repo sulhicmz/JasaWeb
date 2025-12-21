@@ -1,0 +1,325 @@
+---
+/**
+ * Auth Form Component
+ * 
+ * Reusable authentication form component that handles login and register forms
+ * with consistent styling, error messaging, and form validation integration.
+ * 
+ * @example
+ * <AuthForm 
+ *   type="login" 
+ *   title="Selamat Datang"
+ *   subtitle="Masuk ke akun Anda untuk melanjutkan"
+ *   submitText="Masuk"
+ *   footerText="Belum punya akun?"
+ *   footerLink="/register"
+ *   footerLinkText="Daftar sekarang"
+ * />
+ */
+import Button from '../ui/Button.astro';
+import FormGroup from '../ui/FormGroup.astro';
+import FormInput from '../ui/FormInput.astro';
+
+export interface Props {
+  /** Form type - determines fields and validation */
+  type: 'login' | 'register';
+  /** Main title displayed in header */
+  title: string;
+  /** Subtitle/description displayed under title */
+  subtitle: string;
+  /** Submit button text */
+  submitText: string;
+  /** Footer text before link */
+  footerText: string;
+  /** URL for footer link */
+  footerLink: string;
+  /** Text for footer link */
+  footerLinkText: string;
+  /** Show forgot password link (login only) */
+  showForgotLink?: boolean;
+  /** Additional CSS classes */
+  class?: string;
+}
+
+const props = Astro.props as Props;
+const {
+  type,
+  title,
+  subtitle,
+  submitText,
+  footerText,
+  footerLink,
+  footerLinkText,
+  showForgotLink = false,
+  class: className = '',
+} = props;
+
+// Form configuration based on type
+type FormConfig = {
+  id: string;
+  endpoint: string;
+  successRedirect: string;
+  successMessage?: string;
+  errorMessage: string;
+  validatorType: 'login' | 'register';
+};
+
+const formConfigs: Record<'login' | 'register', FormConfig> = {
+  login: {
+    id: 'loginForm',
+    endpoint: '/api/auth/login',
+    successRedirect: '/dashboard',
+    errorMessage: 'Login gagal',
+    validatorType: 'login',
+  },
+  register: {
+    id: 'registerForm',
+    endpoint: '/api/auth/register',
+    successRedirect: '/login',
+    successMessage: 'Registrasi berhasil! Mengalihkan...',
+    errorMessage: 'Registrasi gagal',
+    validatorType: 'register',
+  }
+};
+
+const config = formConfigs[type];
+---
+
+<div class={`auth-form-container ${className}`}>
+  <div class="auth-header">
+    <h1>{title}</h1>
+    <p>{subtitle}</p>
+  </div>
+
+  <form id={config.id} class="auth-form">
+    {type === 'register' && (
+      <FormGroup label="Nama Lengkap" labelFor="name" required>
+        <FormInput
+          type="text"
+          id="name"
+          name="name"
+          placeholder="John Doe"
+          required
+        />
+      </FormGroup>
+    )}
+
+    <FormGroup label="Email" labelFor="email" required>
+      <FormInput
+        type="email"
+        id="email"
+        name="email"
+        placeholder="nama@email.com"
+        required
+      />
+    </FormGroup>
+
+    {type === 'register' && (
+      <FormGroup label="No. WhatsApp" labelFor="phone">
+        <FormInput
+          type="tel"
+          id="phone"
+          name="phone"
+          placeholder="08123456789"
+        />
+      </FormGroup>
+    )}
+
+    <FormGroup label="Password" labelFor="password" required>
+      <FormInput
+        type="password"
+        id="password"
+        name="password"
+        placeholder={type === 'register' ? 'Minimal 8 karakter' : '••••••••'}
+        minlength={type === 'register' ? 8 : undefined}
+        required
+      />
+    </FormGroup>
+
+    {type === 'register' && (
+      <FormGroup label="Konfirmasi Password" labelFor="confirmPassword" required>
+        <FormInput
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          placeholder="Ulangi password"
+          required
+        />
+      </FormGroup>
+    )}
+
+    {showForgotLink && (
+      <div class="form-actions">
+        <a href="/forgot-password" class="forgot-link">Lupa password?</a>
+      </div>
+    )}
+
+    <Button type="submit" variant="primary" fullWidth>{submitText}</Button>
+
+    <div id="errorMessage" class="error-message"></div>
+    {type === 'register' && <div id="successMessage" class="success-message"></div>}
+  </form>
+
+  <div class="auth-footer">
+    <p>{footerText} <a href={footerLink}>{footerLinkText}</a></p>
+  </div>
+</div>
+
+<style>
+  .auth-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: 0;
+  }
+
+  .auth-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+  }
+
+  .auth-header p {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .forgot-link {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+  }
+
+  .forgot-link:hover {
+    opacity: 0.8;
+  }
+
+  .error-message {
+    color: var(--color-error);
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+    margin-top: 0.5rem;
+  }
+
+  .error-message.show {
+    display: block;
+  }
+
+  .success-message {
+    color: var(--color-success);
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+    margin-top: 0.5rem;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .auth-footer {
+    margin-top: 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+  }
+
+  .auth-footer p {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .auth-footer a {
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--transition-fast);
+  }
+
+  .auth-footer a:hover {
+    opacity: 0.8;
+  }
+
+  /* Responsive design */
+  @media (max-width: 640px) {
+    .auth-header h1 {
+      font-size: 1.5rem;
+    }
+    
+    .auth-form {
+      gap: 1rem;
+    }
+  }
+</style> 
+
+<script define:vars={{ config, type }} is:inline>
+  // Export config for client-side script
+  window.authFormConfig = config;
+  window.authFormType = type;
+</script>
+
+<script type="module">
+  import { AuthFormHandler } from '/src/services/auth/AuthFormHandler.js';
+  import { AuthValidator } from '/src/services/auth/AuthValidator.js';
+
+  // Get config from global variables set by define:vars
+  const formConfig = window.authFormConfig;
+  const formType = window.authFormType;
+
+  // Initialize form when component loads
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // Initialize form handler
+      const messageIds = formType === 'register' 
+        ? ['errorMessage', 'successMessage'] 
+        : ['errorMessage'];
+      
+      const initialized = AuthFormHandler.initialize(...messageIds);
+      if (!initialized) {
+        throw new Error('Failed to initialize form handler');
+      }
+
+      // Build configuration based on form type
+      const formSetup = {
+        endpoint: formConfig.endpoint,
+        successRedirect: formConfig.successRedirect,
+        errorMessage: formConfig.errorMessage,
+        validation: AuthValidator.createValidator(formConfig.validatorType)
+      };
+
+      // Add success message for register forms
+      if (formType === 'register' && formConfig.successMessage) {
+        formSetup.successMessage = formConfig.successMessage;
+      }
+
+      // Attach handler to form
+      const success = AuthFormHandler.attachToForm(formConfig.id, formSetup);
+      if (!success) {
+        throw new Error('Failed to attach form handler');
+      }
+    } catch (err) {
+      console.error('Form initialization error:', err);
+      const formTypeDisplay = formType === 'login' ? 'login' : 'registrasi';
+      AuthFormHandler.showFallbackError(`Form ${formTypeDisplay} tidak dapat dimuat`);
+    }
+  });
+</script>

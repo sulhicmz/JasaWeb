@@ -5,6 +5,7 @@
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
+import { paginationService } from '@/services/shared/pagination';
 
 export const GET: APIRoute = async ({ url }) => {
     try {
@@ -33,62 +34,66 @@ export const GET: APIRoute = async ({ url }) => {
             return jsonResponse(page);
         }
 
-        // List pages with pagination
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '20');
-        const search = url.searchParams.get('search') || undefined;
-        const sortBy = (url.searchParams.get('sortBy') as 'updatedAt' | 'title' | 'createdAt') || 'updatedAt';
-        const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
+        // Parse query parameters using centralized pagination service
+        const query = paginationService.parseQuery(url, {
+            defaultLimit: 20,
+            maxLimit: 50,
+            defaultSortBy: 'updatedAt',
+            defaultSortOrder: 'desc',
+            allowedSortFields: ['createdAt', 'updatedAt', 'title']
+        });
 
         // Validate pagination parameters
-        if (page < 1) return errorResponse('Page harus lebih dari 0');
-        if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
-
-        // Validate sort fields
-        const allowedSortFields = ['createdAt', 'updatedAt', 'title'];
-        if (!allowedSortFields.includes(sortBy)) {
-            return errorResponse('Sort field tidak valid');
+        const validation = paginationService.validatePagination(query.pagination);
+        if (!validation.isValid) {
+            return errorResponse(validation.error!, 400);
         }
 
-        // Build where clause
-        const where: Record<string, unknown> = {};
-        if (search) {
-            where.OR = [
-                { title: { contains: search, mode: 'insensitive' } },
-                { content: { contains: search, mode: 'insensitive' } },
-            ];
+        // Build where clause with pagination service helpers
+        let where: Record<string, unknown> = {};
+        if (query.filters.status) {
+            where.status = query.filters.status;
         }
+
+        // Add search condition if provided
+        if (query.search) {
+            where = paginationService.addSearchCondition(
+                where, 
+                query.search, 
+                ['title', 'content']
+            );
+        }
+
+        // Create Prisma query with pagination and sorting
+        const baseQuery = paginationService.createPrismaQuery(
+            query.pagination,
+            query.sort,
+            where
+        );
+
+        // Add selective fields for list performance
+        const prismaQuery = {
+            ...baseQuery,
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                updatedAt: true,
+            }
+        };
 
         // Get total count and pages in parallel
         const [total, pages] = await Promise.all([
             prisma.page.count({ where }),
-            prisma.page.findMany({
-                where,
-                orderBy: { [sortBy]: sortOrder },
-                select: {
-                    id: true,
-                    title: true,
-                    slug: true,
-                    updatedAt: true,
-                    // Exclude content from list for performance
-                },
-                skip: (page - 1) * limit,
-                take: limit,
-            }),
+            prisma.page.findMany(prismaQuery),
         ]);
 
-        const totalPages = Math.ceil(total / limit);
+        // Create standardized response
+        const result = paginationService.createResponse(pages, total, query.pagination);
 
         return jsonResponse({
-            pages,
-            pagination: {
-                total,
-                page,
-                limit,
-                totalPages,
-                hasNext: page < totalPages,
-                hasPrev: page > 1,
-            },
+            pages: result.data,
+            pagination: result.pagination,
         });
     } catch (error) {
         return handleApiError(error);
