@@ -5,18 +5,7 @@
  * and provide reusable billing utilities across the application.
  */
 
-export interface Invoice {
-  id: string;
-  amount: number;
-  status: 'unpaid' | 'paid';
-  createdAt: string;
-  paidAt?: string;
-  qrisUrl?: string;
-  project: {
-    name: string;
-    type: string;
-  };
-}
+import type { Invoice } from '@/lib/types';
 
 export interface BillingStats {
   totalAmount: number;
@@ -26,31 +15,46 @@ export interface BillingStats {
   paidCount: number;
 }
 
+// Extended Invoice with Project data for billing operations
+export interface InvoiceWithProject extends Invoice {
+  project: {
+    name: string;
+    type: string;
+  };
+}
+
+// Temporary accumulator interface for reduce function
+interface BillingAccumulator {
+  total: number;
+  count: Record<string, number>;
+  [key: string]: number | Record<string, number>;
+}
+
 export interface InvoiceState {
   currentPage: number;
   currentStatus: string;
   currentSort: string;
   isLoading: boolean;
-  cache: Map<string, any>;
+  cache: Map<string, unknown>;
 }
 
 /**
  * Calculate billing statistics from invoice array
  * Optimized single-pass computation with proper typing
  */
-export function calculateBillingStats(invoices: Invoice[]): BillingStats {
+export function calculateBillingStats(invoices: InvoiceWithProject[]): BillingStats {
   const totals = invoices.reduce((acc, invoice) => {
     const amount = Number(invoice.amount);
     acc.total += amount;
-    (acc as any)[invoice.status] = ((acc as any)[invoice.status] || 0) + amount;
+    (acc[invoice.status] as number) = ((acc[invoice.status] as number) || 0) + amount;
     acc.count[invoice.status] = (acc.count[invoice.status] || 0) + 1;
     return acc;
-  }, { total: 0, count: {} as Record<string, number> } as any);
+  }, { total: 0, count: {} as Record<string, number> } as BillingAccumulator);
 
   return {
     totalAmount: totals.total,
-    unpaidAmount: (totals as any).unpaid || 0,
-    paidAmount: (totals as any).paid || 0,
+    unpaidAmount: (totals.unpaid as number) || 0,
+    paidAmount: (totals.paid as number) || 0,
     unpaidCount: totals.count.unpaid || 0,
     paidCount: totals.count.paid || 0
   };
@@ -88,7 +92,7 @@ export function generateStatsHTML(stats: BillingStats): string {
  * Generate HTML for invoice card display
  * Type-safe template with consistent formatting
  */
-export function generateInvoiceCard(invoice: Invoice): string {
+export function generateInvoiceCard(invoice: InvoiceWithProject): string {
   const statusClass = invoice.status === 'paid' ? 'badge-success' : 'badge-secondary';
   const statusText = invoice.status === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar';
   const paidDateText = invoice.paidAt 
@@ -130,7 +134,7 @@ export function generateInvoiceCard(invoice: Invoice): string {
 /**
  * Create invoice detail HTML for modal display
  */
-export function generateInvoiceDetailHTML(invoice: Invoice, paymentStatus?: string, expired?: boolean): string {
+export function generateInvoiceDetailHTML(invoice: InvoiceWithProject, paymentStatus?: string, expired?: boolean): string {
   return `
     <div class="invoice-details">
       <div class="detail-row">
@@ -179,7 +183,7 @@ export function generateInvoiceDetailHTML(invoice: Invoice, paymentStatus?: stri
 /**
  * Generate QRIS payment HTML for modal display
  */
-export function generateQRISPaymentHTML(invoice: Invoice, qrisUrl: string, orderId: string): string {
+export function generateQRISPaymentHTML(invoice: InvoiceWithProject, qrisUrl: string, orderId: string): string {
   return `
     <div class="qris-container">
       <h4>Scan QRIS untuk Pembayaran</h4>
@@ -247,7 +251,7 @@ export async function fetchInvoices(params: {
   sortBy: string;
   sortOrder?: string;
   limit?: number;
-}): Promise<{ invoices: Invoice[]; pagination?: any } | null> {
+}): Promise<{ invoices: InvoiceWithProject[]; pagination?: unknown } | null> {
   try {
     const searchParams = new URLSearchParams({
       page: params.page.toString(),

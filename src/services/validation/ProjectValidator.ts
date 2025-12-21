@@ -3,6 +3,8 @@
  * Centralized validation for project-related operations
  */
 
+import type { ProjectValidationData } from '@/lib/types';
+
 export interface ProjectValidationErrors {
   name?: string;
   type?: string;
@@ -60,7 +62,7 @@ export class ProjectValidator {
   /**
    * Validate required project fields
    */
-  static validateRequired(data: any, fields: string[]): string | null {
+  static validateRequired(data: ProjectValidationData, fields: string[]): string | null {
     for (const field of fields) {
       if (!data[field] || data[field].toString().trim() === '') {
         return this.getFieldLabel(field) + ' wajib diisi';
@@ -72,7 +74,7 @@ export class ProjectValidator {
   /**
    * Validate complete project data
    */
-  static validateProject(data: any, isUpdate = false): ProjectValidationErrors {
+  static validateProject(data: ProjectValidationData, isUpdate = false): ProjectValidationErrors {
     const errors: ProjectValidationErrors = {};
 
     // Name validation

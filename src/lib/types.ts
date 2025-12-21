@@ -91,6 +91,7 @@ export interface Invoice {
 export interface LoginForm {
     email: string;
     password: string;
+    [key: string]: unknown;
 }
 
 export interface RegisterForm {
@@ -98,6 +99,7 @@ export interface RegisterForm {
     email: string;
     phone?: string;
     password: string;
+    [key: string]: unknown;
 }
 
 // ==============================================
@@ -134,6 +136,55 @@ export interface MidtransChargeResponse {
         method: string;
         url: string;
     }>;
+}
+
+// ==============================================
+// VALIDATION TYPES
+// ==============================================
+export interface ValidationData {
+    [key: string]: unknown;
+}
+
+export interface ValidationRule {
+    required?: string[];
+    email?: string;
+    password?: string;
+    minLength?: Record<string, number>;
+    pattern?: Record<string, RegExp>;
+}
+
+export interface UserValidationData {
+    email?: string;
+    password?: string;
+    name?: string;
+    phone?: string;
+    role?: UserRole;
+    [key: string]: unknown;
+}
+
+export interface ProjectValidationData {
+    name?: string;
+    type?: ProjectType;
+    status?: ProjectStatus;
+    url?: string;
+    credentials?: ProjectCredentials;
+    [key: string]: unknown;
+}
+
+export interface UserValidationErrors {
+    email?: string;
+    password?: string;
+    name?: string;
+    phone?: string;
+    role?: string;
+}
+
+export interface ProjectValidationErrors {
+    name?: string;
+    type?: string;
+    status?: string;
+    url?: string;
+    credentials?: string;
 }
 
 // ==============================================

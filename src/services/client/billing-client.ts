@@ -5,6 +5,8 @@
  * extracted from inline JavaScript for better modularity.
  */
 
+import type { Invoice } from '@/lib/types';
+
 export {}; // Make this a module
 
 // Extend Window interface for payment timers
@@ -21,8 +23,45 @@ interface BillingState {
   currentStatus: string;
   currentSort: string;
   isLoading: boolean;
-  cache: Map<string, any>;
+  cache: Map<string, unknown>;
 }
+
+// Billing statistics interface
+interface BillingStats {
+  totalAmount: number;
+  paidAmount: number;
+  unpaidAmount: number;
+  paidCount: number;
+  unpaidCount: number;
+}
+
+// Temporary accumulator interface for reduce function
+interface BillingAccumulator {
+  total: number;
+  count: Record<string, number>;
+  [key: string]: number | Record<string, number>;
+}
+
+// Pagination interface
+interface PaginationData {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// Extended Invoice with Project data for templates
+interface InvoiceWithProject extends Invoice {
+  project: {
+    id: string;
+    name: string;
+    type: string;
+  };
+}
+
+
 
 const state: BillingState = {
   currentPage: 1,
@@ -33,9 +72,9 @@ const state: BillingState = {
 };
 
 // Debounce function for better performance
-const debounce = (func: (...args: any[]) => void, wait: number) => {
-  let timeout: any;
-  return function executedFunction(...args: any[]) {
+const debounce = (func: (...args: unknown[]) => void, wait: number) => {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  return function executedFunction(...args: unknown[]) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
@@ -49,26 +88,26 @@ const debounce = (func: (...args: any[]) => void, wait: number) => {
 const formatCurrency = (amount: number): string => `Rp ${amount.toLocaleString('id-ID')}`;
 
 // Calculate billing statistics from invoice array
-const calculateBillingStats = (invoices: any[]) => {
-  const totals = invoices.reduce((acc: any, invoice: any) => {
+const calculateBillingStats = (invoices: InvoiceWithProject[]): BillingStats => {
+  const totals = invoices.reduce((acc: BillingAccumulator, invoice: Invoice) => {
     const amount = Number(invoice.amount);
     acc.total += amount;
-    acc[invoice.status] = (acc[invoice.status] || 0) + amount;
+    (acc[invoice.status] as number) = ((acc[invoice.status] as number) || 0) + amount;
     acc.count[invoice.status] = (acc.count[invoice.status] || 0) + 1;
     return acc;
-  }, { total: 0, count: {} });
+  }, { total: 0, count: {} } as BillingAccumulator);
 
   return {
     totalAmount: totals.total,
-    unpaidAmount: totals.unpaid || 0,
-    paidAmount: totals.paid || 0,
+    unpaidAmount: (totals.unpaid as number) || 0,
+    paidAmount: (totals.paid as number) || 0,
     unpaidCount: totals.count.unpaid || 0,
     paidCount: totals.count.paid || 0
   };
 };
 
 // Generate HTML for billing statistics display
-const generateStatsHTML = (stats: any): string => {
+const generateStatsHTML = (stats: BillingStats): string => {
   return `
     <div class="stat-card">
       <div class="stat-label">Total Tagihan</div>
@@ -86,7 +125,7 @@ const generateStatsHTML = (stats: any): string => {
 };
 
 // Generate HTML for invoice card display
-const generateInvoiceCard = (invoice: any): string => {
+const generateInvoiceCard = (invoice: InvoiceWithProject): string => {
   const statusClass = invoice.status === 'paid' ? 'badge-success' : 'badge-secondary';
   const statusText = invoice.status === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar';
   const paidDateText = invoice.paidAt 
@@ -126,7 +165,7 @@ const generateInvoiceCard = (invoice: any): string => {
 };
 
 // Generate invoice detail HTML for modal display
-const generateInvoiceDetailHTML = (invoice: any, paymentStatus?: string, expired?: boolean): string => {
+const generateInvoiceDetailHTML = (invoice: InvoiceWithProject, paymentStatus?: string, expired?: boolean): string => {
   return `
     <div class="invoice-details">
       <div class="detail-row">
@@ -173,7 +212,7 @@ const generateInvoiceDetailHTML = (invoice: any, paymentStatus?: string, expired
 };
 
 // Generate QRIS payment HTML for modal display
-const generateQRISPaymentHTML = (invoice: any, qrisUrl: string, orderId: string): string => {
+const generateQRISPaymentHTML = (invoice: InvoiceWithProject, qrisUrl: string, orderId: string): string => {
   return `
     <div class="qris-container">
       <h4>Scan QRIS untuk Pembayaran</h4>
@@ -334,7 +373,7 @@ const loadOverviewStats = async (): Promise<void> => {
 };
 
 // Update pagination controls
-const updatePagination = (pagination: any): void => {
+const updatePagination = (pagination: PaginationData): void => {
   const container = document.getElementById('pagination');
   const prevBtn = document.getElementById('prevBtn') as HTMLButtonElement;
   const nextBtn = document.getElementById('nextBtn') as HTMLButtonElement;
@@ -376,7 +415,7 @@ const loadInvoices = async (): Promise<void> => {
     }
 
     // Render invoice cards using service
-    container.innerHTML = data.invoices.map((invoice: any) => generateInvoiceCard(invoice)).join('');
+    container.innerHTML = data.invoices.map((invoice: InvoiceWithProject) => generateInvoiceCard(invoice)).join('');
     updatePagination(data.pagination);
   } catch (error) {
     console.error('Error loading invoices:', error);

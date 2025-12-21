@@ -3,6 +3,8 @@
  * Centralized validation for user-related operations
  */
 
+import type { UserValidationData } from '@/lib/types';
+
 export interface UserValidationErrors {
   email?: string;
   password?: string;
@@ -49,7 +51,7 @@ export class UserValidator {
   /**
    * Validate required user fields
    */
-  static validateRequired(data: any, fields: string[]): string | null {
+  static validateRequired(data: UserValidationData, fields: string[]): string | null {
     for (const field of fields) {
       if (!data[field] || data[field].toString().trim() === '') {
         return this.getFieldLabel(field) + ' wajib diisi';
@@ -61,7 +63,7 @@ export class UserValidator {
   /**
    * Validate complete user data
    */
-  static validateUser(data: any, isUpdate = false): UserValidationErrors {
+  static validateUser(data: UserValidationData, isUpdate = false): UserValidationErrors {
     const errors: UserValidationErrors = {};
 
     // Email validation

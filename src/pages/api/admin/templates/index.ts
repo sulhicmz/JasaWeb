@@ -27,7 +27,7 @@ export const GET: APIRoute = async (context) => {
     const limit = parseInt(url.searchParams.get('limit') || '12');
     const category = url.searchParams.get('category') as string || undefined;
     const search = url.searchParams.get('search') || undefined;
-    const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
+    const sortBy = (url.searchParams.get('sortBy') as 'createdAt' | 'name' | 'category') || 'createdAt';
     const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
 
     // Validate pagination parameters
@@ -46,7 +46,7 @@ export const GET: APIRoute = async (context) => {
     }
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (category) where.category = category;
     if (search) {
       where.OR = [

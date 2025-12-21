@@ -37,7 +37,7 @@ export const GET: APIRoute = async (context) => {
         const limit = parseInt(url.searchParams.get('limit') || '10');
         const search = url.searchParams.get('search') || undefined;
         const role = url.searchParams.get('role') as 'admin' | 'client' || undefined;
-        const sortBy = url.searchParams.get('sortBy') as any || 'createdAt';
+        const sortBy = (url.searchParams.get('sortBy') as 'createdAt' | 'name' | 'email') || 'createdAt';
         const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
 
         // Get users using service layer

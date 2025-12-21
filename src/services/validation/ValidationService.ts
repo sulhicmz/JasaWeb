@@ -3,9 +3,16 @@
  * Orchestration service for all validation operations
  */
 
-import type { ApiResponse } from '@/lib/types';
-import { UserValidator, type UserValidationErrors } from './UserValidator';
-import { ProjectValidator, type ProjectValidationErrors } from './ProjectValidator';
+import type { 
+    ApiResponse, 
+    ValidationData, 
+    UserValidationData, 
+    ProjectValidationData,
+    UserValidationErrors, 
+    ProjectValidationErrors 
+} from '@/lib/types';
+import { UserValidator } from './UserValidator';
+import { ProjectValidator } from './ProjectValidator';
 
 export type ValidationErrors = UserValidationErrors | ProjectValidationErrors;
 
@@ -17,7 +24,7 @@ export class ValidationService {
   /**
    * Required field validation utility
    */
-  static validateRequired(data: any, requiredFields: string[]): string | null {
+  static validateRequired(data: ValidationData, requiredFields: string[]): string | null {
     for (const field of requiredFields) {
       if (!data[field] || data[field].toString().trim() === '') {
         return `${this.getFieldLabel(field)} wajib diisi`;
@@ -29,7 +36,7 @@ export class ValidationService {
   /**
    * Validate user data with comprehensive checks
    */
-  static validateUser(data: any, isUpdate = false): ApiResponse<null> {
+  static validateUser(data: UserValidationData, isUpdate = false): ApiResponse<null> {
     const errors = UserValidator.validateUser(data, isUpdate);
     
     if (UserValidator.hasErrors(errors)) {
@@ -45,7 +52,7 @@ export class ValidationService {
   /**
    * Validate project data with comprehensive checks
    */
-  static validateProject(data: any, isUpdate = false): ApiResponse<null> {
+  static validateProject(data: ProjectValidationData, isUpdate = false): ApiResponse<null> {
     const errors = ProjectValidator.validateProject(data, isUpdate);
     
     if (ProjectValidator.hasErrors(errors)) {
@@ -101,7 +108,7 @@ export class ValidationService {
   /**
    * Common validation pattern for API endpoints
    */
-  static validateCommon(data: any, rules: {
+  static validateCommon(data: ValidationData, rules: {
     required?: string[];
     email?: string;
     password?: string;
@@ -118,14 +125,14 @@ export class ValidationService {
 
     // Email validation
     if (rules.email && data[rules.email]) {
-      if (!UserValidator.isValidEmail(data[rules.email])) {
+      if (!UserValidator.isValidEmail(data[rules.email] as string)) {
         return { success: false, error: 'Format email tidak valid' };
       }
     }
 
     // Password validation
     if (rules.password && data[rules.password]) {
-      if (!UserValidator.isValidPassword(data[rules.password])) {
+      if (!UserValidator.isValidPassword(data[rules.password] as string)) {
         return { success: false, error: 'Password minimal 8 karakter' };
       }
     }
@@ -133,7 +140,8 @@ export class ValidationService {
     // Minimum length validation
     if (rules.minLength) {
       for (const [field, minLength] of Object.entries(rules.minLength)) {
-        if (data[field] && data[field].length < minLength) {
+        const fieldValue = data[field] as string | undefined;
+        if (fieldValue && fieldValue.length < minLength) {
           return { 
             success: false, 
             error: `${this.getFieldLabel(field)} minimal ${minLength} karakter` 
@@ -145,7 +153,8 @@ export class ValidationService {
     // Pattern validation
     if (rules.pattern) {
       for (const [field, pattern] of Object.entries(rules.pattern)) {
-        if (data[field] && !pattern.test(data[field])) {
+        const fieldValue = data[field] as string | undefined;
+        if (fieldValue && !pattern.test(fieldValue)) {
           return { 
             success: false, 
             error: `Format ${this.getFieldLabel(field)} tidak valid` 
