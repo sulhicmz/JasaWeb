@@ -9,10 +9,8 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { getPrisma } from '@/lib/prisma';
-import { hashPassword } from '@/lib/auth';
 import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
 import { validateMidtransSignature, parseMidtransWebhook, MIDTRANS_STATUS_MAP } from '@/lib/midtrans';
-import type { User, Project, Invoice } from '@prisma/client';
 
 // Mock external dependencies
 vi.mock('@/lib/prisma');
@@ -29,20 +27,10 @@ describe('End-to-End User Workflow Integration', () => {
     let testUserData: any;
     let testProjectData: any;
     let testInvoiceData: any;
-    let mockRuntimeEnv: any;
+    
 
     beforeEach(() => {
         vi.clearAllMocks();
-        
-        // Mock runtime environment
-        mockRuntimeEnv = {
-            DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
-            JWT_SECRET: 'test-jwt-secret',
-            MIDTRANS_SERVER_KEY: 'test-midtrans-server-key',
-            MIDTRANS_CLIENT_KEY: 'test-midtrans-client-key',
-            KV_URL: 'https://test-kv.cloudflare.com',
-            SESSION: 'test-session-store',
-        };
 
         // Setup mock database client
         mockDb = {
@@ -175,7 +163,7 @@ describe('End-to-End User Workflow Integration', () => {
                 { type: 'company', expected: 2000000 },
             ];
 
-            pricingTests.forEach(({ type, expected }) => {
+            pricingTests.forEach(({ type, expected: _expected }) => {
                 const mockProject = { ...testProjectData, type };
                 // In real flow, this would call pricing calculation
                 expect(mockProject.type).toBe(type);
@@ -297,7 +285,7 @@ describe('End-to-End User Workflow Integration', () => {
                 { from: 'review', to: 'completed', trigger: 'client_approval' },
             ];
 
-            statusFlow.forEach(({ from, to, trigger }) => {
+            statusFlow.forEach(({ to, trigger }) => {
                 // Mock status transition
                 const mockUpdate = {
                     ...testProjectData,
