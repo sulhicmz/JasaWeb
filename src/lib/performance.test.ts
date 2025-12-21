@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { enhancedPerformanceMonitor, PERFORMANCE_THRESHOLDS } from './bundle-analyzer';
 
 const PERFORMANCE_TIMEOUT = 5000; // 5s max for API responses
-const QUERY_TIMEOUT = 200; // 200ms max for database queries (spec requirement)
+const QUERY_TIMEOUT = 2; // 2ms max for database queries (blueprint requirement - sub-2ms performance)
 const TEST_RECORDS = 1500; // >1000 records as specified in roadmap
 
 describe('Performance Tests - Unit Logic', () => {
@@ -136,7 +136,7 @@ describe('Performance Tests - Unit Logic', () => {
         it('should aggregate dashboard metrics efficiently', () => {
             const startTime = performance.now();
             
-            // Simulate dashboard data aggregation
+            // Simulate dashboard data aggregation with optimized algorithm
             const mockData = Array.from({ length: TEST_RECORDS }, (_, i) => ({
                 id: i,
                 status: ['pending_payment', 'in_progress', 'completed'][i % 3],
@@ -144,20 +144,34 @@ describe('Performance Tests - Unit Logic', () => {
                 createdAt: new Date(2024, 0, (i % 354) + 1)
             }));
 
-            // Aggregate metrics
+            // Optimized single-pass aggregation
             const metrics = {
-                totalRecords: mockData.length,
-                statusCounts: mockData.reduce((acc, item) => {
-                    acc[item.status] = (acc[item.status] || 0) + 1;
-                    return acc;
-                }, {} as Record<string, number>),
-                totalAmount: mockData.reduce((sum, item) => sum + item.amount, 0),
-                thisMonthRecords: mockData.filter(item => {
-                    const now = new Date();
-                    return item.createdAt.getMonth() === now.getMonth() && 
-                           item.createdAt.getFullYear() === now.getFullYear();
-                }).length
+                totalRecords: TEST_RECORDS,
+                statusCounts: { pending_payment: 0, in_progress: 0, completed: 0 } as Record<string, number>,
+                totalAmount: 0,
+                thisMonthRecords: 0
             };
+
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            // Single-pass aggregation for optimal performance
+            for (let i = 0; i < mockData.length; i++) {
+                const item = mockData[i];
+                
+                // Status count update
+                metrics.statusCounts[item.status]++;
+                
+                // Amount accumulation
+                metrics.totalAmount += item.amount;
+                
+                // Monthly filter check
+                if (item.createdAt.getMonth() === currentMonth && 
+                    item.createdAt.getFullYear() === currentYear) {
+                    metrics.thisMonthRecords++;
+                }
+            }
 
             const aggregationTime = performance.now() - startTime;
             testResults['dashboard_aggregation'] = aggregationTime;
