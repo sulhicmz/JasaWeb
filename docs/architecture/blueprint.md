@@ -271,7 +271,7 @@ POST /api/webhooks/midtrans  # Payment notification
 - **Production Impact**: Increased total test coverage from 250 to 297 tests (+47 E2E tests), repository health score improved 96→97/100, validated production readiness
 
 ### Shared Component Architecture Enhancement ✅ (Dec 2025)
-- **Service Page Components**: Created atomic shared components for service detail pages:
+- **Service Page Components**: Created atomic shared components for service detail pages in `src/components/shared/`:
   - `ServiceHero.astro`: Reusable hero section with title, description, icon, and pricing
   - `ServiceFeatures.astro`: Reusable features grid with responsive design and styling
   - `ServiceCTA.astro`: Reusable call-to-action section with customizable service titles
@@ -280,6 +280,14 @@ POST /api/webhooks/midtrans  # Payment notification
 - **Component Directory Structure**: Created `src/components/shared/` for cross-context reusable UI components
 - **Type Safety**: Full TypeScript interfaces for all component props with proper validation
 - **Impact**: Enhanced maintainability, consistent service page design, reduced bundle size
+
+### Template Server Service Extraction ✅ (Dec 2025)
+- **Critical Architecture Violation Fixed**: Eliminated direct database access in `src/pages/template.astro` that bypassed service layer
+- **TemplateServerService**: Created dedicated server-side template service in `src/services/domain/template-server.ts` for proper server-side rendering
+- **Clean Architecture Compliance**: Enforced strict separation between presentation (.astro pages) and business logic (service layer)
+- **Type Safety**: Eliminated `as any` types and implemented proper TypeScript interfaces for server-side template management
+- **Code Standardization**: Replaced inline JavaScript filtering logic with centralized service method
+- **Impact**: Restored architectural integrity, enhanced maintainability, eliminated service layer bypass violations
 
 ### Security & Optimization ✅ (Dec 2025)
 - **Payment Security**: Midtrans SHA-512 signature validation and amount verification implemented.

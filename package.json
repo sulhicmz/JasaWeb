@@ -13,7 +13,7 @@
         "build:analyze": "ANALYZE=true astro check && astro build",
         "preview": "astro preview",
         "typecheck": "astro check && tsc --noEmit",
-        "lint": "npx eslint src --ext ts,tsx --max-warnings 10 && echo '✅ ESLint: No issues found'",
+        "lint": "npx eslint src --ext ts,tsx --max-warnings 10 && echo '✅ ESLint: No issues found (TypeScript + React files checked)',",
         "lint:fix": "eslint . --ext .ts,.tsx --fix --max-warnings 10",
         "astro": "astro",
         "db:generate": "prisma generate",
@@ -64,6 +64,6 @@
         "terser": "^5.44.1",
         "vite-bundle-analyzer": "^0.7.0",
         "vitest": "^4.0.16",
-        "wrangler": "^4.50.0"
+        "wrangler": "^4.56.0"
     }
 }
