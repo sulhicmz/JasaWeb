@@ -43,9 +43,9 @@
 - [x] **MODULARITY**: **HIGH IMPACT** - Extract dashboard inline business logic into client services - eliminated 150+ lines of duplicate code
 - [x] **MODULARITY**: **HIGH IMPACT** - Create validation service layer with domain-specific validators - eliminated 200+ lines of duplicate validation code
 - [x] **MODULARITY**: **ARCHITECTURAL** - Service layer reorganization into atomic structure - created `src/services/domain/` and `src/services/shared/` directories for clean separation of concerns, eliminated architectural friction between domain and utility services
+- [x] **MODULARITY**: **HIGH IMPACT** - Extract service page duplication into shared components (ServiceHero, ServiceFeatures, ServiceCTA) - eliminated 230+ lines of duplicate code across sekolah, company, and berita pages
 - [ ] **MEDIUM**: Add end-to-end integration tests for critical user flows (Registration → Order → Payment)
 - [x] **LOW**: Complete implementation of image optimization service in `src/lib/image-optimization.ts` - ✅ FULLY IMPLEMENTED
-- [ ] **LOW**: Reorganize domain services (`project.ts`, `template.ts`) into dedicated folder structure
 - [ ] **LOW**: Add comprehensive JSDoc documentation for all UI components
 - [ ] **LOW**: Expand test coverage for error boundaries and failure scenarios
 
