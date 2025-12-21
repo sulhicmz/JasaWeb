@@ -48,6 +48,7 @@ export default defineConfig({
         ssr: {
             external: [
                 '@prisma/adapter-pg', 
+                '@prisma/client',
                 'pg',
                 'crypto',
                 'bcryptjs',
@@ -62,7 +63,8 @@ export default defineConfig({
                 '@prisma/adapter-pg',
                 'pg',
                 'bcryptjs',
-                'midtrans-client'
+                'midtrans-client',
+                'jose'
             ],
             include: [
                 'react',
