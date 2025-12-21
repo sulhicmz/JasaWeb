@@ -20,7 +20,8 @@
 | BUG-008 | Rate limiting sliding window vulnerability (potential abuse) | 2025-12-20 |
 | BUG-009 | Missing CSRF protection for authenticated routes | 2025-12-20 |
 | BUG-010 | CMS Pages API missing comprehensive test coverage for delete method | 2025-12-20 |
+| BUG-011 | ESLint violations in e2e integration test (unused imports and variables) | 2025-12-21 |
 
 ---
 
-**Last Updated**: 2025-12-20
+**Last Updated**: 2025-12-21
