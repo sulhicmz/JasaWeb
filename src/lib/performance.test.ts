@@ -215,11 +215,15 @@ describe('Performance Tests - Unit Logic', () => {
                 }
             });
 
-            // Aggregation tests can take more time but should be within limits
+            // Aggregation tests can take more time but should be within optimized limits
             const aggregationTests = ['dashboard_aggregation', 'time_statistics'];
             aggregationTests.forEach(test => {
                 if (testResults[test]) {
-                    expect(testResults[test]).toBeLessThan(QUERY_TIMEOUT);
+                    if (test === 'dashboard_aggregation') {
+                        expect(testResults[test]).toBeLessThan(3); // Optimized threshold
+                    } else {
+                        expect(testResults[test]).toBeLessThan(QUERY_TIMEOUT);
+                    }
                 }
             });
 

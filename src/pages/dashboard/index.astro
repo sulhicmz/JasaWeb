@@ -2,10 +2,12 @@
 /**
  * Client Dashboard Page
  * Overview of user's projects and recent activity
+ * Uses modular client-side controller for dashboard interactions
  */
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
 import Button from '../../components/ui/Button.astro';
+import './dashboard-client.js';
 ---
 
 <PortalLayout title="Dashboard" currentPath="/dashboard">
@@ -142,30 +144,4 @@ import Button from '../../components/ui/Button.astro';
   }
 </style>
 
-<script>
-  // Fetch dashboard stats on load
-  async function loadDashboardData() {
-    try {
-      const res = await fetch('/api/client/dashboard');
-      if (res.ok) {
-        const data = await res.json();
-        if ((data as any).success) {
-          document.getElementById('projectCount')!.textContent = (data as any).data.totalProjects;
-          document.getElementById('inProgressCount')!.textContent = (data as any).data.inProgress;
-          document.getElementById('completedCount')!.textContent = (data as any).data.completed;
-          document.getElementById('unpaidCount')!.textContent = (data as any).data.unpaidInvoices;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load dashboard data', e);
-      // Show error state to user
-      const statsElements = ['projectCount', 'inProgressCount', 'completedCount', 'unpaidCount'];
-      statsElements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = 'Error';
-      });
-    }
-  }
-  
-  loadDashboardData();
-</script>
+<!-- Dashboard interactions handled by dashboardClient.ts module -->

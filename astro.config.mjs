@@ -55,27 +55,49 @@ export default defineConfig({
                 'https'
             ],
         },
+        // Enhanced dependency optimization for better tree-shaking
         optimizeDeps: {
-            exclude: ['@prisma/client'],
-            include: ['react', 'react-dom'],
+            exclude: [
+                '@prisma/client',
+                '@prisma/adapter-pg',
+                'pg',
+                'bcryptjs',
+                'midtrans-client'
+            ],
+            include: [
+                'react',
+                'react-dom',
+                'react/jsx-runtime'
+            ],
         },
-        // Bundle analysis for performance monitoring
+        // Advanced performance optimization configuration
         build: {
             minify: 'terser',
             terserOptions: {
                 compress: {
+                    // Maximum optimization for production
                     drop_console: true,
                     drop_debugger: true,
-                    pure_funcs: ['console.log', 'console.info', 'console.debug'],
+                    pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
                     dead_code: true,
                     unused: true,
-                    passes: 2
+                    passes: 2, // Optimal for performance vs build time
+                    conditionals: true,
+                    evaluate: true,
+                    booleans: true,
+                    loops: true,
+                    if_return: true,
+                    join_vars: true,
+                    reduce_vars: true,
+                    sequences: true,
+                    switches: true
                 },
                 mangle: {
                     toplevel: true,
                     properties: {
                         regex: /^_/
-                    }
+                    },
+                    reserved: []
                 },
                 format: {
                     comments: false
@@ -84,17 +106,18 @@ export default defineConfig({
             target: 'es2022',
             cssCodeSplit: true,
             rollupOptions: {
-output: {
-                    // Let Vite handle chunking automatically
-                    chunkFileNames: (chunkInfo) => {
-                        const name = chunkInfo.name;
-                        return `chunks/[name]-[hash].js`;
+                output: {
+                    // Let Vite handle automatic chunking for optimal bundling
+                    chunkFileNames: 'chunks/[name]-[hash].js',
+                    assetFileNames: (assetInfo) => {
+                        const extType = assetInfo.names?.[0]?.split('.').pop() || '';
+                        if (['css', 'scss', 'sass'].includes(extType)) {
+                            return `css/[name]-[hash].${extType}`;
+                        }
+                        return `assets/[name]-[hash].${extType}`;
                     }
-                },
-                plugins: process.env.ANALYZE ? [
-                    // Bundle visualizer will be added dynamically
-                ] : [],
-            },
-        },
+                }
+            }
+        }
     },
 });
