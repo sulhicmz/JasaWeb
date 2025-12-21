@@ -288,10 +288,10 @@ describe('MonitoringService', () => {
       monitoring.recordPaymentMetrics('txn-3', 75000, 'failed', 'midtrans');
       
       const health = await monitoring['checkPaymentHealth']();
-      expect(health).toBe('healthy'); // 2/3 success rate = 66.7% < 90% threshold, but in our test it should be healthy
+      expect(health).toBe('down'); // 2/3 success rate = 66.7% < 70% threshold = down
     });
 
-    it('should return degraded when success rate is low', async () => {
+    it('should return down when success rate is very low', async () => {
       // Add mostly failed transactions
       for (let i = 0; i < 10; i++) {
         monitoring.recordPaymentMetrics(`txn-${i}`, 50000, 'failed', 'midtrans');
@@ -299,7 +299,20 @@ describe('MonitoringService', () => {
       monitoring.recordPaymentMetrics('txn-10', 100000, 'success', 'midtrans');
       
       const health = await monitoring['checkPaymentHealth']();
-      expect(health).toBe('degraded'); // 1/11 success rate = ~9%
+      expect(health).toBe('down'); // 1/11 success rate = ~9% < 70% threshold = down
+    });
+
+    it('should return degraded when success rate is moderate', async () => {
+      // Add transactions with moderate success rate (75%)
+      for (let i = 0; i < 6; i++) {
+        monitoring.recordPaymentMetrics(`txn-success-${i}`, 50000, 'success', 'midtrans');
+      }
+      for (let i = 0; i < 2; i++) {
+        monitoring.recordPaymentMetrics(`txn-failed-${i}`, 50000, 'failed', 'midtrans');
+      }
+      
+      const health = await monitoring['checkPaymentHealth']();
+      expect(health).toBe('degraded'); // 6/8 success rate = 75% >= 70% but < 90% = degraded
     });
 
     it('should return healthy when no payment transactions exist', async () => {
