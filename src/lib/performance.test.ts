@@ -133,10 +133,11 @@ describe('Performance Tests - Unit Logic', () => {
     });
 
     describe('Data Aggregation Performance Logic', () => {
-        it('should aggregate dashboard metrics efficiently', () => {
+it('should aggregate dashboard metrics efficiently', () => {
             const startTime = performance.now();
             
-            // Simulate dashboard data aggregation with optimized algorithm
+            // Simulate optimized dashboard aggregation using Promise.all() strategy
+            // This mirrors the actual implementation in AdminUserService.getDashboardStats()
             const mockData = Array.from({ length: TEST_RECORDS }, (_, i) => ({
                 id: i,
                 status: ['pending_payment', 'in_progress', 'completed'][i % 3],
@@ -144,34 +145,36 @@ describe('Performance Tests - Unit Logic', () => {
                 createdAt: new Date(2024, 0, (i % 354) + 1)
             }));
 
-            // Optimized single-pass aggregation
-            const metrics = {
-                totalRecords: TEST_RECORDS,
-                statusCounts: { pending_payment: 0, in_progress: 0, completed: 0 } as Record<string, number>,
-                totalAmount: 0,
-                thisMonthRecords: 0
-            };
-
+            // Simulate parallel aggregation queries like the actual implementation
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
 
-            // Single-pass aggregation for optimal performance
-            for (let i = 0; i < mockData.length; i++) {
-                const item = mockData[i];
-                
-                // Status count update
-                metrics.statusCounts[item.status]++;
-                
-                // Amount accumulation
-                metrics.totalAmount += item.amount;
-                
-                // Monthly filter check
-                if (item.createdAt.getMonth() === currentMonth && 
-                    item.createdAt.getFullYear() === currentYear) {
-                    metrics.thisMonthRecords++;
-                }
-            }
+            // Parallel counting operations (mirrors Promise.all() in real implementation)
+            const [totalRecords, pendingPaymentsCount, inProgressCount, completedCount] = [
+                mockData.length,
+                mockData.filter(item => item.status === 'pending_payment').length,
+                mockData.filter(item => item.status === 'in_progress').length,
+                mockData.filter(item => item.status === 'completed').length
+            ];
+
+            // Parallel aggregation operations
+            const totalAmount = mockData.reduce((sum, item) => sum + item.amount, 0);
+            const thisMonthRecords = mockData.filter(item => 
+                item.createdAt.getMonth() === currentMonth && 
+                item.createdAt.getFullYear() === currentYear
+            ).length;
+
+            const metrics = {
+                totalRecords,
+                statusCounts: { 
+                    pending_payment: pendingPaymentsCount, 
+                    in_progress: inProgressCount, 
+                    completed: completedCount 
+                },
+                totalAmount,
+                thisMonthRecords
+            };
 
             const aggregationTime = performance.now() - startTime;
             testResults['dashboard_aggregation'] = aggregationTime;
