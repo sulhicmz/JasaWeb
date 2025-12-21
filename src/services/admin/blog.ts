@@ -3,7 +3,7 @@
  * Business logic for blog post management
  */
 
-import { PrismaClient, PostStatus, type Post } from '@prisma/client';
+import { PrismaClient, type Post, type PostStatus } from '@prisma/client';
 import { BaseCrudService, type ListOptions, type PaginationResult } from './crud';
 
 // ==============================================

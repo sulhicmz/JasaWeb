@@ -53,7 +53,7 @@ const user = Astro.locals.user;
             </FormGroup>
 
             <Button type="submit" variant="primary">Simpan Perubahan</Button>
-            <div id="profileMessage" class="form-message"></div>
+            <div id="profileMessageContainer"></div>
           </Form>
     </Card>
 
@@ -89,7 +89,7 @@ const user = Astro.locals.user;
             </FormGroup>
 
             <Button type="submit" variant="secondary">Ubah Password</Button>
-            <div id="passwordMessage" class="form-message"></div>
+            <div id="passwordMessageContainer"></div>
           </Form>
     </Card>
   </div>
@@ -113,21 +113,7 @@ const user = Astro.locals.user;
     gap: 1.25rem;
   }
 
-  .form-message {
-    font-size: 0.875rem;
-    text-align: center;
-    display: none;
-  }
-
-  .form-message.success {
-    display: block;
-    color: var(--color-success);
-  }
-
-  .form-message.error {
-    display: block;
-    color: var(--color-error);
-  }
+  
 
   @media (max-width: 768px) {
     .profile-grid {
@@ -139,7 +125,7 @@ const user = Astro.locals.user;
 <script>
   // Profile form
   const profileForm = document.getElementById('profileForm') as HTMLFormElement;
-  const profileMsg = document.getElementById('profileMessage');
+  const profileMsgContainer = document.getElementById('profileMessageContainer');
 
   profileForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -157,30 +143,29 @@ const user = Astro.locals.user;
 
       const data = await res.json();
       
-      if (profileMsg) {
-        profileMsg.textContent = (data as any).message || (data as any).error || 'Berhasil disimpan';
-        profileMsg.className = `form-message ${res.ok ? 'success' : 'error'}`;
+      if (profileMsgContainer) {
+        const message = (data as any).message || (data as any).error || 'Berhasil disimpan';
+        const type = res.ok ? 'success' : 'error';
+        profileMsgContainer.innerHTML = `<div class="form-message ${type}" style="display: block;">${message}</div>`;
       }
     } catch {
-      if (profileMsg) {
-        profileMsg.textContent = 'Terjadi kesalahan';
-        profileMsg.className = 'form-message error';
+      if (profileMsgContainer) {
+        profileMsgContainer.innerHTML = '<div class="form-message error" style="display: block;">Terjadi kesalahan</div>';
       }
     }
   });
 
   // Password form
   const passwordForm = document.getElementById('passwordForm') as HTMLFormElement;
-  const passwordMsg = document.getElementById('passwordMessage');
+  const passwordMsgContainer = document.getElementById('passwordMessageContainer');
 
   passwordForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(passwordForm);
     
     if (formData.get('newPassword') !== formData.get('confirmPassword')) {
-      if (passwordMsg) {
-        passwordMsg.textContent = 'Password tidak cocok';
-        passwordMsg.className = 'form-message error';
+      if (passwordMsgContainer) {
+        passwordMsgContainer.innerHTML = '<div class="form-message error" style="display: block;">Password tidak cocok</div>';
       }
       return;
     }
@@ -197,18 +182,18 @@ const user = Astro.locals.user;
 
       const data = await res.json();
       
-      if (passwordMsg) {
-        passwordMsg.textContent = (data as any).message || (data as any).error || 'Password diubah';
-        passwordMsg.className = `form-message ${res.ok ? 'success' : 'error'}`;
+      if (passwordMsgContainer) {
+        const message = (data as any).message || (data as any).error || 'Password diubah';
+        const type = res.ok ? 'success' : 'error';
+        passwordMsgContainer.innerHTML = `<div class="form-message ${type}" style="display: block;">${message}</div>`;
       }
 
       if (res.ok) {
         passwordForm.reset();
       }
     } catch {
-      if (passwordMsg) {
-        passwordMsg.textContent = 'Terjadi kesalahan';
-        passwordMsg.className = 'form-message error';
+      if (passwordMsgContainer) {
+        passwordMsgContainer.innerHTML = '<div class="form-message error" style="display: block;">Terjadi kesalahan</div>';
       }
     }
   });
