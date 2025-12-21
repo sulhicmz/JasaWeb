@@ -22,6 +22,8 @@ describe('ImageOptimizationService', () => {
       expect(result).toContain('fit=cover');
       expect(result).toContain('gravity=center');
       expect(result).toContain('format=webp');
+      expect(result).toContain('metadata=none');
+      expect(result).toContain('sharp=10');
     });
 
     it('should accept custom options', () => {
@@ -335,6 +337,72 @@ describe('ImageOptimizationService', () => {
   });
 });
 
+describe('Progressive Loading Tests', () => {
+    it('should generate progressive URLs pair', () => {
+      const originalUrl = 'https://example.com/image.jpg';
+      const progressive = imageOptimization.generateProgressiveUrls(originalUrl, 800, 600);
+      
+      expect(progressive.lqip).toContain('width=200');
+      expect(progressive.lqip).toContain('quality=20');
+      expect(progressive.high).toContain('width=800');
+      expect(progressive.high).toContain('quality=85');
+      
+      // Both should be different URLs
+      expect(progressive.lqip).not.toBe(progressive.high);
+    });
+
+    it('should use correct format for progressive loading', () => {
+      const originalUrl = 'https://example.com/image.jpg';
+      const progressive = imageOptimization.generateProgressiveUrls(originalUrl, 400, 300);
+      
+      expect(progressive.lqip).toContain('format=webp');
+      expect(progressive.high).toContain('format=webp');
+    });
+  });
+
+  describe('Performance Tests', () => {
+    it('should generate URLs efficiently', () => {
+      const start = performance.now();
+      
+      for (let i = 0; i < 1000; i++) {
+        generateOptimizedUrl('https://example.com/image.jpg', {
+          width: 800,
+          height: 600
+        });
+      }
+      
+      const duration = performance.now() - start;
+      expect(duration).toBeLessThan(50); // Should be very fast
+    });
+
+    it('should generate progressive URLs efficiently', () => {
+      const start = performance.now();
+      
+      for (let i = 0; i < 100; i++) {
+        imageOptimization.generateProgressiveUrls('https://example.com/image.jpg', 800, 600);
+      }
+      
+      const duration = performance.now() - start;
+      expect(duration).toBeLessThan(25); // Should be very fast even for progressive
+    });
+
+    it('should handle bulk srcset generation', () => {
+      const start = performance.now();
+      
+      // Simulate a template gallery with 50 images
+      const urls = Array.from({ length: 50 }, (_, i) => 
+        `https://example.com/template-${i + 1}.jpg`
+      );
+      
+      urls.forEach(url => {
+        generateSrcSet(url, [320, 640, 768, 1024]);
+      });
+      
+      const duration = performance.now() - start;
+      expect(duration).toBeLessThan(100); // Should handle bulk operations efficiently
+    });
+  });
+
 describe('Integration Tests', () => {
   it('should handle template gallery workflow', () => {
     const templateUrl = 'https://templates.example.com/preview.jpg';
@@ -351,6 +419,7 @@ describe('Integration Tests', () => {
     expect(optimizedUrl).toContain('height=300');
     expect(optimizedUrl).toContain('quality=85');  // Default quality is 80, so 85 should override
     expect(optimizedUrl).toContain('format=webp');
+    expect(optimizedUrl).toContain('metadata=none');
     
     // Generate responsive image attributes for card display
     const imageAttrs = createOptimizedImageAttrs(templateUrl, 'Template Preview', {
@@ -366,6 +435,28 @@ describe('Integration Tests', () => {
     expect(imageAttrs.alt).toBe('Template Preview');
     expect(imageAttrs.class).toBe('template-preview');
     expect(imageAttrs.loading).toBe('lazy');
+  });
+
+  it('should support progressive loading workflow', () => {
+    const templateUrl = 'https://templates.example.com/preview.jpg';
+    
+    // Test progressive loading URLs
+    const progressive = imageOptimization.generateProgressiveUrls(templateUrl, 800, 600);
+    
+    expect(progressive.lqip).toContain('quality=20');
+    expect(progressive.high).toContain('quality=85');
+    expect(progressive.lqip).not.toBe(progressive.high);
+    
+    // Test optimization statistics
+    const stats = imageOptimization.getOptimizationStats(
+      500000, // 500KB original
+      150000, // 150KB optimized
+      'jpeg',
+      'webp'
+    );
+    
+    expect(stats.sizeReductionPercent).toBe(70);
+    expect(stats.formatChanged).toBe(true);
   });
 
   it('should provide fallback for invalid images', () => {

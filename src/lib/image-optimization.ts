@@ -35,6 +35,7 @@ class ImageOptimizationService {
 
   /**
    * Generate optimized image URL using Cloudflare Image Resizing
+   * Enhanced with progressive loading and modern format detection
    */
   public generateOptimizedUrl(
     originalUrl: string,
@@ -57,10 +58,15 @@ class ImageOptimizationService {
       url.searchParams.set('fit', mergedOptions.fit!);
       url.searchParams.set('gravity', mergedOptions.gravity!);
       
-      // Add format conversion if specified
-      if (mergedOptions.format && this.supportedFormats.includes(mergedOptions.format)) {
-        url.searchParams.set('format', mergedOptions.format);
+      // Auto-detect best format if not specified
+      const format = mergedOptions.format || this.detectBestFormat();
+      if (this.supportedFormats.includes(format)) {
+        url.searchParams.set('format', format);
       }
+      
+      // Add performance optimizations
+      url.searchParams.set('metadata', 'none'); // Strip metadata for smaller files
+      url.searchParams.set('sharp', '10'); // Enhance sharpness for better perceived quality
       
       // Add cache-busting timestamp for development
       if (process.env.NODE_ENV === 'development') {
@@ -72,6 +78,48 @@ class ImageOptimizationService {
       console.warn('Failed to generate optimized URL:', error);
       return originalUrl;
     }
+  }
+
+  /**
+   * Detect best image format based on browser support and content type
+   * This would ideally use Accept header in production
+   */
+  private detectBestFormat(): 'webp' | 'avif' | 'jpeg' {
+    // For simplicity, prefer WebP as it has wide support and good compression
+    // In production, this could use User-Agent or accept header detection
+    return 'webp';
+  }
+
+  /**
+   * Generate progressive image loading URLs
+   * Creates a low-quality placeholder (LQIP) and high-quality version
+   */
+  public generateProgressiveUrls(
+    originalUrl: string,
+    width: number,
+    height: number
+  ): {
+    lqip: string;
+    high: string;
+  } {
+    const lqipUrl = this.generateOptimizedUrl(originalUrl, {
+      width: width / 4, // 25% size for placeholder
+      height: height / 4,
+      quality: 20, // Low quality for fast loading
+      format: 'webp'
+    });
+
+    const highQualityUrl = this.generateOptimizedUrl(originalUrl, {
+      width,
+      height,
+      quality: 85,
+      format: this.detectBestFormat()
+    });
+
+    return {
+      lqip: lqipUrl,
+      high: highQualityUrl
+    };
   }
 
   /**

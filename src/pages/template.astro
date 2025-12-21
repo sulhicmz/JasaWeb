@@ -54,18 +54,29 @@ const templates = await prisma.template.findMany({
         <Card variant="interactive" padding="none" class="template-card" data-category={template.category}>
           <div class="template-image">
             {template.imageUrl ? (
-              <img 
-                src={imageOptimization.generateOptimizedUrl(template.imageUrl, {
-                  width: 400,
-                  height: 250,
-                  quality: 85,
-                  format: 'webp'
-                })}
-                class="template-img"
-                alt={`${template.name} template preview`}
-                loading="lazy"
-                decoding="async"
-              />
+              <>
+                <img 
+                  src={imageOptimization.generateOptimizedUrl(template.imageUrl, {
+                    width: 400,
+                    height: 250,
+                    quality: 20,
+                    format: 'webp'
+                  })}
+                  data-high-src={imageOptimization.generateOptimizedUrl(template.imageUrl, {
+                    width: 400,
+                    height: 250,
+                    quality: 85,
+                    format: 'webp'
+                  })}
+                  class="template-img progressive"
+                  alt={`${template.name} template preview`}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div class="loading-overlay">
+                  <div class="loading-spinner"></div>
+                </div>
+              </>
             ) : (
               <div class="template-placeholder">
                 <span>{template.name}</span>
@@ -147,7 +158,46 @@ const templates = await prisma.template.findMany({
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform var(--transition-normal);
+    transition: all var(--transition-normal);
+  }
+
+  .template-img.progressive {
+    filter: blur(5px);
+    opacity: 0.8;
+  }
+
+  .template-img.progressive.loaded {
+    filter: blur(0);
+    opacity: 1;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity var(--transition-normal);
+    pointer-events: none;
+  }
+
+  .loading-overlay.hidden {
+    opacity: 0;
+  }
+
+  .loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .template-card:hover .template-img {
@@ -225,4 +275,37 @@ const templates = await prisma.template.findMany({
       });
     });
   });
+
+  // Progressive image loading
+  const progressiveImages = document.querySelectorAll('.template-img.progressive');
+  
+  const imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const highSrc = img.dataset.highSrc;
+        
+        if (highSrc && img.src !== highSrc) {
+          const loadingOverlay = img.parentElement?.querySelector('.loading-overlay');
+          
+          // Load high-quality image
+          const tempImg = new Image();
+          tempImg.onload = () => {
+            img.src = highSrc;
+            img.classList.add('loaded');
+            if (loadingOverlay) {
+              loadingOverlay.classList.add('hidden');
+            }
+          };
+          tempImg.src = highSrc;
+          
+          imageObserver.unobserve(img);
+        }
+      }
+    });
+  }, {
+    rootMargin: '50px' // Start loading 50px before visible
+  });
+  
+  progressiveImages.forEach((img) => imageObserver.observe(img));
 </script>
