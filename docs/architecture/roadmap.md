@@ -142,6 +142,11 @@
   - Add OpenAPI specification generation for API endpoints (low priority)
   - Implement application performance monitoring (medium priority)
   - Background job queue for notifications and report generation (low priority)
+- **NEW TASKS (Based on Audit Recommendations)**: 
+  - Implement Redis caching layer for dashboard aggregates (medium priority)
+  - Add OpenAPI specification generation for API endpoints (low priority)
+  - Implement application performance monitoring (medium priority)
+  - Background job queue for notifications and report generation (low priority)
 - **PRICING DATABASE MIGRATION**: ✅ COMPLETED - Migrated hardcoded pricing from config.ts to database-driven approach
 - **BUILD VERIFICATION**: ✅ PASSED - Zero errors, zero warnings, optimized bundle at 189.71KB with 60.75KB gzip compression
 
