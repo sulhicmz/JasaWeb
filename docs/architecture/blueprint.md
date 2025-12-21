@@ -254,13 +254,14 @@ POST /api/webhooks/midtrans  # Payment notification
 - **Improved Separation**: BusinessLogic → Services → Components → Pages
 
 ### Service Layer Architecture Reorganization ✅ (Dec 2025)
-- **Domain Services**: Created `src/services/domain/` for pure business logic (project.ts, template.ts)
+- **Domain Services**: Created `src/services/domain/` for pure business logic (project.ts, template.ts, faq.ts)
 - **Shared Services**: Created `src/services/shared/` for cross-cutting utilities (pagination.ts)
 - **Clean Architecture**: Strict separation of concerns:
   - `domain/`: Pure business logic without external dependencies
   - `shared/`: Reusable utilities across all service layers
   - `admin/`, `client/`, `auth/`: Context-specific service implementations
 - **Import Path Standardization**: All services now use proper path references
+- **FaqService Implementation**: Extracted direct database access from pricing.astro into dedicated FaqService with full CRUD operations and comprehensive test coverage
 - **Impact**: Eliminated architectural friction, improved service discovery, enhanced maintainability
 
 ### Comprehensive E2E Integration Testing ✅ (Dec 2025)
