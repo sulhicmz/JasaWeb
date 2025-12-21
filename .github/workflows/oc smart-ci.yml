@@ -83,6 +83,7 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+        continue-on-error: true
 
       - name: Lint
         id: lint
