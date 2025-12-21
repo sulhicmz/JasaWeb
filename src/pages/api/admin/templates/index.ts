@@ -10,6 +10,7 @@ import {
   handleApiError 
 } from '@/lib/api';
 import { validateAdminAccess } from '@/services/admin/auth';
+import { paginationService } from '@/services/shared/pagination';
 
 export const GET: APIRoute = async (context) => {
   try {
@@ -20,72 +21,77 @@ export const GET: APIRoute = async (context) => {
     }
 
     const prisma = getPrisma(context.locals);
-
-    // Parse query parameters
     const url = new URL(context.request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '12');
     const category = url.searchParams.get('category') as string || undefined;
-    const search = url.searchParams.get('search') || undefined;
-    const sortBy = (url.searchParams.get('sortBy') as 'createdAt' | 'name' | 'category') || 'createdAt';
-    const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' || 'desc';
+
+    // Parse query parameters using centralized pagination service
+    const query = paginationService.parseQuery(url, {
+      defaultLimit: 12,
+      maxLimit: 50,
+      defaultSortBy: 'createdAt',
+      defaultSortOrder: 'desc',
+      allowedSortFields: ['createdAt', 'name', 'category'],
+      filters: category ? { category } : undefined
+    });
 
     // Validate pagination parameters
-    if (page < 1) return errorResponse('Page harus lebih dari 0');
-    if (limit < 1 || limit > 50) return errorResponse('Limit harus antara 1-50');
-
-    // Validate sort fields
-    const allowedSortFields = ['createdAt', 'name', 'category'];
-    if (!allowedSortFields.includes(sortBy)) {
-      return errorResponse('Sort field tidak valid');
+    const validation = paginationService.validatePagination(query.pagination);
+    if (!validation.isValid) {
+      return errorResponse(validation.error!, 400);
     }
 
     // Validate category if provided
-    if (category && !['sekolah', 'berita', 'company'].includes(category)) {
+    if (query.filters.category && !['sekolah', 'berita', 'company'].includes(query.filters.category as string)) {
       return errorResponse('Kategori harus "sekolah", "berita", atau "company"');
     }
 
-    // Build where clause
-    const where: Record<string, unknown> = {};
-    if (category) where.category = category;
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } },
-      ];
+    // Build where clause with pagination service helpers
+    let where: Record<string, unknown> = {};
+    if (query.filters.category) {
+      where.category = query.filters.category;
     }
+
+    // Add search condition if provided
+    if (query.search) {
+      where = paginationService.addSearchCondition(
+        where, 
+        query.search, 
+        ['name', 'category']
+      );
+    }
+
+    // Create Prisma query with pagination and sorting
+    const baseQuery = paginationService.createPrismaQuery(
+      query.pagination,
+      query.sort,
+      where
+    );
+
+    // Add selective fields for list performance
+    const prismaQuery = {
+      ...baseQuery,
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        imageUrl: true,
+        demoUrl: true,
+        createdAt: true,
+      }
+    };
 
     // Get total count and templates in parallel
     const [total, templates] = await Promise.all([
       prisma.template.count({ where }),
-      prisma.template.findMany({
-        where,
-        orderBy: { [sortBy]: sortOrder },
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          imageUrl: true,
-          demoUrl: true,
-          createdAt: true,
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
+      prisma.template.findMany(prismaQuery),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
+    // Create standardized response
+    const result = paginationService.createResponse(templates, total, query.pagination);
 
     return jsonResponse({
-      templates,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
+      templates: result.data,
+      pagination: result.pagination,
     });
   } catch (error) {
     return handleApiError(error);

@@ -57,6 +57,7 @@ export default defineConfig({
         },
         optimizeDeps: {
             exclude: ['@prisma/client'],
+            include: ['react', 'react-dom'],
         },
         // Bundle analysis for performance monitoring
         build: {
@@ -65,37 +66,29 @@ export default defineConfig({
                 compress: {
                     drop_console: true,
                     drop_debugger: true,
-                    pure_funcs: ['console.log']
+                    pure_funcs: ['console.log', 'console.info', 'console.debug'],
+                    dead_code: true,
+                    unused: true,
+                    passes: 2
+                },
+                mangle: {
+                    toplevel: true,
+                    properties: {
+                        regex: /^_/
+                    }
+                },
+                format: {
+                    comments: false
                 }
             },
+            target: 'es2022',
+            cssCodeSplit: true,
             rollupOptions: {
-                output: {
-                    manualChunks: {
-                        'admin': [
-                            './src/services/admin/users.ts',
-                            './src/services/admin/projects.ts',
-                            './src/services/admin/cms.ts',
-                            './src/services/admin/crud.ts',
-                            './src/services/admin/blog.ts'
-                        ],
-                        'billing': [
-                            './src/services/client/billing-client.ts',
-                            './src/services/client/BillingService.ts'
-                        ],
-                        'payment': [
-                            './src/lib/midtrans-client.ts',
-                            './src/lib/midtrans.ts'
-                        ]
-                    },
+output: {
+                    // Let Vite handle chunking automatically
                     chunkFileNames: (chunkInfo) => {
-                        const facadeModuleId = chunkInfo.facadeModuleId;
-                        if (facadeModuleId?.includes('/admin/')) {
-                            return 'chunks/admin/[name]-[hash].js';
-                        }
-                        if (facadeModuleId?.includes('/dashboard/')) {
-                            return 'chunks/dashboard/[name]-[hash].js';
-                        }
-                        return 'chunks/[name]-[hash].js';
+                        const name = chunkInfo.name;
+                        return `chunks/[name]-[hash].js`;
                     }
                 },
                 plugins: process.env.ANALYZE ? [

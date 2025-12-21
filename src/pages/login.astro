@@ -1,59 +1,28 @@
 ---
 /**
  * Login Page
- * REFACTORED: Uses PageLayout per AGENTS.md (BUG-005 fix)
+ * REFACTORED: Uses shared AuthForm component eliminating 150+ lines of duplication
  */
 import PageLayout from '../layouts/PageLayout.astro';
 import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
-import Button from '../components/ui/Button.astro';
-import Form from '../components/ui/Form.astro';
-import FormGroup from '../components/ui/FormGroup.astro';
-import FormInput from '../components/ui/FormInput.astro';
+import AuthForm from '../components/shared/AuthForm.astro';
 ---
 
 <PageLayout title="Masuk" description="Masuk ke akun JasaWeb Anda" currentPath="/login">
   <Section spacing="lg" class="auth-section">
     <div class="auth-wrapper">
       <Card padding="lg">
-        <div class="auth-header">
-          <h1>Selamat Datang</h1>
-          <p>Masuk ke akun Anda untuk melanjutkan</p>
-        </div>
-
-        <Form id="loginForm" class="auth-form">
-            <FormGroup label="Email" labelFor="email" required>
-              <FormInput
-                type="email"
-                id="email"
-                name="email"
-                placeholder="nama@email.com"
-                required
-              />
-            </FormGroup>
-
-            <FormGroup label="Password" labelFor="password" required>
-              <FormInput
-                type="password"
-                id="password"
-                name="password"
-                placeholder="••••••••"
-                required
-              />
-            </FormGroup>
-
-            <div class="form-actions">
-              <a href="/forgot-password" class="forgot-link">Lupa password?</a>
-            </div>
-
-            <Button type="submit" variant="primary" fullWidth>Masuk</Button>
-
-            <div id="errorMessage" class="error-message"></div>
-          </Form>
-
-        <div class="auth-footer">
-          <p>Belum punya akun? <a href="/register">Daftar sekarang</a></p>
-        </div>
+        <AuthForm 
+          type="login"
+          title="Selamat Datang"
+          subtitle="Masuk ke akun Anda untuk melanjutkan"
+          submitText="Masuk"
+          footerText="Belum punya akun?"
+          footerLink="/register"
+          footerLinkText="Daftar sekarang"
+          showForgotLink={true}
+        />
       </Card>
     </div>
   </Section>
@@ -71,101 +40,4 @@ import FormInput from '../components/ui/FormInput.astro';
     margin: 0 auto;
     width: 100%;
   }
-
-  .auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-
-  .auth-header h1 {
-    font-size: 1.75rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .auth-header p {
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-  }
-
-  .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-  }
-
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .forgot-link {
-    font-size: 0.75rem;
-    color: var(--color-primary);
-  }
-
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .forgot-link {
-    font-size: 0.75rem;
-    color: var(--color-primary);
-  }
-
-  .error-message {
-    color: var(--color-error);
-    font-size: 0.875rem;
-    text-align: center;
-    display: none;
-  }
-
-  .error-message.show {
-    display: block;
-  }
-
-  .auth-footer {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    text-align: center;
-  }
-
-  .auth-footer p {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-  }
-
-  .auth-footer a {
-    color: var(--color-primary);
-    font-weight: 500;
-  }
 </style>
-
-<script>
-  import { AuthFormHandler } from '../services/auth/AuthFormHandler.js';
-  import { AuthValidator } from '../services/auth/AuthValidator.js';
-
-  try {
-    // Initialize form handler
-    const initialized = AuthFormHandler.initialize('errorMessage', 'successMessage');
-    if (!initialized) {
-      throw new Error('Failed to initialize form handler');
-    }
-
-    // Attach handler to login form with configuration
-    const success = AuthFormHandler.attachToForm('loginForm', {
-      endpoint: '/api/auth/login',
-      successRedirect: '/dashboard',
-      errorMessage: 'Login gagal',
-      validation: AuthValidator.createValidator('login')
-    });
-
-    if (!success) {
-      throw new Error('Failed to attach form handler');
-    }
-  } catch (err) {
-    console.error('Form initialization error:', err);
-    AuthFormHandler.showFallbackError('Form login tidak dapat dimuat');
-  }
-</script>
