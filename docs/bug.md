@@ -21,6 +21,7 @@
 | BUG-009 | Missing CSRF protection for authenticated routes | 2025-12-20 |
 | BUG-010 | CMS Pages API missing comprehensive test coverage for delete method | 2025-12-20 |
 | BUG-011 | ESLint violations in e2e integration test (unused imports and variables) | 2025-12-21 |
+| BUG-012 | Astro script warning - missing is:inline directive in billing.astro | 2025-12-21 |
 
 ---
 

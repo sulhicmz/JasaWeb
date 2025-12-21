@@ -58,5 +58,13 @@ export default defineConfig({
         optimizeDeps: {
             exclude: ['@prisma/client'],
         },
+        // Bundle analysis for performance monitoring
+        build: {
+            rollupOptions: {
+                plugins: process.env.ANALYZE ? [
+                    // Bundle visualizer will be added dynamically
+                ] : [],
+            },
+        },
     },
 });
