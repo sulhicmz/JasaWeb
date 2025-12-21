@@ -188,7 +188,9 @@ export function getEnvironmentInfo(): {
 export const siteConfig = {
     name: 'JasaWeb',
     tagline: 'Platform Jasa Pembuatan Website Profesional',
+    heroBadge: '✨ Platform #1 untuk Jasa Web',
     description: 'Kami membantu Anda membuat website sekolah, portal berita, dan company profile dengan kualitas premium.',
+    footerDescription: 'Platform jasa pembuatan website profesional dengan solusi lengkap untuk kebutuhan digital Anda.',
     url: 'https://jasaweb.id',
     email: 'hello@jasaweb.id',
     phone: '+62 812 3456 7890',

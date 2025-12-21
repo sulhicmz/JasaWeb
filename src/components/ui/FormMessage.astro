@@ -1,0 +1,40 @@
+---
+/**
+ * FormMessage Component
+ * Reusable form feedback message with success/error states
+ */
+interface Props {
+  message: string;
+  type: 'success' | 'error';
+  show?: boolean;
+}
+
+const { message, type, show = true } = Astro.props;
+---
+
+{show && (
+  <div 
+    class="form-message"
+    class:list={[type]}
+  >
+    {message}
+  </div>
+)}
+
+<style>
+  .form-message {
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+  }
+
+  .form-message.success {
+    display: block;
+    color: var(--color-success);
+  }
+
+  .form-message.error {
+    display: block;
+    color: var(--color-error);
+  }
+</style>
