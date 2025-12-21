@@ -1,7 +1,7 @@
 ---
 /**
  * Template Gallery Page
- * REFACTORED: Database-driven templates with PageLayout and UI components
+ * REFACTORED: Database-driven templates using proper service layer architecture
  * OPTIMIZED: Integrated image optimization service for template gallery
  */
 import PageLayout from '../layouts/PageLayout.astro';
@@ -9,24 +9,22 @@ import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import OptimizedImage from '../components/ui/OptimizedImage.astro';
-import { getCategoryLabel, type ServiceId, templateCategories } from '../lib/config';
+import { type ServiceId } from '../lib/config';
 import { getPrisma } from '../lib/prisma';
+import { TemplateServerService } from '../services/domain/template-server';
 
-const categories = templateCategories;
+const categories = TemplateServerService.getCategories();
 
-// Fetch templates from database
-const prisma = getPrisma({} as any);
-const templates = await prisma.template.findMany({
-  select: {
-    id: true,
-    name: true,
-    category: true,
-    imageUrl: true,
-    demoUrl: true,
-    createdAt: true,
-  },
-  orderBy: { createdAt: 'desc' }
+// Fetch templates using proper service layer (server-side)
+const prisma = getPrisma(Astro.locals);
+const templatesData = await TemplateServerService.fetchTemplates({
+  limit: 50, // Load all templates for gallery
+  prisma
 });
+const templates = templatesData.templates;
+
+// Helper function to get category label (matches lib/config functionality)
+const getCategoryLabel = TemplateServerService.getCategoryLabel;
 ---
 
 <PageLayout title="Template Gallery" description="Pilih template website terbaik untuk kebutuhan Anda" currentPath="/template">
@@ -243,23 +241,5 @@ const templates = await prisma.template.findMany({
 </style>
 
 <script is:inline>
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  const cards = document.querySelectorAll('.template-card');
-
-  filterBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      const category = btn.dataset?.category;
-      
-      cards.forEach((card) => {
-        if (category === 'all' || card.dataset?.category === category) {
-          card.classList.remove('hidden');
-        } else {
-          card.classList.add('hidden');
-        }
-      });
-    });
-  });
+  {TemplateService.generateFilterScript()}
 </script>
