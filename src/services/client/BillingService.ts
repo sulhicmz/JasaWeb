@@ -38,6 +38,15 @@ export interface InvoiceState {
   cache: Map<string, unknown>;
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 /**
  * Calculate billing statistics from invoice array
  * Optimized single-pass computation with proper typing
@@ -270,6 +279,313 @@ export async function fetchInvoices(params: {
   } catch (error) {
     console.error('Error fetching invoices:', error);
     return null;
+  }
+}
+
+/**
+ * Billing Service Class - Encapsulates all billing operations
+ * Provides clean interface for billing dashboard interactions
+ */
+export class BillingService {
+  
+  /**
+   * Initialize billing state with defaults
+   */
+  public createState(): InvoiceState {
+    return createBillingState();
+  }
+
+  /**
+   * Inject billing styles into DOM
+   */
+  public injectStyles(): void {
+    if (document.getElementById('billing-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'billing-styles';
+    style.textContent = getBillingStyles();
+    document.head.appendChild(style);
+  }
+
+  /**
+   * Fetch billing statistics from API with error handling
+   */
+  public async fetchBillingStats(): Promise<{ invoices: Invoice[] } | null> {
+    return fetchBillingStats();
+  }
+
+  /**
+   * Fetch paginated invoices with filtering and sorting
+   */
+  public async fetchInvoices(params: {
+    page: number;
+    status?: string;
+    sortBy: string;
+    sortOrder?: string;
+    limit?: number;
+  }): Promise<{ invoices: InvoiceWithProject[]; pagination?: unknown } | null> {
+    return fetchInvoices(params);
+  }
+
+  /**
+   * Render overview statistics in DOM
+   */
+  public renderOverviewStats(invoices: Invoice[]): void {
+    const invoiceData = invoices as InvoiceWithProject[];
+    const stats = calculateBillingStats(invoiceData);
+    const container = document.getElementById('overviewStats');
+    
+    if (container) {
+      container.innerHTML = generateStatsHTML(stats);
+    }
+  }
+
+  /**
+   * Render invoices list in DOM
+   */
+  public renderInvoices(invoices: InvoiceWithProject[], pagination?: unknown): void {
+    const container = document.getElementById('invoicesList');
+    if (!container) return;
+
+    if (invoices.length === 0) {
+      container.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary);">Tidak ada invoice ditemukan.</p>';
+      return;
+    }
+
+    const invoicesHTML = invoices.map(invoice => generateInvoiceCard(invoice)).join('');
+    container.innerHTML = invoicesHTML;
+
+    // Render pagination if available
+    if (pagination && this.isValidPagination(pagination)) {
+      this.renderPagination(pagination);
+    }
+  }
+
+  /**
+   * Validate pagination data
+   */
+  private isValidPagination(pagination: unknown): pagination is PaginationInfo {
+    return pagination !== null && 
+           typeof pagination === 'object' &&
+           'page' in pagination &&
+           'limit' in pagination &&
+           'total' in pagination &&
+           'totalPages' in pagination &&
+           'hasNext' in pagination &&
+           'hasPrev' in pagination;
+  }
+
+  /**
+   * Render pagination controls
+   */
+  private renderPagination(pagination: PaginationInfo): void {
+    const container = document.getElementById('paginationControls');
+    if (!container || !pagination) return;
+
+    const { page, totalPages, hasNext, hasPrev } = pagination;
+    
+    let paginationHTML = '<div class="pagination">';
+    
+    if (hasPrev) {
+      paginationHTML += `<button class="button button-secondary button-sm" data-action="change-page" data-page="${page - 1}">← Previous</button>`;
+    }
+    
+    paginationHTML += `<span style="margin: 0 1rem;">Page ${page} of ${totalPages}</span>`;
+    
+    if (hasNext) {
+      paginationHTML += `<button class="button button-secondary button-sm" data-action="change-page" data-page="${page + 1}">Next →</button>`;
+    }
+    
+    paginationHTML += '</div>';
+    container.innerHTML = paginationHTML;
+  }
+
+  /**
+   * Show invoice details modal
+   */
+  public async showInvoiceDetails(invoiceId: string): Promise<void> {
+    try {
+      const response = await fetch(`/api/client/invoices/${invoiceId}`);
+      if (!response.ok) throw new Error('Failed to fetch invoice details');
+      
+      const invoice = await response.json();
+      const invoiceDetailHTML = generateInvoiceDetailHTML(invoice);
+      
+      // Create modal
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>Invoice Details</h3>
+          ${invoiceDetailHTML}
+          <div style="margin-top: 1.5rem; text-align: right;">
+            <button class="button button-secondary" data-action="close-payment-modal">Close</button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Add styles
+      if (!document.getElementById('billing-modal-styles')) {
+        const modalStyles = document.createElement('style');
+        modalStyles.id = 'billing-modal-styles';
+        modalStyles.textContent = `
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+          }
+          .modal-content {
+            background: var(--color-bg-secondary);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+          }
+        `;
+        document.head.appendChild(modalStyles);
+      }
+      
+    } catch (error) {
+      console.error('Error showing invoice details:', error);
+      alert('Gagal memuat detail invoice. Silakan coba lagi.');
+    }
+  }
+
+  /**
+   * Create payment for invoice
+   */
+  public async createPayment(invoiceId: string): Promise<void> {
+    try {
+      const response = await fetch(`/api/client/invoices/${invoiceId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!response.ok) throw new Error('Failed to create payment');
+      
+      const paymentData = await response.json();
+      
+      if (paymentData.qrisUrl && paymentData.orderId) {
+        const invoice = await fetch(`/api/client/invoices/${invoiceId}`).then(res => res.json());
+        const qrisHTML = generateQRISPaymentHTML(invoice, paymentData.qrisUrl, paymentData.orderId);
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'paymentModal';
+        modal.innerHTML = `
+          <div class="modal-content" style="max-width: 400px;">
+            ${qrisHTML}
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Start payment timer
+        this.startPaymentTimer(paymentData.orderId);
+        
+      } else {
+        alert('Gagal membuat pembayaran. Silakan coba lagi.');
+      }
+      
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      alert('Gagal membuat pembayaran. Silakan coba lagi.');
+    }
+  }
+
+  /**
+   * Check payment status
+   */
+  public async checkPaymentStatus(orderId: string): Promise<void> {
+    try {
+      const response = await fetch(`/api/client/payment/status?orderId=${orderId}`);
+      if (!response.ok) throw new Error('Failed to check payment status');
+      
+      const status = await response.json();
+      
+      if (status.status === 'success') {
+        alert('Pembayaran berhasil! Invoice telah diperbarui.');
+        this.closePaymentModal();
+        // Reload invoices
+        window.location.reload();
+      } else if (status.status === 'pending') {
+        alert('Pembayaran masih pending. Silakan coba lagi beberapa saat.');
+      } else if (status.status === 'expired') {
+        alert('Pembayaran telah kadaluarsa. Silakan buat pembayaran baru.');
+        this.closePaymentModal();
+      } else {
+        alert('Status pembayaran tidak diketahui.');
+      }
+      
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      alert('Gagal memeriksa status pembayaran. Silakan coba lagi.');
+    }
+  }
+
+  /**
+   * Close payment modal
+   */
+  public closePaymentModal(): void {
+    const modal = document.getElementById('paymentModal');
+    if (modal) {
+      modal.remove();
+    }
+    
+    // Clear payment timer
+    if (window.paymentInterval) {
+      clearInterval(window.paymentInterval);
+      window.paymentInterval = undefined;
+    }
+    if (window.paymentTimerInterval) {
+      clearInterval(window.paymentTimerInterval);
+      window.paymentTimerInterval = undefined;
+    }
+  }
+
+  /**
+   * Start payment timer
+   */
+  private startPaymentTimer(orderId: string): void {
+    let timeLeft = 24 * 60; // 24 minutes in seconds
+    
+    // Update timer display
+    const updateTimer = () => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      const timerElement = document.getElementById('paymentTimer');
+      
+      if (timerElement) {
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      }
+      
+      if (timeLeft <= 0) {
+        this.closePaymentModal();
+        alert('Pembayaran telah kadaluarsa.');
+        return;
+      }
+      
+      timeLeft--;
+    };
+    
+    updateTimer();
+    window.paymentTimerInterval = window.setInterval(updateTimer, 1000);
+    
+    // Auto check payment status every 5 seconds
+    window.paymentInterval = window.setInterval(() => {
+      this.checkPaymentStatus(orderId);
+    }, 5000);
   }
 }
 

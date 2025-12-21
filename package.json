@@ -44,6 +44,7 @@
         "typescript": "^5.7.2"
     },
     "devDependencies": {
+        "@eslint/js": "^9.39.2",
         "@testing-library/react": "^16.3.1",
         "@types/bcryptjs": "^2.4.6",
         "@types/midtrans-client": "^1.4.0",
