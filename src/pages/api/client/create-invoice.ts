@@ -7,7 +7,7 @@ import type { APIRoute } from 'astro';
 import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createPrismaClient } from '@/lib/prisma';
-import { formatPrice, pricingTiers } from '@/lib/config';
+import { formatPrice } from '@/lib/config';
 
 interface CreateInvoiceRequest {
     projectId: string;
@@ -74,13 +74,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
             });
         }
 
-        // Calculate amount based on project type from config
-        const pricingConfig = pricingTiers.find(tier => tier.id === project.type);
+        // Calculate amount based on project type from database
+        const pricingConfig = await prisma.pricingPlan.findUnique({
+            where: { identifier: project.type }
+        });
         if (!pricingConfig) {
             return errorResponse('Tipe project tidak valid', 400);
         }
 
-        const amount = pricingConfig.price;
+        const amount = Number(pricingConfig.price);
 
         // Create invoice with idempotency check
         const invoice = await prisma.invoice.create({

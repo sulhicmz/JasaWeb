@@ -326,49 +326,10 @@ export const servicesArray = Object.values(services);
 // ==============================================
 // PRICING
 // ==============================================
-export interface PricingTier {
-    id: ServiceId;
-    name: string;
-    price: number;
-    priceFormatted: string;
-    description: string;
-    features: string[];
-    popular: boolean;
-    color: 'primary' | 'success' | 'warning';
-}
-
-export const pricingTiers: PricingTier[] = [
-    {
-        id: 'company',
-        name: 'Company Profile',
-        price: 2000000,
-        priceFormatted: 'Rp 2.000.000',
-        description: 'Website perusahaan profesional',
-        features: ['5 Halaman', 'Desain Responsif', 'Form Kontak', 'Integrasi Maps', 'SEO Basic', 'Support 30 Hari'],
-        popular: false,
-        color: 'success',
-    },
-    {
-        id: 'sekolah',
-        name: 'Web Sekolah',
-        price: 2500000,
-        priceFormatted: 'Rp 2.500.000',
-        description: 'Website lengkap untuk sekolah',
-        features: ['10+ Halaman', 'PPDB Online', 'Galeri Foto', 'Berita & Pengumuman', 'Profil Guru', 'Support 60 Hari'],
-        popular: false,
-        color: 'primary',
-    },
-    {
-        id: 'berita',
-        name: 'Portal Berita',
-        price: 3500000,
-        priceFormatted: 'Rp 3.500.000',
-        description: 'Platform berita modern',
-        features: ['Unlimited Artikel', 'CMS Lengkap', 'Multi Kategori', 'SEO Advanced', 'Analytics Dashboard', 'Support 90 Hari'],
-        popular: true,
-        color: 'warning',
-    },
-];
+// PRICING NOTE: 
+// Pricing data has been migrated to database-driven approach.
+// Use getPricingService() from '@/services/domain/pricing' for pricing operations.
+// Admin interface is available at /api/admin/pricing for management.
 
 // ==============================================
 // UTILITIES

@@ -8,10 +8,15 @@ import Section from '../components/ui/Section.astro';
 import Card from '../components/ui/Card.astro';
 import Button from '../components/ui/Button.astro';
 import Badge from '../components/ui/Badge.astro';
-import { pricingTiers, type PricingTier } from '../lib/config';
-import { getPrisma } from '../lib/prisma';
+import { formatPrice } from '../lib/config';
+import { getPricingService } from '../services/domain/pricing';
 
-// Fetch FAQs from database
+// Fetch pricing plans and FAQs from database using service
+const pricingService = getPricingService({} as any);
+const pricingPlans = await pricingService.getActivePricingPlans();
+
+// For now, keep the existing FAQ database logic
+import { getPrisma } from '../lib/prisma';
 const prisma = getPrisma({} as any);
 const faqs = await prisma.faq.findMany({
   select: {
@@ -36,21 +41,21 @@ const faqs = await prisma.faq.findMany({
 
   <Section spacing="lg">
     <div class="pricing-grid">
-      {pricingTiers.map((plan: PricingTier) => (
+      {pricingPlans.map((plan) => (
         <Card variant={plan.popular ? 'featured' : 'default'} padding="lg" class={`pricing-card ${plan.popular ? 'popular' : ''}`}>
           {plan.popular && <Badge variant="primary" class="popular-badge">Populer</Badge>}
           <h2>{plan.name}</h2>
           <p class="plan-description">{plan.description}</p>
           <div class="plan-price">
-            <span class={`price price-${plan.color}`}>{plan.priceFormatted}</span>
+            <span class={`price price-${plan.color}`}>{formatPrice(Number(plan.price))}</span>
           </div>
           <ul class="plan-features">
-            {plan.features.map((feature: string) => (
+            {(plan.features || []).map((feature: any) => (
               <li>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                {feature}
+                {typeof feature === 'string' ? feature : String(feature)}
               </li>
             ))}
           </ul>

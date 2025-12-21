@@ -163,6 +163,37 @@ model Page {
 }
 
 // ============================================
+// PRICING PLANS
+// ============================================
+model PricingPlan {
+  id          String      @id @default(uuid())
+  identifier  String      @unique // 'company', 'sekolah', 'berita'
+  name        String
+  price       Decimal     @db.Decimal(12, 2)
+  description String
+  features    Json        // Array of strings
+  popular     Boolean     @default(false)
+  color       PricingColor @default(primary)
+  sortOrder   Int         @default(0) @map("sort_order")
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@map("pricing_plans")
+  @@index([identifier])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([isActive, sortOrder])
+  @@index([identifier, isActive])
+}
+
+enum PricingColor {
+  primary
+  success
+  warning
+}
+
+// ============================================
 // FAQ ITEMS
 // ============================================
 model Faq {
