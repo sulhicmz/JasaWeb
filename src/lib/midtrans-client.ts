@@ -23,12 +23,10 @@ export interface MidtransService {
  * CRITICAL: Always use runtime.env for secrets in Cloudflare Workers
  * NEVER use import.meta.env for secrets in production
  */
-function createMidtransClient(runtime?: Partial<RuntimeEnv>): CoreApi {
-    const isProduction = runtime?.MIDTRANS_IS_PRODUCTION === 'true' || 
-                        import.meta.env.MIDTRANS_IS_PRODUCTION === 'true';
-    
-    const serverKey = runtime?.MIDTRANS_SERVER_KEY || import.meta.env.MIDTRANS_SERVER_KEY;
-    const clientKey = runtime?.MIDTRANS_CLIENT_KEY || import.meta.env.MIDTRANS_CLIENT_KEY;
+function createMidtransClient(runtime: RuntimeEnv): CoreApi {
+    const isProduction = runtime.MIDTRANS_IS_PRODUCTION === 'true';
+    const serverKey = runtime.MIDTRANS_SERVER_KEY;
+    const clientKey = runtime.MIDTRANS_CLIENT_KEY;
 
     if (!serverKey || !clientKey) {
         throw new Error('Midtrans keys not configured');
@@ -56,7 +54,7 @@ export class MidtransPaymentService implements MidtransService {
         };
     };
 
-    constructor(runtime?: Partial<RuntimeEnv>) {
+    constructor(runtime: RuntimeEnv) {
         this.midtransClient = createMidtransClient(runtime) as CoreApi & {
             transaction: {
                 status(transactionId: string): Promise<Record<string, unknown>>;
@@ -201,7 +199,7 @@ export class MidtransPaymentService implements MidtransService {
 /**
  * Factory function to create Midtrans service
  */
-export function createMidtransService(runtime?: Partial<RuntimeEnv>): MidtransService {
+export function createMidtransService(runtime: RuntimeEnv): MidtransService {
     return new MidtransPaymentService(runtime);
 }
 

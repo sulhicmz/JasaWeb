@@ -30,6 +30,7 @@
 - [x] **PERFORMANCE**: Clean up TypeScript warnings and build warnings for cleaner production builds.
 - [x] **SECURITY**: Implement comprehensive audit logging system for compliance and security monitoring.
 - [x] **CRITICAL**: Fix webhook environment variable access pattern - secured Midtrans server key from client build exposure
+- [x] **CRITICAL**: Remove fallback to `import.meta.env` in Midtrans client service - ensure 100% secure environment access in production
 - [x] **MODULARITY**: **HIGH IMPACT** - Extract inline business logic from dashboard .astro files into reusable client services (DashboardService, InvoiceService, ProjectService)
 - [x] **MODULARITY**: **HIGH IMPACT** - Create validation service abstractions (UserValidator, ProjectValidator, ValidationService) - eliminated 20+ duplicate validation patterns across API endpoints
 
