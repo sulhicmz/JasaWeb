@@ -87,7 +87,7 @@ describe('Performance Optimization Tests', () => {
       const startTime = performance.now();
       
       // Simulate stats calculation optimization
-      const stats = largeInvoiceData.reduce((acc, invoice) => {
+      const stats = largeInvoiceData.reduce((acc: any, invoice) => {
         acc.total += Number(invoice.amount);
         acc[invoice.status] = (acc[invoice.status] || 0) + Number(invoice.amount);
         return acc;
@@ -106,9 +106,9 @@ describe('Performance Optimization Tests', () => {
     it('should debounce function calls to prevent excessive operations', async () => {
       let callCount = 0;
       
-      const debounce = (func, wait) => {
-        let timeout;
-        return function(...args) {
+      const debounce = (func: (...args: any[]) => void, wait: number) => {
+        let timeout: any;
+        return function(this: any, ...args: any[]) {
           clearTimeout(timeout);
           timeout = setTimeout(() => func.apply(this, args), wait);
         };
@@ -195,7 +195,7 @@ describe('Performance Optimization Tests', () => {
 
   describe('Network Performance Simulation', () => {
     it('should optimize for slow network conditions', async () => {
-      const simulateSlowFetch = (url, delay = 100) => {
+      const simulateSlowFetch = (url: string, delay = 100) => {
         return new Promise(resolve => {
           setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ data: 'test' }) }), delay);
         });

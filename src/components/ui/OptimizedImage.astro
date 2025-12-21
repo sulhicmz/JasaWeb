@@ -34,7 +34,7 @@ const validation = imageOptimization.validateImageUrl(src);
 
 if (!validation.valid) {
   // Fallback placeholder for invalid URLs
-  const placeholderSvg = imageOptimization.generatePlaceholder(width || 400, height || 300);
+  
   
   return `<div class="optimized-image ${className}" style="${width ? `width: ${width}px;` : ''} ${height ? `height: ${height}px;` : ''} background: #e5e7eb; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md);">
     <img src="${placeholderSvg}" alt="${alt}" decoding="async" />
@@ -72,7 +72,7 @@ if (placeholder === 'blur') {
     <>
       <!-- Blur placeholder -->
       <img 
-        src={placeholderSvg} 
+        src={placeholder} 
         alt="" 
         class="optimized-image-blur"
         aria-hidden="true"
