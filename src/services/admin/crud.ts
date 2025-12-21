@@ -151,7 +151,7 @@ export class BaseCrudService<T, CreateData, UpdateData> {
         });
     }
 
-    async update(id: string, data: UpdateData): Promise<T> {
+    async update(id: string, data: Partial<UpdateData>): Promise<T> {
         const model = this.prisma[this.modelName] as unknown as {
             update: (args: unknown) => Promise<T>;
         };
