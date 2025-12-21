@@ -3,7 +3,7 @@
  * Tests database-driven template functionality
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TemplateService, type Template } from '../services/template';
+import { TemplateService, type Template } from './template';
 
 // Mock fetch
 global.fetch = vi.fn();

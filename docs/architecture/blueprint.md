@@ -225,6 +225,16 @@ POST /api/webhooks/midtrans  # Payment notification
 - **`AuthValidator.ts`**: Client-side validation rules with Indonesian error messages and type safety
 - **Improved Separation**: BusinessLogic → Services → Components → Pages
 
+### Service Layer Architecture Reorganization ✅ (Dec 2025)
+- **Domain Services**: Created `src/services/domain/` for pure business logic (project.ts, template.ts)
+- **Shared Services**: Created `src/services/shared/` for cross-cutting utilities (pagination.ts)
+- **Clean Architecture**: Strict separation of concerns:
+  - `domain/`: Pure business logic without external dependencies
+  - `shared/`: Reusable utilities across all service layers
+  - `admin/`, `client/`, `auth/`: Context-specific service implementations
+- **Import Path Standardization**: All services now use proper path references
+- **Impact**: Eliminated architectural friction, improved service discovery, enhanced maintainability
+
 ### Security & Optimization ✅ (Dec 2025)
 - **Payment Security**: Midtrans SHA-512 signature validation and amount verification implemented.
 - **Bot/DDoS Protection**: Fixed-window rate limiting for sensitive API routes.

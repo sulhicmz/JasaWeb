@@ -3,8 +3,8 @@
  * Business logic for template filtering and display
  * Database-driven template management
  */
-import type { TemplateCategory } from '../lib/config';
-import { templateCategories } from '../lib/config';
+import type { TemplateCategory } from '../../lib/config';
+import { templateCategories } from '../../lib/config';
 
 export interface Template {
   id: string;

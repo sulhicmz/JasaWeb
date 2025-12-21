@@ -252,6 +252,7 @@ export const POST: APIRoute = async ({ request }) => {
 | 2025-12-20 | Client Service Layer Extraction | Created `DashboardService`, `InvoiceService`, `ProjectService` | Inline Logic Elimination: -150 lines |
 | 2025-12-20 | Validation Service Layer Abstraction | Created `UserValidator`, `ProjectValidator`, `ValidationService` | Validation Duplication: -200 lines |
 | 2025-12-21 | Performance Enhancement - Image Optimization | Implemented progressive loading, format detection, and performance optimizations | Bandwidth Reduction: 60-80%, UX Enhancement: 40% Faster Perceived Load |
+| 2025-12-21 | Service Layer Architecture Reorganization | Created atomic service structure with domain/ and shared/ directories for clean separation of concerns | Architectural Friction: Eliminated, Service Discovery: Enhanced, Maintainability: High |
 
 ### Admin UI Components Abstraction ✅ (Dec 2025)
 - **AdminHeader.astro**: Extracted duplicate admin page header patterns into reusable component with title, description, gradient text, and action buttons
@@ -295,7 +296,7 @@ export const POST: APIRoute = async ({ request }) => {
 ### 🚨 Critical Warnings for All Agents
 - **ENVIRONMENT ACCESS ENFORCEMENT**: NEVER use `import.meta.env` in server-side code. Always use `locals.runtime.env` to prevent secret exposure to client builds. ✅ CURRENTLY ENFORCED - 18/18 API endpoints comply
 - **ERROR HANDLING STANDARDIZATION**: ALWAYS use `handleApiError()` utility from `src/lib/api.ts` for consistent error responses across all API endpoints. ✅ 61 endpoints currently compliant
-- **SERVICE ORGANIZATION**: When creating new services, follow proper domain organization. Use `src/services/domain/` structure instead of root-level service files.
+- **SERVICE ORGANIZATION**: ✅ RESOLVED - Service layer now properly organized with atomic structure: `src/services/domain/` for pure business logic, `src/services/shared/` for cross-cutting utilities, context-specific services in dedicated directories.
 - **PAYMENT SECURITY REQUIREMENT**: Any work on payment endpoints MUST implement Midtrans SHA-512 signature validation. NEVER process webhook data without cryptographic verification. ✅ SECURED IN `src/lib/midtrans.ts`
 - **TEST COVERAGE REQUIREMENT**: All new API routes MUST include comprehensive test files. Current standard: 250/250 tests passing with 98% coverage of critical paths.
 
