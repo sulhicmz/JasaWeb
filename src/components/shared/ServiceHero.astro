@@ -1,0 +1,61 @@
+---
+/**
+ * Reusable Service Hero Component
+ * Extracted from duplicated service page hero sections
+ * Eliminates 90+ lines of duplication across sekolah, company, and berita pages
+ */
+
+interface Props {
+  title: string;
+  description: string;
+  icon: string;
+  priceFormatted: string;
+}
+
+const { title, description, icon, priceFormatted } = Astro.props;
+---
+
+<div class="hero-content">
+  <span class="service-icon">{icon}</span>
+  <h1>{title}</h1>
+  <p class="hero-description">{description}</p>
+  <div class="hero-price">
+    <span class="price">{priceFormatted}</span>
+  </div>
+</div>
+
+<style>
+  .hero-content {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .service-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .hero-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .hero-description {
+    color: var(--color-text-secondary);
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-price {
+    margin-top: 1rem;
+  }
+
+  .price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+</style>

@@ -67,7 +67,7 @@ describe('Payment Integration Tests', () => {
     });
 
     it('should throw error when Midtrans keys are not configured', () => {
-      const invalidRuntime = { ...mockRuntime, MIDTRANS_SERVER_KEY: undefined };
+      const invalidRuntime = { ...mockRuntime, MIDTRANS_SERVER_KEY: '' };
       expect(() => createMidtransService(invalidRuntime)).toThrow('Midtrans keys not configured');
     });
   });

@@ -5,7 +5,7 @@
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
-import { parseQuery, createPrismaQuery, createResponse } from '@/lib/pagination';
+import { parseQuery, createPrismaQuery, createResponse } from '@/services/shared/pagination';
 
 export const GET: APIRoute = async ({ request, locals }) => {
     try {

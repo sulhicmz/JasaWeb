@@ -1,0 +1,66 @@
+---
+/**
+ * Reusable Service Features Component
+ * Extracted from duplicated service page features sections
+ * Eliminates 50+ lines of duplication across sekolah, company, and berita pages
+ */
+import Card from '../ui/Card.astro';
+import type { ServiceFeature } from '../../lib/types';
+
+interface Props {
+  features: ServiceFeature[];
+}
+
+const { features } = Astro.props;
+---
+
+<h2 class="section-title">Fitur Lengkap</h2>
+<div class="features-grid">
+  {features.map((feature) => (
+    <Card variant="interactive" padding="md" class="feature-card">
+      <span class="feature-icon">{feature.icon}</span>
+      <h3>{feature.title}</h3>
+      <p>{feature.description}</p>
+    </Card>
+  ))}
+</div>
+
+<style>
+  .section-title {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .feature-card {
+    text-align: center;
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-card p {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 768px) {
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

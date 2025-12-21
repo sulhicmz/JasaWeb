@@ -82,7 +82,7 @@ describe('Midtrans Payment Service', () => {
         });
 
         it('should throw error when keys are not configured', () => {
-            const invalidRuntime = { ...mockRuntime, MIDTRANS_SERVER_KEY: undefined };
+            const invalidRuntime = { ...mockRuntime, MIDTRANS_SERVER_KEY: '' };
             expect(() => createMidtransService(invalidRuntime)).toThrow('Midtrans keys not configured');
         });
     });

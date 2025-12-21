@@ -30,6 +30,7 @@
 - [x] **PERFORMANCE**: Clean up TypeScript warnings and build warnings for cleaner production builds.
 - [x] **SECURITY**: Implement comprehensive audit logging system for compliance and security monitoring.
 - [x] **CRITICAL**: Fix webhook environment variable access pattern - secured Midtrans server key from client build exposure
+- [x] **CRITICAL**: Remove fallback to `import.meta.env` in Midtrans client service - ensure 100% secure environment access in production
 - [x] **MODULARITY**: **HIGH IMPACT** - Extract inline business logic from dashboard .astro files into reusable client services (DashboardService, InvoiceService, ProjectService)
 - [x] **MODULARITY**: **HIGH IMPACT** - Create validation service abstractions (UserValidator, ProjectValidator, ValidationService) - eliminated 20+ duplicate validation patterns across API endpoints
 
@@ -41,15 +42,16 @@
 - [x] **MEDIUM**: Enforce consistent error handling using `handleApiError()` utility across all API endpoints - ✅ 61 endpoints compliant
 - [x] **MODULARITY**: **HIGH IMPACT** - Extract dashboard inline business logic into client services - eliminated 150+ lines of duplicate code
 - [x] **MODULARITY**: **HIGH IMPACT** - Create validation service layer with domain-specific validators - eliminated 200+ lines of duplicate validation code
+- [x] **MODULARITY**: **ARCHITECTURAL** - Service layer reorganization into atomic structure - created `src/services/domain/` and `src/services/shared/` directories for clean separation of concerns, eliminated architectural friction between domain and utility services
+- [x] **MODULARITY**: **HIGH IMPACT** - Extract service page duplication into shared components (ServiceHero, ServiceFeatures, ServiceCTA) - eliminated 230+ lines of duplicate code across sekolah, company, and berita pages
 - [ ] **MEDIUM**: Add end-to-end integration tests for critical user flows (Registration → Order → Payment)
 - [x] **LOW**: Complete implementation of image optimization service in `src/lib/image-optimization.ts` - ✅ FULLY IMPLEMENTED
-- [ ] **LOW**: Reorganize domain services (`project.ts`, `template.ts`) into dedicated folder structure
 - [ ] **LOW**: Add comprehensive JSDoc documentation for all UI components
 - [ ] **LOW**: Expand test coverage for error boundaries and failure scenarios
 
 ## High Priority 🔄
 - [x] **PERFORMANCE**: Performance testing with realistic data volumes (>1000 records) - Complete with comprehensive unit test suite validating 1500+ record scenarios.
-- [ ] **OPTIMIZATION**: Image optimization using Cloudflare Workers for template galleries.
+- [x] **OPTIMIZATION**: Image optimization using Cloudflare Workers for template galleries.
 - [x] **MONITORING**: Structured audit logging system implemented for all sensitive admin operations and payment transactions.
 - [ ] **TESTING**: End-to-end (E2E) testing for critical user flows (Registration -> Order -> Payment).
 

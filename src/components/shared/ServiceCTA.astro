@@ -1,0 +1,39 @@
+---
+/**
+ * Reusable Service CTA Component
+ * Extracted from duplicated service page call-to-action sections
+ * Eliminates 30+ lines of duplication across sekolah, company, and berita pages
+ */
+import Button from '../ui/Button.astro';
+
+interface Props {
+  serviceTitle: string;
+  buttonText?: string;
+}
+
+const { serviceTitle, buttonText = "Pesan Sekarang" } = Astro.props;
+---
+
+<div class="cta-content">
+  <h2>Tertarik dengan {serviceTitle}?</h2>
+  <p>Daftar sekarang dan mulai konsultasi gratis dengan tim kami.</p>
+  <Button href="/register" variant="primary" size="lg">{buttonText}</Button>
+</div>
+
+<style>
+  .cta-content {
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .cta-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .cta-content p {
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+  }
+</style>
