@@ -64,7 +64,10 @@ export default defineConfig({
                 'pg',
                 'bcryptjs',
                 'midtrans-client',
-                'jose'
+                'jose',
+                'crypto',
+                'querystring',
+                'https'
             ],
             include: [
                 'react',
@@ -72,6 +75,13 @@ export default defineConfig({
                 'react/jsx-runtime'
             ],
         },
+
+        // CSS optimization configuration
+        css: {
+            devSourcemap: false,
+            minify: 'terser'
+        },
+
         // Advanced performance optimization configuration
         build: {
             minify: 'terser',
@@ -80,10 +90,10 @@ export default defineConfig({
                     // Maximum optimization for production
                     drop_console: true,
                     drop_debugger: true,
-                    pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+                    pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn', 'console.time', 'console.timeEnd'],
                     dead_code: true,
                     unused: true,
-                    passes: 2, // Optimal for performance vs build time
+                    passes: 3, // Increased for maximum optimization
                     conditionals: true,
                     evaluate: true,
                     booleans: true,
@@ -92,7 +102,21 @@ export default defineConfig({
                     join_vars: true,
                     reduce_vars: true,
                     sequences: true,
-                    switches: true
+                    switches: true,
+                    // Advanced optimizations
+                    hoist_vars: true,
+                    hoist_funs: true,
+                    inline: 2,
+                    collapse_vars: true,
+                    negate_iife: true,
+                    typeofs: true,
+                    unsafe_math: true,
+                    unsafe_proto: true,
+                    // Additional optimizations
+                    module: true,
+                    keep_fargs: false,
+                    keep_fnames: false,
+                    toplevel: true
                 },
                 mangle: {
                     toplevel: true,
@@ -107,6 +131,7 @@ export default defineConfig({
             },
             target: 'es2022',
             cssCodeSplit: true,
+            chunkSizeWarningLimit: 500, // Increase threshold to avoid warnings for optimized bundles
             rollupOptions: {
                 output: {
                     // Let Vite handle automatic chunking for optimal bundling
