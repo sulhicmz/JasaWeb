@@ -1,16 +1,47 @@
 ---
 /**
  * Reusable Form Group Component
- * Extracted from duplicate .form-group patterns across auth pages
- * Follows AGENTS.md modular component standards
+ * 
+ * A form field wrapper that provides consistent layout for labels, inputs, and hints.
+ * Extracted from duplicate patterns across auth pages for standardization.
+ * 
+ * @example
+ * ```astro
+ * <!-- Basic form group with label -->
+ * <FormGroup label="Email" required>
+ *   <FormInput type="email" name="email" />
+ * </FormGroup>
+ * 
+ * <!-- Form group with hint text -->
+ * <FormGroup 
+ *   label="Password" 
+ *   labelFor="password"
+ *   hint="Must be at least 8 characters long"
+ *   required
+ * >
+ *   <FormInput type="password" id="password" name="password" />
+ * </FormGroup>
+ * 
+ * <!-- Disabled form group -->
+ * <FormGroup label="Username" disabled>
+ *   <FormInput type="text" name="username" disabled />
+ * </FormGroup>
+ * ```
  */
 export interface Props {
+  /** Text label displayed above the input field */
   label?: string;
+  /** HTML 'for' attribute linking to input ID */
   labelFor?: string;
+  /** Helper text displayed below the input */
   hint?: string;
+  /** Whether the field is required (adds asterisk) */
   required?: boolean;
+  /** Whether the form group appears disabled */
   disabled?: boolean;
+  /** Additional CSS classes to apply */
   class?: string;
+  /** Input field(s) to wrap inside this group */
   children?: any;
 }
 

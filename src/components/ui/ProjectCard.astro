@@ -1,15 +1,52 @@
 ---
 /**
  * Reusable Project Card Component
- * Extracted from inline project card generation in dashboard/projects.astro
- * Follows AGENTS.md modular component standards
+ * 
+ * A specialized card component for displaying project information with
+ * status indicators, metadata, and action links. Extracted from inline 
+ * project card generation in dashboard for consistency.
+ * 
+ * @example
+ * ```astro
+ * <!-- Active project with URL -->
+ * <ProjectCard 
+ *   name="Company Website" 
+ *   type="company"
+ *   status="in_progress"
+ *   url="https://example.com"
+ *   createdAt="2025-01-15T10:30:00Z"
+ * />
+ * 
+ * <!-- Pending project without URL -->
+ * <ProjectCard 
+ *   name="School Portal" 
+ *   type="sekolah"
+ *   status="pending_payment"
+ *   createdAt="2025-01-20T14:15:00Z"
+ * />
+ * 
+ * <!-- Completed project -->
+ * <ProjectCard 
+ *   name="News Website" 
+ *   type="berita"
+ *   status="completed"
+ *   url="https://news.example.com"
+ *   createdAt="2025-01-10T09:00:00Z"
+ * />
+ * ```
  */
 export interface Props {
+  /** Project display name */
   name: string;
+  /** Project category type */
   type: string;
+  /** Current project status in workflow */
   status: 'pending_payment' | 'in_progress' | 'review' | 'completed';
+  /** Live project URL (optional - shown only when provided) */
   url?: string;
+  /** ISO timestamp when project was created */
   createdAt: string;
+  /** Additional CSS classes to apply */
   class?: string;
 }
 
@@ -33,7 +70,7 @@ const statusBadge = {
     </div>
   </div>
   <div class="project-actions">
-    <span class="status-badge" style="background: {variantColor}">{statusBadge.label}</span>
+    <span class={`status-badge status-${statusBadge.variant}`}>{statusBadge.label}</span>
     {url && <a href={url} target="_blank" class="project-link">Kunjungi →</a>}
   </div>
 </div>
@@ -92,6 +129,23 @@ const statusBadge = {
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 500;
+  }
+
+  .status-warning {
+    background: var(--color-secondary);
+  }
+
+  .status-primary {
+    background: var(--color-primary);
+  }
+
+  .status-default {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+  }
+
+  .status-success {
+    background: var(--color-success);
   }
 
   .project-link {

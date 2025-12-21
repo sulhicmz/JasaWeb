@@ -1,21 +1,61 @@
 ---
 /**
  * Admin Header Component
- * Reusable header pattern for admin pages with title, description, and action buttons
+ * 
+ * A comprehensive header pattern for admin pages featuring title, description,
+ * gradient text highlighting, and configurable action buttons.
+ * 
+ * @example
+ * ```astro
+ * <!-- Simple header with title and description -->
+ * <AdminHeader 
+ *   title="User Management" 
+ *   description="Manage user accounts and permissions"
+ * />
+ * 
+ * <!-- Header with gradient text and actions -->
+ * <AdminHeader 
+ *   title="Project Dashboard" 
+ *   gradientText="Dashboard"
+ *   description="Overview of all active projects"
+ *   actions={[
+ *     {
+ *       href: "/admin/projects/new",
+ *       variant: "primary",
+ *       text: "New Project"
+ *     },
+ *     {
+ *       href: "/admin/projects/export",
+ *       variant: "outline",
+ *       text: "Export"
+ *     }
+ *   ]}
+ * />
+ * ```
  */
 import Button from './Button.astro';
 
 export interface Props {
+  /** Main header title (required) */
   title: string;
+  /** Optional descriptive text below title */
   description?: string;
+  /** Text portion to render with gradient styling */
   gradientText?: string;
+  /** Array of action buttons to display in header */
   actions?: Array<{
+    /** URL for the action button */
     href: string;
+    /** Button visual style variant */
     variant: 'primary' | 'secondary' | 'outline';
+    /** Button size */
     size?: 'sm' | 'md' | 'lg';
+    /** Link target for external URLs */
     target?: string;
+    /** Button display text */
     text: string;
   }>;
+  /** Additional CSS classes to apply */
   class?: string;
 }
 

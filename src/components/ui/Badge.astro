@@ -1,11 +1,31 @@
 ---
 /**
  * Reusable Badge Component
- * For status indicators and labels
+ * 
+ * A compact status indicator component perfect for displaying labels, 
+ * status messages, and categorical information with color-coded variants.
+ * 
+ * @example
+ * ```astro
+ * <!-- Status badges -->
+ * <Badge variant="success">Active</Badge>
+ * <Badge variant="warning">Pending</Badge>
+ * <Badge variant="error">Error</Badge>
+ * 
+ * <!-- Size variations -->
+ * <Badge variant="primary" size="sm">Small</Badge>
+ * <Badge variant="default" size="md">Medium</Badge>
+ * 
+ * <!-- Default badge for neutral information -->
+ * <Badge>Default Label</Badge>
+ * ```
  */
 export interface Props {
+  /** Color variant indicating status or category */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error';
+  /** Badge size affecting padding and font size */
   size?: 'sm' | 'md';
+  /** Additional CSS classes to apply */
   class?: string;
 }
 

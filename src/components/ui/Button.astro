@@ -1,16 +1,41 @@
 ---
 /**
  * Reusable Button Component
- * Follows strict design system guidelines
+ * 
+ * A comprehensive button component that supports multiple variants, sizes, and states.
+ * Can render as either a `<button>` or `<a>` element based on whether href is provided.
+ * 
+ * @example
+ * ```astro
+ * <!-- Primary button -->
+ * <Button>Click me</Button>
+ * 
+ * <!-- Secondary button with custom size -->
+ * <Button variant="secondary" size="lg">Large Button</Button>
+ * 
+ * <!-- Link button -->
+ * <Button href="/about" variant="outline">About</Button>
+ * 
+ * <!-- Full width disabled button -->
+ * <Button fullWidth disabled>Disabled</Button>
+ * ```
  */
 export interface Props {
+  /** Visual style variant */
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  /** Button size affecting padding and font size */
   size?: 'sm' | 'md' | 'lg';
+  /** If provided, renders as anchor tag with this URL */
   href?: string;
+  /** Target attribute for anchor tag (e.g., '_blank') */
   target?: string;
+  /** HTML button type when rendered as button element */
   type?: 'button' | 'submit' | 'reset';
+  /** Whether button takes full width of container */
   fullWidth?: boolean;
+  /** Disables button and adds visual disabled state */
   disabled?: boolean;
+  /** Additional CSS classes to apply */
   class?: string;
 }
 

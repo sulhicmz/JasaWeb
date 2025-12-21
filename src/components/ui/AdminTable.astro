@@ -1,36 +1,89 @@
 ---
 /**
  * Admin Table Component
- * Reusable table pattern for admin management pages with configurable columns and actions
+ * 
+ * A powerful, configurable table component for admin management pages.
+ * Supports custom column rendering, badges, date formatting, and conditional actions.
+ * 
+ * @example
+ * ```astro
+ * <!-- Basic user table -->
+ * <AdminTable 
+ *   data={users}
+ *   columns={[
+ *     { key: 'name', label: 'Name' },
+ *     { key: 'email', label: 'Email' },
+ *     { 
+ *       key: 'role', 
+ *       label: 'Role',
+ *       badge: {
+ *         variant: 'primary',
+ *         condition: (value) => value === 'admin'
+ *       }
+ *     },
+ *     { 
+ *       key: 'createdAt', 
+ *       label: 'Created',
+ *       date: true 
+ *     }
+ *   ]}
+ *   actions={[
+ *     {
+ *       href: (user) => `/admin/users/${user.id}/edit`,
+ *       text: 'Edit',
+ *       variant: 'primary',
+ *       size: 'sm'
+ *     }
+ *   ]}
+ * />
+ * ```
  */
 import Badge from './Badge.astro';
 import Button from './Button.astro';
 
 export interface Column {
+  /** Property key to access from data object */
   key: string;
+  /** Column header display text */
   label: string;
-  render?: (item: any) => any; // Custom render function
+  /** Custom render function for complex cell content */
+  render?: (item: any) => any;
+  /** Badge configuration for status indicators */
   badge?: {
+    /** Badge visual variant */
     variant: 'success' | 'primary' | 'warning' | 'error' | 'default';
+    /** Conditional function to apply badge variant */
     condition?: (value: any) => boolean;
   };
-  date?: boolean; // Format as date
+  /** Whether to format value as date */
+  date?: boolean;
 }
 
 export interface Action {
+  /** Function to generate action URL from row data */
   href: (item: any) => string;
+  /** Button display text */
   text: string;
+  /** Button visual style variant */
   variant: 'primary' | 'secondary' | 'outline';
+  /** Button size */
   size?: 'sm' | 'md' | 'lg';
-  condition?: (item: any) => boolean; // Optional condition to show/hide action
+  /** Conditional function to show/hide action */
+  condition?: (item: any) => boolean;
 }
 
 export interface Props {
+  /** Array of data objects to display in table */
   data: any[];
+  /** Column configuration for table structure */
   columns: Column[];
+  /** Optional action buttons for each row */
   actions?: Action[];
+  /** Message to display when no data is available */
   emptyMessage?: string;
+  /** Error message to display above table */
   error?: string;
+  /** Additional CSS classes to apply */
   class?: string;
 }
 

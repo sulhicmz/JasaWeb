@@ -1,12 +1,44 @@
 ---
 /**
  * Reusable Section Component
- * Consistent section spacing and background variants
+ * 
+ * A layout section component providing consistent spacing, backgrounds,
+ * and containerization for page sections. Perfect for creating structured
+ * page layouts with predictable spacing patterns.
+ * 
+ * @example
+ * ```astro
+ * <!-- Default section with large spacing -->
+ * <Section>
+ *   <h1>Hero Section</h1>
+ *   <p>Welcome to our platform</p>
+ * </Section>
+ * 
+ * <!-- Gradient background section -->
+ * <Section background="gradient" spacing="xl">
+ *   <h2>Features Section</h2>
+ *   <div>Feature content here</div>
+ * </Section>
+ * 
+ * <!-- Muted background section with ID for navigation -->
+ * <Section 
+ *   background="muted" 
+ *   spacing="lg"
+ *   id="contact"
+ * >
+ *   <h2>Contact Us</h2>
+ *   <p>Get in touch with our team</p>
+ * </Section>
+ * ```
  */
 export interface Props {
+  /** Background style variant */
   background?: 'default' | 'gradient' | 'muted';
+  /** Vertical padding spacing */
   spacing?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Additional CSS classes to apply */
   class?: string;
+  /** HTML ID for anchor navigation */
   id?: string;
 }
 
