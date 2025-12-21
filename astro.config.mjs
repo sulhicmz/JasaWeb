@@ -60,7 +60,44 @@ export default defineConfig({
         },
         // Bundle analysis for performance monitoring
         build: {
+            minify: 'terser',
+            terserOptions: {
+                compress: {
+                    drop_console: true,
+                    drop_debugger: true,
+                    pure_funcs: ['console.log']
+                }
+            },
             rollupOptions: {
+                output: {
+                    manualChunks: {
+                        'admin': [
+                            './src/services/admin/users.ts',
+                            './src/services/admin/projects.ts',
+                            './src/services/admin/cms.ts',
+                            './src/services/admin/crud.ts',
+                            './src/services/admin/blog.ts'
+                        ],
+                        'billing': [
+                            './src/services/client/billing-client.ts',
+                            './src/services/client/BillingService.ts'
+                        ],
+                        'payment': [
+                            './src/lib/midtrans-client.ts',
+                            './src/lib/midtrans.ts'
+                        ]
+                    },
+                    chunkFileNames: (chunkInfo) => {
+                        const facadeModuleId = chunkInfo.facadeModuleId;
+                        if (facadeModuleId?.includes('/admin/')) {
+                            return 'chunks/admin/[name]-[hash].js';
+                        }
+                        if (facadeModuleId?.includes('/dashboard/')) {
+                            return 'chunks/dashboard/[name]-[hash].js';
+                        }
+                        return 'chunks/[name]-[hash].js';
+                    }
+                },
                 plugins: process.env.ANALYZE ? [
                     // Bundle visualizer will be added dynamically
                 ] : [],

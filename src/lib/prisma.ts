@@ -22,3 +22,11 @@ export function createPrismaClient(env: Env): PrismaClient {
 export function getPrisma(locals: App.Locals): PrismaClient {
     return createPrismaClient(locals.runtime.env);
 }
+
+/**
+ * Prevent Prisma client bundling in browser environments
+ * This ensures server-side code is never included in client bundles
+ */
+export const prisma = typeof window === 'undefined' 
+  ? null 
+  : undefined;

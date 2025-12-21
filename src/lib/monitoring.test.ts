@@ -2,16 +2,24 @@
  * Production Monitoring Service Tests
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MonitoringService } from '@/lib/monitoring';
 
 describe('MonitoringService', () => {
   let monitoring: MonitoringService;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     monitoring = MonitoringService.getInstance();
     // Clear metrics between tests
     monitoring['metrics'] = [];
+    // Suppress console errors for expected monitoring alerts
+    consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console warn logging
+    consoleSpy.mockRestore();
   });
 
   describe('Singleton Pattern', () => {
@@ -232,8 +240,6 @@ describe('MonitoringService', () => {
 
   describe('Alert System', () => {
     it('should trigger response time alerts when threshold exceeded', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
       monitoring.recordApiMetrics('/api/slow', 3000, 200); // 3 seconds > 2 second threshold
       
       const metrics = monitoring['metrics'];
@@ -246,13 +252,9 @@ describe('MonitoringService', () => {
         responseTime: 3000,
         threshold: 2000
       });
-      
-      consoleSpy.mockRestore();
     });
 
     it('should trigger error alerts for API errors', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
       monitoring.recordApiMetrics('/api/error', 100, 500);
       
       const metrics = monitoring['metrics'];
@@ -260,13 +262,10 @@ describe('MonitoringService', () => {
       
       expect(alertMetric).toBeDefined();
       expect(alertMetric?.data.alertType).toBe('api_error');
-      
-      consoleSpy.mockRestore();
     });
 
     it('should not trigger alerts when disabled', () => {
       monitoring['alertConfig'].enabled = false;
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       monitoring.recordApiMetrics('/api/slow', 3000, 200);
       
@@ -275,7 +274,6 @@ describe('MonitoringService', () => {
       
       expect(alertMetric).toBeUndefined();
       
-      consoleSpy.mockRestore();
       monitoring['alertConfig'].enabled = true; // Reset for other tests
     });
   });

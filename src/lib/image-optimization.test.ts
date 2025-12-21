@@ -3,12 +3,26 @@
  * Tests for Cloudflare Workers-based image optimization
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { imageOptimization, generateOptimizedUrl, generateSrcSet, createOptimizedImageAttrs } from './image-optimization';
 
 describe('ImageOptimizationService', () => {
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Suppress console warnings for expected URL validation failures
+    consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console warning logging
+    consoleSpy.mockRestore();
+  });
+
+  afterEach(() => {
+    // Restore console error logging
+    consoleSpy.mockRestore();
   });
 
   describe('generateOptimizedUrl', () => {
@@ -338,6 +352,18 @@ describe('ImageOptimizationService', () => {
 });
 
 describe('Progressive Loading Tests', () => {
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    // Suppress console warnings for expected URL validation failures
+    consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console warning logging
+    consoleSpy.mockRestore();
+  });
+
     it('should generate progressive URLs pair', () => {
       const originalUrl = 'https://example.com/image.jpg';
       const progressive = imageOptimization.generateProgressiveUrls(originalUrl, 800, 600);
@@ -404,6 +430,18 @@ describe('Progressive Loading Tests', () => {
   });
 
 describe('Integration Tests', () => {
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    // Suppress console warnings for expected URL validation failures
+    consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    // Restore console warning logging
+    consoleSpy.mockRestore();
+  });
+
   it('should handle template gallery workflow', () => {
     const templateUrl = 'https://templates.example.com/preview.jpg';
     
