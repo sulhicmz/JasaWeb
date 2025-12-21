@@ -306,7 +306,7 @@ export class AdminUserService {
      * Check if email exists (excluding current user)
      */
     async isEmailExists(email: string, excludeId?: string): Promise<boolean> {
-        const where: any = { email };
+        const where: Record<string, unknown> = { email };
         
         if (excludeId) {
             where.NOT = { id: excludeId };

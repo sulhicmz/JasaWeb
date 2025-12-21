@@ -122,20 +122,26 @@ export class BundleAnalyzer {
     };
   }
 
-  private extractBundleMetrics(bundleData: any): any {
+  private extractBundleMetrics(bundleData: Record<string, unknown>): BundleMetrics {
     // Extract metrics from Vite build stats
+    const totalSize = typeof bundleData.totalSize === 'number' ? bundleData.totalSize : 194 * 1024; // Current: 194KB
+    const gzipSize = typeof bundleData.gzipSize === 'number' ? bundleData.gzipSize : 58 * 1024; // Estimated gzip size
+    const chunks = Array.isArray(bundleData.chunks) ? bundleData.chunks as ChunkInfo[] : [
+      { name: 'client/index.js', size: 120 * 1024, gzipSize: 36 * 1024, modules: [], imports: [] },
+      { name: 'admin/index.js', size: 74 * 1024, gzipSize: 22 * 1024, modules: [], imports: [] }
+    ];
+    const dependencies = Array.isArray(bundleData.dependencies) ? bundleData.dependencies as DependencyInfo[] : [];
+
     return {
-      totalSize: bundleData.totalSize || 194 * 1024, // Current: 194KB
-      gzipSize: bundleData.gzipSize || 58 * 1024, // Estimated gzip size
-      chunks: bundleData.chunks || [
-        { name: 'client/index.js', size: 120 * 1024, gzipSize: 36 * 1024, modules: [], imports: [] },
-        { name: 'admin/index.js', size: 74 * 1024, gzipSize: 22 * 1024, modules: [], imports: [] }
-      ],
-      dependencies: bundleData.dependencies || []
+      totalSize,
+      gzipSize,
+      chunks,
+      dependencies,
+      analysis: this.performBundleAnalysis({ totalSize, gzipSize, chunks, dependencies, analysis: {} as BundleAnalysis })
     };
   }
 
-  private performBundleAnalysis(metrics: any): BundleAnalysis {
+  private performBundleAnalysis(metrics: BundleMetrics): BundleAnalysis {
     const chunks = metrics.chunks || [];
     const largestChunks = chunks
       .sort((a: ChunkInfo, b: ChunkInfo) => b.size - a.size)
