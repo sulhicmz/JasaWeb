@@ -1,18 +1,58 @@
 ---
 /**
  * Reusable Form Input Component
- * Extracted from duplicate input patterns across auth pages
- * Follows AGENTS.md modular component standards
+ * 
+ * A standardized input field with consistent styling and validation support.
+ * Extracted from duplicate patterns across auth pages for uniformity.
+ * 
+ * @example
+ * ```astro
+ * <!-- Basic text input -->
+ * <FormInput type="text" name="username" placeholder="Enter username" />
+ * 
+ * <!-- Required email input with validation -->
+ * <FormInput 
+ *   type="email" 
+ *   name="email" 
+ *   placeholder="user@example.com"
+ *   required 
+ * />
+ * 
+ * <!-- Password input with minimum length -->
+ * <FormInput 
+ *   type="password" 
+ *   name="password" 
+ *   minlength="8"
+ *   placeholder="Password (min 8 chars)"
+ * />
+ * 
+ * <!-- Disabled input with preset value -->
+ * <FormInput 
+ *   type="text" 
+ *   name="readonly-field" 
+ *   value="Read only value"
+ *   disabled 
+ * />
+ * ```
  */
 export interface Props {
+  /** Input type determining keyboard and validation behavior */
   type: 'text' | 'email' | 'tel' | 'password' | 'number';
+  /** Unique identifier for the input element */
   id?: string;
+  /** Name attribute for form submission */
   name?: string;
+  /** Placeholder text displayed when input is empty */
   placeholder?: string;
+  /** Whether the input is required for form submission */
   required?: boolean;
+  /** Whether the input is disabled and non-interactive */
   disabled?: boolean;
+  /** Minimum character length for validation */
   minlength?: number;
+  /** Pre-filled value for the input */
   value?: string;
+  /** Additional CSS classes to apply */
   class?: string;
 }
 

@@ -1,11 +1,36 @@
 ---
 /**
  * Reusable Card Component
- * Consistent card container with optional hover effects
+ * 
+ * A flexible card container with multiple variants and padding options.
+ * Perfect for displaying grouped content with consistent styling.
+ * 
+ * @example
+ * ```astro
+ * <!-- Default card with medium padding -->
+ * <Card>
+ *   <h3>Card Title</h3>
+ *   <p>Card content</p>
+ * </Card>
+ * 
+ * <!-- Featured card with no padding -->
+ * <Card variant="featured" padding="none">
+ *   <img src="image.jpg" alt="Card image" />
+ * </Card>
+ * 
+ * <!-- Interactive card with large padding -->
+ * <Card variant="interactive" padding="lg" onclick="handleClick()">
+ *   <h3>Clickable Card</h3>
+ *   <p>Click this card for more info</p>
+ * </Card>
+ * ```
  */
 export interface Props {
+  /** Visual style variant affecting border and background */
   variant?: 'default' | 'featured' | 'interactive';
+  /** Internal padding spacing */
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  /** Additional CSS classes to apply */
   class?: string;
 }
 

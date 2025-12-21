@@ -1,14 +1,41 @@
 ---
 /**
  * Reusable Form Component
- * Extracted from duplicate patterns across register/login/profile pages
- * Follows AGENTS.md modular component standards
+ * 
+ * A standardized form wrapper extracted from duplicate patterns across auth pages.
+ * Provides consistent spacing and layout for form elements.
+ * 
+ * @example
+ * ```astro
+ * <!-- Basic form with ID -->
+ * <Form id="login-form">
+ *   <FormGroup label="Email">
+ *     <FormInput type="email" name="email" required />
+ *   </FormGroup>
+ *   <FormGroup label="Password">
+ *     <FormInput type="password" name="password" required />
+ *   </FormGroup>
+ *   <Button type="submit">Login</Button>
+ * </Form>
+ * 
+ * <!-- Form with custom submission handler -->
+ * <Form onSubmit="handleSubmit(event)">
+ *   <FormGroup label="Search">
+ *     <FormInput type="text" name="query" placeholder="Search..." />
+ *   </FormGroup>
+ *   <Button type="submit">Search</Button>
+ * </Form>
+ * ```
  */
 export interface Props {
+  /** HTML form ID attribute */
   id?: string;
+  /** Additional CSS classes to apply */
   class?: string;
+  /** Child elements to render inside the form */
   children?: any;
-  onSubmit?: string; // JavaScript code for form submission
+  /** JavaScript code to execute on form submission */
+  onSubmit?: string;
 }
 
 const { id, class: className, children, onSubmit } = Astro.props;
