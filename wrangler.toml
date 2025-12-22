@@ -6,11 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 # Session KV binding for authentication
 [[kv_namespaces]]
 binding = "SESSION"
-id = "YOUR_SESSION_KV_ID"
+id = "b47ef7be5707491fae168239002d8967"
 
 # Environment bindings for Cloudflare Pages Functions
 [env.production]
-name = "jasaweb-prod"
+name = "jasaweb"
 
 [env.production.vars]
 NODE_ENV = "production"
@@ -18,12 +18,12 @@ NODE_ENV = "production"
 # Hyperdrive - Neon PostgreSQL connection pooling
 [[hyperdrive]]
 binding = "HYPERDRIVE"
-id = "YOUR_HYPERDRIVE_ID"
+id = "11a021980f3a42d99ad32444636fb720"
 
 # KV Namespace for caching
 [[kv_namespaces]]
 binding = "CACHE"
-id = "YOUR_KV_ID"
+id = "8dcb2ddeb62a4f6ab5ea8aa803b63435"
 
 # R2 Bucket for file storage
 [[r2_buckets]]
