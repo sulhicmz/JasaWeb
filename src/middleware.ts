@@ -30,11 +30,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     // Environment validation (only once per application lifetime)
     if (!envValidated) {
-        const validation = validateEnvironment();
+        const validation = validateEnvironment(env);
         if (!validation.isValid) {
             const env = context.locals.runtime?.env;
             const isDev = env?.NODE_ENV === 'development' || import.meta.env.DEV;
-            
+
             if (isDev) {
                 // In development, show detailed errors but don't crash
                 console.error('❌ Environment Variable Validation Failed:');
@@ -48,13 +48,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
                 // In production, this is a critical failure
                 console.error('🚨 CRITICAL: Environment validation failed in production');
                 return new Response(
-                    JSON.stringify({ 
-                        error: 'Configuration Error', 
+                    JSON.stringify({
+                        error: 'Configuration Error',
                         message: 'Server configuration is incomplete. Please contact administrator.'
-                    }), 
-                    { 
-                        status: 500, 
-                        headers: { 'Content-Type': 'application/json' } 
+                    }),
+                    {
+                        status: 500,
+                        headers: { 'Content-Type': 'application/json' }
                     }
                 );
             }
@@ -75,10 +75,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Check if path is protected
     const isProtected = protectedPaths.some(path => pathname.startsWith(path));
     const isAuthPath = authPaths.some(path => pathname === path);
-    
+
     // Check if request needs CSRF protection
-    const needsCsrfProtection = csrfProtectedMethods.includes(method) && 
-                              csrfProtectedPaths.some(path => pathname.startsWith(path));
+    const needsCsrfProtection = csrfProtectedMethods.includes(method) &&
+        csrfProtectedPaths.some(path => pathname.startsWith(path));
 
     // CSRF validation for authenticated state-changing requests
     if (needsCsrfProtection && token) {
@@ -99,7 +99,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
             // Check for admin routes that require additional validation
             const requiresAdmin = requiresAdminAccess(pathname);
             if (requiresAdmin && user?.role !== 'admin') {
-                return new Response('Admin access required', { 
+                return new Response('Admin access required', {
                     status: 403,
                     headers: { 'Content-Type': 'application/json' }
                 });
