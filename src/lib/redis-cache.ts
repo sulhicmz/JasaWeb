@@ -375,6 +375,9 @@ scanStream: (options: any) => {
     }
 }
 
+// Export class for testing
+export { RedisCacheService };
+
 // Default export - singleton instance for testing
 const redisMockService = new RedisCacheService();
 export default redisMockService;

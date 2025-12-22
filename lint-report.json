@@ -1,0 +1,5 @@
+
+> jasaweb@0.0.1 lint /home/runner/work/jasaweb/jasaweb
+> npx eslint src --ext ts,tsx --max-warnings 10 && echo '✅ ESLint: No issues found (TypeScript + React files checked)', "--" "--format=json"
+
+✅ ESLint: No issues found (TypeScript + React files checked), -- --format=json
