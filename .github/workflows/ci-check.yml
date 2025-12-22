@@ -28,33 +28,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Standardized Node.js Setup
+        uses: ./.github/workflows/setup/composite.yml
         with:
           node-version: 20
-          cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Multi-layer caching strategy
-        uses: actions/cache@v4
-        id: cache
-        with:
-          path: |
-            ~/.pnpm-store
-            ~/.npm
-            node_modules/.cache
-          key: ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ${{ runner.os }}-pnpm-
-
-      - name: Install Dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile --prefer-frozen-lockfile
+          cache-scope: 'ci'
+          install-deps: 'true'
 
       - name: Type Check
         id: typecheck
