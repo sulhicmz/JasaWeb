@@ -1,0 +1,62 @@
+name: 'Node.js Setup Composite Action'
+description: 'Standardized Node.js and pnpm setup with optimized caching'
+author: 'JasaWeb CI/CD'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+  cache-scope:
+    description: 'Cache scope for key differentiation'
+    required: false
+    default: 'default'
+  cache-dependency-path:
+    description: 'Path to dependency file for cache keying'
+    required: false
+    default: ''
+  install-deps:
+    description: 'Whether to install dependencies'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9.1.0
+        
+    - name: Get pnpm store directory
+      shell: bash
+      id: pnpm-cache
+      run: |
+        echo "store_path=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+        
+    - name: Cache pnpm modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.pnpm-cache.outputs.store_path }}
+          ~/.npm
+          node_modules/.cache
+        key: ${{ runner.os }}-pnpm-${{ inputs.cache-scope }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-${{ inputs.cache-scope }}-
+          ${{ runner.os }}-pnpm-
+          
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.cache-dependency-path }}" ]; then
+          pnpm install --frozen-lockfile --filter="${{ inputs.cache-dependency-path }}"
+        else
+          pnpm install --frozen-lockfile
+        fi

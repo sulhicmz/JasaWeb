@@ -41,29 +41,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Standardized Node.js Setup
+        uses: ./.github/workflows/setup
         with:
           node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Setup Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pnpm-store
-            **/node_modules
-            ~/.opencode
-          key: ${{ runner.os }}-oc-v1-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-oc-v1-
-
-      - name: Install Dependencies
-        run: pnpm install --no-frozen-lockfile
+          cache-scope: 'standarizer'
+          install-deps: 'true'
 
       - name: Machine Diagnostics
         id: diagnostics

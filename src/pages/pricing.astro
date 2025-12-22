@@ -10,25 +10,15 @@ import Button from '../components/ui/Button.astro';
 import Badge from '../components/ui/Badge.astro';
 import { formatPrice } from '../lib/config';
 import { getPricingService } from '../services/domain/pricing';
+import { getFaqService } from '../services/domain/faq';
 
-// Fetch pricing plans and FAQs from database using service
-const pricingService = getPricingService({} as any);
+// Fetch pricing plans and FAQs from database using service layer
+const runtime = Astro.locals.runtime;
+const pricingService = getPricingService(runtime);
 const pricingPlans = await pricingService.getActivePricingPlans();
 
-// For now, keep the existing FAQ database logic
-import { getPrisma } from '../lib/prisma';
-const prisma = getPrisma({} as any);
-const faqs = await prisma.faq.findMany({
-  select: {
-    id: true,
-    question: true,
-    answer: true,
-    sortOrder: true,
-    isActive: true,
-  },
-  where: { isActive: true },
-  orderBy: { sortOrder: 'asc' }
-});
+const faqService = getFaqService(runtime);
+const faqs = await faqService.getActiveFaqs();
 ---
 
 <PageLayout title="Harga" description="Pilih paket harga pembuatan website sesuai kebutuhan Anda" currentPath="/pricing">
