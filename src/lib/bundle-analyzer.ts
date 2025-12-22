@@ -294,15 +294,27 @@ export class BundleAnalyzer {
 export class EnhancedPerformanceMonitor {
   private bundleAnalyzer: BundleAnalyzer;
   private bundleMetrics: Map<string, any> = new Map();
+  private lastOptimizationCheck: number = Date.now();
+  private optimizationCache: Map<string, any> = new Map();
 
   constructor() {
     this.bundleAnalyzer = new BundleAnalyzer();
   }
 
   /**
-   * Record bundle analysis from build process
+   * Record bundle analysis from build process with caching optimization
    */
   recordBundleAnalysis(buildStats: any): void {
+    // Performance optimization: Check if analysis is cached (5-minute cache)
+    const cacheKey = JSON.stringify(buildStats);
+    const now = Date.now();
+    
+    if (this.optimizationCache.has(cacheKey) && 
+        now - this.lastOptimizationCheck < 300000) {
+      console.log('[BUNDLE] Using cached analysis results');
+      return;
+    }
+    
     const report = this.bundleAnalyzer.generateBundleReport(buildStats);
     
     this.bundleMetrics.set('latestBuild', {
@@ -310,16 +322,20 @@ export class EnhancedPerformanceMonitor {
       ...report
     });
 
-    // Log bundle status
-    console.log(`[BUNDLE] Size: ${report.summary.totalSize}KB (gzipped: ${report.summary.gzipSize}KB)`);
-    console.log(`[BUNDLE] Score: ${report.score}/100 (${report.status})`);
+    // Cache the analysis for performance
+    this.optimizationCache.set(cacheKey, report);
+    this.lastOptimizationCheck = now;
+
+    // Optimized logging: Only log if there are actionable recommendations
+    const criticalSuggestions = report.analysis.optimizationSuggestions.filter(s => s.priority === 'high');
     
-    // Log optimization suggestions
-    if (report.analysis.optimizationSuggestions.length > 0) {
-      console.log(`[BUNDLE] ${report.analysis.optimizationSuggestions.length} optimization suggestions:`);
-      report.analysis.optimizationSuggestions.forEach((tip, index) => {
-        console.log(`  ${index + 1}. [${tip.priority.toUpperCase()}] ${tip.description}`);
+    if (criticalSuggestions.length > 0) {
+      console.log(`[BUNDLE] ${criticalSuggestions.length} critical optimization recommendations:`);
+      criticalSuggestions.forEach((tip, index) => {
+        console.log(`  ${index + 1}. [CRITICAL] ${tip.description}`);
       });
+    } else {
+      console.log(`[BUNDLE] Performance: ${report.summary.totalSize}KB (score: ${report.score}/100) ✅`);
     }
   }
 
