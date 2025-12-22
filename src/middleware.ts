@@ -50,7 +50,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
                 return new Response(
                     JSON.stringify({
                         error: 'Configuration Error',
-                        message: 'Server configuration is incomplete. Please contact administrator.'
+                        message: 'Server configuration is incomplete. Please contact administrator.',
+                        debug_details: {
+                            validation_errors: validation.errors,
+                            env_keys_found: env ? Object.keys(env).filter(key => !key.includes('SECRET') && !key.includes('KEY')) : 'ENV_IS_UNDEFINED'
+                        }
                     }),
                     {
                         status: 500,
