@@ -46,29 +46,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Standardized Node.js Setup
+        uses: ./.github/workflows/setup/composite.yml
         with:
           node-version: 20
-          cache: 'pnpm'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Cache Dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-perf-analysis-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-perf-analysis-
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
+          cache-scope: 'performance-analysis'
+          install-deps: 'true'
 
       - name: Production Build with Analysis
         run: |
