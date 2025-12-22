@@ -42,7 +42,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Standardized Node.js Setup
-        uses: ./.github/workflows/setup/composite.yml
+        uses: ./.github/workflows/setup
         with:
           node-version: 20
           cache-scope: 'standarizer'

@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Standardized Node.js Setup
-        uses: ./.github/workflows/setup/composite.yml
+        uses: ./.github/workflows/setup
         with:
           node-version: 20
           cache-scope: 'performance-analysis'
