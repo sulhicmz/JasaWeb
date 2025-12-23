@@ -1,9 +1,11 @@
 name: oc analyzer
 
-# Continuous Cycle: Analyzer → PR → Standarizer → PR → Analyzer
+# Chain: CI Check → Analyzer → Standarizer → Smart CI
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: ["CI Check"]
+    types: [completed]
     branches: [dev]
 
 permissions:
@@ -19,6 +21,7 @@ jobs:
     name: Analyze Codebase
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -33,16 +36,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Checkout
+      - name: Checkout agent-workspace
         uses: actions/checkout@v4
         with:
+          ref: agent-workspace
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Configure Git
+      - name: Merge Dev (Keep Fresh)
         run: |
           git config --global user.name "sulhicmz"
           git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+          git fetch origin dev
+          git merge origin/dev --no-edit || echo "Merge conflict ignored for analysis phase"
 
       - name: Install OpenCode
         run: |
@@ -102,12 +108,8 @@ jobs:
           - **Consistency**: Naming conventions, linter adherence, code patterns.
 
           **EXECUTION STEPS:**
-          1.  **Branch Management**: Use the shared branch `agent-workspace`.
-              - Always start by fetching all: `git fetch --all`.
-              - If `agent-workspace` exists, switch to it: `git checkout agent-workspace`.
-              - If it does not exist, create it: `git checkout -b agent-workspace`.
-              - **CRITICAL**: Always merge latest dev to stay up-to-date: `git merge origin/dev --no-edit`.
-              - This prevents "PR not up to date" issues.
+          1.  **Branch Management**: Use the current branch `agent-workspace`.
+              - *Note*: It is already checked out and merged with dev.
           2.  **Audit**: Read the code. Look for patterns, anti-patterns, technical debt, and risks.
           3.  **Verify**: Verify your audit by running `pnpm build && pnpm lint`.
           4.  **Report Generation (Target: `docs/evaluasi.md`)**:
@@ -138,4 +140,4 @@ jobs:
           PROMPT
           )" \
             --model iflowcn/glm-4.6 \
-            --share false \
+            --share false
