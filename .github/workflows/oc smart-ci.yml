@@ -3,7 +3,7 @@ name: smart ci
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["oc standarizer"]
+    workflows: ["ci check"]
     types: [completed]
 
 permissions:
