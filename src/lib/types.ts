@@ -207,21 +207,21 @@ export interface CloudflareRuntime {
     env: {
         // Database
         DATABASE_URL?: string;
-        HYPERDRIVE?: string;
-        
+        HYPERDRIVE?: { connectionString: string };
+
         // Authentication
         JWT_SECRET?: string;
-        
+
         // Payment
         MIDTRANS_SERVER_KEY?: string;
         MIDTRANS_CLIENT_KEY?: string;
         MIDTRANS_IS_PRODUCTION?: string;
-        
+
         // Services
         SESSION?: KVNamespace;
         CACHE?: KVNamespace;
         STORAGE?: R2Bucket;
-        
+
         // Other app variables
         NODE_ENV?: 'development' | 'production';
     };

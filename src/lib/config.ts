@@ -113,6 +113,13 @@ export function validateEnvironment(runtimeEnv?: Record<string, any>): EnvValida
     for (const spec of ENV_VARS) {
         // Prioritize runtime env (Cloudflare), fallback to import.meta.env (Vite/Build)
         const value = runtimeEnv?.[spec.name] || import.meta.env[spec.name];
+
+        // Special handling for DATABASE_URL with Hyperdrive
+        if (spec.name === 'DATABASE_URL' && !value && runtimeEnv?.HYPERDRIVE) {
+             // database is configured via Hyperdrive
+             continue;
+        }
+
         const result = validateEnvVar(spec, value);
 
         if (!result.isValid) {
@@ -133,11 +140,17 @@ export function validateEnvironment(runtimeEnv?: Record<string, any>): EnvValida
     const isProduction = import.meta.env.NODE_ENV === 'production';
 
     if (isProduction) {
-        const requiredInProd = ['DATABASE_URL', 'JWT_SECRET', 'MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY'];
+        const requiredInProd = ['JWT_SECRET', 'MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY'];
         for (const varName of requiredInProd) {
-            if (!import.meta.env[varName]) {
+            const hasValue = runtimeEnv?.[varName] || import.meta.env[varName];
+            if (!hasValue) {
                 errors.push(`'${varName}' is required in production environment`);
             }
+        }
+        
+        // Check DATABASE_URL only if Hyperdrive is NOT present
+        if (!runtimeEnv?.HYPERDRIVE && !import.meta.env.DATABASE_URL && !runtimeEnv?.DATABASE_URL) {
+             errors.push(`'DATABASE_URL' is required in production environment (or Hyperdrive binding)`);
         }
     }
 
