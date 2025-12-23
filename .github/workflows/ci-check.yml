@@ -221,7 +221,7 @@ jobs:
              echo "size-kb=0KB" >> $GITHUB_OUTPUT; echo "gzip-kb=0KB" >> $GITHUB_OUTPUT; echo "score=0" >> $GITHUB_OUTPUT; echo "grade=F" >> $GITHUB_OUTPUT
           fi
 
-   report:
+  report:
     name: Generate Health Report
     needs: validate-and-build
     runs-on: ubuntu-24.04-arm
