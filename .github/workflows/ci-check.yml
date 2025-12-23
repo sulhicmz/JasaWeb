@@ -39,6 +39,9 @@ jobs:
       gzip-size: ${{ steps.perf.outputs.gzip-kb }}
       perf-score: ${{ steps.perf.outputs.score }}
       perf-grade: ${{ steps.perf.outputs.grade }}
+      audit-critical: ${{ steps.audit.outputs.critical }}
+      audit-high: ${{ steps.audit.outputs.high }}
+      audit-moderate: ${{ steps.audit.outputs.moderate }}
 
     steps:
       - name: Checkout
@@ -110,6 +113,29 @@ jobs:
           END=$(date +%s.%N)
           echo "time=$(echo "$END - $START" | bc -l)" >> $GITHUB_OUTPUT
 
+      - name: Security Audit
+        id: audit
+        continue-on-error: true
+        run: |
+          # Run audit and capture JSON output
+          pnpm audit --prod --audit-level=moderate --json > audit.json || true
+          
+          # Parse vulnerabilities using jq
+          if [ -s audit.json ]; then
+             CRIT=$(jq '.metadata.vulnerabilities.critical' audit.json 2>/dev/null || echo "0")
+             HIGH=$(jq '.metadata.vulnerabilities.high' audit.json 2>/dev/null || echo "0")
+             MOD=$(jq '.metadata.vulnerabilities.moderate' audit.json 2>/dev/null || echo "0")
+          else
+             echo "Audit failed to produce output"
+             CRIT=0
+             HIGH=0
+             MOD=0
+          fi
+          
+          echo "critical=$CRIT" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "moderate=$MOD" >> $GITHUB_OUTPUT
+          
       - name: Performance Analysis
         id: perf
         if: steps.build.outcome == 'success'
@@ -186,6 +212,9 @@ jobs:
           gzip_size: ${{ needs.validate-and-build.outputs.gzip-size }}
           perf_score: ${{ needs.validate-and-build.outputs.perf-score }}
           perf_grade: ${{ needs.validate-and-build.outputs.perf-grade }}
+          audit_critical: ${{ needs.validate-and-build.outputs.audit-critical }}
+          audit_high: ${{ needs.validate-and-build.outputs.audit-high }}
+          audit_moderate: ${{ needs.validate-and-build.outputs.audit-moderate }}
           CHECKS_FAILED: ${{ (needs.validate-and-build.outputs.typecheck-status == 'failure' || needs.validate-and-build.outputs.lint-status == 'failure' || needs.validate-and-build.outputs.test-status == 'failure' || needs.validate-and-build.outputs.build-status == 'failure') && 'true' || 'false' }}
         run: |
           export TYPECHECK_STATUS=$typecheck_status
@@ -204,6 +233,9 @@ jobs:
           export GZIP_SIZE=$gzip_size
           export PERF_SCORE=$perf_score
           export PERF_GRADE=$perf_grade
+          export AUDIT_CRITICAL=$audit_critical
+          export AUDIT_HIGH=$audit_high
+          export AUDIT_MODERATE=$audit_moderate
           
           # Run the typescript script directly
           npx tsx scripts/generate-health-report.ts
