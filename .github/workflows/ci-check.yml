@@ -10,8 +10,8 @@ permissions:
   actions: write
 
 concurrency:
-  group: oc-agent
-  cancel-in-progress: false
+  group: ci-check-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
