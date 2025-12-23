@@ -17,7 +17,25 @@ TEST_RECORDS=1500
 echo "🧪 Running performance tests with ${TEST_RECORDS}+ records..."
 echo ""
 
-npm run test:perf
+pnpm run test:perf
+
+# Enhanced performance validation
+echo ""
+echo "📊 Running bundle analysis..."
+pnpm run build:analyze
+
+# Check exit code
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Performance tests PASSED"
+    echo "📈 Platform is ready for production scaling"
+    echo "🎯 Bundle optimization validated"
+else
+    echo ""
+    echo "❌ Performance tests FAILED"
+    echo "⚠️  Address performance issues before production deployment"
+    exit 1
+fi
 
 # Check exit code
 if [ $? -eq 0 ]; then

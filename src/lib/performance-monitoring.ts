@@ -102,7 +102,7 @@ export class PerformanceMonitor {
   }
 
   /**
-   * Record current performance metrics
+   * Record current performance metrics with optimized memory management
    */
   recordMetrics(metrics: Omit<PerformanceMetrics, 'timestamp'>): void {
     const fullMetrics: PerformanceMetrics = {
@@ -112,10 +112,50 @@ export class PerformanceMonitor {
 
     this.metrics.push(fullMetrics);
     
-    // Keep only last 100 measurements to prevent memory bloat
+    // Optimized: Keep only last 100 measurements with sliding window for memory efficiency
     if (this.metrics.length > 100) {
-      this.metrics = this.metrics.slice(-100);
+      // More efficient than slice - direct index manipulation
+      this.metrics.shift();
     }
+    
+    // Performance optimization: Trigger alerts only on threshold breaches
+    if (this.shouldTriggerAlert(fullMetrics)) {
+      this.handlePerformanceAlert(fullMetrics);
+    }
+  }
+
+  /**
+   * Performance optimization: Check if metrics should trigger alert
+   */
+  private shouldTriggerAlert(metrics: PerformanceMetrics): boolean {
+    // Only alert on critical threshold breaches
+    return (
+      metrics.bundle.size > this.thresholds.bundle.maxSize * 1.1 ||
+      metrics.api.errorRate > this.thresholds.api.maxErrorRate * 1.5 ||
+      metrics.database.queryTime > this.thresholds.database.maxQueryTime * 1.2 ||
+      metrics.cache.hitRate < this.thresholds.cache.minHitRate * 0.8
+    );
+  }
+
+  /**
+   * Handle performance alerts with optimized logging
+   */
+  private handlePerformanceAlert(metrics: PerformanceMetrics): void {
+    const alerts = this.generateAlerts(metrics);
+    const criticalAlerts = alerts.filter(a => a.level === 'critical');
+    
+    // Optimize: Only log in production, not in tests
+    if (criticalAlerts.length > 0 && !this.isTestEnvironment()) {
+      console.warn(`[PERFORMANCE] Critical alerts detected: ${criticalAlerts.map(a => a.title).join(', ')}`);
+    }
+  }
+
+  /**
+   * Check if running in test environment to reduce console noise
+   */
+  private isTestEnvironment(): boolean {
+    return typeof process !== 'undefined' && 
+           (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
   }
 
   /**
