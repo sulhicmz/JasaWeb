@@ -253,25 +253,35 @@ jobs:
           git config --global user.name "sulhicmz-bot"
           git config --global user.email "bot@sulhicmz.com"
           
-          # 3. Checkout target branch (agent-workspace)
-          # Fetch if exists, or create orphan/new if not
-          git fetch origin agent-workspace:agent-workspace || git checkout -b agent-workspace
-          git checkout agent-workspace
+          # 3. Checkout target branch (Logic diperbaiki)
+          # Fetch SEMUA history dulu untuk memastikan kita tahu state remote
+          git fetch origin
+          
+          # Coba checkout branch remote yang sudah ada. 
+          # Flag -B (kapital) akan mereset branch lokal agar SAMA PERSIS dengan remote.
+          # Jika remote belum ada, baru kita buat orphan branch (kosong) atau branch baru.
+          git checkout -B agent-workspace origin/agent-workspace 2>/dev/null || git checkout --orphan agent-workspace
           
           # 4. Restore report to the correct location
           mkdir -p docs
           cp /tmp/system-health.md docs/system-health.md
           
-          # 5. Commit and Push to agent-workspace (Not Protected)
+          # 5. Commit and Push
           git add docs/system-health.md
+          
           if git diff --staged --quiet; then
             echo "No changes to report"
           else
             git commit -m "chore(ci): update system health report [skip ci]"
-            # Force push if needed to ensure agent-workspace is up to date with report
+            
+            # 6. Safety Pull (Rebase)
+            # Tarik perubahan terbaru jika ada workflow lain yang berjalan bersamaan
+            git pull origin agent-workspace --rebase --autostash || true
+            
+            # 7. Push
             git push origin agent-workspace
           fi
-
+          
       - name: Trigger Smart CI (If Failed)
         if: env.CHECKS_FAILED == 'true'
         env:
