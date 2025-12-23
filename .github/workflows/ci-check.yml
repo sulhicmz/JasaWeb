@@ -317,15 +317,22 @@ jobs:
           mkdir -p docs
           cp /tmp/system-health.md docs/system-health.md
           
-          # 5. Commit and Push to agent-workspace (Not Protected)
+          # 5. Commit and Push
           git add docs/system-health.md
+          
           if git diff --staged --quiet; then
             echo "No changes to report"
           else
             git commit -m "chore(ci): update system health report [skip ci]"
+            
+            # 6. Safety Pull (Rebase)
+            # Tarik perubahan terbaru jika ada workflow lain yang berjalan bersamaan
+            git pull origin agent-workspace --rebase --autostash || true
+            
+            # 7. Push
             git push origin agent-workspace
           fi
-
+          
       - name: Trigger Smart CI (If Failed)
         if: env.CHECKS_FAILED == 'true'
         env:
