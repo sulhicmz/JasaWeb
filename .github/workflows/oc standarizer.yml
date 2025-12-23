@@ -122,6 +122,10 @@ jobs:
           - **Modern Syntax**: Use React Hooks (`useState`, `useEffect`) and Functional Components.
           - **Optimization**: Use `lazy` loading for heavy components.
           - **Validation**: Ensure `pnpm build` passes.
+          - **Production Safety**:
+              - Check for **Hydration Mismatches** (React text content does not match server-rendered HTML).
+              - Verify **Asset Paths** (Images/Fonts) work in both `dev` and production build structures.
+              - Ensure `client:load` vs `client:visible` directives are used correctly in Astro.
           
           ### **PHASE 3: DELIVERY**
           1.  **Documentation**: Update `docs/task.md` (Mark as done).
@@ -179,10 +183,12 @@ jobs:
           1.  **Branch Management**: Sync `agent-workspace` from `dev`.
           2.  **Code Trace**: If fixing a bug, TRACE the data flow from API Endpoint -> Service -> DB.
           3.  **Root Cause**: Don't just patch; fix the root cause.
-          4.  **Deployment Reality Check**: If CI passes but Prod fails (Error 500):
-              - Suspect **Edge Runtime Incompatibility** (using Node.js APIs not available in Workers).
-              - Suspect **Missing Environment Variables/Secrets** in Cloudflare.
-              - Suspect **Database Connection Pooling** issues (Serverless limits).
+          3.  **Root Cause**: Don't just patch; fix the root cause.
+          4.  **Production Failure Analysis** (CI Green / Prod Red):
+              - **Status 500/1101**: Check Edge Runtime limits, missing Env Vars, or Node.js polyfill issues.
+              - **Status 404**: Check `_routes.json`, file-based routing logic, or SPA fallback handlers.
+              - **Status 403/401**: Check CORS configuration (`allowedOrigins`), Cookie attributes (`Secure`, `SameSite`), or excessive RLS rules.
+              - **Timeouts**: Check for long-running DB queries affecting Worker limits (max 10ms-30s).
           
           ### **PHASE 2: IMPLEMENTATION (Surgical Precision)**
           - **Type Safety**: No `any`. Define Zod schemas for validation.
