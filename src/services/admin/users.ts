@@ -6,7 +6,9 @@
 
 import type { PrismaClient } from '@prisma/client';
 import type { Project } from '@prisma/client';
+import type { KVNamespace } from '@/lib/types';
 import { hashPassword } from '@/lib/auth';
+import { createDashboardCacheService } from '@/lib/dashboard-cache';
 
 // ==============================================
 // SERVICE INTERFACES
@@ -78,12 +80,113 @@ export interface PaginatedUsers {
 // ==============================================
 
 export class AdminUserService {
-    constructor(private prisma: PrismaClient) {}
+    private cacheService: ReturnType<typeof createDashboardCacheService>;
+
+    constructor(
+        private prisma: PrismaClient,
+        kv?: KVNamespace
+    ) {
+        this.cacheService = kv ? createDashboardCacheService(kv) : null as any;
+    }
 
     /**
-     * Get dashboard statistics
+     * Get dashboard statistics with Redis caching
      */
     async getDashboardStats(): Promise<AdminDashboardStats> {
+        // If cache service is available, try cache-aside pattern
+        if (this.cacheService) {
+            return this.getDashboardStatsWithCache();
+        }
+
+        // Fallback to direct database queries
+        return this.getDashboardStatsFromDB();
+    }
+
+    /**
+     * Get dashboard statistics using cache-aside pattern
+     */
+    private async getDashboardStatsWithCache(): Promise<AdminDashboardStats> {
+        // Try to get recent users and projects from cache first
+        const [cachedRecentUsers, cachedRecentProjects] = await Promise.all([
+            this.cacheService.getOrSetRecentUsers(() => 
+                this.prisma.user.findMany({
+                    take: 5,
+                    orderBy: { createdAt: 'desc' },
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                        createdAt: true
+                    }
+                })
+            ),
+            this.cacheService.getOrSetRecentProjects(() =>
+                this.prisma.project.findMany({
+                    take: 5,
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true
+                            }
+                        }
+                    }
+                })
+            )
+        ]);
+
+        // Get or set main dashboard stats from cache
+        const cachedStats = await this.cacheService.getOrSetDashboardStats(
+            async () => {
+                const [
+                    totalUsers,
+                    totalProjects,
+                    totalRevenue,
+                    activeProjects,
+                    pendingPayments
+                ] = await Promise.all([
+                    this.prisma.user.count(),
+                    this.prisma.project.count(),
+                    this.prisma.invoice.aggregate({
+                        where: { status: 'paid' },
+                        _sum: { amount: true }
+                    }),
+                    this.prisma.project.count({
+                        where: { status: { in: ['in_progress', 'review'] } }
+                    }),
+                    this.prisma.invoice.count({
+                        where: { status: 'unpaid' }
+                    })
+                ]);
+
+                return {
+                    totalUsers,
+                    totalProjects,
+                    totalRevenue: Number(totalRevenue._sum.amount || 0),
+                    activeProjects,
+                    pendingPayments
+                };
+            }
+        );
+
+        return {
+            totalUsers: cachedStats.totalUsers,
+            totalProjects: cachedStats.totalProjects,
+            totalRevenue: cachedStats.totalRevenue,
+            activeProjects: cachedStats.activeProjects,
+            pendingPayments: cachedStats.pendingPayments,
+            recentUsers: cachedRecentUsers.items,
+            recentProjects: cachedRecentProjects.items
+        };
+    }
+
+    /**
+     * Get dashboard statistics directly from database (fallback)
+     */
+    private async getDashboardStatsFromDB(): Promise<AdminDashboardStats> {
         const [
             totalUsers,
             totalProjects,
@@ -254,6 +357,14 @@ export class AdminUserService {
             }
         });
 
+        // Invalidate dashboard cache when user is created
+        if (this.cacheService) {
+            await Promise.all([
+                this.cacheService.invalidateDashboardStats(),
+                this.cacheService.invalidateRecentItems()
+            ]);
+        }
+
         return user;
     }
 
@@ -270,7 +381,12 @@ export class AdminUserService {
     }> {
         const user = await this.prisma.user.update({
             where: { id },
-            data,
+            data: {
+                ...(data.name && { name: data.name }),
+                ...(data.email && { email: data.email }),
+                ...(data.phone !== undefined && { phone: data.phone }),
+                ...(data.role && { role: data.role })
+            },
             select: {
                 id: true,
                 name: true,
@@ -280,6 +396,15 @@ export class AdminUserService {
                 createdAt: true
             }
         });
+
+        // Invalidate relevant cache when user is updated
+        if (this.cacheService) {
+            await Promise.all([
+                this.cacheService.invalidateDashboardStats(),
+                this.cacheService.invalidateRecentItems(),
+                this.cacheService.invalidateUserStats(id)
+            ]);
+        }
 
         return user;
     }
@@ -300,6 +425,15 @@ export class AdminUserService {
         await this.prisma.user.delete({
             where: { id }
         });
+
+        // Invalidate cache when user is deleted
+        if (this.cacheService) {
+            await Promise.all([
+                this.cacheService.invalidateDashboardStats(),
+                this.cacheService.invalidateRecentItems(),
+                this.cacheService.invalidateUserStats(id)
+            ]);
+        }
     }
 
     /**
@@ -324,6 +458,9 @@ export class AdminUserService {
 // FACTORY FUNCTION
 // ==============================================
 
-export function createAdminService(prisma: PrismaClient): AdminUserService {
-    return new AdminUserService(prisma);
+export function createAdminService(
+    prisma: PrismaClient,
+    kv?: KVNamespace
+): AdminUserService {
+    return new AdminUserService(prisma, kv);
 }

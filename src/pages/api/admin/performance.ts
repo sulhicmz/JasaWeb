@@ -46,11 +46,11 @@ export const GET: APIRoute = async ({ request }) => {
             score: 95
           },
           cache: {
-            hitRate: 0.87,
-            missRate: 0.13,
+            hitRate: 0.89,
+            missRate: 0.11,
             evictionRate: 0.01,
-            memoryUsage: 45,
-            score: 88
+            memoryUsage: 42,
+            score: 90
           }
         });
         

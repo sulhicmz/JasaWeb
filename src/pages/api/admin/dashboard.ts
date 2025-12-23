@@ -16,9 +16,10 @@ export const GET: APIRoute = async (context) => {
         if (authError) return authError;
 
         const prisma = getPrisma(context.locals);
-        const adminService = createAdminService(prisma);
+        const kv = context.locals.runtime.env?.JASAWEB_CACHE as any;
+        const adminService = createAdminService(prisma, kv);
 
-        // Get dashboard statistics using service layer
+        // Get dashboard statistics using service layer with caching
         const stats = await adminService.getDashboardStats();
 
         return jsonResponse(stats);
