@@ -1,4 +1,4 @@
-name: oc smart-ci
+name: smart ci
 
 on:
   workflow_dispatch:
