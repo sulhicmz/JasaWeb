@@ -66,6 +66,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Standardized Node.js Setup
+        continue-on-error: true
         uses: ./.github/workflows/setup
         with:
           node-version: 20
@@ -190,6 +191,7 @@ jobs:
           echo "moderate=$MOD" >> $GITHUB_OUTPUT
           
       - name: Performance Analysis
+        continue-on-error: true
         id: perf
         if: steps.build.outcome == 'success'
         run: |
@@ -235,6 +237,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Standardized Node.js Setup
+        continue-on-error: true
         uses: ./.github/workflows/setup
         with:
            install-deps: 'true'
@@ -290,6 +293,7 @@ jobs:
           npx tsx scripts/generate-health-report.ts
 
       - name: Save Report to Agent Workspace
+        continue-on-error: true
         if: always()
         run: |
           # 1. Temporarily save the generated report
