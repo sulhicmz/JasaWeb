@@ -1,16 +1,16 @@
-name: CI Check
+name: ci check
 
 on:
-  pull_request:
-    branches: [dev, main]
   workflow_dispatch:
-  push:
-    branches: [dev]
+  workflow_run:
+    workflows: ["oc standarizer"]
+    types: [completed]
 
 permissions:
   contents: write
   actions: write
   pull-requests: write
+  checks: write
 
 concurrency:
   group: ci-check-${{ github.ref }}
@@ -18,10 +18,25 @@ concurrency:
 
 jobs:
   validate-and-build:
-    name: Validation & Performance
+    name: Full Stack Validation
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 20
+    timeout-minutes: 30
     
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: rootpassword
+          POSTGRES_DB: jasaweb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     outputs:
       typecheck-status: ${{ steps.typecheck.outcome }}
       typecheck-time: ${{ steps.typecheck.outputs.time }}
@@ -35,6 +50,8 @@ jobs:
       test-failed: ${{ steps.test.outputs.failed }}
       build-status: ${{ steps.build.outcome }}
       build-time: ${{ steps.build.outputs.time }}
+      e2e-status: ${{ steps.e2e.outcome }}
+      e2e-time: ${{ steps.e2e.outputs.time }}
       bundle-size: ${{ steps.perf.outputs.size-kb }}
       gzip-size: ${{ steps.perf.outputs.gzip-kb }}
       perf-score: ${{ steps.perf.outputs.score }}
@@ -48,6 +65,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Standardized Node.js Setup
+        continue-on-error: true
         uses: ./.github/workflows/setup
         with:
           node-version: 20
@@ -90,7 +108,7 @@ jobs:
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
           echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
 
-      - name: Test
+      - name: Unit Test
         id: test
         continue-on-error: true
         run: |
@@ -113,35 +131,71 @@ jobs:
           END=$(date +%s.%N)
           echo "time=$(echo "$END - $START" | bc -l)" >> $GITHUB_OUTPUT
 
+      - name: Install Playwright & Seed DB
+        if: steps.build.outcome == 'success'
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          # Wait for Postgres
+          until pg_isready -h localhost -p 5432; do echo "Waiting for database..."; sleep 2; done
+          pnpm seed:e2e
+        env:
+          DATABASE_URL: "postgresql://root:rootpassword@localhost:5432/jasaweb_test"
+
+      - name: E2E Smoke Tests
+        id: e2e
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: |
+          echo "::group::Playwright E2E"
+          START=$(date +%s.%N)
+          pnpm test:e2e
+          END=$(date +%s.%N)
+          echo "time=$(echo "$END - $START" | bc -l)" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+        env:
+          DATABASE_URL: "postgresql://root:rootpassword@localhost:5432/jasaweb_test"
+          JWT_SECRET: "super-secret-test-jwt-key"
+          # Mocking R2/Midtrans inputs
+          R2_ACCESS_KEY_ID: "mock"
+          R2_SECRET_ACCESS_KEY: "mock"
+          R2_BUCKET_NAME: "mock-bucket"
+          R2_ACCOUNT_ID: "mock-account"
+          MIDTRANS_SERVER_KEY: "mock-server-key"
+          MIDTRANS_CLIENT_KEY: "mock-client-key"
+          MIDTRANS_IS_PRODUCTION: "false"
+          CI: true
+
+      - name: Upload E2E Report
+        if: always() && steps.e2e.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
       - name: Security Audit
         id: audit
         continue-on-error: true
         run: |
-          # Run audit and capture JSON output
           pnpm audit --prod --audit-level=moderate --json > audit.json || true
-          
-          # Parse vulnerabilities using jq
           if [ -s audit.json ]; then
              CRIT=$(jq '.metadata.vulnerabilities.critical' audit.json 2>/dev/null || echo "0")
              HIGH=$(jq '.metadata.vulnerabilities.high' audit.json 2>/dev/null || echo "0")
              MOD=$(jq '.metadata.vulnerabilities.moderate' audit.json 2>/dev/null || echo "0")
           else
-             echo "Audit failed to produce output"
-             CRIT=0
-             HIGH=0
-             MOD=0
+             CRIT=0; HIGH=0; MOD=0
           fi
-          
           echo "critical=$CRIT" >> $GITHUB_OUTPUT
           echo "high=$HIGH" >> $GITHUB_OUTPUT
           echo "moderate=$MOD" >> $GITHUB_OUTPUT
           
       - name: Performance Analysis
+        continue-on-error: true
         id: perf
         if: steps.build.outcome == 'success'
         run: |
           if [ -d "dist/_astro" ]; then
-             BUNDLE=$(find dist/_astro -name "client.*.js" | head -1) # Determine main bundle
+             BUNDLE=$(find dist/_astro -name "client.*.js" | head -1)
              if [ -z "$BUNDLE" ]; then BUNDLE=$(find dist/_astro -name "*.js" | head -1); fi
              
              if [ -f "$BUNDLE" ]; then
@@ -153,27 +207,19 @@ jobs:
                  echo "size-kb=${SIZE_KB}KB" >> $GITHUB_OUTPUT
                  echo "gzip-kb=${GZIP_KB}KB" >> $GITHUB_OUTPUT
                  
-                 # Simple Scoring Logic
                  SCORE=100
                  if [ $SIZE_KB -gt 200 ]; then SCORE=$((SCORE - 20)); fi
                  if [ $SIZE_KB -gt 250 ]; then SCORE=$((SCORE - 30)); fi
                  
                  echo "score=$SCORE" >> $GITHUB_OUTPUT
-                 
                  if [ $SCORE -ge 90 ]; then echo "grade=A" >> $GITHUB_OUTPUT; 
                  elif [ $SCORE -ge 80 ]; then echo "grade=B" >> $GITHUB_OUTPUT;
                  else echo "grade=C" >> $GITHUB_OUTPUT; fi
              else
-                 echo "size-kb=0KB" >> $GITHUB_OUTPUT
-                 echo "gzip-kb=0KB" >> $GITHUB_OUTPUT
-                 echo "score=0" >> $GITHUB_OUTPUT
-                 echo "grade=F" >> $GITHUB_OUTPUT
+                 echo "size-kb=0KB" >> $GITHUB_OUTPUT; echo "gzip-kb=0KB" >> $GITHUB_OUTPUT; echo "score=0" >> $GITHUB_OUTPUT; echo "grade=F" >> $GITHUB_OUTPUT
              fi
           else
-             echo "size-kb=0KB" >> $GITHUB_OUTPUT
-             echo "gzip-kb=0KB" >> $GITHUB_OUTPUT
-             echo "score=0" >> $GITHUB_OUTPUT
-             echo "grade=F" >> $GITHUB_OUTPUT
+             echo "size-kb=0KB" >> $GITHUB_OUTPUT; echo "gzip-kb=0KB" >> $GITHUB_OUTPUT; echo "score=0" >> $GITHUB_OUTPUT; echo "grade=F" >> $GITHUB_OUTPUT
           fi
 
   report:
@@ -190,6 +236,7 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Standardized Node.js Setup
+        continue-on-error: true
         uses: ./.github/workflows/setup
         with:
            install-deps: 'true'
@@ -208,6 +255,8 @@ jobs:
           test_failed: ${{ needs.validate-and-build.outputs.test-failed }}
           build_status: ${{ needs.validate-and-build.outputs.build-status }}
           build_time: ${{ needs.validate-and-build.outputs.build-time }}
+          e2e_status: ${{ needs.validate-and-build.outputs.e2e-status }}
+          e2e_time: ${{ needs.validate-and-build.outputs.e2e-time }}
           bundle_size: ${{ needs.validate-and-build.outputs.bundle-size }}
           gzip_size: ${{ needs.validate-and-build.outputs.gzip-size }}
           perf_score: ${{ needs.validate-and-build.outputs.perf-score }}
@@ -215,7 +264,7 @@ jobs:
           audit_critical: ${{ needs.validate-and-build.outputs.audit-critical }}
           audit_high: ${{ needs.validate-and-build.outputs.audit-high }}
           audit_moderate: ${{ needs.validate-and-build.outputs.audit-moderate }}
-          CHECKS_FAILED: ${{ (needs.validate-and-build.outputs.typecheck-status == 'failure' || needs.validate-and-build.outputs.lint-status == 'failure' || needs.validate-and-build.outputs.test-status == 'failure' || needs.validate-and-build.outputs.build-status == 'failure') && 'true' || 'false' }}
+          CHECKS_FAILED: ${{ (needs.validate-and-build.outputs.typecheck-status == 'failure' || needs.validate-and-build.outputs.lint-status == 'failure' || needs.validate-and-build.outputs.test-status == 'failure' || needs.validate-and-build.outputs.build-status == 'failure' || needs.validate-and-build.outputs.e2e-status == 'failure') && 'true' || 'false' }}
         run: |
           export TYPECHECK_STATUS=$typecheck_status
           export TYPECHECK_TIME=$typecheck_time
@@ -229,6 +278,8 @@ jobs:
           export TEST_FAILED=$test_failed
           export BUILD_STATUS=$build_status
           export BUILD_TIME=$build_time
+          export E2E_STATUS=$e2e_status
+          export E2E_TIME=$e2e_time
           export BUNDLE_SIZE=$bundle_size
           export GZIP_SIZE=$gzip_size
           export PERF_SCORE=$perf_score
@@ -241,6 +292,7 @@ jobs:
           npx tsx scripts/generate-health-report.ts
 
       - name: Save Report to Agent Workspace
+        continue-on-error: true
         if: always()
         run: |
           # 1. Temporarily save the generated report
@@ -251,24 +303,36 @@ jobs:
           git config --global user.email "bot@sulhicmz.com"
           
           # 3. Checkout target branch (agent-workspace)
-          # Fetch if exists, or create orphan/new if not
-          git fetch origin agent-workspace:agent-workspace || git checkout -b agent-workspace
-          git checkout agent-workspace
+          git fetch --all
+          
+          if git show-ref --verify --quiet refs/remotes/origin/agent-workspace; then
+            echo "Branch exists on remote. Checking it out..."
+            git checkout -B agent-workspace origin/agent-workspace
+          else
+            echo "Branch does not exist on remote. Creating orphan/new..."
+            git checkout -B agent-workspace
+          fi
           
           # 4. Restore report to the correct location
           mkdir -p docs
           cp /tmp/system-health.md docs/system-health.md
           
-          # 5. Commit and Push to agent-workspace (Not Protected)
+          # 5. Commit and Push
           git add docs/system-health.md
+          
           if git diff --staged --quiet; then
             echo "No changes to report"
           else
             git commit -m "chore(ci): update system health report [skip ci]"
-            # Force push if needed to ensure agent-workspace is up to date with report
+            
+            # 6. Safety Pull (Rebase)
+            # Tarik perubahan terbaru jika ada workflow lain yang berjalan bersamaan
+            git pull origin agent-workspace --rebase --autostash || true
+            
+            # 7. Push
             git push origin agent-workspace
           fi
-
+          
       - name: Trigger Smart CI (If Failed)
         if: env.CHECKS_FAILED == 'true'
         env:

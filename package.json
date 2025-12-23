@@ -26,7 +26,9 @@
         "docs:api": "node -e \"const { generateOpenApiJson } = require('./dist/lib/openapi-generator.js'); console.log(generateOpenApiJson());\" > openapi.json",
         "docs:validate": "node -e \"const { validateOpenApiSpec, getEndpointCount, getSchemaCount } = require('./dist/lib/openapi-generator.js'); console.log('✅ OpenAPI spec is valid'); console.log('📊 Endpoints:', getEndpointCount()); console.log('📝 Schemas:', getSchemaCount());\"",
         "prepare": "prisma generate",
-        "preinstall": "npx only-allow pnpm"
+        "preinstall": "npx only-allow pnpm",
+        "seed:e2e": "prisma db push --accept-data-loss && tsx prisma/seed-e2e.ts",
+        "test:e2e": "playwright test"
     },
     "dependencies": {
         "@astrojs/check": "^0.9.4",
@@ -47,6 +49,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@playwright/test": "^1.40.1",
         "@testing-library/react": "^16.3.1",
         "@types/bcryptjs": "^2.4.6",
         "@types/midtrans-client": "^1.4.0",
@@ -68,6 +71,7 @@
         "rollup-plugin-visualizer": "^5.12.0",
         "swagger-ui-dist": "^5.31.0",
         "terser": "^5.44.1",
+        "tsx": "^4.7.0",
         "vite-bundle-analyzer": "^0.7.0",
         "vitest": "^4.0.16",
         "wrangler": "^4.56.0"
