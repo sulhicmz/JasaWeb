@@ -336,7 +336,9 @@ export class PerformanceIntelligenceService {
       
       // Calculate confidence bounds
       const stdError = Math.sqrt(residualSumSquares / (n - 2));
-      const margin = 1.96 * stdError * Math.sqrt(1 + 1/n + Math.pow(steps, 2) / sumXX);
+      // Handle perfect linear fit case with minimum margin
+      const marginTerm = Math.sqrt(1 + 1/n + Math.pow(steps, 2) / sumXX);
+      const margin = stdError > 0 ? 1.96 * stdError * marginTerm : Math.abs(futureValue) * 0.05;
       
       return {
         timestamp: this.getFutureTimestamp(timeframe),

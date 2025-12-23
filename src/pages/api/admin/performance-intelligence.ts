@@ -60,27 +60,29 @@ export const GET: APIRoute = async ({ request, locals }) => {
     }
 
     switch (type) {
-      case 'summary':
+      case 'summary': {
         const summary = performanceIntelligence.getIntelligenceSummary();
         return jsonResponse({
           summary,
           currentMetrics,
           timestamp: new Date().toISOString()
         });
+      }
 
-      case 'anomalies':
+      case 'anomalies': {
         const anomalies = performanceIntelligence.getAnomalies({ 
-      severity: severity || undefined, 
-      metric: metric || undefined, 
-      timeRange 
-    });
+          severity: severity || undefined, 
+          metric: metric || undefined, 
+          timeRange 
+        });
         return jsonResponse({
           anomalies,
           count: anomalies.length,
           timestamp: new Date().toISOString()
         });
+      }
 
-      case 'predictions':
+      case 'predictions': {
         if (metric) {
           const prediction = performanceIntelligence.getPrediction(metric);
           if (!prediction) {
@@ -95,16 +97,18 @@ export const GET: APIRoute = async ({ request, locals }) => {
             timestamp: new Date().toISOString()
           });
         }
+      }
 
-      case 'patterns':
+      case 'patterns': {
         const patterns = performanceIntelligence.getPatterns({ metric: metric || undefined });
         return jsonResponse({
           patterns,
           count: patterns.length,
           timestamp: new Date().toISOString()
         });
+      }
 
-      case 'intelligence':
+      case 'intelligence': {
         // Full intelligence report
         const fullSummary = performanceIntelligence.getIntelligenceSummary();
         const allAnomalies = performanceIntelligence.getAnomalies();
@@ -128,6 +132,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
           currentMetrics,
           lastUpdated: new Date().toISOString()
         });
+      }
 
       default:
         return errorResponse('Invalid intelligence type. Use: summary, anomalies, predictions, patterns, or intelligence', 400);
@@ -164,7 +169,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { action, metrics } = body;
 
     switch (action) {
-      case 'add-metrics':
+      case 'add-metrics': {
         if (!metrics || typeof metrics !== 'object') {
           return errorResponse('Invalid metrics data provided', 400);
         }
@@ -177,8 +182,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
           metricsCount: Object.keys(metrics).length,
           timestamp: new Date().toISOString()
         });
-
-      case 'clear-data':
+      }
+      case 'clear-data': {
         // Clear all intelligence data (for testing/reset purposes)
         performanceIntelligence.clearData();
         
@@ -186,8 +191,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
           message: 'Performance intelligence data cleared',
           timestamp: new Date().toISOString()
         });
+      }
 
-      case 'reset-anomalies':
+      case 'reset-anomalies': {
         // Clear only anomalies
         const currentAnomalies = performanceIntelligence.getAnomalies();
         
@@ -196,6 +202,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           clearedCount: currentAnomalies.length,
           timestamp: new Date().toISOString()
         });
+      }
 
       default:
         return errorResponse('Invalid action. Use: add-metrics, clear-data, or reset-anomalies', 400);

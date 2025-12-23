@@ -105,7 +105,7 @@ describe('Performance Intelligence API Integration', () => {
 
     it('should generate meaningful predictions', () => {
       // Add trend data
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 30; i++) {
         performanceIntelligence.addMetrics({
           'performance_score': 100 - i * 2, // Degrading trend
           'response_time': 50 + i * 3,     // Increasing trend
@@ -182,8 +182,8 @@ describe('Performance Intelligence API Integration', () => {
       // Clear and test degraded system
       performanceIntelligence.clearData();
 
-      // Add problematic data
-      for (let i = 0; i < 15; i++) {
+      // Add problematic data (enough to trigger analysis)
+      for (let i = 0; i < 25; i++) {
         performanceIntelligence.addMetrics({
           'performance_score': 60 - Math.random() * 10,
           'error_rate': 0.05 + Math.random() * 0.05
