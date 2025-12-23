@@ -21,6 +21,7 @@ jobs:
     name: Pick and Execute Task
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -35,11 +36,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-      - name: Checkout
+      - name: Checkout agent-workspace
         uses: actions/checkout@v4
         with:
+          ref: agent-workspace
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
+
+      - name: Merge Dev (Ensure Freshness)
+        run: |
+          git config --global user.name "sulhicmz"
+          git config --global user.email "22936450+sulhicmz@users.noreply.github.com"
+          git fetch origin dev
+          git merge origin/dev --no-edit || echo "Merge conflict ignored. Continuing with agent-workspace state."
 
       - name: Standardized Node.js Setup
         uses: ./.github/workflows/setup

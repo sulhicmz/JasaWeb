@@ -47,7 +47,50 @@ Platform jasa pembuatan website (Sekolah, Berita, Company Profile) dengan client
 | Register | Form pendaftaran client |
 | Login | Form login untuk client/admin |
 
-### 3.2 Client Portal
+### 3.2 Advanced Performance Intelligence System (NEW)
+
+The JasaWeb platform now includes an advanced performance intelligence system with ML-based analytics and predictive capabilities.
+
+#### 3.2.1 Core Intelligence Features
+
+| Feature | Description | Technical Implementation |
+|---------|-------------|--------------------------|
+| **Anomaly Detection** | Real-time statistical analysis to detect performance spikes and drops | Z-score based detection with configurable thresholds |
+| **Predictive Analytics** | Machine learning-powered forecasting for performance metrics | Linear regression with confidence intervals |
+| **Pattern Recognition** | Automatic detection of seasonal and cyclical patterns | Auto-correlation analysis |
+| **Intelligent Alerting** | Reduced false positives through confidence scoring | Multi-level severity classification |
+
+#### 3.2.2 Intelligence Service Architecture
+
+```typescript
+// Core service interface
+interface PerformanceIntelligenceService {
+  addMetrics(data: Record<string, number>): void;
+  getAnomalies(options?: AnomalyFilter): PerformanceAnomaly[];
+  getPrediction(metric: string): PerformancePrediction | null;
+  getPatterns(options?: PatternFilter): PerformancePattern[];
+  getIntelligenceSummary(): IntelligenceSummary;
+}
+```
+
+#### 3.2.3 Data Processing Pipeline
+
+1. **Data Ingestion**: Real-time metrics collection from existing monitoring systems
+2. **Statistical Analysis**: Rolling window analysis with configurable sensitivity
+3. **ML Processing**: Linear regression for trend prediction and forecasting
+4. **Pattern Detection**: Auto-correlation for seasonal/cyclical patterns
+5. **Intelligence Generation**: Comprehensive summaries with risk assessments
+
+#### 3.2.4 Integration Points
+
+- **Performance Monitor**: Existing `performance-monitoring.ts` integration
+- **Dashboard Cache**: Enhanced caching for intelligence data
+- **Admin APIs**: New `/api/admin/performance-intelligence` endpoint
+- **Client Dashboard**: Advanced performance visualizations
+
+---
+
+### 3.3 Client Portal
 
 | Halaman | Deskripsi |
 |---------|-----------|
