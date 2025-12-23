@@ -100,19 +100,22 @@ jobs:
           ${{ env.HEALTH_CONTEXT }}
           
           **OBJECTIVE:**
-          Scan `docs/task.md` for UI/UX related tasks (tagged [UI], [UX], or implying visual changes) and execute ONE high-impact task.
+          Scan `docs/task.md` for UI/UX related tasks (tagged `[UI]`, `[UX]`).
+          
+          **STRICT TASK SELECTION PROTOCOL:**
+          1.  Read `docs/task.md`.
+          2.  Look for open tasks specifically tagged `[UI]` or `[UX]`.
+          3.  **CRITICAL**: If NO task with these tags is found, output "No relevant UI tasks found." and **EXIT** immediately. **DO NOT** invent work or refactor randomly.
+          4.  If found, pick ONE high-impact task.
           
           ---
           
           ### **PHASE 1: VISUAL ANALYSIS**
           1.  **Branch Management**: Use shared branch `agent-workspace`.
-              - `git fetch --all`.
-              - `git checkout agent-workspace` (or create if missing).
-              - `git merge origin/dev --no-edit` (Sync).
+              - `git fetch --all`
+              - `git checkout agent-workspace`
+              - `git merge origin/dev --no-edit`
           2.  **Review Scope**: Focus ONLY on `src/components`, `src/pages`, or `src/styles`.
-          3.  **Task Selection**: 
-              - Look for: "Fix overlap", "Add animation", "Redesign card", "Mobile view broken".
-              - If no strict UI task exists, find a UI component that looks "Basic" and elevate its design to "Premium".
           
           ### **PHASE 2: IMPLEMENTATION (The "Wow" Factor)**
           - **Defensive UI**: Always check if properties exist before rendering. Use Optional Chaining `?.`.
@@ -162,8 +165,13 @@ jobs:
           ${{ env.HEALTH_CONTEXT }}
           
           **OBJECTIVE:**
-          Scan `docs/task.md` for Backend/Bug-related tasks (tagged [FIX], [BE], [DB], [SEC]).
-          Or check `docs/bug.md` for open issues.
+          Scan `docs/task.md` for Backend/Bug-related tasks (tagged `[FIX]`, `[BE]`, `[DB]`, `[SEC]`) OR `docs/bug.md`.
+          
+          **STRICT TASK SELECTION PROTOCOL:**
+          1.  Read `docs/task.md` and `docs/bug.md`.
+          2.  Look for open tasks/bugs tagged `[FIX]`, `[BE]`, `[DB]`, or `[SEC]`.
+          3.  **CRITICAL**: If NO relevant task is found, output "No backend tasks found." and **EXIT** immediately. **DO NOT** invent work.
+          4.  If found, pick ONE task (Prioritize Critical Bugs).
           
           ---
           
@@ -219,8 +227,13 @@ jobs:
           ${{ env.HEALTH_CONTEXT }}
           
           **OBJECTIVE:**
-          Scan `docs/task.md` for Architecture/refactoring tasks (tagged [ARCH], [TEST], [DOC], [REFACTOR]).
-          OR analyze the Codebase for "Code Smells" (Large functions, Magic numbers, Tightly coupled modules).
+          Scan `docs/task.md` for Architecture/refactoring tasks (tagged `[ARCH]`, `[TEST]`, `[DOC]`, `[REFACTOR]`).
+          
+          **STRICT TASK SELECTION PROTOCOL:**
+          1.  Read `docs/task.md`.
+          2.  Look for open tasks tagged `[ARCH]`, `[TEST]`, `[DOC]`, or `[REFACTOR]`.
+          3.  **CRITICAL**: If NO relevant task is found, output "No architecture tasks found." and **EXIT** immediately. **DO NOT** invent work.
+          4.  If found, pick ONE task.
           
           ---
           
