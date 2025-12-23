@@ -240,17 +240,33 @@ jobs:
           # Run the typescript script directly
           npx tsx scripts/generate-health-report.ts
 
-      - name: Commit Report
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      - name: Save Report to Agent Workspace
+        if: always()
         run: |
+          # 1. Temporarily save the generated report
+          cp docs/system-health.md /tmp/system-health.md
+          
+          # 2. Configure Git
           git config --global user.name "sulhicmz-bot"
           git config --global user.email "bot@sulhicmz.com"
+          
+          # 3. Checkout target branch (agent-workspace)
+          # Fetch if exists, or create orphan/new if not
+          git fetch origin agent-workspace:agent-workspace || git checkout -b agent-workspace
+          git checkout agent-workspace
+          
+          # 4. Restore report to the correct location
+          mkdir -p docs
+          cp /tmp/system-health.md docs/system-health.md
+          
+          # 5. Commit and Push to agent-workspace (Not Protected)
           git add docs/system-health.md
           if git diff --staged --quiet; then
             echo "No changes to report"
           else
             git commit -m "chore(ci): update system health report [skip ci]"
-            git push
+            # Force push if needed to ensure agent-workspace is up to date with report
+            git push origin agent-workspace
           fi
 
       - name: Trigger Smart CI (If Failed)
