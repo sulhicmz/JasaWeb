@@ -124,7 +124,10 @@ jobs:
           5.  **Strategic Updates**:
               - **`AGENTS.md`**: Update this file with new "Rules of Engagement" or warnings based on your findings (e.g., "Warning: Auth module is fragile, touch with caution").
               - **`docs/architecture/roadmap.md`**: Add specific tasks to address the weaknesses found in `docs/evaluasi.md` (e.g., "Refactor: Decouple User Service").
-              - **`docs/task.md`**: Update status of existing tasks if verified completed.
+              - **`docs/task.md`**: Update task list. **MANDATORY**: Tag every new task to assign it to a specialist:
+                  - `[UI]` -> For Frontend & UX tasks.
+                  - `[FIX]` -> For Bugs, Backend, or Security tasks.
+                  - `[ARCH]` -> For Refactoring, Testing, or Documentation tasks.
 
           **CONSTRAINTS:**
           - **DO NOT** change any `.ts`, `.tsx`, `.js`, or business logic files.
