@@ -48,18 +48,23 @@ jobs:
           cache-scope: 'standarizer'
           install-deps: 'true'
 
-      - name: Machine Diagnostics
-        id: diagnostics
-        continue-on-error: true
+      - name: Load System Health Context
+        id: context
         run: |
-          echo "MACHINE_CONTEXT<<EOF" >> $GITHUB_ENV
-          echo "### 🚩 MACHINE DIAGNOSTICS REPORT ###" >> $GITHUB_ENV
-          echo "Checked at: $(date)" >> $GITHUB_ENV
-          echo -e "\n--- LINT STATUS ---" >> $GITHUB_ENV
-          pnpm lint --if-present > lint.log 2>&1 || (echo "FAILED:" && tail -n 20 lint.log) >> $GITHUB_ENV
-          echo -e "\n--- BUILD STATUS ---" >> $GITHUB_ENV
-          pnpm build --if-present > build.log 2>&1 || (echo "FAILED:" && tail -n 20 build.log) >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          if [ -f "docs/system-health.md" ]; then
+            echo "Loading system health report..."
+            HEALTH_REPORT=$(cat docs/system-health.md)
+          else
+            echo "Health report not found. Triggering fresh diagnostic..."
+            HEALTH_REPORT="System Health Report not available. Proceed with caution."
+          fi
+          
+          # Safe multiline storage for GITHUB_ENV
+          {
+            echo 'HEALTH_CONTEXT<<EOF'
+            echo "$HEALTH_REPORT"
+            echo 'EOF' 
+          } >> $GITHUB_ENV
 
       - name: Configure Git
         run: |
@@ -76,7 +81,7 @@ jobs:
       - name: Execute
         run: |
           opencode run "$(cat <<'PROMPT'
-          You are a **Senior Perfectionist Software Architect & Developer** specialized in GitHub workflows.
+          You are a **Worldclass Software Architect & Developer** specialized in GitHub workflows.
           Your Core Principles are non-negotiable:
           - **Stability**: Zero regression policy.
           - **Performance**: Every millisecond counts.
@@ -92,8 +97,8 @@ jobs:
           - Cloudflare KV & R2
           - Midtrans (payment)
 
-          **CONTEXT (Machine Diagnostics):**
-          ${{ env.MACHINE_CONTEXT }}
+          **LATEST SYSTEM HEALTH:**
+          ${{ env.HEALTH_CONTEXT }}
 
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
@@ -182,8 +187,8 @@ jobs:
           **CONTEXT:**
           You are tasked with resolving technical debt or bugs.
           
-          **Machine Diagnostics Status:**
-          ${{ env.MACHINE_CONTEXT }}
+          **LATEST SYSTEM HEALTH:**
+          ${{ env.HEALTH_CONTEXT }}
           Your source of truth for issues is `docs/bug.md` or the remote repository Issue Tracker.
           TECH STACK:
           - Astro + React
@@ -253,8 +258,8 @@ jobs:
           - Cloudflare KV & R2
           - Midtrans (payment)
 
-          **CONTEXT (Machine Diagnostics):**
-          ${{ env.MACHINE_CONTEXT }}
+          **LATEST SYSTEM HEALTH:**
+          ${{ env.HEALTH_CONTEXT }}
 
           **OBJECTIVE:**
           Analyze the current state of the repository and execute ONE clearly scoped task from the list below.
@@ -351,8 +356,8 @@ jobs:
           - Neon PostgreSQL + Prisma
           - Midtrans Core API (Modular Payment Integration)
 
-          **CONTEXT (Machine Diagnostics):**
-          ${{ env.MACHINE_CONTEXT }}
+          **LATEST SYSTEM HEALTH:**
+          ${{ env.HEALTH_CONTEXT }}
 
           **OBJECTIVE:**
           Analyze the repository and execute ONE task that moves the needle toward a more **modular** and **standardized** ecosystem.
