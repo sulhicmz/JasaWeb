@@ -32,7 +32,7 @@ const ENV_VARS: EnvSpec[] = [
         description: 'Application environment (development/production)',
         validator: (value) => ['development', 'production', 'test'].includes(value),
     },
-    
+
     // Database (Neon PostgreSQL)
     {
         name: 'DATABASE_URL',
@@ -40,7 +40,7 @@ const ENV_VARS: EnvSpec[] = [
         description: 'Neon PostgreSQL connection string',
         validator: (value) => value.startsWith('postgresql://') && value.includes('sslmode=require'),
     },
-    
+
     // Authentication
     {
         name: 'JWT_SECRET',
@@ -48,7 +48,7 @@ const ENV_VARS: EnvSpec[] = [
         description: 'JWT signing secret (min 32 characters)',
         validator: (value) => value.length >= 32,
     },
-    
+
     // Midtrans Payment Gateway
     {
         name: 'MIDTRANS_SERVER_KEY',
@@ -68,7 +68,7 @@ const ENV_VARS: EnvSpec[] = [
         description: 'Midtrans production mode flag (true/false)',
         validator: (value) => ['true', 'false'].includes(value.toLowerCase()),
     },
-    
+
     // Optional: Cloudflare (usually managed by platform)
     {
         name: 'CLOUDFLARE_API_TOKEN',
@@ -87,18 +87,18 @@ function validateEnvVar(spec: EnvSpec, value: string | undefined): { isValid: bo
             error: `Required environment variable '${spec.name}' is missing`
         };
     }
-    
+
     if (!value && !spec.required) {
         return { isValid: true };
     }
-    
+
     if (spec.validator && value && !spec.validator(value)) {
         return {
             isValid: false,
             error: `Environment variable '${spec.name}' has invalid value. Expected: ${spec.description}`
         };
     }
-    
+
     return { isValid: true };
 }
 
@@ -106,44 +106,58 @@ function validateEnvVar(spec: EnvSpec, value: string | undefined): { isValid: bo
  * Validate all environment variables
  * This should be called during application startup
  */
-export function validateEnvironment(): EnvValidationResult {
+export function validateEnvironment(runtimeEnv?: Record<string, any>): EnvValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
-    
+
     for (const spec of ENV_VARS) {
-        const value = import.meta.env[spec.name];
+        // Prioritize runtime env (Cloudflare), fallback to import.meta.env (Vite/Build)
+        const value = runtimeEnv?.[spec.name] || import.meta.env[spec.name];
+
+        // Special handling for DATABASE_URL with Hyperdrive
+        if (spec.name === 'DATABASE_URL' && !value && runtimeEnv?.HYPERDRIVE) {
+             // database is configured via Hyperdrive
+             continue;
+        }
+
         const result = validateEnvVar(spec, value);
-        
+
         if (!result.isValid) {
             errors.push(result.error!);
         }
-        
+
         // Check for common misconfigurations
         if (value && spec.name.includes('SECRET') && value.length < 32) {
             warnings.push(`'${spec.name}' should be at least 32 characters for security`);
         }
-        
+
         if (value && spec.name.includes('KEY') && value.includes('xxx')) {
             warnings.push(`'${spec.name}' appears to be using placeholder value`);
         }
     }
-    
+
     // Additional cross-variable validation
     const isProduction = import.meta.env.NODE_ENV === 'production';
-    
+
     if (isProduction) {
-        const requiredInProd = ['DATABASE_URL', 'JWT_SECRET', 'MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY'];
+        const requiredInProd = ['JWT_SECRET', 'MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY'];
         for (const varName of requiredInProd) {
-            if (!import.meta.env[varName]) {
+            const hasValue = runtimeEnv?.[varName] || import.meta.env[varName];
+            if (!hasValue) {
                 errors.push(`'${varName}' is required in production environment`);
             }
         }
+        
+        // Check DATABASE_URL only if Hyperdrive is NOT present
+        if (!runtimeEnv?.HYPERDRIVE && !import.meta.env.DATABASE_URL && !runtimeEnv?.DATABASE_URL) {
+             errors.push(`'DATABASE_URL' is required in production environment (or Hyperdrive binding)`);
+        }
     }
-    
+
     // Check for development vs production Midtrans configuration
     const midtransServerKey = import.meta.env.MIDTRANS_SERVER_KEY;
     const midtransIsProduction = import.meta.env.MIDTRANS_IS_PRODUCTION === 'true';
-    
+
     if (midtransServerKey) {
         const isSandboxKey = midtransServerKey.startsWith('SB-Mid-server-');
         if (isSandboxKey && midtransIsProduction) {
@@ -153,7 +167,7 @@ export function validateEnvironment(): EnvValidationResult {
             warnings.push('Using production Midtrans key in development environment');
         }
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors,
@@ -173,7 +187,7 @@ export function getEnvironmentInfo(): {
     const database = import.meta.env.DATABASE_URL ? 'configured' : 'missing';
     const payment = (import.meta.env.MIDTRANS_SERVER_KEY && import.meta.env.MIDTRANS_CLIENT_KEY) ? 'configured' : 'missing';
     const auth = import.meta.env.JWT_SECRET ? 'configured' : 'missing';
-    
+
     return {
         environment: import.meta.env.NODE_ENV || 'unknown',
         database,
@@ -231,10 +245,10 @@ export type ServiceId = 'sekolah' | 'berita' | 'company';
 
 // Template categories - extracted from inline hardcode
 export const templateCategories = [
-  { value: 'all' as const, label: 'Semua' },
-  { value: 'sekolah', label: 'Web Sekolah' },
-  { value: 'berita', label: 'Portal Berita' },
-  { value: 'company', label: 'Company Profile' },
+    { value: 'all' as const, label: 'Semua' },
+    { value: 'sekolah', label: 'Web Sekolah' },
+    { value: 'berita', label: 'Portal Berita' },
+    { value: 'company', label: 'Company Profile' },
 ] as const;
 
 export type TemplateCategory = typeof templateCategories[number]['value'];

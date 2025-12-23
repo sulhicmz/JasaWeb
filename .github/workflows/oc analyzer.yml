@@ -54,6 +54,22 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> $GITHUB_PATH
 
+      - name: Load System Health Context
+        id: context
+        run: |
+          if [ -f "docs/system-health.md" ]; then
+            HEALTH_REPORT=$(cat docs/system-health.md)
+          else
+            HEALTH_REPORT="System Health Report: Not available (Fresh Run)."
+          fi
+          
+          # Safe multiline storage for GITHUB_ENV
+          {
+            echo 'HEALTH_CONTEXT<<EOF'
+            echo "$HEALTH_REPORT"
+            echo 'EOF' 
+          } >> $GITHUB_ENV
+
       - name: Execute
         run: |
           opencode run "$(cat <<'PROMPT'
@@ -69,6 +85,10 @@ jobs:
 
           **CONTEXT:**
           You have been summoned to evaluate the current state of the repository on the `dev` branch.
+          
+          **LATEST SYSTEM HEALTH:**
+          ${{ env.HEALTH_CONTEXT }}
+          
           Your goal is to provide a transparent, evidence-based health check and update the strategic documents.
 
           **TASK SCOPE:**

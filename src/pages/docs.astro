@@ -1,0 +1,321 @@
+---
+/**
+ * API Documentation Page with Swagger UI
+ * Interactive API exploration and testing interface
+ */
+import Layout from '@/layouts/Layout.astro';
+
+const apiTitle = 'JasaWeb API Documentation';
+const apiDescription = 'Interactive API documentation for the JasaWeb platform. Explore, test, and integrate with our comprehensive API for website building services.';
+---
+
+<Layout title={apiTitle} description={apiDescription}>
+  <section class="docs-header">
+    <h1>{apiTitle}</h1>
+    <p>{apiDescription}</p>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="endpoint-count">25+</div>
+        <div class="stat-label">API Endpoints</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="schema-count">15+</div>
+        <div class="stat-label">Data Schemas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">API Categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Test Coverage</div>
+      </div>
+    </div>
+
+    <div class="download-buttons">
+      <a href="/api/docs" download="jasaweb-api.json" class="download-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7,10 12,15 17,10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download OpenAPI Spec
+      </a>
+      <a href="#swagger-ui" class="download-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        Explore Interactive Docs
+      </a>
+    </div>
+  </section>
+
+  <div id="swagger-ui-container" class="swagger-ui-container">
+    <div class="loading-spinner">
+      <div class="loading-dots">
+        <span>🚀</span> Loading interactive API documentation...
+      </div>
+    </div>
+  </div>
+
+  <!-- Swagger UI Resources -->
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.31.0/swagger-ui.css" />
+  
+  <script src="https://unpkg.com/swagger-ui-dist@5.31.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.31.0/swagger-ui-standalone-preset.js"></script>
+
+  <script>
+    // Initialize Swagger UI when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.getElementById('swagger-ui-container');
+      
+      // Load the OpenAPI specification
+      fetch('/api/docs')
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then((spec) => {
+          // Update stats
+          const endpointCount = Object.keys(spec.paths || {}).length;
+          const schemaCount = Object.keys(spec.components?.schemas || {}).length;
+          
+          const endpointCountEl = document.getElementById('endpoint-count');
+          const schemaCountEl = document.getElementById('schema-count');
+          
+          if (endpointCountEl) {
+            endpointCountEl.textContent = endpointCount + '+';
+          }
+          if (schemaCountEl) {
+            schemaCountEl.textContent = schemaCount + '+';
+          }
+
+          // Initialize Swagger UI
+          if (container && (window as any).SwaggerUIBundle) {
+            (window as any).SwaggerUIBundle({
+              url: '/api/docs',
+              dom_id: '#swagger-ui-container',
+              deepLinking: true,
+              presets: [
+                (window as any).SwaggerUIBundle.presets.apis,
+                (window as any).SwaggerUIStandalonePreset
+              ],
+              plugins: [
+                (window as any).SwaggerUIBundle.plugins.DownloadUrl
+              ],
+              layout: "StandaloneLayout",
+              defaultModelsExpandDepth: 2,
+              defaultModelExpandDepth: 2,
+              tryItOutEnabled: true,
+              displayOperationId: false,
+              showExtensions: true,
+              showCommonExtensions: true,
+              docExpansion: "list",
+              filter: true,
+              supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+              onComplete: function() {
+                console.log("Swagger UI loaded successfully");
+              },
+              requestInterceptor: function(request: any) {
+                // Add any request customizations here
+                return request;
+              },
+              responseInterceptor: function(response: any) {
+                // Add any response customizations here
+                return response;
+              },
+              onSubmit: function(args: any) {
+                // Handle form submission
+                console.log('API request submitted:', args);
+              },
+              onError: function(error: any) {
+                console.error('Swagger UI error:', error);
+                if (container) {
+                  container.innerHTML = `
+                    <div class="error-container">
+                      <div class="error-icon">⚠️</div>
+                      <h3>Failed to load API documentation</h3>
+                      <p>We encountered an error while loading the interactive documentation.</p>
+                      <button onclick="location.reload()" class="download-btn">Retry</button>
+                    </div>
+                  `;
+                }
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading OpenAPI spec:', error);
+          if (container) {
+            container.innerHTML = `
+              <div class="error-container">
+                <div class="error-icon">⚠️</div>
+                <h3>Failed to load API documentation</h3>
+                <p>We encountered an error while loading the interactive documentation.</p>
+                <p><strong>Error:</strong> ${error.message}</p>
+                <div class="download-buttons">
+                  <a href="/api/docs" download="jasaweb-api.json" class="download-btn">
+                    Download OpenAPI Spec
+                  </a>
+                  <button onclick="location.reload()" class="download-btn">Retry</button>
+                </div>
+              </div>
+            `;
+          }
+        });
+    });
+
+    // Add smooth scroll behavior
+    document.querySelectorAll('a[href^="#"]').forEach((anchor: Element) => {
+      anchor.addEventListener('click', function (e: Event) {
+        e.preventDefault();
+        const anchorEl = anchor as HTMLAnchorElement;
+        const target = document.querySelector(anchorEl.getAttribute('href') || '');
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  </script>
+
+  <style>
+    .swagger-ui-container {
+      min-height: calc(100vh - 200px);
+    }
+
+    .swagger-ui .topbar {
+      display: none;
+    }
+
+    .docs-header {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      color: var(--color-text);
+      padding: 3rem 0;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .docs-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .docs-header p {
+      font-size: 1.125rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      max-width: 800px;
+      margin: 0 auto 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .download-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: var(--radius-md);
+      color: var(--color-text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all var(--transition-normal);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+
+    .download-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 400px;
+      font-size: 1.125rem;
+      color: var(--color-text-secondary);
+    }
+
+    .error-container {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--color-error);
+    }
+
+    .error-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .docs-header h1 {
+        font-size: 2rem;
+      }
+
+      .docs-header p {
+        font-size: 1rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</Layout>
