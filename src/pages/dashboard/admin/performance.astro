@@ -1,0 +1,38 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { siteConfig } from '@/lib/config';
+import PerformanceDashboard from '@/components/ui/PerformanceDashboard.astro';
+
+// Fetch initial performance data
+let initialData = null;
+let error = '';
+
+try {
+  const response = await fetch(`${siteConfig.url}/api/admin/performance?type=comprehensive`, {
+    headers: {
+      'Cookie': Astro.request.headers.get('Cookie') || '',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch performance data');
+  }
+  
+  initialData = await response.json();
+} catch (e) {
+  error = e instanceof Error ? e.message : 'Unknown error';
+}
+---
+
+<AdminLayout title="Performance Metrics" currentPath="/dashboard/admin/performance">
+  {error && (
+    <div class="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-lg mb-6">
+      <p>Error loading performance data: {error}</p>
+    </div>
+  )}
+
+  <PerformanceDashboard 
+    initialData={initialData}
+    currentPath="/dashboard/admin/performance"
+  />
+</AdminLayout>
