@@ -68,7 +68,7 @@
 - [ ] **LOW PRIORITY**: Background job queue for notifications and report generation
 
 ## Immediate Action Required (Latest Independent Audit - Dec 23, 2025)
-- [FIX] **HIGH PRIORITY**: [PERF-TEST] Adjust performance test threshold in `src/lib/performance.test.ts:186` from 2ms to 5ms for realistic unit test environment - restore 100% test pass rate
+- [FIX] **MEDIUM PRIORITY**: [PERF-TEST] Adjust performance test threshold in `src/lib/performance.test.ts:186` from 2ms to 5ms for realistic unit test environment - restore 100% test pass rate
 
 ## Outstanding Tasks for Future Excellence (Based on Latest Independent Audit - Dec 23, 2025 - FINAL VERIFICATION)
 - [x] **CRITICAL UPDATE**: [PERF-TEST] All 464 tests now passing with 100% reliability - test issues resolved ✅ COMPLETED
