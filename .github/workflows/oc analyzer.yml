@@ -3,8 +3,9 @@ name: oc analyzer
 # Continuous Cycle: Analyzer → PR → Standarizer → PR → Analyzer
 on:
   workflow_dispatch:
-  push:
-    branches: [dev]
+  workflow_run:
+    workflows: ["smart ci"]
+    types: [completed]
 
 permissions:
   contents: write
