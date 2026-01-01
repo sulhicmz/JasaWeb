@@ -62,6 +62,12 @@ export class DashboardCacheService {
         revenueByPeriod: (period: string) => `dashboard:revenue:${period}:v1`,
         projectStatusCounts: () => 'dashboard:projects:status:counts:v1',
         invoiceStats: () => 'dashboard:invoices:stats:v1',
+        // BI Layer Keys
+        biRevenueHistory: (period: string) => `bi:revenue:history:${period}:v1`,
+        biRevenueByType: () => 'bi:revenue:by-type:v1',
+        biUserGrowth: (period: string) => `bi:users:growth:${period}:v1`,
+        biProjectGrowth: (period: string) => `bi:projects:growth:${period}:v1`,
+        biSummary: () => 'bi:summary:v1',
     } as const;
 
     // ========================================
@@ -297,6 +303,90 @@ export class DashboardCacheService {
     }
 
     // ========================================
+    // BI LAYER CACHING
+    // ========================================
+
+    async getBIRevenueHistory(period: string): Promise<any | null> {
+        return cacheGet<any>(
+            this.kv,
+            DashboardCacheService.KEYS.biRevenueHistory(period)
+        );
+    }
+
+    async setBIRevenueHistory(period: string, data: any): Promise<void> {
+        await cacheSet(
+            this.kv,
+            DashboardCacheService.KEYS.biRevenueHistory(period),
+            { ...data, lastUpdated: new Date().toISOString() },
+            { ttl: this.config.aggregationTTL }
+        );
+    }
+
+    async getBIRevenueByType(): Promise<any | null> {
+        return cacheGet<any>(
+            this.kv,
+            DashboardCacheService.KEYS.biRevenueByType()
+        );
+    }
+
+    async setBIRevenueByType(data: any): Promise<void> {
+        await cacheSet(
+            this.kv,
+            DashboardCacheService.KEYS.biRevenueByType(),
+            { ...data, lastUpdated: new Date().toISOString() },
+            { ttl: this.config.aggregationTTL }
+        );
+    }
+
+    async getBIUserGrowth(period: string): Promise<any | null> {
+        return cacheGet<any>(
+            this.kv,
+            DashboardCacheService.KEYS.biUserGrowth(period)
+        );
+    }
+
+    async setBIUserGrowth(period: string, data: any): Promise<void> {
+        await cacheSet(
+            this.kv,
+            DashboardCacheService.KEYS.biUserGrowth(period),
+            { ...data, lastUpdated: new Date().toISOString() },
+            { ttl: this.config.aggregationTTL }
+        );
+    }
+
+    async getBIProjectGrowth(period: string): Promise<any | null> {
+        return cacheGet<any>(
+            this.kv,
+            DashboardCacheService.KEYS.biProjectGrowth(period)
+        );
+    }
+
+    async setBIProjectGrowth(period: string, data: any): Promise<void> {
+        await cacheSet(
+            this.kv,
+            DashboardCacheService.KEYS.biProjectGrowth(period),
+            { ...data, lastUpdated: new Date().toISOString() },
+            { ttl: this.config.aggregationTTL }
+        );
+    }
+
+    async getBISummary(): Promise<any | null> {
+        return cacheGet<any>(
+            this.kv,
+            DashboardCacheService.KEYS.biSummary()
+        );
+    }
+
+    async setBISummary(data: any): Promise<void> {
+        await cacheSet(
+            this.kv,
+            DashboardCacheService.KEYS.biSummary(),
+            { ...data, lastUpdated: new Date().toISOString() },
+            { ttl: this.config.aggregationTTL }
+        );
+    }
+
+    // ========================================
     // CACHE INVALIDATION
     // ========================================
 
@@ -308,6 +398,18 @@ export class DashboardCacheService {
         await cacheDelete(this.kv, DashboardCacheService.KEYS.dashboardStats());
         await cacheDelete(this.kv, DashboardCacheService.KEYS.projectStatusCounts());
         await cacheDelete(this.kv, DashboardCacheService.KEYS.invoiceStats());
+
+        // Invalidate BI cache as well since it depends on the same data
+        await this.invalidateBIStats();
+    }
+
+    async invalidateBIStats(): Promise<void> {
+        await cacheDelete(this.kv, DashboardCacheService.KEYS.biRevenueByType());
+        await cacheDelete(this.kv, DashboardCacheService.KEYS.biSummary());
+        // For parameterized keys, we might need a pattern match delete or just let them expire
+        // If kv supports listing by prefix, we could do that.
+        // Our cacheInvalidateByPrefix supports this.
+        await cacheInvalidateByPrefix(this.kv, 'bi:');
     }
 
     /**
