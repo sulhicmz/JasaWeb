@@ -1,0 +1,190 @@
+---
+/**
+ * MetricCard.astro
+ * 
+ * Displays a single metric with value, trend, and comparison data
+ * 
+ * @example
+ * ```astro
+ * <MetricCard 
+ *   title="API Response Time"
+ *   value={45}
+ *   unit="ms"
+ *   trend="down"
+ *   previousValue={47}
+ *   status="healthy"
+ * />
+ * ```
+ */
+
+export type TrendDirection = 'up' | 'down' | 'stable';
+
+export interface Props {
+  title: string;
+  value: number;
+  unit?: string;
+  trend: TrendDirection;
+  previousValue: number;
+  status: 'healthy' | 'warning' | 'critical';
+}
+
+const { title, value, unit = '', trend, previousValue, status } = Astro.props;
+
+function getTrendIcon(trendDirection: TrendDirection): string {
+  const icons: Record<TrendDirection, string> = {
+    up: '📈',
+    down: '📉',
+    stable: '➡️'
+  };
+  return icons[trendDirection];
+}
+
+function getStatusColor(statusValue: 'healthy' | 'warning' | 'critical'): string {
+  const colors: Record<'healthy' | 'warning' | 'critical', string> = {
+    healthy: 'var(--color-success)',
+    warning: 'var(--color-secondary)',
+    critical: 'var(--color-error)'
+  };
+  return colors[statusValue];
+}
+
+function formatValue(val: number, unitStr: string): string {
+  if (unitStr === '%') {
+    return `${(val * 100).toFixed(2)}${unitStr}`;
+  }
+  return `${val}${unitStr}`;
+}
+
+const trendIcon = getTrendIcon(trend);
+const statusColor = getStatusColor(status);
+const formattedValue = formatValue(value, unit);
+const formattedPrevious = formatValue(previousValue, unit);
+---
+
+<article 
+  class="metric-card glass-card" 
+  role="article"
+  aria-label="{title} metric: {formattedValue}, trend: {trend}"
+  tabindex="0"
+  data-status={status}
+>
+  <div class="metric-content">
+    <header class="metric-header">
+      <h4 class="metric-title">{title}</h4>
+      <div 
+        class="metric-trend" 
+        aria-label="Trend: {trend}"
+        role="img"
+      >
+        <span class="trend-icon" aria-hidden="true">{trendIcon}</span>
+        <span class="trend-value">{trend}</span>
+      </div>
+    </header>
+    
+    <div 
+      class="metric-value-large" 
+      aria-live="polite"
+      aria-label="Current value: {formattedValue}"
+    >
+      {formattedValue}
+    </div>
+    
+    <div 
+      class="metric-change" 
+      aria-label="Previous value was {formattedPrevious}"
+    >
+      Previous: {formattedPrevious}
+    </div>
+  </div>
+</article>
+
+<style>
+  .metric-card {
+    padding: 1.5rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .metric-card:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .metric-card[data-status="critical"] .metric-value-large {
+    color: var(--color-error);
+  }
+
+  .metric-card[data-status="warning"] .metric-value-large {
+    color: var(--color-secondary);
+  }
+
+  .metric-card[data-status="healthy"] .metric-value-large {
+    color: white;
+  }
+
+  .metric-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .metric-title {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .metric-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .trend-icon {
+    font-size: 0.875rem;
+  }
+
+  .trend-value {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+  }
+
+  .metric-value-large {
+    font-size: 2rem;
+    font-weight: 700;
+    transition: transform 0.3s ease;
+  }
+
+  .metric-value-large.updated {
+    transform: scale(1.1);
+  }
+
+  .metric-change {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    .metric-value-large {
+      font-size: 1.5rem;
+    }
+  }
+</style>

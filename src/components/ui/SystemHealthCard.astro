@@ -1,0 +1,201 @@
+---
+/**
+ * SystemHealthCard.astro
+ * 
+ * Displays system component health status with response time and metadata
+ * 
+ * @example
+ * ```astro
+ * <SystemHealthCard 
+ *   name="Database"
+ *   status="healthy"
+ *   responseTime={12}
+ *   lastCheck={new Date().toISOString()}
+ *   description="PostgreSQL with connection pooling"
+ * />
+ * ```
+ */
+import Card from './Card.astro';
+
+export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'down';
+
+export interface Props {
+  name: string;
+  status: HealthStatus;
+  responseTime: number;
+  lastCheck: string;
+  description: string;
+}
+
+const { name, status, responseTime, lastCheck, description } = Astro.props;
+
+function getStatusLabel(statusValue: HealthStatus): string {
+  const labels: Record<HealthStatus, string> = {
+    healthy: 'Operational',
+    warning: 'Degraded',
+    critical: 'Critical',
+    down: 'Offline'
+  };
+  return labels[statusValue];
+}
+
+function getStatusColor(statusValue: HealthStatus): string {
+  const colors: Record<HealthStatus, string> = {
+    healthy: 'var(--color-success)',
+    warning: 'var(--color-secondary)',
+    critical: 'var(--color-error)',
+    down: 'var(--color-error)'
+  };
+  return colors[statusValue];
+}
+
+const statusLabel = getStatusLabel(status);
+const statusColor = getStatusColor(status);
+const lastCheckDate = new Date(lastCheck);
+---
+
+<article 
+  class={`system-health-card glass-card ${status}`} 
+  role="article"
+  aria-label="{name} component status: {statusLabel}"
+  tabindex="0"
+>
+  <div class="health-content">
+    <header class="health-header">
+      <div class="health-info">
+        <h3 class="component-name">{name}</h3>
+        <p class="component-description">{description}</p>
+      </div>
+      <div 
+        class="health-status" 
+        role="status"
+        aria-live="polite"
+      >
+        <span 
+          class={`status-dot ${status}`} 
+          aria-hidden="true"
+          style="background-color: {statusColor}"
+        ></span>
+        <span class="status-text">{statusLabel}</span>
+      </div>
+    </header>
+    
+    <dl class="health-metrics" role="list">
+      <div class="metric-row" role="listitem">
+        <dt class="metric-label">Response Time</dt>
+        <dd class="metric-value">{responseTime}ms</dd>
+      </div>
+      <div class="metric-row" role="listitem">
+        <dt class="metric-label">Last Check</dt>
+        <dd class="metric-value">
+          <time datetime={lastCheck}>{lastCheckDate.toLocaleTimeString()}</time>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</article>
+
+<style>
+  .system-health-card {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+
+  .system-health-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .system-health-card:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .health-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .health-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .component-name {
+    color: white;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+  }
+
+  .component-description {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .health-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .status-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .health-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .metric-label {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .metric-value {
+    color: white;
+    font-weight: 600;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @media (max-width: 768px) {
+    .health-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .health-status {
+      align-self: flex-start;
+    }
+  }
+</style>
