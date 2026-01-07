@@ -18,6 +18,22 @@ interface CacheStats {
     lastReset: Date;
 }
 
+interface RedisClient {
+    get(key: string): Promise<string | null>;
+    setEx(key: string, ttl: number, value: string): Promise<unknown>;
+    del(key: string | string[]): Promise<number>;
+    scanStream(options: ScanStreamOptions): AsyncIterable<string[]>;
+    ping(): Promise<string>;
+    quit(): Promise<string>;
+    on(event: string, callback: (...args: unknown[]) => void): void;
+    connect(): Promise<void>;
+}
+
+interface ScanStreamOptions {
+    match?: string;
+    count?: number;
+}
+
 class RedisCacheService {
     private config: {
         host: string;
@@ -27,7 +43,7 @@ class RedisCacheService {
         maxRetries: number;
         retryDelay: number;
     };
-    private redis: any = null;
+    private redis: RedisClient | null = null;
     private stats: CacheStats;
     private isAvailable: boolean = false;
     private mockCache: Map<string, { value: string; expiry: number }> = new Map();
@@ -86,7 +102,7 @@ class RedisCacheService {
                     }
                     return deleted;
                 },
-scanStream: (options: any) => {
+                scanStream: (options: ScanStreamOptions): AsyncIterable<string[]> => {
                     const pattern = options.match || '*';
                     const patternParts = pattern.split(':');
                     
@@ -115,8 +131,8 @@ scanStream: (options: any) => {
                     for (let i = 0; i < matchingKeys.length; i += options.count || 100) {
                         chunks.push(matchingKeys.slice(i, i + (options.count || 100)));
                     }
-                    
-                    return (function* generator() {
+
+                    return (async function* asyncGenerator() {
                         for (const chunk of chunks) {
                             yield chunk;
                         }
@@ -145,7 +161,7 @@ scanStream: (options: any) => {
     /**
      * Get cached value
      */
-    async get<T = any>(key: string): Promise<T | null> {
+    async get<T = unknown>(key: string): Promise<T | null> {
         if (!this.isAvailable || !this.redis) {
             this.stats.misses++;
             return null;
@@ -173,7 +189,7 @@ scanStream: (options: any) => {
     /**
      * Set cache value
      */
-    async set(key: string, value: any, options: CacheOptions = {}): Promise<boolean> {
+    async set(key: string, value: unknown, options: CacheOptions = {}): Promise<boolean> {
         if (!this.isAvailable || !this.redis) {
             this.stats.misses++;
             return false;
@@ -259,7 +275,7 @@ scanStream: (options: any) => {
     /**
      * Get or set pattern (fetch from cache or compute and cache)
      */
-    async getOrSet<T = any>(
+    async getOrSet<T = unknown>(
         key: string,
         fetcher: () => Promise<T>,
         options: CacheOptions = {}

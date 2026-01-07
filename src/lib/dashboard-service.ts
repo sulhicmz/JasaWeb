@@ -5,8 +5,9 @@
 
 import cacheService from './redis-cache';
 import { getPrisma } from './prisma';
-import type { Project, Invoice } from '@prisma/client';
+import type { Project, Invoice, Prisma, ProjectStatus } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
+import type { RuntimeEnv } from './types.js';
 
 interface DashboardStats {
     totalUsers: number;
@@ -171,8 +172,8 @@ export class DashboardService {
                 // Calculate user statistics
                 const stats = {
                     totalProjects: projects.length,
-                    activeProjects: projects.filter((p: any) => p.status === 'in_progress').length,
-                    completedProjects: projects.filter((p: any) => p.status === 'completed').length,
+                    activeProjects: projects.filter((p: Project) => p.status === 'in_progress').length,
+                    completedProjects: projects.filter((p: Project) => p.status === 'completed').length,
                     totalSpent: invoices
                         .filter(inv => inv.status === 'paid')
                         .reduce((sum, inv) => sum + Number(inv.amount), 0),
@@ -211,7 +212,7 @@ export class DashboardService {
     } = {}): Promise<{ projects: Project[]; total: number; performance: PerformanceMetrics }> {
         const startTime = Date.now();
         const cacheKey = `dashboard:projects:${JSON.stringify(options)}`;
-        
+
         return await this.cache.getOrSet(
             cacheKey,
             async () => {
@@ -219,14 +220,13 @@ export class DashboardService {
                     throw new Error('Database not available');
                 }
 
-                const where: any = {};
+                const where: Prisma.ProjectWhereInput = {};
                 if (options.status) {
-                    where.status = options.status;
+                    where.status = options.status as ProjectStatus;
                 }
                 if (options.search) {
                     where.OR = [
-                        { name: { contains: options.search, mode: 'insensitive' } },
-                        { type: { contains: options.search, mode: 'insensitive' } }
+                        { name: { contains: options.search, mode: 'insensitive' } }
                     ];
                 }
 
@@ -402,8 +402,21 @@ export class DashboardService {
      * Get cache performance metrics
      */
     async getCacheMetrics(): Promise<{
-        stats: any;
-        health: any;
+        stats: {
+            hits: number;
+            misses: number;
+            sets: number;
+            deletes: number;
+            errors: number;
+            lastReset: Date;
+            hitRate: number;
+            isAvailable: boolean;
+        };
+        health: {
+            isHealthy: boolean;
+            responseTime?: number;
+            error?: string;
+        };
         recommendations: string[];
     }> {
         const [stats, health] = await Promise.all([
@@ -441,8 +454,9 @@ export function createDashboardService(prismaInstance: PrismaClient): DashboardS
 }
 
 // Export factory function for standalone usage
-export function createDashboardServiceFromLocals(locals: any): DashboardService {
-    const prismaInstance = getPrisma(locals);
+export function createDashboardServiceFromLocals(locals: RuntimeEnv): DashboardService {
+    const appLocals = { runtime: { env: locals } } as App.Locals;
+    const prismaInstance = getPrisma(appLocals);
     return new DashboardService(prismaInstance, cacheService);
 }
 

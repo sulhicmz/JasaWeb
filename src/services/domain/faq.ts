@@ -1,4 +1,5 @@
 import { getPrisma } from '../../lib/prisma';
+import type { RuntimeEnv } from '../../lib/types.js';
 
 /**
  * FAQ Service
@@ -15,8 +16,10 @@ export interface FAQ {
 export class FaqService {
   private prisma;
 
-  constructor(runtime: any) {
-    this.prisma = getPrisma(runtime);
+  constructor(runtime: RuntimeEnv | { env: RuntimeEnv }) {
+    const env = (runtime as { env: RuntimeEnv }).env || runtime as RuntimeEnv;
+    const locals = { runtime: { env } } as App.Locals;
+    this.prisma = getPrisma(locals);
   }
 
   /**
@@ -114,6 +117,6 @@ export class FaqService {
 /**
  * Get FAQ service instance
  */
-export function getFaqService(runtime: any): FaqService {
+export function getFaqService(runtime: RuntimeEnv | { env: RuntimeEnv }): FaqService {
   return new FaqService(runtime);
 }

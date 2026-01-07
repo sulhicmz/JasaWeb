@@ -4,6 +4,7 @@
  */
 import type { PrismaClient } from '@prisma/client';
 import { getPrisma } from '../../lib/prisma.js';
+import type { RuntimeEnv } from '../../lib/types.js';
 
 export interface PricingPlan {
   id: string;
@@ -179,7 +180,9 @@ export class PricingService {
 }
 
 // Create singleton instance
-export function getPricingService(env: any): PricingService {
-  const prisma = getPrisma(env);
+export function getPricingService(runtime: RuntimeEnv | { env: RuntimeEnv }): PricingService {
+  const env = (runtime as { env: RuntimeEnv }).env || runtime as RuntimeEnv;
+  const locals = { runtime: { env } } as App.Locals;
+  const prisma = getPrisma(locals);
   return new PricingService(prisma);
 }

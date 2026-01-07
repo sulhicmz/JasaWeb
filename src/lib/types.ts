@@ -230,7 +230,7 @@ export interface CloudflareRuntime {
 // Interface for runtime environment (as passed to functions)
 export interface RuntimeEnv {
     DATABASE_URL?: string;
-    HYPERDRIVE?: string;
+    HYPERDRIVE?: string | { connectionString: string };
     JWT_SECRET?: string;
     MIDTRANS_SERVER_KEY?: string;
     MIDTRANS_CLIENT_KEY?: string;

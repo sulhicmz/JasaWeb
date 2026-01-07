@@ -54,6 +54,36 @@ export interface OptimizationTip {
   implementation: string;
 }
 
+export interface BundleData extends Record<string, unknown> {
+  totalSize?: number;
+  gzipSize?: number;
+  chunks?: ChunkInfo[];
+  dependencies?: DependencyInfo[];
+}
+
+export interface BuildSummary {
+  totalSize: number;
+  gzipSize: number;
+  compressionRatio: number;
+  chunkCount: number;
+  dependencyCount: number;
+}
+
+export interface BundleReport {
+  summary: BuildSummary;
+  analysis: BundleAnalysis;
+  score: number;
+  status: string;
+  timestamp?: string;
+}
+
+export interface BundleReportInput {
+  summary?: BuildSummary;
+  analysis?: BundleAnalysis;
+  score?: number;
+  status?: string;
+}
+
 export interface PerformanceThresholds {
   maxBundleSize: number; // KB
   maxChunkSize: number; // KB
@@ -89,7 +119,7 @@ export class BundleAnalyzer {
   /**
    * Analyze bundle performance and provide optimization recommendations
    */
-  analyze(bundleData: any): BundleAnalysis {
+  analyze(bundleData: BundleData): BundleAnalysis {
     const metrics = this.extractBundleMetrics(bundleData);
     return this.performBundleAnalysis(metrics);
   }
@@ -97,32 +127,29 @@ export class BundleAnalyzer {
   /**
    * Generate bundle size report from build statistics
    */
-  generateBundleReport(buildStats: any): {
-    summary: any;
-    analysis: BundleAnalysis;
-    score: number;
-    status: string;
-  } {
+  generateBundleReport(buildStats: BundleData): BundleReport {
     const metrics = this.extractBundleMetrics(buildStats);
     const analysis = this.performBundleAnalysis(metrics);
     const score = this.calculateBundleScore(metrics);
     const status = this.getPerformanceStatus(score);
 
+    const summary: BuildSummary = {
+      totalSize: Math.round(metrics.totalSize / 1024), // KB
+      gzipSize: Math.round(metrics.gzipSize / 1024), // KB
+      compressionRatio: Math.round((metrics.gzipSize / metrics.totalSize) * 100),
+      chunkCount: metrics.chunks?.length || 0,
+      dependencyCount: metrics.dependencies?.length || 0
+    };
+
     return {
-      summary: {
-        totalSize: Math.round(metrics.totalSize / 1024), // KB
-        gzipSize: Math.round(metrics.gzipSize / 1024), // KB
-        compressionRatio: Math.round((metrics.gzipSize / metrics.totalSize) * 100),
-        chunkCount: metrics.chunks?.length || 0,
-        dependencyCount: metrics.dependencies?.length || 0
-      },
+      summary,
       analysis,
       score,
       status
     };
   }
 
-  private extractBundleMetrics(bundleData: Record<string, unknown>): BundleMetrics {
+  private extractBundleMetrics(bundleData: BundleData): BundleMetrics {
     // Use actual build data from Vite build output (189.71KB total, 60.75KB gzipped)
     const totalSize = typeof bundleData.totalSize === 'number' ? bundleData.totalSize : 189.71 * 1024; // Real optimized: 189.71KB
     const gzipSize = typeof bundleData.gzipSize === 'number' ? bundleData.gzipSize : 60.75 * 1024; // Real gzipped: 60.75KB
@@ -199,7 +226,7 @@ export class BundleAnalyzer {
     ];
   }
 
-  private generateOptimizationSuggestions(metrics: any): OptimizationTip[] {
+  private generateOptimizationSuggestions(metrics: BundleMetrics): OptimizationTip[] {
     const suggestions: OptimizationTip[] = [];
 
     // Bundle size suggestions - updated with realistic thresholds
@@ -254,7 +281,7 @@ export class BundleAnalyzer {
     return suggestions;
   }
 
-  private calculateBundleScore(metrics: any): number {
+  private calculateBundleScore(metrics: BundleMetrics): number {
     let score = 100;
 
     // Bundle size penalty
@@ -292,9 +319,9 @@ export class BundleAnalyzer {
  */
 export class EnhancedPerformanceMonitor {
   private bundleAnalyzer: BundleAnalyzer;
-  private bundleMetrics: Map<string, any> = new Map();
+  private bundleMetrics: Map<string, BundleReport> = new Map();
   private lastOptimizationCheck: number = Date.now();
-  private optimizationCache: Map<string, any> = new Map();
+  private optimizationCache: Map<string, BundleReport> = new Map();
 
   constructor() {
     this.bundleAnalyzer = new BundleAnalyzer();
@@ -303,7 +330,7 @@ export class EnhancedPerformanceMonitor {
   /**
    * Record bundle analysis from build process with caching optimization
    */
-  recordBundleAnalysis(buildStats: any): void {
+  recordBundleAnalysis(buildStats: BundleData): void {
     // Performance optimization: Check if analysis is cached (5-minute cache)
     const cacheKey = JSON.stringify(buildStats);
     const now = Date.now();
@@ -342,8 +369,12 @@ export class EnhancedPerformanceMonitor {
    * Get comprehensive performance report including bundle analysis
    */
   getComprehensiveReport(): {
-    bundle: any;
-    api: any;
+    bundle: BundleReport | undefined;
+    api: {
+      score: number;
+      status: string;
+      note: string;
+    };
     overall: {
       score: number;
       status: string;

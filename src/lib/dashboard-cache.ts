@@ -37,6 +37,30 @@ export interface RecentItemsCache<T> {
     lastUpdated: string;
 }
 
+export interface UserDashboardStats {
+    totalProjects: number;
+    activeProjects: number;
+    completedProjects: number;
+    pendingPayments: number;
+    totalRevenue: number;
+    lastUpdated?: string;
+}
+
+export interface RevenueByPeriod {
+    period: string;
+    revenue: number;
+    transactionCount: number;
+    lastUpdated?: string;
+}
+
+export interface ProjectStatusCounts {
+    pending_payment: number;
+    in_progress: number;
+    review: number;
+    completed: number;
+    lastUpdated?: string;
+}
+
 /**
  * Redis-style Cache Service for Dashboard Operations
  * Optimized for high-frequency dashboard access patterns
@@ -128,8 +152,8 @@ export class DashboardCacheService {
     /**
      * Get cached recent users
      */
-    async getRecentUsers(): Promise<RecentItemsCache<any> | null> {
-        return cacheGet<RecentItemsCache<any>>(
+    async getRecentUsers<T = Record<string, unknown>>(): Promise<RecentItemsCache<T> | null> {
+        return cacheGet<RecentItemsCache<T>>(
             this.kv,
             DashboardCacheService.KEYS.recentUsers()
         );
@@ -138,8 +162,8 @@ export class DashboardCacheService {
     /**
      * Set cached recent users
      */
-    async setRecentUsers(users: any[]): Promise<void> {
-        const cacheData: RecentItemsCache<any> = {
+    async setRecentUsers<T = Record<string, unknown>>(users: T[]): Promise<void> {
+        const cacheData: RecentItemsCache<T> = {
             items: users,
             lastUpdated: new Date().toISOString()
         };
@@ -155,17 +179,17 @@ export class DashboardCacheService {
     /**
      * Get or set recent users
      */
-    async getOrSetRecentUsers<T>(
+    async getOrSetRecentUsers<T = Record<string, unknown>>(
         fetcher: () => Promise<T[]>
     ): Promise<RecentItemsCache<T>> {
-        const cached = await this.getRecentUsers();
+        const cached = await this.getRecentUsers<T>();
         if (cached) {
-            return cached as RecentItemsCache<T>;
+            return cached;
         }
 
         const users = await fetcher();
         await this.setRecentUsers(users);
-        
+
         return {
             items: users,
             lastUpdated: new Date().toISOString()
@@ -175,8 +199,8 @@ export class DashboardCacheService {
     /**
      * Get cached recent projects
      */
-    async getRecentProjects(): Promise<RecentItemsCache<any> | null> {
-        return cacheGet<RecentItemsCache<any>>(
+    async getRecentProjects<T = Record<string, unknown>>(): Promise<RecentItemsCache<T> | null> {
+        return cacheGet<RecentItemsCache<T>>(
             this.kv,
             DashboardCacheService.KEYS.recentProjects()
         );
@@ -185,8 +209,8 @@ export class DashboardCacheService {
     /**
      * Set cached recent projects
      */
-    async setRecentProjects(projects: any[]): Promise<void> {
-        const cacheData: RecentItemsCache<any> = {
+    async setRecentProjects<T = Record<string, unknown>>(projects: T[]): Promise<void> {
+        const cacheData: RecentItemsCache<T> = {
             items: projects,
             lastUpdated: new Date().toISOString()
         };
@@ -202,17 +226,17 @@ export class DashboardCacheService {
     /**
      * Get or set recent projects
      */
-    async getOrSetRecentProjects<T>(
+    async getOrSetRecentProjects<T = Record<string, unknown>>(
         fetcher: () => Promise<T[]>
     ): Promise<RecentItemsCache<T>> {
-        const cached = await this.getRecentProjects();
+        const cached = await this.getRecentProjects<T>();
         if (cached) {
-            return cached as RecentItemsCache<T>;
+            return cached;
         }
 
         const projects = await fetcher();
         await this.setRecentProjects(projects);
-        
+
         return {
             items: projects,
             lastUpdated: new Date().toISOString()
@@ -226,8 +250,8 @@ export class DashboardCacheService {
     /**
      * Get cached user-specific dashboard stats
      */
-    async getUserStats(userId: string): Promise<any | null> {
-        return cacheGet<any>(
+    async getUserStats(userId: string): Promise<UserDashboardStats | null> {
+        return cacheGet<UserDashboardStats>(
             this.kv,
             DashboardCacheService.KEYS.userStats(userId)
         );
@@ -236,7 +260,7 @@ export class DashboardCacheService {
     /**
      * Set cached user-specific dashboard stats
      */
-    async setUserStats(userId: string, stats: any): Promise<void> {
+    async setUserStats(userId: string, stats: Partial<Omit<UserDashboardStats, 'lastUpdated'>>): Promise<void> {
         await cacheSet(
             this.kv,
             DashboardCacheService.KEYS.userStats(userId),
@@ -255,8 +279,8 @@ export class DashboardCacheService {
     /**
      * Get cached revenue by period
      */
-    async getRevenueByPeriod(period: string): Promise<any | null> {
-        return cacheGet<any>(
+    async getRevenueByPeriod(period: string): Promise<RevenueByPeriod | null> {
+        return cacheGet<RevenueByPeriod>(
             this.kv,
             DashboardCacheService.KEYS.revenueByPeriod(period)
         );
@@ -265,7 +289,7 @@ export class DashboardCacheService {
     /**
      * Set cached revenue by period
      */
-    async setRevenueByPeriod(period: string, data: any): Promise<void> {
+    async setRevenueByPeriod(period: string, data: Omit<RevenueByPeriod, 'lastUpdated'>): Promise<void> {
         await cacheSet(
             this.kv,
             DashboardCacheService.KEYS.revenueByPeriod(period),
@@ -280,8 +304,8 @@ export class DashboardCacheService {
     /**
      * Get cached project status counts
      */
-    async getProjectStatusCounts(): Promise<any | null> {
-        return cacheGet<any>(
+    async getProjectStatusCounts(): Promise<ProjectStatusCounts | null> {
+        return cacheGet<ProjectStatusCounts>(
             this.kv,
             DashboardCacheService.KEYS.projectStatusCounts()
         );
@@ -290,7 +314,7 @@ export class DashboardCacheService {
     /**
      * Set cached project status counts
      */
-    async setProjectStatusCounts(data: any): Promise<void> {
+    async setProjectStatusCounts(data: Omit<ProjectStatusCounts, 'lastUpdated'>): Promise<void> {
         await cacheSet(
             this.kv,
             DashboardCacheService.KEYS.projectStatusCounts(),
