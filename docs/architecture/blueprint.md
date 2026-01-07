@@ -202,6 +202,94 @@ Order → pending_payment → (bayar) → in_progress → review → completed
 
 ---
 
+## 6. Background Job Queue System (NEW - Jan 7, 2026)
+
+### 6.1 Job Queue Architecture
+
+The JasaWeb platform now includes a comprehensive background job queue system for processing asynchronous tasks like notifications and report generation.
+
+#### Job Types Supported
+
+| Job Type | Description | Implementation |
+|----------|-------------|----------------|
+| `NOTIFICATION` | Email, SMS, push notifications | `NotificationJobHandler` |
+| `REPORT_GENERATION` | PDF, CSV, XLSX, JSON reports | `ReportJobHandler` |
+| `EMAIL_SEND` | Email delivery | `NotificationJobHandler` |
+| `WEBHOOK` | External webhook calls | Extensible handler |
+| `CLEANUP` | Old job cleanup | System handler |
+| `BACKUP` | Database backups | Extensible handler |
+| `DATA_EXPORT` | Data export jobs | Extensible handler |
+| `DATA_IMPORT` | Data import jobs | Extensible handler |
+
+#### Job Lifecycle
+
+```
+PENDING → PROCESSING → COMPLETED
+         ↓           ↓
+        RETRYING    FAILED
+         ↓           ↓
+      CANCELLED  (max retries exceeded)
+```
+
+**Priority Levels:** `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+
+#### Key Features
+
+- **Automatic Retry**: Configurable max retries (default: 3)
+- **Priority-Based Processing**: Critical jobs processed first
+- **Health Monitoring**: Queue health scoring algorithm (0-100)
+- **Batch Processing**: Execute multiple jobs in single operation
+- **Soft Delete**: Jobs marked as CANCELLED instead of hard delete
+- **Automatic Cleanup**: Old jobs removed after retention period (default: 7 days)
+
+### 6.2 API Endpoints
+
+```
+GET    /api/admin/jobs              # List jobs with pagination
+POST   /api/admin/jobs              # Create new job
+GET    /api/admin/jobs/[id]         # Get job details
+PUT    /api/admin/jobs/[id]         # Update job
+DELETE /api/admin/jobs/[id]         # Cancel/delete job
+GET    /api/admin/jobs/stats        # Get job statistics
+POST   /api/admin/jobs/process      # Process pending jobs
+```
+
+### 6.3 Service Layer
+
+- **`JobQueueService`**: CRUD operations and job lifecycle management
+- **`JobSchedulerService`**: Job processing, batch execution, health monitoring
+- **`NotificationJobHandler`**: Email, SMS, push notifications
+- **`ReportJobHandler`**: PDF, CSV, XLSX, JSON report generation
+
+### 6.4 Database Schema
+
+```sql
+CREATE TABLE job_queue (
+  id UUID PRIMARY KEY,
+  type VARCHAR(50) NOT NULL,        -- JobType enum
+  status VARCHAR(20) DEFAULT 'PENDING', -- JobStatus enum
+  priority VARCHAR(20) DEFAULT 'MEDIUM', -- JobPriority enum
+  payload JSONB NOT NULL,            -- Job data
+  result JSONB,                      -- Job execution result
+  error_message TEXT,                -- Error details if failed
+  retry_count INTEGER DEFAULT 0,
+  max_retries INTEGER DEFAULT 3,
+  scheduled_at TIMESTAMP,
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Strategic indexes for performance
+CREATE INDEX idx_job_queue_status ON job_queue(status);
+CREATE INDEX idx_job_queue_priority ON job_queue(priority);
+CREATE INDEX idx_job_queue_type ON job_queue(type);
+CREATE INDEX idx_job_queue_scheduled ON job_queue(scheduled_at);
+CREATE INDEX idx_job_queue_created ON job_queue(created_at);
+```
+
+---
+
 ## 6. API Endpoints
 
 ### Auth
@@ -214,25 +302,60 @@ GET  /api/auth/me
 
 ### Client Portal
 ```
-GET  /api/projects          # List my projects
-GET  /api/projects/:id      # Project detail
-GET  /api/invoices          # My invoices
-POST /api/invoices/:id/pay  # Create Midtrans payment
+GET  /api/client/projects         # List my projects
+GET  /api/client/projects/:id     # Project detail
+GET  /api/client/invoices         # My invoices
+POST /api/client/invoices/:id/pay # Create Midtrans payment
 ```
 
 ### Admin
 ```
+# Users
 GET    /api/admin/users
 POST   /api/admin/users
 PUT    /api/admin/users/:id
 DELETE /api/admin/users/:id
 
+# Projects
 GET    /api/admin/projects
 PUT    /api/admin/projects/:id
 
-CRUD   /api/admin/posts
-CRUD   /api/admin/pages
-CRUD   /api/admin/templates
+# Content Management
+GET    /api/admin/posts
+POST   /api/admin/posts
+PUT    /api/admin/posts/:id
+DELETE /api/admin/posts/:id
+
+GET    /api/admin/pages
+POST   /api/admin/pages
+PUT    /api/admin/pages/:id
+DELETE /api/admin/pages/:id
+
+GET    /api/admin/templates
+POST   /api/admin/templates
+PUT    /api/admin/templates/:id
+DELETE /api/admin/templates/:id
+
+# Background Jobs
+GET    /api/admin/jobs
+POST   /api/admin/jobs
+GET    /api/admin/jobs/[id]
+PUT    /api/admin/jobs/[id]
+DELETE /api/admin/jobs/[id]
+GET    /api/admin/jobs/stats
+POST   /api/admin/jobs/process
+```
+
+### Performance & Monitoring
+```
+GET  /api/admin/performance           # Bundle & API performance
+GET  /api/admin/performance-intelligence # ML-based analytics
+GET  /api/admin/cache                 # Cache health monitoring
+POST /api/admin/cache-manage           # Cache management
+GET  /api/admin/bi/revenue           # Revenue analytics
+GET  /api/admin/bi/users              # User growth analytics
+GET  /api/admin/bi/projects           # Project analytics
+GET  /api/admin/bi/summary            # BI summary
 ```
 
 ### Public
@@ -240,6 +363,7 @@ CRUD   /api/admin/templates
 GET /api/templates
 GET /api/posts
 GET /api/pages/:slug
+GET /api/docs                         # OpenAPI specification (JSON)
 ```
 
 ### Webhook
@@ -468,7 +592,7 @@ const result = await withResilience(
 
 ---
 
-## 6. Current Production Readiness Status (Updated Jan 7, 2026)
+## 7. Current Production Readiness Status (Updated Jan 7, 2026)
 
 ### 🏆 Overall System Maturity: **95/100** (Production-Ready)
 - **Zero Critical Vulnerabilities**: All security issues resolved
@@ -572,7 +696,7 @@ const result = await withResilience(
 
 ---
 
-## 6. Biaya Bulanan
+## 7. Biaya Bulanan
 
 | Service | Biaya |
 |---------|-------|
