@@ -6,8 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   withCache,
-  createCacheService,
-  type CacheOptions
+  createCacheService
 } from './cache';
 
 // Mock KVNamespace interface matching cache.ts expectations
@@ -303,7 +302,7 @@ describe('withCache middleware', () => {
         }
         return value;
       }),
-      put: vi.fn(async (key: string, value: string, options?: { expirationTtl?: number }) => {
+      put: vi.fn(async (key: string, value: string) => {
         cacheStorage.set(key, value);
       }),
       delete: vi.fn(async (key: string) => {
@@ -451,8 +450,6 @@ describe('Edge Cases and Error Handling', () => {
   });
 
   it('should handle very long cache keys', async () => {
-    const cacheStorage = new Map();
-
     const mockKV = {
       get: vi.fn(),
       put: vi.fn(),

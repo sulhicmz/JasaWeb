@@ -9,9 +9,7 @@ import {
   EnhancedPerformanceMonitor,
   PERFORMANCE_THRESHOLDS,
   type BundleData,
-  type ChunkInfo,
-  type DependencyInfo,
-  type BundleAnalysis
+  type ChunkInfo
 } from './bundle-analyzer';
 
 describe('BundleAnalyzer', () => {
