@@ -1,0 +1,327 @@
+---
+/**
+ * Stepper/Progress Indicator Component
+ * 
+ * Visual progress indicator for multi-step flows (forms, onboarding, etc.).
+ * Supports clickable steps with callbacks and proper ARIA attributes.
+ * 
+ * @example
+ * ```astro
+ * <!-- Basic stepper -->
+ * <Stepper
+ *   steps={[
+ *     { label: 'Account', completed: true },
+ *     { label: 'Profile', completed: true },
+ *     { label: 'Review', current: true },
+ *     { label: 'Done' }
+ *   ]}
+ * />
+ * 
+ * <!-- Stepper with step actions -->
+ * <Stepper
+ *   steps={steps}
+ *   currentStep={2}
+ *   onStepClick="handleStepClick(index)"
+ * />
+ * ```
+ */
+export interface Step {
+  /** Label for the step */
+  label: string;
+  /** Whether this step is completed */
+  completed?: boolean;
+  /** Whether this is the current/active step */
+  current?: boolean;
+  /** Optional description for the step */
+  description?: string;
+}
+
+export interface Props {
+  /** Array of step objects defining the flow */
+  steps: Step[];
+  /** Index of the current step (0-based) */
+  currentStep?: number;
+  /** Whether steps are clickable (requires onStepClick) */
+  clickable?: boolean;
+  /** JavaScript to execute when a step is clicked (receives index) */
+  onStepClick?: string;
+  /** Display variant (horizontal or vertical) */
+  orientation?: 'horizontal' | 'vertical';
+  /** Additional CSS classes to apply */
+  class?: string;
+}
+
+const {
+  steps,
+  currentStep = 0,
+  clickable = false,
+  onStepClick,
+  orientation = 'horizontal',
+  class: className = '',
+} = Astro.props;
+
+const currentStepIndex = Math.max(0, Math.min(currentStep, steps.length - 1));
+---
+
+<nav
+  class={`stepper stepper-${orientation} ${className}`}
+  aria-label="Progress"
+  role="navigation"
+>
+  <ol class="stepper-list">
+    {steps.map((step, index) => {
+      const isCompleted = step.completed || index < currentStepIndex;
+      const isCurrent = index === currentStepIndex;
+      const stepNumber = index + 1;
+      const canClick = clickable && onStepClick && !isCurrent;
+
+      return (
+        <li
+          class={`stepper-item ${isCompleted ? 'step-completed' : ''} ${isCurrent ? 'step-current' : ''} ${canClick ? 'step-clickable' : ''}`}
+          aria-current={isCurrent ? 'step' : undefined}
+          data-index={index}
+        >
+          {canClick ? (
+            <div
+              class="stepper-step"
+              role="button"
+              tabindex={0}
+              aria-label={`Go to step ${stepNumber}: ${step.label}`}
+              onclick={`${onStepClick}(${index})`}
+            >
+              <span class="stepper-number" aria-hidden="true">
+                {isCompleted ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="check-icon">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                ) : (
+                  stepNumber
+                )}
+              </span>
+              <div class="stepper-content">
+                <span class="stepper-label">{step.label}</span>
+                {step.description && <span class="stepper-description">{step.description}</span>}
+              </div>
+            </div>
+          ) : (
+            <div class="stepper-step">
+              <span class="stepper-number" aria-hidden="true">
+                {isCompleted ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="check-icon">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                ) : (
+                  stepNumber
+                )}
+              </span>
+              <div class="stepper-content">
+                <span class="stepper-label">{step.label}</span>
+                {step.description && <span class="stepper-description">{step.description}</span>}
+              </div>
+            </div>
+          )}
+          {index < steps.length - 1 && <div class="stepper-connector" aria-hidden="true" />}
+        </li>
+      );
+    })}
+  </ol>
+</nav>
+
+<style>
+  .stepper {
+    --step-color: var(--color-text-muted);
+    --step-active-color: var(--color-primary);
+    --step-completed-color: var(--color-success);
+    --step-bg: var(--color-bg-secondary);
+    --step-bg-active: var(--color-primary);
+    --step-size: 32px;
+  }
+
+  .stepper-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+  }
+
+  .stepper.stepper-horizontal .stepper-list {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .stepper.stepper-vertical .stepper-list {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .stepper-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .stepper.stepper-horizontal .stepper-item {
+    flex: 1;
+  }
+
+  .stepper.stepper-vertical .stepper-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 0 1.5rem 0;
+  }
+
+  .stepper-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .stepper.stepper-vertical .stepper-step {
+    width: 100%;
+  }
+
+  .stepper-step-clickable {
+    cursor: pointer;
+  }
+
+  .stepper-step-clickable:hover {
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+  }
+
+  .stepper-step-clickable:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .stepper-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--step-size);
+    height: var(--step-size);
+    border-radius: 50%;
+    background: var(--step-bg);
+    color: var(--step-color);
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    border: 2px solid var(--step-color);
+    transition: all var(--transition-normal);
+  }
+
+  .step-current .stepper-number {
+    background: var(--step-bg-active);
+    color: white;
+    border-color: var(--step-bg-active);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+
+  .step-completed .stepper-number {
+    background: var(--step-completed-color);
+    color: white;
+    border-color: var(--step-completed-color);
+  }
+
+  .check-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .stepper-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stepper-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--step-color);
+    transition: color var(--transition-normal);
+  }
+
+  .step-current .stepper-label {
+    color: var(--color-text);
+  }
+
+  .step-completed .stepper-label {
+    color: var(--step-completed-color);
+  }
+
+  .stepper-description {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .stepper-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--step-color);
+    opacity: 0.3;
+    margin-left: 1rem;
+    min-width: 1rem;
+  }
+
+  .stepper.stepper-vertical .stepper-connector {
+    flex: none;
+    width: 2px;
+    height: 1.5rem;
+    min-height: 1.5rem;
+    min-width: 2px;
+    margin-left: calc(var(--step-size) / 2 - 1px);
+    position: absolute;
+    top: var(--step-size);
+    left: 0;
+  }
+
+  .step-completed + .stepper-item .stepper-connector {
+    background: var(--step-completed-color);
+    opacity: 1;
+  }
+
+  .step-current + .stepper-item .stepper-connector {
+    background: var(--step-bg-active);
+    opacity: 0.5;
+  }
+
+  @media (max-width: 640px) {
+    .stepper.stepper-horizontal .stepper-label {
+      font-size: 0.75rem;
+    }
+
+    .stepper.stepper-horizontal .stepper-description {
+      display: none;
+    }
+
+    --step-size: 28px;
+  }
+</style>
+
+<script is:inline>
+  (function() {
+    document.addEventListener('click', function(event) {
+      const stepperStep = event.target.closest('.step-clickable[role="button"]');
+      if (!stepperStep) return;
+
+      const stepperItem = stepperStep.closest('.stepper-item');
+      if (!stepperItem) return;
+
+      const index = parseInt(stepperItem.dataset.index || '-1');
+      if (index >= 0) {
+        stepperStep.click();
+      }
+    });
+
+    document.addEventListener('keydown', function(event) {
+      const stepperStep = event.target.closest('.step-clickable[role="button"]');
+      if (!stepperStep) return;
+
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        stepperStep.click();
+      }
+    });
+  })();
+</script>

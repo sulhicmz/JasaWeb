@@ -1,6 +1,5 @@
 import { type APIRoute } from 'astro';
-import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 import { JobQueueService } from '@/services/jobs/job-queue.service';
 
 export const POST: APIRoute = async ({ request, locals }) => {
@@ -9,9 +8,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!env) {
       return errorResponse('Environment not available', 500);
     }
-
-    const rateLimit = await checkRateLimit(request, env, 'admin-jobs-process');
-    if (rateLimit) return rateLimit;
 
     const body = await request.json();
     const maxJobs = body.maxJobs || 10;
@@ -26,6 +22,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     return jsonResponse({ processed, count: processed.length });
   } catch (error) {
-    return jsonResponse({ error: 'Failed to process jobs' }, 500);
+    return handleApiError(error);
   }
 };

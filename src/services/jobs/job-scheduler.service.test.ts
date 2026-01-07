@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { JobSchedulerService } from '../job-scheduler.service';
+import { JobSchedulerService } from './job-scheduler.service';
 
 describe('JobSchedulerService', () => {
   beforeEach(() => {

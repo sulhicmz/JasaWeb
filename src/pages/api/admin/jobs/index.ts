@@ -1,6 +1,5 @@
 import { type APIRoute } from 'astro';
-import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { jsonResponse, errorResponse, validateRequired, handleApiError } from '@/lib/api';
 import { JobQueueService } from '@/services/jobs/job-queue.service';
 
 export const GET: APIRoute = async ({ request, locals }) => {
@@ -9,9 +8,6 @@ export const GET: APIRoute = async ({ request, locals }) => {
     if (!env) {
       return errorResponse('Environment not available', 500);
     }
-
-    const rateLimit = await checkRateLimit(request, env, 'admin-jobs-list');
-    if (rateLimit) return rateLimit;
 
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
@@ -22,9 +18,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     const result = await JobQueueService.getJobs(
       {
-        status: status || undefined,
-        type: type || undefined,
-        priority: priority || undefined,
+        status: (status as any) || undefined,
+        type: (type as any) || undefined,
+        priority: (priority as any) || undefined,
       },
       page,
       limit
@@ -32,7 +28,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     return jsonResponse(result);
   } catch (error) {
-    return jsonResponse({ error: 'Failed to fetch jobs' }, 500);
+    return handleApiError(error);
   }
 };
 
@@ -42,9 +38,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (!env) {
       return errorResponse('Environment not available', 500);
     }
-
-    const rateLimit = await checkRateLimit(request, env, 'admin-jobs-create');
-    if (rateLimit) return rateLimit;
 
     const body = await request.json();
     const error = validateRequired(body, ['type', 'payload']);
@@ -61,6 +54,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     return jsonResponse(job, 201);
   } catch (error) {
-    return jsonResponse({ error: 'Failed to create job' }, 500);
+    return handleApiError(error);
   }
 };

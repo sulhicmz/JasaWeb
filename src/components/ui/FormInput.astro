@@ -2,8 +2,8 @@
 /**
  * Reusable Form Input Component
  * 
- * A standardized input field with consistent styling and validation support.
- * Extracted from duplicate patterns across auth pages for uniformity.
+ * A standardized input field with consistent styling, validation support,
+ * and accessibility features. Includes proper ARIA attributes for screen readers.
  * 
  * @example
  * ```astro
@@ -24,6 +24,14 @@
  *   name="password" 
  *   minlength="8"
  *   placeholder="Password (min 8 chars)"
+ * />
+ * 
+ * <!-- Input with error state -->
+ * <FormInput 
+ *   type="text" 
+ *   name="field" 
+ *   error="This field is required"
+ *   aria-describedby="field-error"
  * />
  * 
  * <!-- Disabled input with preset value -->
@@ -54,6 +62,16 @@ export interface Props {
   value?: string;
   /** Additional CSS classes to apply */
   class?: string;
+  /** Error message to display (shows error state) */
+  error?: string;
+  /** Warning message to display (shows warning state) */
+  warning?: string;
+  /** Success message to display (shows success state) */
+  success?: string;
+  /** ID of element describing this input (for accessibility) */
+  ariaDescribedby?: string;
+  /** Auto-complete behavior */
+  autocomplete?: string;
 }
 
 const {
@@ -66,22 +84,59 @@ const {
   minlength,
   value,
   class: className,
+  error,
+  warning,
+  success,
+  ariaDescribedby,
+  autocomplete,
 } = Astro.props;
+
+const validationClass = error ? 'input-error' : warning ? 'input-warning' : success ? 'input-success' : '';
+const ariaInvalid = !!error;
+const describedBy = [ariaDescribedby, error ? `${id}-error` : null, warning ? `${id}-warning` : null, success ? `${id}-success` : null]
+  .filter(Boolean)
+  .join(' ');
 ---
 
-<input
-  type={type}
-  id={id}
-  name={name}
-  placeholder={placeholder}
-  required={required}
-  disabled={disabled}
-  minlength={minlength}
-  value={value}
-  class={`form-input ${className || ''}`}
-/>
+<div class="form-input-wrapper">
+  <input
+    type={type}
+    id={id}
+    name={name}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    minlength={minlength}
+    value={value}
+    autocomplete={autocomplete}
+    class={`form-input ${validationClass} ${className || ''}`}
+    aria-invalid={ariaInvalid}
+    aria-describedby={describedBy || undefined}
+  />
+  {error && (
+    <p id={`${id}-error`} class="input-error-message" role="alert" aria-live="polite">
+      {error}
+    </p>
+  )}
+  {warning && !error && (
+    <p id={`${id}-warning`} class="input-warning-message">
+      {warning}
+    </p>
+  )}
+  {success && !error && !warning && (
+    <p id={`${id}-success`} class="input-success-message">
+      {success}
+    </p>
+  )}
+</div>
 
 <style>
+  .form-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
   .form-input {
     padding: 0.75rem 1rem;
     background: var(--color-bg);
@@ -89,7 +144,7 @@ const {
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-size: 0.875rem;
-    transition: border-color var(--transition-fast);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     width: 100%;
   }
 
@@ -107,5 +162,49 @@ const {
 
   .form-input::placeholder {
     color: var(--color-text-muted);
+  }
+
+  .input-error {
+    border-color: var(--color-error);
+  }
+
+  .input-error:focus {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+  }
+
+  .input-warning {
+    border-color: var(--color-secondary);
+  }
+
+  .input-warning:focus {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+  }
+
+  .input-success {
+    border-color: var(--color-success);
+  }
+
+  .input-success:focus {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+  }
+
+  .input-error-message,
+  .input-warning-message,
+  .input-success-message {
+    font-size: 0.8125rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .input-error-message {
+    color: var(--color-error);
+  }
+
+  .input-warning-message {
+    color: var(--color-secondary);
+  }
+
+  .input-success-message {
+    color: var(--color-success);
   }
 </style>

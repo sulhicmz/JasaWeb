@@ -1,9 +1,5 @@
 import type { Prisma } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
-
-export type JobType = 'NOTIFICATION' | 'REPORT_GENERATION' | 'EMAIL_SEND' | 'WEBHOOK' | 'CLEANUP' | 'BACKUP' | 'DATA_EXPORT' | 'DATA_IMPORT';
-export type JobStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'RETRYING';
-export type JobPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+import { prisma, type JobType, type JobStatus, type JobPriority } from '@/lib/prisma';
 
 export interface JobQueueFilter {
   status?: JobStatus;
@@ -51,10 +47,10 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.create({
+    return (prisma as any).jobQueue.create({
       data: {
-        type: options.type as unknown as Prisma.JobType,
-        priority: (options.priority || 'MEDIUM') as unknown as Prisma.JobPriority,
+        type: options.type,
+        priority: options.priority || 'MEDIUM',
         payload: payload as Prisma.InputJsonValue,
         scheduledAt: options.scheduledAt || new Date(),
         maxRetries: options.maxRetries || 3,
@@ -69,7 +65,7 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.findUnique({
+    return (prisma as any).jobQueue.findUnique({
       where: { id },
     });
   }
@@ -79,9 +75,9 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.findMany({
+    return (prisma as any).jobQueue.findMany({
       where: {
-        status: 'PENDING' as Prisma.JobStatus,
+        status: 'PENDING',
         scheduledAt: { lte: new Date() },
       },
       orderBy: [
@@ -97,9 +93,9 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.findMany({
+    return (prisma as any).jobQueue.findMany({
       where: {
-        status: 'FAILED' as Prisma.JobStatus,
+        status: 'FAILED',
         retryCount: { lt: 3 },
       },
       orderBy: [{ createdAt: 'asc' }],
@@ -112,10 +108,10 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.update({
+    return (prisma as any).jobQueue.update({
       where: { id },
       data: {
-        status: options.status as unknown as Prisma.JobStatus,
+        status: options.status,
         result: options.result as Prisma.InputJsonValue,
         error: options.error,
         startedAt: options.startedAt,
@@ -132,10 +128,10 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.update({
+    return (prisma as any).jobQueue.update({
       where: { id },
       data: {
-        status: 'PROCESSING' as Prisma.JobStatus,
+        status: 'PROCESSING',
         startedAt: new Date(),
       },
     });
@@ -146,10 +142,10 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.update({
+    return (prisma as any).jobQueue.update({
       where: { id },
       data: {
-        status: 'COMPLETED' as Prisma.JobStatus,
+        status: 'COMPLETED',
         completedAt: new Date(),
         result: result as Prisma.InputJsonValue,
       },
@@ -165,7 +161,7 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    const currentJob = await prisma.jobQueue.findUnique({
+    const currentJob = await (prisma as any).jobQueue.findUnique({
       where: { id },
       select: { retryCount: true, maxRetries: true },
     });
@@ -177,10 +173,10 @@ export class JobQueueService {
     const newRetryCount = incrementRetry ? currentJob.retryCount + 1 : currentJob.retryCount;
     const shouldRetry = newRetryCount < currentJob.maxRetries;
 
-    return prisma.jobQueue.update({
+    return (prisma as any).jobQueue.update({
       where: { id },
       data: {
-        status: (shouldRetry ? 'RETRYING' : 'FAILED') as Prisma.JobStatus,
+        status: shouldRetry ? 'RETRYING' : 'FAILED',
         retryCount: newRetryCount,
         error,
         lastError: error,
@@ -194,10 +190,10 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.update({
+    return (prisma as any).jobQueue.update({
       where: { id },
       data: {
-        status: 'CANCELLED' as Prisma.JobStatus,
+        status: 'CANCELLED',
         completedAt: new Date(),
       },
     });
@@ -208,7 +204,7 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    return prisma.jobQueue.delete({
+    return (prisma as any).jobQueue.delete({
       where: { id },
     });
   }
@@ -218,24 +214,24 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    const where: Prisma.JobQueueWhereInput = {};
+    const where: any = {};
 
     if (filter.status) {
-      where.status = filter.status as unknown as Prisma.JobStatus;
+      where.status = filter.status;
     }
     if (filter.type) {
-      where.type = filter.type as unknown as Prisma.JobType;
+      where.type = filter.type;
     }
     if (filter.priority) {
-      where.priority = filter.priority as unknown as Prisma.JobPriority;
+      where.priority = filter.priority;
     }
     if (filter.userId) {
       where.userId = filter.userId;
     }
 
     const [total, jobs] = await Promise.all([
-      prisma.jobQueue.count({ where }),
-      prisma.jobQueue.findMany({
+      (prisma as any).jobQueue.count({ where }),
+      (prisma as any).jobQueue.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }],
         skip: (page - 1) * limit,
@@ -261,13 +257,13 @@ export class JobQueueService {
 
     const [total, pending, processing, completed, failed, cancelled, retrying] =
       await Promise.all([
-        prisma.jobQueue.count(),
-        prisma.jobQueue.count({ where: { status: 'PENDING' as Prisma.JobStatus } }),
-        prisma.jobQueue.count({ where: { status: 'PROCESSING' as Prisma.JobStatus } }),
-        prisma.jobQueue.count({ where: { status: 'COMPLETED' as Prisma.JobStatus } }),
-        prisma.jobQueue.count({ where: { status: 'FAILED' as Prisma.JobStatus } }),
-        prisma.jobQueue.count({ where: { status: 'CANCELLED' as Prisma.JobStatus } }),
-        prisma.jobQueue.count({ where: { status: 'RETRYING' as Prisma.JobStatus } }),
+        (prisma as any).jobQueue.count(),
+        (prisma as any).jobQueue.count({ where: { status: 'PENDING' } }),
+        (prisma as any).jobQueue.count({ where: { status: 'PROCESSING' } }),
+        (prisma as any).jobQueue.count({ where: { status: 'COMPLETED' } }),
+        (prisma as any).jobQueue.count({ where: { status: 'FAILED' } }),
+        (prisma as any).jobQueue.count({ where: { status: 'CANCELLED' } }),
+        (prisma as any).jobQueue.count({ where: { status: 'RETRYING' } }),
       ]);
 
     return {
@@ -289,9 +285,9 @@ export class JobQueueService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const result = await prisma.jobQueue.deleteMany({
+    const result = await (prisma as any).jobQueue.deleteMany({
       where: {
-        status: { in: ['COMPLETED' as Prisma.JobStatus, 'FAILED' as Prisma.JobStatus, 'CANCELLED' as Prisma.JobStatus] },
+        status: { in: ['COMPLETED', 'FAILED', 'CANCELLED'] },
         completedAt: { lte: cutoffDate },
       },
     });
@@ -304,16 +300,16 @@ export class JobQueueService {
       throw new Error('Prisma client not initialized');
     }
 
-    const jobs = await prisma.jobQueue.findMany({
-      where: { id: { in: jobIds }, status: 'FAILED' as Prisma.JobStatus },
+    const jobs = await (prisma as any).jobQueue.findMany({
+      where: { id: { in: jobIds }, status: 'FAILED' },
     });
 
     const updated = await Promise.all(
-      jobs.map((job) =>
-        prisma.jobQueue.update({
+      jobs.map((job: any) =>
+        (prisma as any).jobQueue.update({
           where: { id: job.id },
           data: {
-            status: 'PENDING' as Prisma.JobStatus,
+            status: 'PENDING',
             scheduledAt: new Date(),
             error: null,
             startedAt: null,

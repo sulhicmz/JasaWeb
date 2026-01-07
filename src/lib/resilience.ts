@@ -133,13 +133,14 @@ export async function retryWithBackoff<T>(
                     isRetryable,
                 });
 
-                throw new ExternalServiceError(
+                const finalError = new ExternalServiceError(
                     `Operation failed after ${attempt + 1} attempts: ${lastError.message}`,
                     errorCode,
                     ErrorSeverity.MEDIUM,
                     error,
                     isRetryable
                 );
+                throw finalError;
             }
 
             const delayMs = calculateDelay(attempt, fullConfig);
@@ -403,13 +404,13 @@ export class CircuitBreaker {
         this.cleanupOldHistory();
     }
 
-    /**
+     /**
      * Clean up old call history outside rolling window
      */
     private cleanupOldHistory(): void {
         const fullConfig = this.config as Required<CircuitBreakerConfig>;
         const cutoffTime = Date.now() - fullConfig.rollingWindowMs;
-        
+
         this.callHistory = this.callHistory.filter(call => call.timestamp > cutoffTime);
     }
 

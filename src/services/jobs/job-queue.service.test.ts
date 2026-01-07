@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { JobQueueService } from '../job-queue.service';
+import { JobQueueService } from './job-queue.service';
 
 describe('JobQueueService', () => {
   beforeEach(() => {

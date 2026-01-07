@@ -1,23 +1,57 @@
 ---
 /**
- * Modal Component
- * Reusable modal with header, body, and close functionality
+ * Reusable Modal Component
+ * 
+ * An accessible modal dialog with proper ARIA attributes, keyboard navigation,
+ * and focus management. Supports ESC key to close and focus trapping.
+ * 
+ * @example
+ * ```astro
+ * <!-- Basic modal -->
+ * <Modal id="my-modal" title="Dialog Title">
+ *   <p>Modal content goes here</p>
+ * </Modal>
+ * 
+ * <!-- Trigger button to open modal -->
+ * <button onclick="openModal('my-modal')">Open Modal</button>
+ * ```
  */
-interface Props {
+export interface Props {
+  /** Unique identifier for the modal (required for ARIA and JavaScript) */
   id: string;
+  /** Title displayed in modal header and used for ARIA label */
   title: string;
+  /** Whether modal is visible (controlled programmatically) */
   show?: boolean;
+  /** Additional CSS classes to apply */
   class?: string;
 }
 
 const { id, title, show = false, class: className = '' } = Astro.props;
+const titleId = `${id}-title`;
 ---
 
-<div id={id} class="modal-overlay" class:list={[className, show && 'modal-visible']} style={show ? 'display: flex' : 'display: none'}>
+<div
+  id={id}
+  class="modal-overlay"
+  class:list={[className, show && 'modal-visible']}
+  style={show ? 'display: flex' : 'display: none'}
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby={titleId}
+  aria-hidden={!show}
+>
   <div class="modal-content">
     <div class="modal-header">
-      <h3>{title}</h3>
-      <button class="close-btn" onclick={`closeModal('${id}')`}>&times;</button>
+      <h3 id={titleId}>{title}</h3>
+      <button
+        class="close-btn"
+        onclick={`closeModal('${id}')`}
+        aria-label="Close dialog"
+        type="button"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
     <div class="modal-body">
       <slot />
@@ -102,15 +136,97 @@ const { id, title, show = false, class: className = '' } = Astro.props;
   }
 </style>
 
-<script>
-  /**
-   * Close modal by ID
-   */
-  (window as any).closeModal = (modalId: string): void => {
-    const modal = document.getElementById(modalId) as HTMLElement;
-    if (modal) {
+<script is:inline>
+  (function() {
+    const activeElementBeforeModal = new Map();
+
+    function getFocusableElements(container) {
+      const focusableSelectors = [
+        'button:not([disabled])',
+        '[href]',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])',
+      ];
+      return Array.from(container.querySelectorAll(focusableSelectors.join(', ')));
+    }
+
+    window.openModal = function(modalId) {
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+
+      activeElementBeforeModal.set(modalId, document.activeElement);
+      modal.style.display = 'flex';
+      modal.classList.add('modal-visible');
+      modal.setAttribute('aria-hidden', 'false');
+
+      const closeBtn = modal.querySelector('.close-btn');
+      if (closeBtn) {
+        closeBtn.focus();
+      }
+
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.closeModal = function(modalId) {
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+
       modal.style.display = 'none';
       modal.classList.remove('modal-visible');
+      modal.setAttribute('aria-hidden', 'true');
+
+      const previousElement = activeElementBeforeModal.get(modalId);
+      if (previousElement) {
+        previousElement.focus();
+        activeElementBeforeModal.delete(modalId);
+      }
+
+      document.body.style.overflow = '';
+    };
+
+    function initializeModals() {
+      const modals = document.querySelectorAll('.modal-overlay');
+      
+      modals.forEach(modal => {
+        const modalId = modal.id;
+        if (!modalId) return;
+
+        modal.addEventListener('keydown', function(event) {
+          if (event.key === 'Escape') {
+            window.closeModal(modalId);
+            return;
+          }
+
+          if (event.key === 'Tab') {
+            const target = event.target;
+            if (target && target.closest('#' + modalId)) {
+              const focusableElements = getFocusableElements(modal);
+              const firstElement = focusableElements[0];
+              const lastElement = focusableElements[focusableElements.length - 1];
+
+              if (event.shiftKey) {
+                if (document.activeElement === firstElement) {
+                  lastElement.focus();
+                  event.preventDefault();
+                }
+              } else {
+                if (document.activeElement === lastElement) {
+                  firstElement.focus();
+                  event.preventDefault();
+                }
+              }
+            }
+          }
+        });
+      });
     }
-  };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeModals);
+    } else {
+      initializeModals();
+    }
+  })();
 </script>

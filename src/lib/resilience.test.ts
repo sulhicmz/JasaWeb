@@ -10,12 +10,14 @@ import {
     CircuitBreaker,
     CircuitBreakerState,
     RequestLogger,
+    requestLogger,
     withResilience,
     ExternalServiceError,
     ExternalServiceErrorCode,
     ErrorSeverity,
-    requestLogger,
 } from './resilience';
+
+void requestLogger;
 
 describe('retryWithBackoff', () => {
     beforeEach(() => {

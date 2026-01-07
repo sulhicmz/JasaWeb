@@ -1,0 +1,284 @@
+---
+/**
+ * Toast/Notification Component
+ * 
+ * Accessible toast notification system for user feedback. Supports multiple
+ * variants (success, error, warning, info), auto-dismiss, and keyboard navigation.
+ * 
+ * @example
+ * ```astro
+ * <!-- Show toast from JavaScript -->
+ * <script>
+ *   import { showToast } from './toast-client';
+ *   
+ *   showToast({
+ *     message: 'Operation successful!',
+ *     variant: 'success',
+ *     duration: 3000
+ *   });
+ * </script>
+ * ```
+ */
+export interface Props {
+  /** Unique ID for the toast container */
+  id?: string;
+  /** Position of the toast container */
+  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+}
+
+const { id = 'toast-container', position = 'top-right' } = Astro.props;
+const positionClass = `toast-position-${position}`;
+---
+
+<div id={id} class={`toast-container ${positionClass}`} role="status" aria-live="polite" aria-atomic="true">
+</div>
+
+<style>
+  .toast-container {
+    position: fixed;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+  }
+
+  .toast-container.toast-position-top-right {
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .toast-container.toast-position-top-left {
+    top: 1.5rem;
+    left: 1.5rem;
+  }
+
+  .toast-container.toast-position-bottom-right {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .toast-container.toast-position-bottom-left {
+    bottom: 1.5rem;
+    left: 1.5rem;
+  }
+
+  .toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    min-width: 300px;
+    max-width: 400px;
+    animation: slideIn 0.3s ease-out;
+    transition: all var(--transition-normal);
+  }
+
+  .toast.toast-success {
+    border-color: var(--color-success);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--color-bg-secondary));
+  }
+
+  .toast.toast-error {
+    border-color: var(--color-error);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), var(--color-bg-secondary));
+  }
+
+  .toast.toast-warning {
+    border-color: var(--color-secondary);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), var(--color-bg-secondary));
+  }
+
+  .toast.toast-info {
+    border-color: var(--color-primary);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), var(--color-bg-secondary));
+  }
+
+  .toast.toast-removing {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  .toast-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+  }
+
+  .toast-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toast-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-text);
+    margin: 0 0 0.25rem 0;
+  }
+
+  .toast-message {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .toast-close:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text);
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .toast-container.toast-position-top-right,
+    .toast-container.toast-position-top-left {
+      top: 1rem;
+    }
+
+    .toast-container.toast-position-bottom-right,
+    .toast-container.toast-position-bottom-left {
+      bottom: 1rem;
+    }
+
+    .toast-container {
+      left: 1rem !important;
+      right: 1rem !important;
+    }
+
+    .toast {
+      min-width: auto;
+      max-width: none;
+    }
+
+    .toast-position-top-right,
+    .toast-position-top-left {
+      top: 1rem;
+    }
+
+    .toast-position-bottom-right,
+    .toast-position-bottom-left {
+      bottom: 1rem;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function() {
+    const icons = {
+      success: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toast-icon"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>',
+      error: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toast-icon"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>',
+      warning: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toast-icon"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
+      info: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="toast-icon"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>'
+    };
+
+    const titles = {
+      success: 'Success',
+      error: 'Error',
+      warning: 'Warning',
+      info: 'Info'
+    };
+
+    let toastCounter = 0;
+
+    function showToast(options) {
+      const {
+        message,
+        variant = 'info',
+        title,
+        duration = 5000,
+        containerId = 'toast-container'
+      } = options;
+
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      const toastId = `toast-${Date.now()}-${toastCounter++}`;
+      const toastTitle = title || titles[variant] || 'Notification';
+
+      const toast = document.createElement('div');
+      toast.id = toastId;
+      toast.className = `toast toast-${variant}`;
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+
+      toast.innerHTML = `
+        ${icons[variant] || icons.info}
+        <div class="toast-content">
+          <p class="toast-title">${toastTitle}</p>
+          <p class="toast-message">${message}</p>
+        </div>
+        <button type="button" class="toast-close" aria-label="Close notification" onclick="window.closeToast('${toastId}')">
+          &times;
+        </button>
+      `;
+
+      container.appendChild(toast);
+
+      if (duration > 0) {
+        setTimeout(() => {
+          closeToast(toastId);
+        }, duration);
+      }
+
+      return toastId;
+    }
+
+    function closeToast(toastId) {
+      const toast = document.getElementById(toastId);
+      if (!toast) return;
+
+      toast.classList.add('toast-removing');
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }
+
+    window.showToast = showToast;
+    window.closeToast = closeToast;
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        const container = document.querySelector('.toast-container');
+        if (container) {
+          const toasts = container.querySelectorAll('.toast');
+          if (toasts.length > 0) {
+            const lastToast = toasts[toasts.length - 1];
+            closeToast(lastToast.id);
+          }
+        }
+      }
+    });
+  })();
+</script>

@@ -1,0 +1,96 @@
+---
+/**
+ * Loading/Spinner Component
+ * 
+ * Accessible loading indicator for async operations. Supports multiple
+ * sizes and includes proper ARIA attributes for screen readers.
+ * 
+ * @example
+ * ```astro
+ * <!-- Small inline spinner -->
+ * <Spinner size="sm" />
+ * 
+ * <!-- Medium spinner with custom label -->
+ * <Spinner size="md" label="Loading data..." />
+ * 
+ * <!-- Large spinner centered -->
+ * <div style="display: flex; justify-content: center;">
+ *   <Spinner size="lg" />
+ * </div>
+ * ```
+ */
+export interface Props {
+  /** Size of the spinner affecting dimensions */
+  size?: 'sm' | 'md' | 'lg';
+  /** Accessibility label for screen readers (overrides default) */
+  label?: string;
+  /** Additional CSS classes to apply */
+  class?: string;
+}
+
+const { size = 'md', label: customLabel, class: className = '' } = Astro.props;
+
+const defaultLabels = {
+  sm: 'Loading',
+  md: 'Loading',
+  lg: 'Loading',
+};
+
+const ariaLabel = customLabel || defaultLabels[size];
+---
+
+<div 
+  class={`spinner spinner-${size} ${className || ''}`}
+  role="status"
+  aria-label={ariaLabel}
+  aria-live="polite"
+>
+  <span class="sr-only">{ariaLabel}</span>
+</div>
+
+<style>
+  .spinner {
+    display: inline-block;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    border-top-color: var(--color-primary);
+    border-right-color: transparent;
+    border-bottom-color: var(--color-primary);
+    border-left-color: transparent;
+  }
+
+  .spinner-sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  .spinner-md {
+    width: 24px;
+    height: 24px;
+    border-width: 3px;
+  }
+
+  .spinner-lg {
+    width: 40px;
+    height: 40px;
+    border-width: 4px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+</style>

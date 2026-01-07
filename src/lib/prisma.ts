@@ -24,6 +24,13 @@ export function getPrisma(locals: App.Locals): PrismaClient {
 }
 
 /**
+ * Type definitions for Job enums (for type safety when Prisma client is not available)
+ */
+export type JobType = 'NOTIFICATION' | 'REPORT_GENERATION' | 'EMAIL_SEND' | 'WEBHOOK' | 'CLEANUP' | 'BACKUP' | 'DATA_EXPORT' | 'DATA_IMPORT';
+export type JobStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'RETRYING';
+export type JobPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+/**
  * Prevent Prisma client bundling in browser environments
  * This ensures server-side code is never included in client bundles
  */
