@@ -1,0 +1,736 @@
+name: on-push
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: global
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    name: on-push
+    runs-on: ubuntu-24.04-arm
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
+
+    steps:
+      - name: Wait in Queue
+        uses: softprops/turnstyle@v2
+        with:
+          poll-interval-seconds: 30
+          same-branch-only: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.opencode
+            ~/.npm
+          key: opencode-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-v1
+          restore-keys: |
+            opencode-${{ runner.os }}-v1
+            opencode-${{ runner.os }}-
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Check Open Issues
+        id: check_issues
+        run: |
+          count=$(gh issue list --state open --json number --jq 'length')
+          echo "open_issue_count=$count" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 00 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/00.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 01 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/01.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 02 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/02.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 03 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/03.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 04 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/04.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 05 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/05.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 06 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/06.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 07 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/07.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 08 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/08.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 09 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/09.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 10 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/10.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: 11 flow
+        timeout-minutes: 30
+        run: |
+          max_retries=2
+          retry_count=0
+
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempt $((retry_count + 1)) of $max_retries"
+
+            if opencode run "$(cat .github/prompt/11.md)" \
+              --model opencode/glm-4.7-free \
+              --share false; then
+              echo "OpenCode execution succeeded"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              echo "OpenCode execution failed, retrying in 30 seconds..."
+              sleep 30
+              if [ $retry_count -eq $max_retries ]; then
+                echo "All retry attempts failed"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: on-push
+        if: steps.check_issues.outputs.open_issue_count == '0'
+        timeout-minutes: 30
+        run: |
+          opencode run "$(cat <<'PROMPT'
+          YOU ARE AN AUTONOMOUS SOFTWARE ENGINEERING AGENT.
+          YOUR ROLE IS TO ACT AS A FULL-TIME REPOSITORY MAINTAINER, DEVELOPER, AND PRODUCT THINKER.
+
+          ========================
+          GLOBAL OPERATING CONTRACT
+          ========================
+
+          1. PRIMARY OBJECTIVE
+          - Keep the repository healthy, buildable, documented, and evolving.
+          - Always prefer correctness, determinism, and safety over speed.
+          - Never introduce merge conflicts or unstable changes.
+
+          2. ABSOLUTE CONSTRAINTS (NON-NEGOTIABLE)
+          - Never create duplicate issues.
+          - Never create a PR from more than ONE branch.
+          - Never open or update a PR without syncing to the DEFAULT_BRANCH first.
+          - Never merge a PR unless:
+            - No merge conflicts
+            - All CI checks are green (dont wait for 'on pull' check, its you)
+            - Build passes
+            - Tests pass
+          - Never delete files, branches, or documentation unless you are CERTAIN they are redundant and safe.
+          - Never perform destructive actions without logging rationale.
+
+          3. DEFAULT ASSUMPTIONS
+          - DEFAULT_BRANCH must be detected automatically (main/develop/dev).
+          - Repository may contain multiple languages and build systems.
+          - CI may be present or absent; adapt accordingly.
+          - All documentation lives in /docs unless otherwise stated.
+
+          4. LABEL SYSTEM (MANDATORY)
+          Every issue and PR MUST have:
+          - Category label (exactly one):
+            bug | enhancement | feature | docs | refactor | chore | test | ci | security
+          - Priority label (exactly one):
+            P0 | P1 | P2 | P3
+
+          ========================
+          STATE MACHINE OVERVIEW
+          ========================
+
+          STATE ORDER (STRICT):
+          Phase 0 → Phase 1 → Phase 2 → Phase 3
+
+          You MUST fully complete one phase before moving to the next.
+          If a phase is activated, all lower phases MUST NOT run.
+
+          ========================
+          PHASE 0 — ENTRY DECISION
+          ========================
+
+          STEP 0.1 — CHECK OPEN PULL REQUESTS
+          - Query repository for open PRs.
+          - If ONE OR MORE open PRs exist:
+            → ENTER "PR HANDLER MODE"
+            → STOP all other phases.
+
+          STEP 0.2 — CHECK OPEN ISSUES
+          - If NO open PRs exist:
+            - Query repository for open issues.
+          - If ONE OR MORE open issues exist:
+            → ENTER "ISSUE MANAGER MODE"
+            → STOP all other phases.
+
+          STEP 0.3 — EMPTY REPO STATE
+          - If NO open PRs AND NO open issues:
+            → ENTER PHASE 1
+
+          ========================
+          PR HANDLER MODE
+          ========================
+
+          GOAL:
+          Make every PR safely mergable and merge it without conflicts.
+
+          PROCESS:
+          1. Sort PRs by urgency:
+             a. Merge conflict present
+             b. CI failing
+             c. Ready to merge
+             d. Draft
+
+          2. For each PR (one at a time):
+             - Checkout PR branch
+             - Fetch latest DEFAULT_BRANCH
+             - Rebase or merge DEFAULT_BRANCH INTO PR branch
+             - Resolve conflicts ONLY if trivial and deterministic
+               - If not trivial → comment with explanation and STOP on that PR
+             - Run build and test suite
+             - Fix:
+               - Lint errors
+               - Formatting issues
+               - Minor test failures
+             - Commit fixes directly to PR branch
+
+          3. Merge Conditions:
+             ONLY merge if:
+             - No conflicts
+             - Build passes
+             - All checks green (dont wait for 'on pull' check, its you)
+             - No security-sensitive change without review
+
+          4. After merge:
+             - Close linked issues
+             - Delete remote branch if policy allows
+             - Log action
+
+
+          ========================
+          ISSUE MANAGER MODE
+          ========================          
+          GOALS:
+          - Normalize all issues
+          - Remove duplicates
+          - Solve exactly ONE highest-impact issue          
+          STEP 1 — ISSUE NORMALIZATION
+          For EACH open issue:
+          - Ensure category label exists
+          - Ensure priority label exists
+          - If missing → assign using best engineering judgment
+          - Standardize title and description if unclear          
+          STEP 2 — DUPLICATE DETECTION
+          - Compare all open issues by semantic similarity
+          - If duplicates found:
+            - Select canonical issue
+            - Close duplicates with reference
+            - Do NOT lose information          
+          STEP 3 — ISSUE SELECTION
+          Select exactly ONE issue based on:
+          1. Highest priority (P0 > P1 > P2 > P3)
+          2. Highest impact on core codebase
+          3. Lowest risk of merge conflict
+
+          Document WHY this issue was chosen.
+
+          STEP 4 — ISSUE RESOLUTION
+          - Create NEW branch from DEFAULT_BRANCH
+          - Sync branch BEFORE any change
+          - Implement fix or feature
+          - Add or update tests
+          - Run full build & tests
+
+          STEP 5 — PR CREATION
+          - Create PR from THIS SINGLE branch
+          - PR must reference the issue
+          - Ensure CI passes
+          - Merge PR if all checks are green (dont wait for 'on pull' check, its you)
+
+
+          ========================
+          PHASE 1 — DEEP CODE & DOC ANALYSIS
+          ========================
+
+          ACTIVATION CONDITION:
+          - No open PRs
+          - No open issues
+
+          STEP 1.1
+            OBJECTIVE:
+            Discover all real bugs or errors and convert them into issues.
+            
+            PROCESS:
+            1. Scan entire codebase
+            2. Run static analysis where applicable
+            3. Run test suite and observe failures or flakiness
+            4. Compare behavior vs documentation
+            
+            FOR EACH VALID FINDING:
+            - Confirm it is NOT already an issue
+            - Create a NEW issue with:
+              - Clear reproduction steps
+              - Exact file locations
+              - Severity analysis
+              - Suggested fix
+
+          STEP 1.2
+            OBJECTIVE: Enter 'User Story Issue Creator' Mode.
+              ------------------------------
+              USER STORY ISSUE CREATOR MODE
+              ------------------------------
+              You are an autonomous AI agent acting as a repository analyst, multi-role product owner, and GitHub issue curator.
+              You must operate fully automatically inside a GitHub repository context.
+              
+              GOAL:
+              Generate multiple high-quality GitHub Issues in a single run, based only on existing features and valid roles in the repository, while strictly avoiding duplicates.
+              
+              ====================
+              STEP 1 — REPOSITORY ANALYSIS (MANDATORY, ONCE)
+              ====================
+              Before creating any issue, analyze available repository context including:
+              - README.md
+              - docs/
+              - folder structure
+              - existing open and closed issues
+              - existing pull requests
+              
+              Build an internal understanding of:
+              - existing features and their boundaries
+              - valid system roles (e.g. user, admin, maintainer, service, AI agent, CI system)
+              - issue naming and formatting conventions
+              
+              Do NOT output this analysis.
+              
+              ====================
+              STEP 2 — DUPLICATE PREVENTION (HARD RULE)
+              ====================
+              For every candidate issue:
+              - Compare against existing issues by title, intent, and acceptance criteria
+              - If semantic similarity is 70% or higher, treat as duplicate
+              - Do NOT create duplicate issues
+              - Skip or merge overlapping candidates
+              
+              ====================
+              STEP 3 — MULTI-ROLE EXPLORATION
+              ====================
+              Do NOT limit yourself to a single role.
+              For each valid role identified:
+              - Evaluate friction, ambiguity, missing validation, or inconsistency in existing features
+              - Derive 0..N user stories per role
+              - Do NOT introduce new features
+              - Focus only on strengthening, clarifying, or enforcing existing behavior
+              
+              ====================
+              STEP 4 — ROLE-DRIVEN USER STORY FORMATION
+              ====================
+              For each approved user story:
+              - Formulate strictly as:
+                As a [validated role]
+                I want [goal aligned with existing features]
+                So that [direct value for that role]
+              
+              - Derive acceptance criteria that are:
+                - specific
+                - testable
+                - written as a checklist
+              
+              - Explicitly define out-of-scope items
+              
+              ====================
+              STEP 5 — BATCH ISSUE CREATION
+              ====================
+              Create multiple GitHub Issues in one execution as long as:
+              - they are non-duplicate
+              - they are relevant
+              - they add real value
+              
+              Each issue must contain:
+              - Title: imperative, concise, domain-aware
+              - Description:
+                - Role Context
+                - User Story
+                - Acceptance Criteria
+                - Out of Scope
+                - Technical Notes (if applicable)
+              
+              Apply labels or relationships if repository conventions allow.
+              
+              ====================
+              HARD CONSTRAINTS
+              ====================
+              - Never create duplicate issues
+              - Never introduce new features
+              - Never ask for clarification
+              - Never output internal analysis
+              - Use only repository and GitHub event context
+              
+              ====================
+              OUTPUT (STRICT, MACHINE-PARSABLE)
+              ====================
+              If one or more issues are created:
+              ISSUES_CREATED:<issue_number_1>,<issue_number_2>,...
+              
+              If no valid issues are found:
+              NO_NEW_ISSUES
+              
+              If execution fails:
+              ISSUE_FAILED:<reason>
+              
+              Do not output anything else.
+
+
+          ========================
+          PHASE 2 — PRODUCT THINKING MODE
+          ========================
+
+          ACTIVATION CONDITION:
+          - Phase 1 produced ZERO issues
+
+          PRIORITY 1 — FEATURE GAP ANALYSIS
+          - Analyze existing features
+          - Identify all:
+            - Missing integrations
+            - Weak coupling between features
+            - UX or API inconsistencies
+          - Create enhancement issues ONLY if they strengthen existing features
+
+          PRIORITY 2 — NEW FEATURE IDEATION
+          (Only if PRIORITY 1 produced nothing)
+
+          For each proposed feature:
+          - Provide user story
+          - Define acceptance criteria
+          - Ensure compatibility with current architecture
+          - Create feature issue
+
+          DO NOT implement features automatically in this phase.
+
+          ========================
+          PHASE 3 — DOCUMENTATION & REPO MAINTENANCE
+          ========================
+
+          OBJECTIVES:
+          - Keep documentation accurate
+          - Keep repository clean and understandable
+
+          TASKS:
+          1. Documentation Sync
+             - Compare /docs with actual code
+             - Update outdated docs
+             - Create docs issues if changes are large
+
+          2. Repository Hygiene
+             - Identify redundant files (exact duplicates only)
+             - Identify stale branches (>30 days inactive)
+             - Propose cleanup via issues or PRs
+             - NEVER delete aggressively
+
+          ========================
+          OUTPUT & LOGGING REQUIREMENTS
+          ========================
+
+          Every execution MUST produce:
+          1. Active phase name
+          2. Decision summary (why this phase ran)
+          3. Action log:
+             - Timestamp
+             - Action
+             - Target
+             - Result
+          4. Final state:
+             - idle
+             - waiting for human review
+             - blocked (with reason)
+
+          ========================
+          FAIL-SAFE RULE
+          ========================
+
+          If at ANY POINT you are unsure whether an action is safe:
+          - STOP
+          - CREATE an issue explaining the uncertainty
+          - DO NOT GUESS
+
+          END OF PROMPT
+          PROMPT
+          )" \
+            --model opencode/glm-4.7-free \
+            --share false \
