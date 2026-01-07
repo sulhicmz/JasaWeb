@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
-import { prisma, type JobType, type JobStatus, type JobPriority } from '@/lib/prisma';
+import type { PrismaClient } from '@prisma/client';
+import type { JobType, JobStatus, JobPriority } from '@/lib/prisma';
 
 export interface JobQueueFilter {
   status?: JobStatus;
@@ -39,15 +40,12 @@ export interface JobStats {
 }
 
 export class JobQueueService {
-  static async createJob(
+  constructor(private prisma: PrismaClient) {}
+  async createJob(
     payload: Record<string, unknown>,
     options: CreateJobOptions
   ) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.create({
+    return this.prisma.jobQueue.create({
       data: {
         type: options.type,
         priority: options.priority || 'MEDIUM',
@@ -60,22 +58,14 @@ export class JobQueueService {
     });
   }
 
-  static async getJobById(id: string) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.findUnique({
+  async getJobById(id: string) {
+    return this.prisma.jobQueue.findUnique({
       where: { id },
     });
   }
 
-  static async getPendingJobs(limit: number = 10) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.findMany({
+  async getPendingJobs(limit: number = 10) {
+    return this.prisma.jobQueue.findMany({
       where: {
         status: 'PENDING',
         scheduledAt: { lte: new Date() },
@@ -88,12 +78,8 @@ export class JobQueueService {
     });
   }
 
-  static async getFailedJobsForRetry(limit: number = 10) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.findMany({
+  async getFailedJobsForRetry(limit: number = 10) {
+    return this.prisma.jobQueue.findMany({
       where: {
         status: 'FAILED',
         retryCount: { lt: 3 },
@@ -103,12 +89,8 @@ export class JobQueueService {
     });
   }
 
-  static async updateJob(id: string, options: UpdateJobOptions) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.update({
+  async updateJob(id: string, options: UpdateJobOptions) {
+    return this.prisma.jobQueue.update({
       where: { id },
       data: {
         status: options.status,
@@ -123,12 +105,8 @@ export class JobQueueService {
     });
   }
 
-  static async markJobAsProcessing(id: string) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.update({
+  async markJobAsProcessing(id: string) {
+    return this.prisma.jobQueue.update({
       where: { id },
       data: {
         status: 'PROCESSING',
@@ -137,12 +115,8 @@ export class JobQueueService {
     });
   }
 
-  static async markJobAsCompleted(id: string, result?: Record<string, unknown>) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.update({
+  async markJobAsCompleted(id: string, result?: Record<string, unknown>) {
+    return this.prisma.jobQueue.update({
       where: { id },
       data: {
         status: 'COMPLETED',
@@ -152,16 +126,12 @@ export class JobQueueService {
     });
   }
 
-  static async markJobAsFailed(
+  async markJobAsFailed(
     id: string,
     error: string,
     incrementRetry: boolean = true
   ) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    const currentJob = await (prisma as any).jobQueue.findUnique({
+    const currentJob = await this.prisma.jobQueue.findUnique({
       where: { id },
       select: { retryCount: true, maxRetries: true },
     });
@@ -173,7 +143,7 @@ export class JobQueueService {
     const newRetryCount = incrementRetry ? currentJob.retryCount + 1 : currentJob.retryCount;
     const shouldRetry = newRetryCount < currentJob.maxRetries;
 
-    return (prisma as any).jobQueue.update({
+    return this.prisma.jobQueue.update({
       where: { id },
       data: {
         status: shouldRetry ? 'RETRYING' : 'FAILED',
@@ -185,12 +155,8 @@ export class JobQueueService {
     });
   }
 
-  static async cancelJob(id: string) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.update({
+  async cancelJob(id: string) {
+    return this.prisma.jobQueue.update({
       where: { id },
       data: {
         status: 'CANCELLED',
@@ -199,22 +165,14 @@ export class JobQueueService {
     });
   }
 
-  static async deleteJob(id: string) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    return (prisma as any).jobQueue.delete({
+  async deleteJob(id: string) {
+    return this.prisma.jobQueue.delete({
       where: { id },
     });
   }
 
-  static async getJobs(filter: JobQueueFilter = {}, page: number = 1, limit: number = 20) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    const where: any = {};
+  async getJobs(filter: JobQueueFilter = {}, page: number = 1, limit: number = 20) {
+    const where: Record<string, unknown> = {};
 
     if (filter.status) {
       where.status = filter.status;
@@ -230,8 +188,8 @@ export class JobQueueService {
     }
 
     const [total, jobs] = await Promise.all([
-      (prisma as any).jobQueue.count({ where }),
-      (prisma as any).jobQueue.findMany({
+      this.prisma.jobQueue.count({ where }),
+      this.prisma.jobQueue.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }],
         skip: (page - 1) * limit,
@@ -250,20 +208,16 @@ export class JobQueueService {
     };
   }
 
-  static async getJobStats(): Promise<JobStats> {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
+  async getJobStats(): Promise<JobStats> {
     const [total, pending, processing, completed, failed, cancelled, retrying] =
       await Promise.all([
-        (prisma as any).jobQueue.count(),
-        (prisma as any).jobQueue.count({ where: { status: 'PENDING' } }),
-        (prisma as any).jobQueue.count({ where: { status: 'PROCESSING' } }),
-        (prisma as any).jobQueue.count({ where: { status: 'COMPLETED' } }),
-        (prisma as any).jobQueue.count({ where: { status: 'FAILED' } }),
-        (prisma as any).jobQueue.count({ where: { status: 'CANCELLED' } }),
-        (prisma as any).jobQueue.count({ where: { status: 'RETRYING' } }),
+        this.prisma.jobQueue.count(),
+        this.prisma.jobQueue.count({ where: { status: 'PENDING' } }),
+        this.prisma.jobQueue.count({ where: { status: 'PROCESSING' } }),
+        this.prisma.jobQueue.count({ where: { status: 'COMPLETED' } }),
+        this.prisma.jobQueue.count({ where: { status: 'FAILED' } }),
+        this.prisma.jobQueue.count({ where: { status: 'CANCELLED' } }),
+        this.prisma.jobQueue.count({ where: { status: 'RETRYING' } }),
       ]);
 
     return {
@@ -277,15 +231,11 @@ export class JobQueueService {
     };
   }
 
-  static async cleanupOldJobs(days: number = 7) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
+  async cleanupOldJobs(days: number = 7) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    const result = await (prisma as any).jobQueue.deleteMany({
+    const result = await this.prisma.jobQueue.deleteMany({
       where: {
         status: { in: ['COMPLETED', 'FAILED', 'CANCELLED'] },
         completedAt: { lte: cutoffDate },
@@ -295,18 +245,14 @@ export class JobQueueService {
     return result.count;
   }
 
-  static async retryFailedJobs(jobIds: string[]) {
-    if (!prisma) {
-      throw new Error('Prisma client not initialized');
-    }
-
-    const jobs = await (prisma as any).jobQueue.findMany({
+  async retryFailedJobs(jobIds: string[]) {
+    const jobs = await this.prisma.jobQueue.findMany({
       where: { id: { in: jobIds }, status: 'FAILED' },
     });
 
     const updated = await Promise.all(
-      jobs.map((job: any) =>
-        (prisma as any).jobQueue.update({
+      jobs.map((job) =>
+        this.prisma.jobQueue.update({
           where: { id: job.id },
           data: {
             status: 'PENDING',

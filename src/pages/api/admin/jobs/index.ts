@@ -1,13 +1,11 @@
 import { type APIRoute } from 'astro';
 import { jsonResponse, errorResponse, validateRequired, handleApiError } from '@/lib/api';
 import { JobQueueService } from '@/services/jobs/job-queue.service';
+import { getPrisma } from '@/lib/prisma';
 
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
-    const env = locals.runtime?.env;
-    if (!env) {
-      return errorResponse('Environment not available', 500);
-    }
+    const prisma = getPrisma(locals);
 
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
@@ -16,7 +14,8 @@ export const GET: APIRoute = async ({ request, locals }) => {
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
-    const result = await JobQueueService.getJobs(
+    const jobQueueService = new JobQueueService(prisma);
+    const result = await jobQueueService.getJobs(
       {
         status: (status as any) || undefined,
         type: (type as any) || undefined,
@@ -34,16 +33,14 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
-    const env = locals.runtime?.env;
-    if (!env) {
-      return errorResponse('Environment not available', 500);
-    }
+    const prisma = getPrisma(locals);
 
     const body = await request.json();
     const error = validateRequired(body, ['type', 'payload']);
     if (error) return errorResponse(error);
 
-    const job = await JobQueueService.createJob(body.payload, {
+    const jobQueueService = new JobQueueService(prisma);
+    const job = await jobQueueService.createJob(body.payload, {
       type: body.type,
       priority: body.priority,
       scheduledAt: body.scheduledAt,

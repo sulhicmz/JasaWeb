@@ -7,13 +7,13 @@ export interface JobHandler {
 }
 
 export class JobSchedulerService {
-  private static handlers: Map<string, any> = new Map([
+  private static handlers: Map<string, JobHandler> = new Map([
     ['NOTIFICATION', new NotificationJobHandler()],
     ['REPORT_GENERATION', new ReportJobHandler()],
     ['EMAIL_SEND', new NotificationJobHandler()],
   ]);
 
-  static registerHandler(type: string, handler: any) {
+  static registerHandler(type: string, handler: JobHandler) {
     this.handlers.set(type, handler);
   }
 
@@ -108,7 +108,7 @@ export class JobSchedulerService {
     const { JobQueueService } = await import('./job-queue.service');
     return JobQueueService.createJob(payload, {
       type,
-      priority: options?.priority as any,
+      priority: options?.priority,
       scheduledAt: options?.scheduledAt,
       maxRetries: options?.maxRetries,
       userId: options?.userId,
@@ -126,7 +126,7 @@ export class JobSchedulerService {
       return this.scheduleJob('NOTIFICATION', payload, {
         priority: options?.priority || 'MEDIUM',
         userId: options?.userId,
-      } as any);
+      });
   }
 
   static async scheduleReportJob(

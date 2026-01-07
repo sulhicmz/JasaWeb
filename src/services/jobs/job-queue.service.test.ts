@@ -1,9 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobQueueService } from './job-queue.service';
+import { createPrismaClient } from '@/lib/prisma';
 
 describe('JobQueueService', () => {
+  let prisma: any;
+  let jobQueueService: JobQueueService;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    prisma = createPrismaClient({
+      HYPERDRIVE: { connectionString: 'postgresql://test' }
+    });
+    jobQueueService = new JobQueueService(prisma);
   });
 
   describe('createJob', () => {
@@ -11,7 +19,7 @@ describe('JobQueueService', () => {
       const payload = { type: 'NOTIFICATION', userId: 'user123', message: 'Test' };
       const options = { type: 'NOTIFICATION' as any, priority: 'HIGH' as any, maxRetries: 5 };
 
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
       expect(job).toBeDefined();
       expect(job.id).toBeDefined();
@@ -21,7 +29,7 @@ describe('JobQueueService', () => {
       const payload = { type: 'REPORT_GENERATION', reportType: 'sales' };
       const options = { type: 'REPORT_GENERATION' as any };
 
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
       expect(job).toBeDefined();
     });
@@ -34,7 +42,7 @@ describe('JobQueueService', () => {
         scheduledAt,
       };
 
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
       expect(job).toBeDefined();
     });
@@ -44,16 +52,16 @@ describe('JobQueueService', () => {
     it('should retrieve job by id', async () => {
       const payload = { type: 'NOTIFICATION', userId: 'user123' };
       const options = { type: 'NOTIFICATION' as any };
-      const created = await JobQueueService.createJob(payload, options);
+      const created = await jobQueueService.createJob(payload, options);
 
-      const job = await JobQueueService.getJobById(created.id);
+      const job = await jobQueueService.getJobById(created.id);
 
       expect(job).toBeDefined();
       expect(job?.id).toBe(created.id);
     });
 
     it('should return undefined for non-existent job', async () => {
-      const job = await JobQueueService.getJobById('non-existent-id');
+      const job = await jobQueueService.getJobById('non-existent-id');
 
       expect(job).toBeNull();
     });
@@ -61,7 +69,7 @@ describe('JobQueueService', () => {
 
   describe('getPendingJobs', () => {
     it('should retrieve pending jobs ordered by priority', async () => {
-      const pending = await JobQueueService.getPendingJobs(10);
+      const pending = await jobQueueService.getPendingJobs(10);
 
       expect(Array.isArray(pending)).toBe(true);
     });
@@ -69,7 +77,7 @@ describe('JobQueueService', () => {
 
   describe('getFailedJobsForRetry', () => {
     it('should retrieve failed jobs eligible for retry', async () => {
-      const failed = await JobQueueService.getFailedJobsForRetry(10);
+      const failed = await jobQueueService.getFailedJobsForRetry(10);
 
       expect(Array.isArray(failed)).toBe(true);
     });
@@ -79,9 +87,9 @@ describe('JobQueueService', () => {
     it('should update job status to PROCESSING', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
-      const updated = await JobQueueService.markJobAsProcessing(job.id);
+      const updated = await jobQueueService.markJobAsProcessing(job.id);
 
       expect(updated.status).toBe('PROCESSING');
       expect(updated.startedAt).toBeDefined();
@@ -92,10 +100,10 @@ describe('JobQueueService', () => {
     it('should mark job as completed with result', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
       const result = { success: true, data: 'completed' };
 
-      const updated = await JobQueueService.markJobAsCompleted(job.id, result);
+      const updated = await jobQueueService.markJobAsCompleted(job.id, result);
 
       expect(updated.status).toBe('COMPLETED');
       expect(updated.completedAt).toBeDefined();
@@ -106,10 +114,10 @@ describe('JobQueueService', () => {
     it('should mark job as failed with error', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
       const error = 'Job execution failed';
 
-      const updated = await JobQueueService.markJobAsFailed(job.id, error, true);
+      const updated = await jobQueueService.markJobAsFailed(job.id, error, true);
 
       expect(['FAILED', 'RETRYING']).toContain(updated.status);
       expect(updated.error).toBe(error);
@@ -118,10 +126,10 @@ describe('JobQueueService', () => {
     it('should mark as RETRYING if retries remain', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any, maxRetries: 5 };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
-      await JobQueueService.markJobAsFailed(job.id, 'Temporary error', true);
-      const updated = await JobQueueService.getJobById(job.id);
+      await jobQueueService.markJobAsFailed(job.id, 'Temporary error', true);
+      const updated = await jobQueueService.getJobById(job.id);
 
       expect(updated?.status).toBe('RETRYING');
     });
@@ -129,10 +137,10 @@ describe('JobQueueService', () => {
     it('should mark as FAILED if max retries exceeded', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any, maxRetries: 0 };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
-      await JobQueueService.markJobAsFailed(job.id, 'Permanent error', true);
-      const updated = await JobQueueService.getJobById(job.id);
+      await jobQueueService.markJobAsFailed(job.id, 'Permanent error', true);
+      const updated = await jobQueueService.getJobById(job.id);
 
       expect(updated?.status).toBe('FAILED');
     });
@@ -142,9 +150,9 @@ describe('JobQueueService', () => {
     it('should cancel a pending job', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
-      const updated = await JobQueueService.cancelJob(job.id);
+      const updated = await jobQueueService.cancelJob(job.id);
 
       expect(updated.status).toBe('CANCELLED');
       expect(updated.completedAt).toBeDefined();
@@ -155,10 +163,10 @@ describe('JobQueueService', () => {
     it('should delete a job', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
-      await JobQueueService.deleteJob(job.id);
-      const deleted = await JobQueueService.getJobById(job.id);
+      await jobQueueService.deleteJob(job.id);
+      const deleted = await jobQueueService.getJobById(job.id);
 
       expect(deleted).toBeNull();
     });
@@ -166,7 +174,7 @@ describe('JobQueueService', () => {
 
   describe('getJobs', () => {
     it('should retrieve jobs with pagination', async () => {
-      const result = await JobQueueService.getJobs({}, 1, 20);
+      const result = await jobQueueService.getJobs({}, 1, 20);
 
       expect(result).toHaveProperty('jobs');
       expect(result).toHaveProperty('pagination');
@@ -177,19 +185,19 @@ describe('JobQueueService', () => {
     });
 
     it('should filter jobs by status', async () => {
-      const result = await JobQueueService.getJobs({ status: 'PENDING' as any }, 1, 20);
+      const result = await jobQueueService.getJobs({ status: 'PENDING' as any }, 1, 20);
 
       expect(result.jobs.every((job: any) => job.status === 'PENDING')).toBe(true);
     });
 
     it('should filter jobs by type', async () => {
-      const result = await JobQueueService.getJobs({ type: 'NOTIFICATION' as any }, 1, 20);
+      const result = await jobQueueService.getJobs({ type: 'NOTIFICATION' as any }, 1, 20);
 
       expect(result.jobs.every((job: any) => job.type === 'NOTIFICATION')).toBe(true);
     });
 
     it('should filter jobs by priority', async () => {
-      const result = await JobQueueService.getJobs({ priority: 'HIGH' as any }, 1, 20);
+      const result = await jobQueueService.getJobs({ priority: 'HIGH' as any }, 1, 20);
 
       expect(result.jobs.every((job: any) => job.priority === 'HIGH')).toBe(true);
     });
@@ -197,7 +205,7 @@ describe('JobQueueService', () => {
 
   describe('getJobStats', () => {
     it('should return accurate job statistics', async () => {
-      const stats = await JobQueueService.getJobStats();
+      const stats = await jobQueueService.getJobStats();
 
       expect(stats).toHaveProperty('total');
       expect(stats).toHaveProperty('pending');
@@ -212,13 +220,13 @@ describe('JobQueueService', () => {
 
   describe('cleanupOldJobs', () => {
     it('should delete completed jobs older than specified days', async () => {
-      const deleted = await JobQueueService.cleanupOldJobs(7);
+      const deleted = await jobQueueService.cleanupOldJobs(7);
 
       expect(typeof deleted).toBe('number');
     });
 
     it('should handle 0 days parameter', async () => {
-      const deleted = await JobQueueService.cleanupOldJobs(0);
+      const deleted = await jobQueueService.cleanupOldJobs(0);
 
       expect(typeof deleted).toBe('number');
     });
@@ -228,10 +236,10 @@ describe('JobQueueService', () => {
     it('should retry failed jobs', async () => {
       const payload = { type: 'TEST', data: 'test' };
       const options = { type: 'NOTIFICATION' as any };
-      const job = await JobQueueService.createJob(payload, options);
+      const job = await jobQueueService.createJob(payload, options);
 
-      await JobQueueService.markJobAsFailed(job.id, 'Error', true);
-      const retried = await JobQueueService.retryFailedJobs([job.id]);
+      await jobQueueService.markJobAsFailed(job.id, 'Error', true);
+      const retried = await jobQueueService.retryFailedJobs([job.id]);
 
       expect(retried.length).toBeGreaterThan(0);
     });
