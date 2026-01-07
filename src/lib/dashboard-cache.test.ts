@@ -194,6 +194,7 @@ describe('DashboardCacheService', () => {
 
     describe('Cache Invalidation', () => {
         it('should invalidate dashboard stats', async () => {
+            mockKV.list.mockResolvedValue({ keys: [] });
             await cacheService.invalidateDashboardStats();
 
             expect(mockKV.delete).toHaveBeenCalledWith('dashboard:stats:v1');
