@@ -190,7 +190,7 @@ describe('Security Validation - CSRF, Session, Authorization', () => {
                 description: 1000,
             };
 
-            Object.entries(maxLengths).forEach(([field, maxLength]) => {
+            Object.entries(maxLengths).forEach(([_field, maxLength]) => {
                 expect(maxLength).toBeGreaterThan(0);
                 expect(maxLength).toBeLessThanOrEqual(5000);
             });
@@ -429,8 +429,6 @@ describe('Security Validation - CSRF, Session, Authorization', () => {
         it('should enforce password change after breach', async () => {
             const passwordAge = 90; // days
             const maxPasswordAge = 90; // days
-
-            const needsPasswordChange = passwordAge >= maxPasswordAge;
 
             expect(passwordAge).toBeGreaterThanOrEqual(0);
             expect(maxPasswordAge).toBeGreaterThan(0);

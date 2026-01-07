@@ -13,7 +13,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
     mockPrisma,
     mockRateLimit,
-    mockJsonResponse,
     testUserData,
     testAdminData,
     createMockDatabase,

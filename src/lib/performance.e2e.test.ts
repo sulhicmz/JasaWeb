@@ -51,7 +51,7 @@ describe('Performance & Scalability - Load Testing', () => {
 
             // Performance expectation
             const startTime = performance.now();
-            const aggregation = mockLargeDataset.reduce((acc, project) => {
+            mockLargeDataset.reduce((acc, project) => {
                 const status = project.status;
                 acc[status] = (acc[status] || 0) + 1;
                 return acc;
@@ -273,7 +273,6 @@ describe('Performance & Scalability - Load Testing', () => {
 
         it('should handle pagination with sorting', async () => {
             const largeDataset = createMockProjects(5000);
-            const sortField = 'createdAt';
             
             // Test both sort orders
             ['asc', 'desc' as const].forEach(sortOrder => {

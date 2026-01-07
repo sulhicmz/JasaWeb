@@ -4,9 +4,8 @@
  */
 
 import { vi } from 'vitest';
-import type { Mocked } from 'vitest';
 import { getPrisma } from '@/lib/prisma';
-import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { validateMidtransSignature, parseMidtransWebhook } from '@/lib/midtrans';
 import { jsonResponse, errorResponse } from '@/lib/api';
 
@@ -233,7 +232,7 @@ export function createMockDatabase(): MockDatabase {
 }
 
 // Setup function to configure default mock behaviors
-export function setupDefaultMocks(mockDb: MockDatabase) {
+export function setupDefaultMocks(_mockDb: MockDatabase) {
     // Default successful rate limiting (null = allow request)
     mockRateLimit.mockResolvedValue(null);
     

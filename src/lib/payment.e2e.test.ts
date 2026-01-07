@@ -13,7 +13,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
     mockPrisma,
-    mockRateLimit,
     mockValidateMidtransSignature,
     mockParseMidtransWebhook,
     testProjectData,
@@ -87,7 +86,7 @@ describe('Payment Integration - QRIS & Midtrans Workflows', () => {
         });
 
         it('should validate pricing matrix configuration', () => {
-            Object.entries(pricingMatrix).forEach(([type, config]) => {
+            Object.entries(pricingMatrix).forEach(([_type, config]) => {
                 expect(config.base).toBeGreaterThan(0);
                 expect(config.features).toBeInstanceOf(Array);
                 expect(config.features.length).toBeGreaterThan(0);
