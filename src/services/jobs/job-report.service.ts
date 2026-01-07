@@ -55,7 +55,7 @@ export class ReportJobHandler {
 
     await this.simulateDelay(500);
 
-    const reportId = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const reportId = `report_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const downloadUrl = `/api/reports/${reportId}`;
     const rows = Math.floor(Math.random() * 1000) + 100;
 

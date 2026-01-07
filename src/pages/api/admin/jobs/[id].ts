@@ -1,5 +1,5 @@
 import { type APIRoute } from 'astro';
-import { jsonResponse, errorResponse } from '@/lib/api';
+import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 import { JobQueueService } from '@/services/jobs/job-queue.service';
 import { getPrisma } from '@/lib/prisma';
 
@@ -19,8 +19,8 @@ export const GET: APIRoute = async ({ locals, params }) => {
     }
 
     return jsonResponse(job);
-  } catch (_) {
-    return errorResponse('Failed to fetch job', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 };
 
@@ -38,12 +38,12 @@ export const PUT: APIRoute = async ({ request, locals, params }) => {
 
     const job = await jobQueueService.updateJob(id, body);
     return jsonResponse(job);
-  } catch (_) {
-    return errorResponse('Failed to update job', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 };
 
-export const DELETE: APIRoute = async ({ request, locals, params }) => {
+export const DELETE: APIRoute = async ({ locals, params }) => {
   try {
     const prisma = getPrisma(locals);
     const jobQueueService = new JobQueueService(prisma);
@@ -55,7 +55,7 @@ export const DELETE: APIRoute = async ({ request, locals, params }) => {
 
     await jobQueueService.deleteJob(id);
     return jsonResponse({ success: true });
-  } catch (_) {
-    return errorResponse('Failed to delete job', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 };

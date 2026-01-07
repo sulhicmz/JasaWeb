@@ -1,20 +1,45 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobSchedulerService } from './job-scheduler.service';
+import { createPrismaClient } from '@/lib/prisma';
+
+type KVNamespace = {
+  get: (key: string) => Promise<string | null>;
+  put: (key: string, value: string) => Promise<void>;
+  delete: (key: string) => Promise<void>;
+};
+
+type R2Bucket = {
+  put: (key: string, value: ReadableStream) => Promise<void>;
+  get: (key: string) => Promise<ReadableStream | null>;
+  delete: (key: string) => Promise<void>;
+};
 
 describe('JobSchedulerService', () => {
+  let prisma: any;
+  let jobSchedulerService: JobSchedulerService;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    prisma = createPrismaClient({
+      HYPERDRIVE: { connectionString: 'postgresql://test' },
+      CACHE: {} as unknown as KVNamespace,
+      STORAGE: {} as unknown as R2Bucket,
+      JWT_SECRET: 'test-secret',
+      MIDTRANS_SERVER_KEY: 'test-server-key',
+      MIDTRANS_CLIENT_KEY: 'test-client-key',
+    });
+    jobSchedulerService = new JobSchedulerService(prisma);
   });
 
   describe('processNextJob', () => {
     it('should process next pending job', async () => {
-      const processed = await JobSchedulerService.processNextJob();
+      const processed = await jobSchedulerService.processNextJob();
 
       expect(typeof processed).toBe('boolean');
     });
 
     it('should return false when no pending jobs', async () => {
-      const processed = await JobSchedulerService.processNextJob();
+      const processed = await jobSchedulerService.processNextJob();
 
       expect(processed).toBe(false);
     });
@@ -22,7 +47,7 @@ describe('JobSchedulerService', () => {
 
   describe('processBatch', () => {
     it('should process multiple jobs in batch', async () => {
-      const results = await JobSchedulerService.processBatch(5);
+      const results = await jobSchedulerService.processBatch(5);
 
       expect(results).toHaveProperty('processed');
       expect(results).toHaveProperty('successful');
@@ -31,7 +56,7 @@ describe('JobSchedulerService', () => {
     });
 
     it('should respect max jobs limit', async () => {
-      const results = await JobSchedulerService.processBatch(10);
+      const results = await jobSchedulerService.processBatch(10);
 
       expect(results.processed).toBeLessThanOrEqual(10);
     });
@@ -39,7 +64,7 @@ describe('JobSchedulerService', () => {
 
   describe('scheduleJob', () => {
     it('should schedule a job with type and payload', async () => {
-      const job = await JobSchedulerService.scheduleJob('NOTIFICATION', {
+      const job = await jobSchedulerService.scheduleJob('NOTIFICATION', {
         userId: 'user123',
         message: 'Test notification',
       });
@@ -48,7 +73,7 @@ describe('JobSchedulerService', () => {
     });
 
     it('should schedule job with priority', async () => {
-      const job = await JobSchedulerService.scheduleJob(
+      const job = await jobSchedulerService.scheduleJob(
         'REPORT_GENERATION',
         { reportType: 'sales' },
         { priority: 'HIGH' }
@@ -59,7 +84,7 @@ describe('JobSchedulerService', () => {
 
     it('should schedule job with future time', async () => {
       const scheduledAt = new Date(Date.now() + 60000);
-      const job = await JobSchedulerService.scheduleJob(
+      const job = await jobSchedulerService.scheduleJob(
         'EMAIL_SEND',
         { to: 'test@example.com' },
         { scheduledAt }
@@ -71,7 +96,7 @@ describe('JobSchedulerService', () => {
 
   describe('scheduleNotificationJob', () => {
     it('should schedule notification with medium priority by default', async () => {
-      const job = await JobSchedulerService.scheduleNotificationJob({
+      const job = await jobSchedulerService.scheduleNotificationJob({
         userId: 'user123',
         type: 'INFO',
         title: 'Test',
@@ -82,7 +107,7 @@ describe('JobSchedulerService', () => {
     });
 
     it('should schedule notification with custom priority', async () => {
-      const job = await JobSchedulerService.scheduleNotificationJob(
+      const job = await jobSchedulerService.scheduleNotificationJob(
         {
           userId: 'user123',
           type: 'INFO',
@@ -98,7 +123,7 @@ describe('JobSchedulerService', () => {
 
   describe('scheduleReportJob', () => {
     it('should schedule report with low priority by default', async () => {
-      const job = await JobSchedulerService.scheduleReportJob({
+      const job = await jobSchedulerService.scheduleReportJob({
         reportType: 'sales',
         parameters: { format: 'pdf' },
       });
@@ -107,7 +132,7 @@ describe('JobSchedulerService', () => {
     });
 
     it('should schedule report with custom priority', async () => {
-      const job = await JobSchedulerService.scheduleReportJob(
+      const job = await jobSchedulerService.scheduleReportJob(
         {
           reportType: 'revenue',
           parameters: { format: 'csv' },
@@ -121,7 +146,7 @@ describe('JobSchedulerService', () => {
 
   describe('scheduleEmailJob', () => {
     it('should schedule email with medium priority by default', async () => {
-      const job = await JobSchedulerService.scheduleEmailJob({
+      const job = await jobSchedulerService.scheduleEmailJob({
         to: 'test@example.com',
         subject: 'Test',
         body: 'Test email',
@@ -133,7 +158,7 @@ describe('JobSchedulerService', () => {
 
   describe('getQueueHealth', () => {
     it('should return queue health status', async () => {
-      const health = await JobSchedulerService.getQueueHealth();
+      const health = await jobSchedulerService.getQueueHealth();
 
       expect(health).toHaveProperty('stats');
       expect(health).toHaveProperty('healthScore');
@@ -142,7 +167,7 @@ describe('JobSchedulerService', () => {
     });
 
     it('should calculate health score correctly', async () => {
-      const health = await JobSchedulerService.getQueueHealth();
+      const health = await jobSchedulerService.getQueueHealth();
 
       expect(typeof health.healthScore).toBe('number');
       expect(health.healthScore).toBeGreaterThanOrEqual(0);
@@ -152,13 +177,13 @@ describe('JobSchedulerService', () => {
 
   describe('cleanupOldJobs', () => {
     it('should cleanup old jobs', async () => {
-      const deleted = await JobSchedulerService.cleanupOldJobs(7);
+      const deleted = await jobSchedulerService.cleanupOldJobs(7);
 
       expect(typeof deleted).toBe('number');
     });
 
     it('should cleanup with custom days parameter', async () => {
-      const deleted = await JobSchedulerService.cleanupOldJobs(30);
+      const deleted = await jobSchedulerService.cleanupOldJobs(30);
 
       expect(typeof deleted).toBe('number');
     });
@@ -170,15 +195,15 @@ describe('JobSchedulerService', () => {
         handle: vi.fn().mockResolvedValue({ success: true }),
       };
 
-      JobSchedulerService.registerHandler('CUSTOM', mockHandler as any);
+      jobSchedulerService.registerHandler('CUSTOM', mockHandler as any);
 
-      expect(JobSchedulerService['handlers']).toBeDefined();
+      expect(jobSchedulerService['handlers']).toBeDefined();
     });
   });
 
   describe('retryStuckJobs', () => {
     it('should retry stuck jobs', async () => {
-      const retried = await JobSchedulerService.retryStuckJobs();
+      const retried = await jobSchedulerService.retryStuckJobs();
 
       expect(typeof retried).toBe('number');
     });

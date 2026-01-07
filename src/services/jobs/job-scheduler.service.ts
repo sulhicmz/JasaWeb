@@ -1,25 +1,34 @@
 import { logger } from '@/lib/logger';
+import type { PrismaClient } from '@prisma/client';
+import type { JobType, JobPriority } from '@/lib/prisma';
 import { NotificationJobHandler } from './job-notification.service';
 import { ReportJobHandler } from './job-report.service';
+import { JobQueueService, type JobStats } from './job-queue.service';
 
 export interface JobHandler {
   handle(payload: Record<string, unknown>): Promise<Record<string, unknown>>;
 }
 
 export class JobSchedulerService {
-  private static handlers: Map<string, JobHandler> = new Map([
-    ['NOTIFICATION', new NotificationJobHandler()],
-    ['REPORT_GENERATION', new ReportJobHandler()],
-    ['EMAIL_SEND', new NotificationJobHandler()],
-  ]);
+  private handlers: Record<string, JobHandler> = {
+    'NOTIFICATION': new NotificationJobHandler(),
+    'REPORT_GENERATION': new ReportJobHandler(),
+    'EMAIL_SEND': new NotificationJobHandler(),
+  };
 
-  static registerHandler(type: string, handler: JobHandler) {
-    this.handlers.set(type, handler);
+  constructor(private prisma: PrismaClient) {}
+
+  private getJobQueueService(): JobQueueService {
+    return new JobQueueService(this.prisma);
   }
 
-  static async processNextJob(): Promise<boolean> {
-    const { JobQueueService } = await import('./job-queue.service');
-    const pendingJobs = await JobQueueService.getPendingJobs(1);
+  registerHandler(type: string, handler: JobHandler) {
+    this.handlers[type] = handler;
+  }
+
+  async processNextJob(): Promise<boolean> {
+    const jobQueueService = this.getJobQueueService();
+    const pendingJobs = await jobQueueService.getPendingJobs(1);
 
     if (pendingJobs.length === 0) {
       return false;
@@ -28,9 +37,9 @@ export class JobSchedulerService {
     const job = pendingJobs[0] as unknown as { id: string; type: string; payload: Record<string, unknown> };
 
     try {
-      await JobQueueService.markJobAsProcessing(job.id);
+      await jobQueueService.markJobAsProcessing(job.id);
 
-      const handler = this.handlers.get(job.type);
+      const handler = this.handlers[job.type];
 
       if (!handler) {
         throw new Error(`No handler registered for job type: ${job.type}`);
@@ -38,7 +47,7 @@ export class JobSchedulerService {
 
       const result = await handler.handle(job.payload);
 
-      await JobQueueService.markJobAsCompleted(job.id, result);
+      await jobQueueService.markJobAsCompleted(job.id, result);
 
       logger.info(`Job completed successfully`, {
         jobId: job.id,
@@ -53,12 +62,12 @@ export class JobSchedulerService {
         error: errorMessage,
       } as Record<string, unknown>);
 
-      await JobQueueService.markJobAsFailed(job.id, errorMessage, true);
+      await jobQueueService.markJobAsFailed(job.id, errorMessage, true);
       return false;
     }
   }
 
-  static async processBatch(maxJobs: number = 10): Promise<{
+  async processBatch(maxJobs: number = 10): Promise<{
     processed: number;
     successful: number;
     failed: number;
@@ -83,30 +92,30 @@ export class JobSchedulerService {
     return results;
   }
 
-  static async retryStuckJobs(): Promise<number> {
-    const { JobQueueService } = await import('./job-queue.service');
-    const stuckJobs = await JobQueueService.getFailedJobsForRetry(20);
+  async retryStuckJobs(): Promise<number> {
+    const jobQueueService = this.getJobQueueService();
+    const stuckJobs = await jobQueueService.getFailedJobsForRetry(20);
 
     for (const job of stuckJobs as unknown as Array<{ id: string; lastError?: string }>) {
-      await JobQueueService.markJobAsFailed(job.id, job.lastError || 'Retry', true);
+      await jobQueueService.markJobAsFailed(job.id, job.lastError || 'Retry', true);
     }
 
     return stuckJobs.length;
   }
 
-  static async scheduleJob(
-    type: string,
+  async scheduleJob(
+    type: JobType,
     payload: Record<string, unknown>,
     options?: {
-      priority?: string;
+      priority?: JobPriority;
       scheduledAt?: Date;
       maxRetries?: number;
       userId?: string;
       metadata?: Record<string, unknown>;
     }
   ) {
-    const { JobQueueService } = await import('./job-queue.service');
-    return JobQueueService.createJob(payload, {
+    const jobQueueService = this.getJobQueueService();
+    return jobQueueService.createJob(payload, {
       type,
       priority: options?.priority,
       scheduledAt: options?.scheduledAt,
@@ -116,10 +125,10 @@ export class JobSchedulerService {
     });
   }
 
-  static async scheduleNotificationJob(
+  async scheduleNotificationJob(
     payload: Record<string, unknown>,
     options?: {
-      priority?: string;
+      priority?: JobPriority;
       userId?: string;
     }
   ) {
@@ -129,10 +138,10 @@ export class JobSchedulerService {
       });
   }
 
-  static async scheduleReportJob(
+  async scheduleReportJob(
     payload: Record<string, unknown>,
     options?: {
-      priority?: string;
+      priority?: JobPriority;
       scheduledAt?: Date;
       userId?: string;
     }
@@ -144,10 +153,10 @@ export class JobSchedulerService {
     });
   }
 
-  static async scheduleEmailJob(
+  async scheduleEmailJob(
     payload: Record<string, unknown>,
     options?: {
-      priority?: string;
+      priority?: JobPriority;
       userId?: string;
     }
   ) {
@@ -157,9 +166,9 @@ export class JobSchedulerService {
     });
   }
 
-  static async getQueueHealth() {
-    const { JobQueueService } = await import('./job-queue.service');
-    const stats = await JobQueueService.getJobStats();
+  async getQueueHealth() {
+    const jobQueueService = this.getJobQueueService();
+    const stats = await jobQueueService.getJobStats();
 
     const healthScore = this.calculateHealthScore(stats);
 
@@ -170,7 +179,7 @@ export class JobSchedulerService {
     };
   }
 
-  private static calculateHealthScore(stats: any): number {
+  private calculateHealthScore(stats: JobStats): number {
     const total = stats.total || 1;
     const failedRatio = (stats.failed + stats.retrying) / total;
     const processingRatio = stats.processing / total;
@@ -185,9 +194,9 @@ export class JobSchedulerService {
     return Math.max(0, Math.min(100, score));
   }
 
-  static async cleanupOldJobs(days: number = 7) {
-    const { JobQueueService } = await import('./job-queue.service');
-    const deleted = await JobQueueService.cleanupOldJobs(days);
+  async cleanupOldJobs(days: number = 7) {
+    const jobQueueService = this.getJobQueueService();
+    const deleted = await jobQueueService.cleanupOldJobs(days);
     logger.info(`Cleaned up old jobs`, { deleted, days } as Record<string, unknown>);
     return deleted;
   }

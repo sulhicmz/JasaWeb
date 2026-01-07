@@ -1,5 +1,5 @@
 import { type APIRoute } from 'astro';
-import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
+import { jsonResponse, handleApiError } from '@/lib/api';
 import { JobQueueService } from '@/services/jobs/job-queue.service';
 import { getPrisma } from '@/lib/prisma';
 

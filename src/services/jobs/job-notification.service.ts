@@ -54,7 +54,7 @@ export class NotificationJobHandler {
 
     await this.simulateDelay(100);
 
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     logger.info(`Notification sent successfully`, {
       userId: params.userId,

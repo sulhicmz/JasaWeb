@@ -394,8 +394,6 @@ export class CircuitBreaker {
      * Record a call result
      */
     private recordCall(success: boolean): void {
-        const fullConfig = this.config as Required<CircuitBreakerConfig>;
-        
         this.callHistory.push({
             success,
             timestamp: Date.now(),
@@ -590,7 +588,7 @@ export class RequestLogger {
      * Generate unique log ID
      */
     private generateId(): string {
-        return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     }
 }
 

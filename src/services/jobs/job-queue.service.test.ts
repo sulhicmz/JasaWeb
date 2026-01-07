@@ -2,6 +2,18 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobQueueService } from './job-queue.service';
 import { createPrismaClient } from '@/lib/prisma';
 
+type KVNamespace = {
+  get: (key: string) => Promise<string | null>;
+  put: (key: string, value: string) => Promise<void>;
+  delete: (key: string) => Promise<void>;
+};
+
+type R2Bucket = {
+  put: (key: string, value: ReadableStream) => Promise<void>;
+  get: (key: string) => Promise<ReadableStream | null>;
+  delete: (key: string) => Promise<void>;
+};
+
 describe('JobQueueService', () => {
   let prisma: any;
   let jobQueueService: JobQueueService;
@@ -9,7 +21,12 @@ describe('JobQueueService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prisma = createPrismaClient({
-      HYPERDRIVE: { connectionString: 'postgresql://test' }
+      HYPERDRIVE: { connectionString: 'postgresql://test' },
+      CACHE: {} as unknown as KVNamespace,
+      STORAGE: {} as unknown as R2Bucket,
+      JWT_SECRET: 'test-secret',
+      MIDTRANS_SERVER_KEY: 'test-server-key',
+      MIDTRANS_CLIENT_KEY: 'test-client-key',
     });
     jobQueueService = new JobQueueService(prisma);
   });
