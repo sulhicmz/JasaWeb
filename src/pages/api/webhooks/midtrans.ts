@@ -1,21 +1,24 @@
 import type { APIRoute } from 'astro';
 import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 import { validateMidtransSignature, parseMidtransWebhook, MIDTRANS_STATUS_MAP } from '@/lib/midtrans';
-import { createPrismaClient } from '@/lib/prisma';
-import type { PrismaClient } from '@prisma/client';
-import { AuditLogger } from '@/lib/audit-middleware';
+import { getPrisma } from '@/lib/prisma';
+import { WebhookQueueService } from '@/services/webhook-queue.service';
 
 /**
  * Midtrans webhook endpoint for payment notifications
  * 
- * CRITICAL SECURITY: This endpoint validates webhook signatures before processing
+ * RELIABILITY ENHANCEMENT: This endpoint now enqueues webhooks for
+ * reliable asynchronous processing with automatic retries.
+ * 
+ * CRITICAL SECURITY: This endpoint validates webhook signatures before enqueuing
  * any payment notifications. Never disable or bypass signature validation.
  * 
  * Rate limiting is intentionally NOT applied to webhook endpoints as they need
  * to handle payment notifications reliably without false negatives.
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  const prisma = createPrismaClient(locals.runtime.env);
+  const prisma = getPrisma(locals) as ReturnType<typeof getPrisma> & { webhookQueue: unknown };
+  const webhookQueueService = new WebhookQueueService(prisma as any);
 
   try {
     // Get raw body for signature validation
@@ -51,34 +54,58 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return errorResponse('Invalid signature', 401);
     }
 
-    // Process valid webhook
-    return await processPaymentNotification(prisma, payload, request, locals);
+    // Enqueue webhook for reliable processing
+    await webhookQueueService.enqueueWithDeduplication({
+      provider: 'midtrans',
+      eventType: 'payment_notification',
+      payload: {
+        order_id: payload.order_id,
+        transaction_status: payload.transaction_status,
+        status_code: payload.status_code,
+        gross_amount: payload.gross_amount,
+        signature_key: payload.signature_key,
+      },
+      signature: payload.signature_key,
+      eventId: payload.order_id,
+      maxRetries: 5,
+      ttlSeconds: 60 * 60 * 24, // 24 hours
+    });
+
+    // Return immediate success - processing happens asynchronously
+    return jsonResponse({
+      status: 'queued',
+      message: 'Webhook enqueued for processing',
+      order_id: payload.order_id,
+    });
     
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    console.error('Webhook enqueue error:', error);
     return handleApiError(error);
-  } finally {
-    await prisma.$disconnect();
   }
 };
 
 /**
- * Processes validated payment notification
- * Implements idempotency - safe to retry the same notification
+ * Process a single webhook from the queue
+ * This function is called by the background job processor
  */
-async function processPaymentNotification(
-  prisma: PrismaClient, 
-  payload: { order_id: string; transaction_status: string; gross_amount: string; signature_key: string },
-  request: Request,
-  locals: App.Locals
-) {
+export async function processMidtransWebhook(
+  prisma: ReturnType<typeof getPrisma>,
+  webhook: { payload: Record<string, unknown> }
+): Promise<void> {
+  const payload = webhook.payload as {
+    order_id: string;
+    transaction_status: string;
+    gross_amount: string;
+    signature_key: string;
+  };
+
   const { order_id, transaction_status, gross_amount } = payload;
   
   // Map Midtrans status to our invoice status
   const mappedStatus = MIDTRANS_STATUS_MAP[transaction_status as keyof typeof MIDTRANS_STATUS_MAP];
   if (!mappedStatus) {
     console.warn(`Unknown transaction status: ${transaction_status} for order: ${order_id}`);
-    return jsonResponse({ status: 'unknown_status_handled' });
+    return;
   }
 
   // Find invoice by Midtrans order_id
@@ -89,16 +116,16 @@ async function processPaymentNotification(
 
   if (!invoice) {
     console.warn(`Invoice not found for order: ${order_id}`);
-    return jsonResponse({ status: 'invoice_not_found' });
+    return;
   }
 
   // Validate amount matches (prevent tampering)
   if (parseFloat(gross_amount) !== Number(invoice.amount)) {
     console.error(`Amount mismatch for order ${order_id}: expected ${invoice.amount}, got ${gross_amount}`);
-    return errorResponse('Amount validation failed', 400);
+    throw new Error('Amount validation failed');
   }
 
-// Update invoice status (idempotent operation)
+  // Update invoice status (idempotent operation)
   const oldStatus = invoice.status;
   const oldProjectStatus = invoice.project.status;
   await prisma.invoice.update({
@@ -121,28 +148,16 @@ async function processPaymentNotification(
 
   // Log successful processing with detailed audit trail
   try {
-    await AuditLogger.logPayment(locals, request, {
-      action: mappedStatus === 'paid' ? 'PAYMENT_SUCCESS' : 'PAYMENT_FAILED',
-      resourceId: invoice.id,
-      oldValues: {
-        status: oldStatus,
-        projectStatus: oldProjectStatus
-      },
-      newValues: {
-        status: mappedStatus,
-        projectStatus: newProjectStatus,
-        paidAt: mappedStatus === 'paid' ? new Date() : null
-      }
+    // Note: Audit logging in background processing has limited request context
+    console.info('Payment webhook processed', {
+      invoiceId: invoice.id,
+      oldStatus,
+      newStatus: mappedStatus,
+      oldProjectStatus,
+      newProjectStatus,
     });
   } catch (auditError) {
     console.error('Failed to log payment audit:', auditError);
-    // Don't fail the webhook if audit logging fails
+    // Don't fail webhook if audit logging fails
   }
-
-  return jsonResponse({
-    status: 'success',
-    order_id,
-    invoice_id: invoice.id,
-    new_status: mappedStatus
-  });
 }
