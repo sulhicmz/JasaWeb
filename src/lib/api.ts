@@ -1,9 +1,41 @@
 /**
  * API Response Utilities
- * Standardized responses for all API endpoints
+ * Standardized responses for all API endpoints with comprehensive error codes
  */
 
-import type { ApiResponse, PaginatedResponse } from './types';
+import type { ApiResponse, PaginatedResponse, ApiErrorDetails } from './types';
+
+// ==============================================
+// ERROR CODES
+// ==============================================
+
+/**
+ * Standardized API error codes
+ */
+export enum ApiErrorCode {
+    VALIDATION_ERROR = 'VALIDATION_ERROR',
+    UNAUTHORIZED = 'UNAUTHORIZED',
+    FORBIDDEN = 'FORBIDDEN',
+    NOT_FOUND = 'NOT_FOUND',
+    CONFLICT = 'CONFLICT',
+    RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+    INTERNAL_ERROR = 'INTERNAL_ERROR',
+    SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
+    EXTERNAL_SERVICE_ERROR = 'EXTERNAL_SERVICE_ERROR',
+    PAYMENT_ERROR = 'PAYMENT_ERROR',
+    DATABASE_ERROR = 'DATABASE_ERROR',
+    CACHE_ERROR = 'CACHE_ERROR',
+}
+
+/**
+ * Error severity levels
+ */
+export enum ApiErrorSeverity {
+    LOW = 'low',
+    MEDIUM = 'medium',
+    HIGH = 'high',
+    CRITICAL = 'critical',
+}
 
 // ==============================================
 // RESPONSE BUILDERS
@@ -52,6 +84,195 @@ export function errorResponse(error: string, status = 400): Response {
         status,
         headers: { 'Content-Type': 'application/json' },
     });
+}
+
+/**
+ * Create an error response with code and details
+ */
+export function detailedErrorResponse(
+    code: ApiErrorCode,
+    message: string,
+    status = 400,
+    details?: Partial<ApiErrorDetails>
+): Response {
+    const errorDetails: ApiErrorDetails = {
+        code,
+        severity: details?.severity || ApiErrorSeverity.MEDIUM,
+        retryable: details?.retryable || false,
+        requestId: generateRequestId(),
+        ...details,
+    };
+
+    const body: ApiResponse<null> = {
+        success: false,
+        error: message,
+        errorDetails,
+    };
+
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    });
+}
+
+/**
+ * Create a validation error response
+ */
+export function validationErrorResponse(
+    field: string,
+    message: string,
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.VALIDATION_ERROR,
+        message,
+        400,
+        {
+            field,
+            severity: ApiErrorSeverity.LOW,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create an unauthorized error response
+ */
+export function unauthorizedErrorResponse(
+    message = 'Unauthorized access',
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.UNAUTHORIZED,
+        message,
+        401,
+        {
+            severity: ApiErrorSeverity.HIGH,
+            retryable: false,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create a forbidden error response
+ */
+export function forbiddenErrorResponse(
+    message = 'Access forbidden',
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.FORBIDDEN,
+        message,
+        403,
+        {
+            severity: ApiErrorSeverity.HIGH,
+            retryable: false,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create a not found error response
+ */
+export function notFoundErrorResponse(
+    resource: string,
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.NOT_FOUND,
+        `${resource} not found`,
+        404,
+        {
+            severity: ApiErrorSeverity.LOW,
+            retryable: false,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create a conflict error response
+ */
+export function conflictErrorResponse(
+    message: string,
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.CONFLICT,
+        message,
+        409,
+        {
+            severity: ApiErrorSeverity.MEDIUM,
+            retryable: false,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create a rate limit exceeded error response
+ */
+export function rateLimitErrorResponse(
+    message = 'Rate limit exceeded',
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.RATE_LIMIT_EXCEEDED,
+        message,
+        429,
+        {
+            severity: ApiErrorSeverity.MEDIUM,
+            retryable: true,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create an internal error response
+ */
+export function internalErrorResponse(
+    message = 'Internal server error',
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.INTERNAL_ERROR,
+        message,
+        500,
+        {
+            severity: ApiErrorSeverity.CRITICAL,
+            retryable: true,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Create a service unavailable error response
+ */
+export function serviceUnavailableErrorResponse(
+    message = 'Service temporarily unavailable',
+    details?: Partial<ApiErrorDetails>
+): Response {
+    return detailedErrorResponse(
+        ApiErrorCode.SERVICE_UNAVAILABLE,
+        message,
+        503,
+        {
+            severity: ApiErrorSeverity.HIGH,
+            retryable: true,
+            ...details,
+        }
+    );
+}
+
+/**
+ * Generate a unique request ID
+ */
+function generateRequestId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
 /**

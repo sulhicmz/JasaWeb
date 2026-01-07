@@ -8,11 +8,25 @@ export type { ServiceId, ServiceConfig, ServiceFeature } from './config';
 // ==============================================
 // API TYPES
 // ==============================================
+
+/**
+ * API error details for enhanced error responses
+ */
+export interface ApiErrorDetails {
+    code: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    field?: string;
+    requestId?: string;
+    originalError?: string;
+    retryable?: boolean;
+}
+
 export interface ApiResponse<T = unknown> {
     success: boolean;
     data?: T;
     error?: string;
     message?: string;
+    errorDetails?: ApiErrorDetails;
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {

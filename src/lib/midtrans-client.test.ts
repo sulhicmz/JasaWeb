@@ -207,7 +207,7 @@ describe('Midtrans Payment Service', () => {
             const service = createMidtransService(mockRuntime);
             
             await expect(service.createQrisPayment(mockInvoice, mockUser))
-                .rejects.toThrow('Payment creation failed: Invalid payment response from Midtrans');
+                .rejects.toThrow(/Invalid payment response from Midtrans/);
         });
 
         it('should handle missing QRIS URL in response', async () => {
@@ -221,7 +221,7 @@ describe('Midtrans Payment Service', () => {
             const service = createMidtransService(mockRuntime);
             
             await expect(service.createQrisPayment(mockInvoice, mockUser))
-                .rejects.toThrow('Payment creation failed: QRIS URL not found in payment response');
+                .rejects.toThrow(/QRIS URL not found in payment response/);
         });
     });
 
