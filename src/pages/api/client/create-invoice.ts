@@ -8,6 +8,7 @@ import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createPrismaClient } from '@/lib/prisma';
 import { formatPrice } from '@/lib/config';
+import { logger } from '@/lib/logger';
 
 interface CreateInvoiceRequest {
     projectId: string;
@@ -104,7 +105,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         });
 
         // Log successful invoice creation (audit trail)
-        console.log(`Invoice created: ${invoice.id} for project ${project.id} by user ${user.id}`);
+        logger.info('Invoice created', { invoiceId: invoice.id, projectId: project.id, userId: user.id });
 
         return jsonResponse({
             invoice,
@@ -117,7 +118,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         });
 
     } catch (error) {
-        console.error('Invoice creation error:', error);
+        logger.error('Invoice creation error', { error: error instanceof Error ? error.message : String(error) });
         return errorResponse('Gagal membuat invoice', 500);
     } finally {
         await prisma.$disconnect();

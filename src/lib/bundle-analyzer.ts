@@ -1,5 +1,9 @@
+import { Logger } from './logger';
+
 // Re-export types from existing performance monitor
 export type { PerformanceMetric, PerformanceStats } from './performance-monitor';
+
+const bundleLogger = new Logger('BundleAnalyzer');
 
 /**
  * Enhanced Performance Monitoring with Bundle Analysis
@@ -337,7 +341,7 @@ export class EnhancedPerformanceMonitor {
     
     if (this.optimizationCache.has(cacheKey) && 
         now - this.lastOptimizationCheck < 300000) {
-      console.log('[BUNDLE] Using cached analysis results');
+      bundleLogger.debug('Using cached analysis results');
       return;
     }
     
@@ -356,12 +360,15 @@ export class EnhancedPerformanceMonitor {
     const criticalSuggestions = report.analysis.optimizationSuggestions.filter(s => s.priority === 'high');
     
     if (criticalSuggestions.length > 0) {
-      console.log(`[BUNDLE] ${criticalSuggestions.length} critical optimization recommendations:`);
-      criticalSuggestions.forEach((tip, index) => {
-        console.log(`  ${index + 1}. [CRITICAL] ${tip.description}`);
+      bundleLogger.warn(`${criticalSuggestions.length} critical optimization recommendations:`, {
+        suggestions: criticalSuggestions.map((tip, index) => ({
+          index: index + 1,
+          description: tip.description,
+          priority: tip.priority
+        }))
       });
     } else {
-      console.log(`[BUNDLE] Performance: ${report.summary.totalSize}KB (score: ${report.score}/100) ✅`);
+      bundleLogger.info(`Performance: ${report.summary.totalSize}KB (score: ${report.score}/100)`);
     }
   }
 
