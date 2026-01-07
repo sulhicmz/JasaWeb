@@ -322,15 +322,21 @@ describe('BundleAnalyzer', () => {
 
 describe('EnhancedPerformanceMonitor', () => {
   let monitor: EnhancedPerformanceMonitor;
-  let consoleLogSpy: any;
+  let consoleInfoSpy: any;
+  let consoleDebugSpy: any;
+  let consoleWarnSpy: any;
 
   beforeEach(() => {
     monitor = new EnhancedPerformanceMonitor();
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    consoleLogSpy.mockRestore();
+    consoleInfoSpy.mockRestore();
+    consoleDebugSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
   });
 
   describe('Constructor', () => {
@@ -350,7 +356,7 @@ describe('EnhancedPerformanceMonitor', () => {
 
       monitor.recordBundleAnalysis(buildStats);
 
-      expect(consoleLogSpy).toHaveBeenCalled();
+      expect(consoleInfoSpy).toHaveBeenCalled();
     });
 
     it('should use cached analysis for identical builds', () => {
@@ -364,7 +370,7 @@ describe('EnhancedPerformanceMonitor', () => {
       monitor.recordBundleAnalysis(buildStats);
       monitor.recordBundleAnalysis(buildStats);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('cached'));
+      expect(consoleDebugSpy).toHaveBeenCalledWith(expect.stringContaining('cached'));
     });
 
     it('should log critical optimization recommendations', () => {
@@ -377,7 +383,7 @@ describe('EnhancedPerformanceMonitor', () => {
 
       monitor.recordBundleAnalysis(poorStats);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('critical optimization')
       );
     });

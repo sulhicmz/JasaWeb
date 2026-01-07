@@ -62,15 +62,33 @@ describe('retryWithBackoff', () => {
 
     it('should fail after max retries', async () => {
         const mockFn = vi.fn().mockRejectedValue(new Error('Persistent failure'));
+        let errorThrown = false;
+        let promiseCompleted = false;
 
         const promise = retryWithBackoff(mockFn, {
-            maxRetries: 2,
-            initialDelayMs: 100,
+                maxRetries: 2,
+                initialDelayMs: 10,
+            });
+
+        promise.then(() => {
+            promiseCompleted = true;
+        }).catch(() => {
+            // Expected - error will be caught below
         });
 
         await vi.runAllTimersAsync();
-        
-        await expect(promise).rejects.toThrow(ExternalServiceError);
+
+        expect(promiseCompleted).toBe(false);
+
+        try {
+            await promise;
+            expect.fail('Should have thrown an error');
+        } catch (error) {
+            errorThrown = true;
+            expect(error).toBeInstanceOf(ExternalServiceError);
+        }
+
+        expect(errorThrown).toBe(true);
         expect(mockFn).toHaveBeenCalledTimes(3);
     });
 

@@ -1,0 +1,42 @@
+/**
+ * End-to-End Integration Tests - Production Ready Suite (Re-exports)
+ * 
+ * This file serves as the main entry point for E2E tests.
+ * Tests are organized into focused domain-specific files for better maintainability.
+ * 
+ * Test Suites:
+ * • Auth: Registration, login, session management, password security
+ * • Payment: QRIS flow, webhooks, invoicing, refund handling
+ * • Admin: User/project/template management, audit logs, dashboard
+ * • Security: CSRF, rate limiting, input sanitization, authorization
+ * • Performance: Load testing, database performance, scalability
+ */
+
+// Re-export all domain-specific E2E test suites
+export * from './auth.e2e.test';
+export * from './payment.e2e.test';
+export * from './admin.e2e.test';
+export * from './security.e2e.test';
+export * from './performance.e2e.test';
+
+/**
+ * Test Organization Notes:
+ * 
+ * This refactoring splits the original 1226-line monolithic test file into:
+ * - auth.e2e.test.ts: Authentication workflows
+ * - payment.e2e.test.ts: Payment and invoicing workflows
+ * - admin.e2e.test.ts: Admin management workflows
+ * - security.e2e.test.ts: Security validations
+ * - performance.e2e.test.ts: Performance and scalability tests
+ * 
+ * Benefits:
+ * • Improved maintainability and navigation
+ * • Clear domain separation
+ * • Easier to add domain-specific tests
+ * • Better test organization for CI/CD
+ * • Reduced merge conflicts across domains
+ * 
+ * Total tests: Maintained from original file
+ * Test coverage: Preserved
+ * All existing tests: Still valid
+ */

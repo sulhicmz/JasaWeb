@@ -1,18 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JobQueueService } from './job-queue.service';
-import { createPrismaClient } from '@/lib/prisma';
 
-type KVNamespace = {
-  get: (key: string) => Promise<string | null>;
-  put: (key: string, value: string) => Promise<void>;
-  delete: (key: string) => Promise<void>;
-};
-
-type R2Bucket = {
-  put: (key: string, value: ReadableStream) => Promise<void>;
-  get: (key: string) => Promise<ReadableStream | null>;
-  delete: (key: string) => Promise<void>;
-};
+vi.mock('@prisma/client', () => ({
+  PrismaClient: vi.fn(),
+}));
 
 describe('JobQueueService', () => {
   let prisma: any;
@@ -20,39 +11,91 @@ describe('JobQueueService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    prisma = createPrismaClient({
-      HYPERDRIVE: { connectionString: 'postgresql://test' },
-      CACHE: {} as unknown as KVNamespace,
-      STORAGE: {} as unknown as R2Bucket,
-      JWT_SECRET: 'test-secret',
-      MIDTRANS_SERVER_KEY: 'test-server-key',
-      MIDTRANS_CLIENT_KEY: 'test-client-key',
-    });
+
+    prisma = {
+      jobQueue: {
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        count: vi.fn(),
+        deleteMany: vi.fn(),
+      },
+    };
+
     jobQueueService = new JobQueueService(prisma);
   });
 
   describe('createJob', () => {
     it('should create a job with valid payload and options', async () => {
+      const mockJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'PENDING',
+        priority: 'HIGH',
+        maxRetries: 5,
+        payload: { type: 'NOTIFICATION', userId: 'user123', message: 'Test' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      prisma.jobQueue.create.mockResolvedValue(mockJob);
+
       const payload = { type: 'NOTIFICATION', userId: 'user123', message: 'Test' };
       const options = { type: 'NOTIFICATION' as any, priority: 'HIGH' as any, maxRetries: 5 };
 
       const job = await jobQueueService.createJob(payload, options);
 
       expect(job).toBeDefined();
-      expect(job.id).toBeDefined();
+      expect(job.id).toBe('job-1');
+      expect(prisma.jobQueue.create).toHaveBeenCalled();
     });
 
     it('should create a job with default priority and retries', async () => {
+      const mockJob = {
+        id: 'job-2',
+        type: 'REPORT_GENERATION',
+        status: 'PENDING',
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: { type: 'REPORT_GENERATION', reportType: 'sales' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      prisma.jobQueue.create.mockResolvedValue(mockJob);
+
       const payload = { type: 'REPORT_GENERATION', reportType: 'sales' };
       const options = { type: 'REPORT_GENERATION' as any };
 
       const job = await jobQueueService.createJob(payload, options);
 
       expect(job).toBeDefined();
+      expect(prisma.jobQueue.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            priority: 'MEDIUM',
+            maxRetries: 3,
+          }),
+        })
+      );
     });
 
     it('should create a job with scheduled time', async () => {
       const scheduledAt = new Date(Date.now() + 60000);
+      const mockJob = {
+        id: 'job-3',
+        type: 'EMAIL_SEND',
+        status: 'PENDING',
+        scheduledAt,
+        payload: { type: 'EMAIL_SEND', to: 'test@example.com' },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      prisma.jobQueue.create.mockResolvedValue(mockJob);
+
       const payload = { type: 'EMAIL_SEND', to: 'test@example.com' };
       const options = {
         type: 'EMAIL_SEND' as any,
@@ -62,22 +105,43 @@ describe('JobQueueService', () => {
       const job = await jobQueueService.createJob(payload, options);
 
       expect(job).toBeDefined();
+      expect(prisma.jobQueue.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            scheduledAt,
+          }),
+        })
+      );
     });
   });
 
   describe('getJobById', () => {
     it('should retrieve job by id', async () => {
-      const payload = { type: 'NOTIFICATION', userId: 'user123' };
-      const options = { type: 'NOTIFICATION' as any };
-      const created = await jobQueueService.createJob(payload, options);
+      const mockJob = {
+        id: 'job-123',
+        type: 'NOTIFICATION',
+        status: 'PENDING',
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const job = await jobQueueService.getJobById(created.id);
+      prisma.jobQueue.findUnique.mockResolvedValue(mockJob);
+
+      const job = await jobQueueService.getJobById('job-123');
 
       expect(job).toBeDefined();
-      expect(job?.id).toBe(created.id);
+      expect(job?.id).toBe('job-123');
+      expect(prisma.jobQueue.findUnique).toHaveBeenCalledWith({
+        where: { id: 'job-123' },
+      });
     });
 
     it('should return undefined for non-existent job', async () => {
+      prisma.jobQueue.findUnique.mockResolvedValue(null);
+
       const job = await jobQueueService.getJobById('non-existent-id');
 
       expect(job).toBeNull();
@@ -86,111 +150,268 @@ describe('JobQueueService', () => {
 
   describe('getPendingJobs', () => {
     it('should retrieve pending jobs ordered by priority', async () => {
+      const mockJobs = [
+        { id: 'job-1', priority: 'HIGH', status: 'PENDING' },
+        { id: 'job-2', priority: 'MEDIUM', status: 'PENDING' },
+      ];
+
+      prisma.jobQueue.findMany.mockResolvedValue(mockJobs);
+
       const pending = await jobQueueService.getPendingJobs(10);
 
       expect(Array.isArray(pending)).toBe(true);
+      expect(pending.length).toBe(2);
+      expect(prisma.jobQueue.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'PENDING',
+          }),
+          take: 10,
+          orderBy: [
+            { priority: 'desc' },
+            { createdAt: 'asc' },
+          ],
+        })
+      );
     });
   });
 
   describe('getFailedJobsForRetry', () => {
     it('should retrieve failed jobs eligible for retry', async () => {
+      const mockJobs = [
+        { id: 'job-1', status: 'FAILED', retryCount: 1, maxRetries: 3 },
+        { id: 'job-2', status: 'FAILED', retryCount: 2, maxRetries: 3 },
+      ];
+
+      prisma.jobQueue.findMany.mockResolvedValue(mockJobs);
+
       const failed = await jobQueueService.getFailedJobsForRetry(10);
 
       expect(Array.isArray(failed)).toBe(true);
+      expect(prisma.jobQueue.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'FAILED',
+            retryCount: { lt: 3 },
+          }),
+          take: 10,
+        })
+      );
     });
   });
 
   describe('markJobAsProcessing', () => {
     it('should update job status to PROCESSING', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any };
-      const job = await jobQueueService.createJob(payload, options);
+      const now = new Date();
+      const mockJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'PROCESSING',
+        startedAt: now,
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const updated = await jobQueueService.markJobAsProcessing(job.id);
+      prisma.jobQueue.update.mockResolvedValue(mockJob);
+
+      const updated = await jobQueueService.markJobAsProcessing('job-1');
 
       expect(updated.status).toBe('PROCESSING');
       expect(updated.startedAt).toBeDefined();
+      expect(prisma.jobQueue.update).toHaveBeenCalledWith({
+        where: { id: 'job-1' },
+        data: expect.objectContaining({
+          status: 'PROCESSING',
+          startedAt: expect.any(Date),
+        }),
+      });
     });
   });
 
   describe('markJobAsCompleted', () => {
     it('should mark job as completed with result', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any };
-      const job = await jobQueueService.createJob(payload, options);
+      const now = new Date();
       const result = { success: true, data: 'completed' };
 
-      const updated = await jobQueueService.markJobAsCompleted(job.id, result);
+      const mockJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'COMPLETED',
+        completedAt: now,
+        result,
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      prisma.jobQueue.update.mockResolvedValue(mockJob);
+
+      const updated = await jobQueueService.markJobAsCompleted('job-1', result);
 
       expect(updated.status).toBe('COMPLETED');
       expect(updated.completedAt).toBeDefined();
+      expect(prisma.jobQueue.update).toHaveBeenCalledWith({
+        where: { id: 'job-1' },
+        data: expect.objectContaining({
+          status: 'COMPLETED',
+          completedAt: expect.any(Date),
+          result,
+        }),
+      });
     });
   });
 
   describe('markJobAsFailed', () => {
     it('should mark job as failed with error', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any };
-      const job = await jobQueueService.createJob(payload, options);
-      const error = 'Job execution failed';
+      const currentJob = {
+        id: 'job-1',
+        retryCount: 0,
+        maxRetries: 3,
+      };
 
-      const updated = await jobQueueService.markJobAsFailed(job.id, error, true);
+      const updatedJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'FAILED',
+        error: 'Job execution failed',
+        retryCount: 1,
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        completedAt: new Date(),
+      };
+
+      prisma.jobQueue.findUnique.mockResolvedValue(currentJob);
+      prisma.jobQueue.update.mockResolvedValue(updatedJob);
+
+      const updated = await jobQueueService.markJobAsFailed('job-1', 'Job execution failed', false);
 
       expect(['FAILED', 'RETRYING']).toContain(updated.status);
-      expect(updated.error).toBe(error);
+      expect(updated.error).toBe('Job execution failed');
+      expect(prisma.jobQueue.findUnique).toHaveBeenCalledWith({
+        where: { id: 'job-1' },
+        select: { retryCount: true, maxRetries: true },
+      });
     });
 
     it('should mark as RETRYING if retries remain', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any, maxRetries: 5 };
-      const job = await jobQueueService.createJob(payload, options);
+      const currentJob = {
+        id: 'job-1',
+        retryCount: 1,
+        maxRetries: 5,
+      };
 
-      await jobQueueService.markJobAsFailed(job.id, 'Temporary error', true);
-      const updated = await jobQueueService.getJobById(job.id);
+      const updatedJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'RETRYING',
+        retryCount: 2,
+        priority: 'MEDIUM',
+        maxRetries: 5,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      expect(updated?.status).toBe('RETRYING');
+      prisma.jobQueue.findUnique.mockResolvedValue(currentJob);
+      prisma.jobQueue.update.mockResolvedValue(updatedJob);
+
+      const updated = await jobQueueService.markJobAsFailed('job-1', 'Temporary error', true);
+
+      expect(updated.status).toBe('RETRYING');
+      expect(updated.retryCount).toBeGreaterThan(0);
     });
 
     it('should mark as FAILED if max retries exceeded', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any, maxRetries: 0 };
-      const job = await jobQueueService.createJob(payload, options);
+      const currentJob = {
+        id: 'job-1',
+        retryCount: 3,
+        maxRetries: 3,
+      };
 
-      await jobQueueService.markJobAsFailed(job.id, 'Permanent error', true);
-      const updated = await jobQueueService.getJobById(job.id);
+      const updatedJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'FAILED',
+        retryCount: 4,
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        completedAt: new Date(),
+      };
 
-      expect(updated?.status).toBe('FAILED');
+      prisma.jobQueue.findUnique.mockResolvedValue(currentJob);
+      prisma.jobQueue.update.mockResolvedValue(updatedJob);
+
+      const updated = await jobQueueService.markJobAsFailed('job-1', 'Permanent error', true);
+
+      expect(updated.status).toBe('FAILED');
     });
   });
 
   describe('cancelJob', () => {
     it('should cancel a pending job', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any };
-      const job = await jobQueueService.createJob(payload, options);
+      const now = new Date();
+      const mockJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'CANCELLED',
+        completedAt: now,
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const updated = await jobQueueService.cancelJob(job.id);
+      prisma.jobQueue.update.mockResolvedValue(mockJob);
+
+      const updated = await jobQueueService.cancelJob('job-1');
 
       expect(updated.status).toBe('CANCELLED');
       expect(updated.completedAt).toBeDefined();
+      expect(prisma.jobQueue.update).toHaveBeenCalledWith({
+        where: { id: 'job-1' },
+        data: expect.objectContaining({
+          status: 'CANCELLED',
+          completedAt: expect.any(Date),
+        }),
+      });
     });
   });
 
   describe('deleteJob', () => {
     it('should delete a job', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any };
-      const job = await jobQueueService.createJob(payload, options);
+      prisma.jobQueue.delete.mockResolvedValue({ id: 'job-1' });
+      prisma.jobQueue.findUnique.mockResolvedValue(null);
 
-      await jobQueueService.deleteJob(job.id);
-      const deleted = await jobQueueService.getJobById(job.id);
+      await jobQueueService.deleteJob('job-1');
+      const deleted = await jobQueueService.getJobById('job-1');
 
       expect(deleted).toBeNull();
+      expect(prisma.jobQueue.delete).toHaveBeenCalledWith({
+        where: { id: 'job-1' },
+      });
     });
   });
 
   describe('getJobs', () => {
     it('should retrieve jobs with pagination', async () => {
+      prisma.jobQueue.count.mockResolvedValue(100);
+      prisma.jobQueue.findMany.mockResolvedValue([
+        { id: 'job-1' },
+        { id: 'job-2' },
+      ]);
+
       const result = await jobQueueService.getJobs({}, 1, 20);
 
       expect(result).toHaveProperty('jobs');
@@ -202,63 +423,150 @@ describe('JobQueueService', () => {
     });
 
     it('should filter jobs by status', async () => {
+      const mockJobs = [
+        { id: 'job-1', status: 'PENDING' },
+        { id: 'job-2', status: 'PENDING' },
+      ];
+
+      prisma.jobQueue.count.mockResolvedValue(2);
+      prisma.jobQueue.findMany.mockResolvedValue(mockJobs);
+
       const result = await jobQueueService.getJobs({ status: 'PENDING' as any }, 1, 20);
 
       expect(result.jobs.every((job: any) => job.status === 'PENDING')).toBe(true);
+      expect(prisma.jobQueue.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'PENDING',
+          }),
+        })
+      );
     });
 
     it('should filter jobs by type', async () => {
+      const mockJobs = [
+        { id: 'job-1', type: 'NOTIFICATION' },
+        { id: 'job-2', type: 'NOTIFICATION' },
+      ];
+
+      prisma.jobQueue.count.mockResolvedValue(2);
+      prisma.jobQueue.findMany.mockResolvedValue(mockJobs);
+
       const result = await jobQueueService.getJobs({ type: 'NOTIFICATION' as any }, 1, 20);
 
       expect(result.jobs.every((job: any) => job.type === 'NOTIFICATION')).toBe(true);
+      expect(prisma.jobQueue.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: 'NOTIFICATION',
+          }),
+        })
+      );
     });
 
     it('should filter jobs by priority', async () => {
+      const mockJobs = [
+        { id: 'job-1', priority: 'HIGH' },
+        { id: 'job-2', priority: 'HIGH' },
+      ];
+
+      prisma.jobQueue.count.mockResolvedValue(2);
+      prisma.jobQueue.findMany.mockResolvedValue(mockJobs);
+
       const result = await jobQueueService.getJobs({ priority: 'HIGH' as any }, 1, 20);
 
       expect(result.jobs.every((job: any) => job.priority === 'HIGH')).toBe(true);
+      expect(prisma.jobQueue.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            priority: 'HIGH',
+          }),
+        })
+      );
     });
   });
 
   describe('getJobStats', () => {
     it('should return accurate job statistics', async () => {
+      prisma.jobQueue.count
+        .mockResolvedValueOnce(100)
+        .mockResolvedValueOnce(25)
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(3)
+        .mockResolvedValueOnce(2);
+
       const stats = await jobQueueService.getJobStats();
 
-      expect(stats).toHaveProperty('total');
-      expect(stats).toHaveProperty('pending');
-      expect(stats).toHaveProperty('processing');
-      expect(stats).toHaveProperty('completed');
-      expect(stats).toHaveProperty('failed');
-      expect(stats).toHaveProperty('cancelled');
-      expect(stats).toHaveProperty('retrying');
+      expect(stats).toHaveProperty('total', 100);
+      expect(stats).toHaveProperty('pending', 25);
+      expect(stats).toHaveProperty('processing', 10);
+      expect(stats).toHaveProperty('completed', 50);
+      expect(stats).toHaveProperty('failed', 10);
+      expect(stats).toHaveProperty('cancelled', 3);
+      expect(stats).toHaveProperty('retrying', 2);
       expect(typeof stats.total).toBe('number');
+      expect(prisma.jobQueue.count).toHaveBeenCalledTimes(7);
     });
   });
 
   describe('cleanupOldJobs', () => {
     it('should delete completed jobs older than specified days', async () => {
+      prisma.jobQueue.deleteMany.mockResolvedValue({ count: 15 });
+
       const deleted = await jobQueueService.cleanupOldJobs(7);
 
-      expect(typeof deleted).toBe('number');
+      expect(deleted).toBe(15);
+      expect(prisma.jobQueue.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ['COMPLETED', 'FAILED', 'CANCELLED'] },
+          }),
+        })
+      );
     });
 
     it('should handle 0 days parameter', async () => {
+      prisma.jobQueue.deleteMany.mockResolvedValue({ count: 5 });
+
       const deleted = await jobQueueService.cleanupOldJobs(0);
 
       expect(typeof deleted).toBe('number');
+      expect(deleted).toBe(5);
     });
   });
 
   describe('retryFailedJobs', () => {
     it('should retry failed jobs', async () => {
-      const payload = { type: 'TEST', data: 'test' };
-      const options = { type: 'NOTIFICATION' as any };
-      const job = await jobQueueService.createJob(payload, options);
+      const mockJob = {
+        id: 'job-1',
+        type: 'NOTIFICATION',
+        status: 'PENDING',
+        retryCount: 1,
+        priority: 'MEDIUM',
+        maxRetries: 3,
+        payload: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      await jobQueueService.markJobAsFailed(job.id, 'Error', true);
-      const retried = await jobQueueService.retryFailedJobs([job.id]);
+      prisma.jobQueue.findMany.mockResolvedValue([mockJob]);
+      prisma.jobQueue.update
+        .mockResolvedValueOnce({ id: 'job-1', status: 'PENDING' })
+        .mockResolvedValueOnce(mockJob);
+
+      const retried = await jobQueueService.retryFailedJobs(['job-1']);
 
       expect(retried.length).toBeGreaterThan(0);
+      expect(prisma.jobQueue.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'job-1' },
+          data: expect.objectContaining({
+            status: 'PENDING',
+          }),
+        })
+      );
     });
   });
 });
