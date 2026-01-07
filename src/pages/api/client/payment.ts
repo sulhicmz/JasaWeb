@@ -72,24 +72,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
             return errorResponse(invoiceValidation.error, 400);
         }
 
-        // Get user details for payment processing
-        const userDetails = await prisma.user.findUnique({
+        // Fetch only phone field (id, email, name already in JWT token)
+        // Optimization: Single field query instead of full user record
+        const { phone } = await prisma.user.findUnique({
             where: { id: user.id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                phone: true,
-            },
-        });
+            select: { phone: true },
+        }) ?? { phone: null };
 
-        if (!userDetails) {
-            return errorResponse('Data pengguna tidak ditemukan', 400);
-        }
+        // User details from JWT + phone from database
+        const userDetails = {
+            email: user.email,
+            name: user.name,
+            phone,
+        };
 
         // Create Midtrans service and initiate payment
         const midtransService = createMidtransService(locals.runtime.env);
-        
+
         try {
             // Create QRIS payment with Midtrans
             const paymentResponse = await midtransService.createQrisPayment(invoice, userDetails);

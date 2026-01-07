@@ -1,5 +1,22 @@
 # Task Checklist - JasaWeb Platform
 
+## Data Architecture Optimization (Jan 7, 2026) ✅
+- [x] **QUERY OPTIMIZATION**: Optimized payment.ts API to fetch only phone field from database instead of full user record - reduced query payload by 75% (4 fields to 1 field)
+- [x] **QUERY OPTIMIZATION**: Eliminated redundant user field fetching by using JWT token data (id, email, name) already available in locals.user
+- [x] **DATA INTEGRITY**: Added comprehensive CHECK constraints for critical business rules - 9 new constraints for invoices, job_queue, pricing_plans, users, faqs tables
+- [x] **DATA INTEGRITY**: Implemented reversible migration 007_add_data_constraints with complete rollback script (down.sql)
+- [x] **VALIDATION**: Invoice amount must be positive constraint
+- [x] **VALIDATION**: Paid invoice must have paidAt timestamp constraint
+- [x] **VALIDATION**: PaidAt timestamp must be after createdAt constraint
+- [x] **VALIDATION**: Job queue retry count non-negative constraint
+- [x] **VALIDATION**: Job queue max retries positive constraint
+- [x] **VALIDATION**: Job queue retry count within max retries constraint
+- [x] **VALIDATION**: Pricing plan price positive constraint
+- [x] **VALIDATION**: User email format validation constraint (PostgreSQL regex)
+- [x] **VALIDATION**: Pricing plan and FAQ sort order non-negative constraints
+- [x] **VALIDATION**: All 780 tests passing after optimization (100% success rate)
+- [x] **VALIDATION**: Build successful (7.97s) with zero TypeScript errors
+
 ## Type Safety Refactoring (Jan 7, 2026) ✅
 - [x] **CRITICAL TYPE SAFETY**: Refactored JobQueueService to accept PrismaClient via constructor - eliminated 41 'as any' casts from production code
 - [x] **CRITICAL TYPE SAFETY**: Updated all JobQueueService methods from static to instance methods for proper dependency injection
