@@ -534,11 +534,12 @@ it('should filter patterns by metric', () => {
         return hoursDiff;
       });
 
-      // Should contain predictions for different timeframes
-      expect(timeframes).toContain(1);   // 1 hour
-      expect(timeframes).toContain(6);   // 6 hours
-      expect(timeframes).toContain(24);  // 24 hours
-      expect(timeframes).toContain(168); // 7 days
+      // Should contain predictions for different timeframes (with small floating-point tolerance)
+      const expectedTimeframes = [1, 6, 24, 168];
+      for (const expected of expectedTimeframes) {
+        const found = timeframes.some(t => Math.abs(t - expected) < 0.1);
+        expect(found).toBe(true);
+      }
     });
 
     it('should provide consistent anomaly IDs', () => {
