@@ -250,3 +250,64 @@ enum AuditAction {
   IMPORT
   ROLE_CHANGE
 }
+
+// ============================================
+// BACKGROUND JOB QUEUE
+// ============================================
+model JobQueue {
+  id          String      @id @default(uuid())
+  type        JobType
+  status      JobStatus   @default(PENDING)
+  priority    JobPriority @default(MEDIUM)
+  payload     Json
+  result      Json?
+  error       String?
+  scheduledAt DateTime    @map("scheduled_at")
+  startedAt   DateTime?   @map("started_at")
+  completedAt DateTime?   @map("completed_at")
+  retryCount  Int         @default(0) @map("retry_count")
+  maxRetries  Int         @default(3) @map("max_retries")
+  lastError   String?     @map("last_error")
+  userId      String?     @map("user_id")
+  metadata    Json?
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@map("job_queue")
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([type])
+  @@index([priority])
+  @@index([status, scheduledAt])
+  @@index([status, priority, scheduledAt])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type, status])
+}
+
+enum JobType {
+  NOTIFICATION
+  REPORT_GENERATION
+  EMAIL_SEND
+  WEBHOOK
+  CLEANUP
+  BACKUP
+  DATA_EXPORT
+  DATA_IMPORT
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  RETRYING
+}
+
+enum JobPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
