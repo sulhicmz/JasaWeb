@@ -1,12 +1,12 @@
 # Cloudflare Setup Guide
 
-## Akun yang Diperlukan
+## Required Accounts
 
-| Akun | URL | Free Tier |
-|------|-----|-----------|
+| Account | URL | Free Tier |
+|---------|-----|-----------|
 | **Cloudflare** | [dash.cloudflare.com](https://dash.cloudflare.com) | Pages, Workers, KV, R2 |
 | **Neon** | [console.neon.tech](https://console.neon.tech) | 3GB PostgreSQL |
-| **Midtrans** | [dashboard.midtrans.com](https://dashboard.midtrans.com) | Sandbox gratis |
+| **Midtrans** | [dashboard.midtrans.com](https://dashboard.midtrans.com) | Free sandbox |
 
 ---
 
@@ -22,8 +22,8 @@ wrangler whoami
 
 ## Step 2: Neon Database
 
-1. Buat project di Neon Dashboard
-2. Copy connection string
+1. Create a project in Neon Dashboard
+2. Copy the connection string
 3. Setup Hyperdrive:
 
 ```bash
@@ -36,7 +36,7 @@ wrangler hyperdrive create jasaweb-db --connection-string="CONNECTION_STRING"
 
 ```bash
 wrangler kv namespace create "CACHE"
-# Catat ID
+# Note down the ID
 ```
 
 ---
@@ -336,11 +336,11 @@ export function createPrismaClient(env: CloudflareEnv) {
 
 ---
 
-## Biaya Bulanan
+## Monthly Costs
 
-| Service | Biaya |
-|---------|-------|
-| Cloudflare | Gratis |
-| Neon | Gratis (3GB) |
-| Midtrans | 2.9%/transaksi |
+| Service | Cost |
+|---------|------|
+| Cloudflare | Free |
+| Neon | Free (3GB) |
+| Midtrans | 2.9% per transaction |
 | **Total Fixed** | **Rp 0** |

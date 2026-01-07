@@ -1,27 +1,50 @@
 # JasaWeb
 
-Platform jasa pembuatan website profesional (Web Sekolah, Portal Berita, Company Profile) dengan client portal dan sistem pembayaran QRIS terintegrasi.
+Professional web development platform (School Websites, News Portals, Company Profiles) with client portal and integrated QRIS payment system.
 
 ## Quick Start
 
+### Prerequisites
+- Node.js 20+ 
+- pnpm (recommended) or npm/yarn
+- Neon PostgreSQL account (free tier available)
+- Git
+
+### Installation
+
 ```bash
+# Clone the repository
+git clone https://github.com/jasaweb/jasaweb.git
+cd jasaweb
+
 # Install dependencies (pnpm required)
 pnpm install
+
+# Copy environment variables
+cp .dev.vars.example .dev.vars
+
+# Edit .dev.vars with your credentials
+# DATABASE_URL=postgresql://user:password@ep-xxx.neon.tech/jasaweb
+# JWT_SECRET=your-secret-key
+# MIDTRANS_SERVER_KEY=SB-Mid-server-xxx
+# MIDTRANS_CLIENT_KEY=SB-Mid-client-xxx
 
 # Generate Prisma client
 pnpm db:generate
 
-# Set up database (first time)
+# Set up database (first time only)
 pnpm db:push
 
 # Run development server
 pnpm dev
 ```
 
+The application will be available at [http://localhost:4321](http://localhost:4321)
+
 ## Tech Stack
 
-| Komponen | Teknologi |
-|----------|-----------|
+| Component | Technology |
+|-----------|------------|
 | **Frontend** | Astro 5 + React 19 |
 | **Backend** | Cloudflare Workers |
 | **Database** | Neon PostgreSQL + Prisma ORM |
@@ -34,10 +57,10 @@ pnpm dev
 ## Key Features
 
 ### Core Features
-- **Multi-service support**: Website sekolah, portal berita, company profile
-- **Client portal**: Dashboard project, billing, manajemen akun
-- **Payment integration**: QRIS payment dengan Midtrans
-- **Admin panel**: Manajemen client, project, blog, template
+- **Multi-service support**: School websites, news portals, company profiles
+- **Client portal**: Project dashboard, billing, account management
+- **Payment integration**: QRIS payment with Midtrans
+- **Admin panel**: Client management, projects, blog, templates
 
 ### Recent Enhancements
 - **Background Job Queue**: Sistem job queue untuk notifikasi dan report generation
@@ -49,13 +72,14 @@ pnpm dev
 
 ## Documentation
 
-| Dokumentasi | Deskripsi |
-|-------------|-----------|
-| [Blueprint & Features](docs/architecture/blueprint.md) | Spesifikasi fitur, database schema, API endpoints, resilience patterns |
-| [Roadmap](docs/architecture/roadmap.md) | Timeline development |
-| [Cloudflare Setup](docs/deployment/SETUP.md) | Panduan setup Cloudflare |
-| [AI Guidelines](AGENTS.md) | Coding standards dan architectural patterns |
-| [Task Checklist](docs/task.md) | Status task yang sudah selesai dan berjalan |
+| Documentation | Description |
+|---------------|-------------|
+| [API Documentation](docs/api-documentation.md) | REST API reference with authentication and examples |
+| [Architecture Blueprint](docs/blueprint.md) | Feature specifications, database schema, API endpoints, resilience patterns |
+| [Roadmap](docs/architecture/roadmap.md) | Development timeline and milestones |
+| [Cloudflare Setup](docs/deployment/SETUP.md) | Cloudflare deployment guide |
+| [AI Guidelines](AGENTS.md) | Coding standards and architectural patterns |
+| [Task Checklist](docs/task.md) | Task status and progress |
 
 ## Development Commands
 
