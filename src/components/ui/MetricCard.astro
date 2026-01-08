@@ -39,15 +39,6 @@ function getTrendIcon(trendDirection: TrendDirection): string {
   return icons[trendDirection];
 }
 
-function getStatusColor(statusValue: 'healthy' | 'warning' | 'critical'): string {
-  const colors: Record<'healthy' | 'warning' | 'critical', string> = {
-    healthy: 'var(--color-success)',
-    warning: 'var(--color-secondary)',
-    critical: 'var(--color-error)'
-  };
-  return colors[statusValue];
-}
-
 function formatValue(val: number, unitStr: string): string {
   if (unitStr === '%') {
     return `${(val * 100).toFixed(2)}${unitStr}`;
@@ -56,7 +47,6 @@ function formatValue(val: number, unitStr: string): string {
 }
 
 const trendIcon = getTrendIcon(trend);
-const statusColor = getStatusColor(status);
 const formattedValue = formatValue(value, unit);
 const formattedPrevious = formatValue(previousValue, unit);
 ---

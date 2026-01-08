@@ -117,17 +117,17 @@ export class WebhookProcessorService {
   /**
    * Process a single webhook
    */
-  private async processWebhook(webhook: { 
-    id: string; 
-    provider: string; 
-    eventType: string; 
-    payload: Record<string, unknown>; 
+  private async processWebhook(webhook: {
+    id: string;
+    provider: string;
+    eventType: string;
+    payload: unknown;
   }): Promise<void> {
     const startTime = Date.now();
 
     try {
-      logger.info('Processing webhook', { 
-        webhookId: webhook.id, 
+      logger.info('Processing webhook', {
+        webhookId: webhook.id,
         provider: webhook.provider,
         eventType: webhook.eventType,
       });
@@ -135,7 +135,10 @@ export class WebhookProcessorService {
       // Route webhook to appropriate processor
       switch (webhook.provider) {
         case 'midtrans':
-          await this.processMidtransWebhook(webhook);
+          await this.processMidtransWebhook({
+            id: webhook.id,
+            payload: webhook.payload as Record<string, unknown>
+          });
           break;
         default:
           logger.warn('Unknown webhook provider', { provider: webhook.provider });

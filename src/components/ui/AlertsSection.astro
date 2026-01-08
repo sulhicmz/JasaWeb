@@ -37,16 +37,6 @@ export interface Props {
 
 const { alerts, onViewAll } = Astro.props;
 
-function getSeverityColor(severity: AlertSeverity): string {
-  const colors = {
-    success: 'var(--color-success)',
-    info: 'var(--color-primary)',
-    warning: 'var(--color-secondary)',
-    error: 'var(--color-error)'
-  };
-  return colors[severity];
-}
-
 function formatTimestamp(timestamp: string): string {
   const now = Date.now();
   const then = new Date(timestamp).getTime();

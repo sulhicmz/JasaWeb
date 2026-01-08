@@ -1,12 +1,12 @@
 ---
 /**
  * SystemHealthCard.astro
- * 
+ *
  * Displays system component health status with response time and metadata
- * 
+ *
  * @example
  * ```astro
- * <SystemHealthCard 
+ * <SystemHealthCard
  *   name="Database"
  *   status="healthy"
  *   responseTime={12}
@@ -15,7 +15,6 @@
  * />
  * ```
  */
-import Card from './Card.astro';
 
 export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'down';
 
@@ -40,6 +39,7 @@ function getStatusLabel(statusValue: HealthStatus): string {
 }
 
 function getStatusColor(statusValue: HealthStatus): string {
+
   const colors: Record<HealthStatus, string> = {
     healthy: 'var(--color-success)',
     warning: 'var(--color-secondary)',
@@ -50,7 +50,6 @@ function getStatusColor(statusValue: HealthStatus): string {
 }
 
 const statusLabel = getStatusLabel(status);
-const statusColor = getStatusColor(status);
 const lastCheckDate = new Date(lastCheck);
 ---
 
@@ -71,10 +70,10 @@ const lastCheckDate = new Date(lastCheck);
         role="status"
         aria-live="polite"
       >
-        <span 
-          class={`status-dot ${status}`} 
+        <span
+          class={`status-dot ${status}`}
           aria-hidden="true"
-          style="background-color: {statusColor}"
+          style="background-color: {getStatusColor(status)}"
         ></span>
         <span class="status-text">{statusLabel}</span>
       </div>

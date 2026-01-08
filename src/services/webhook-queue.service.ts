@@ -11,7 +11,7 @@
  * - Comprehensive monitoring and statistics
  */
 
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import { Logger } from '@/lib/logger';
 
 export type WebhookStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'EXPIRED';
@@ -20,7 +20,7 @@ export interface WebhookQueue {
   id: string;
   provider: string;
   eventType: string;
-  payload: Record<string, unknown>;
+  payload: Prisma.JsonValue;
   signature: string | null | undefined;
   eventId: string | null | undefined;
   status: WebhookStatus;
@@ -36,7 +36,7 @@ export interface WebhookQueue {
 export interface EnqueueWebhookOptions {
   provider: string;
   eventType: string;
-  payload: Record<string, unknown>;
+  payload: Prisma.InputJsonValue;
   signature?: string;
   eventId?: string;
   maxRetries?: number;
@@ -64,7 +64,7 @@ const logger = new Logger('WebhookQueue');
 
 type PrismaWithWebhookQueue = PrismaClient & {
   webhookQueue: {
-    create: (args: { data: Partial<WebhookQueue> & { provider: string; eventType: string; payload: Record<string, unknown>; expiresAt: Date } }) => Promise<WebhookQueue>;
+    create: (args: { data: Partial<WebhookQueue> & { provider: string; eventType: string; payload: Prisma.InputJsonValue; expiresAt: Date } }) => Promise<WebhookQueue>;
     findFirst: (args: { where: { provider: string; eventId?: string; status?: { in: string[] } } }) => Promise<WebhookQueue | null>;
     findMany: (args: { where?: Record<string, unknown>; orderBy?: Array<Record<string, 'asc' | 'desc'>>; take?: number }) => Promise<WebhookQueue[]>;
     findUnique: (args: { where: { id: string } }) => Promise<WebhookQueue | null>;
@@ -103,7 +103,7 @@ export class WebhookQueueService {
         data: {
           provider,
           eventType,
-          payload,
+          payload: payload as Prisma.InputJsonValue,
           signature: signature || null,
           eventId: eventId || null,
           maxRetries,
