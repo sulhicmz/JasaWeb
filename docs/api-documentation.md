@@ -4,7 +4,8 @@
 
 JasaWeb provides a RESTful API for managing websites, invoices, and projects. This documentation covers authentication, endpoints, and common use cases.
 
-**Base URL**: `https://api.jasaweb.com`  
+**Development Base URL**: `http://localhost:4321` (local development)  
+**Production Base URL**: `https://your-deployed-domain.com` (your deployed domain)  
 **API Version**: v1  
 **Content-Type**: `application/json`
 
@@ -15,8 +16,8 @@ All API requests (except public endpoints) require authentication via JWT tokens
 ### Obtaining a Token
 
 ```bash
-# Register
-curl -X POST https://api.jasaweb.com/api/auth/register \
+# Register (local development)
+curl -X POST http://localhost:4321/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "John Doe",
@@ -24,14 +25,16 @@ curl -X POST https://api.jasaweb.com/api/auth/register \
     "password": "securePassword123"
   }'
 
-# Login
-curl -X POST https://api.jasaweb.com/api/auth/login \
+# Login (local development)
+curl -X POST http://localhost:4321/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "john@example.com",
     "password": "securePassword123"
   }'
 ```
+
+**Note**: For production, replace `http://localhost:4321` with your deployed domain.
 
 **Response**:
 ```json
@@ -54,7 +57,12 @@ curl -X POST https://api.jasaweb.com/api/auth/login \
 Include the token in the Authorization header:
 
 ```bash
-curl https://api.jasaweb.com/api/client/projects \
+# Local development
+curl http://localhost:4321/api/client/projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Production
+curl https://your-deployed-domain.com/api/client/projects \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -491,6 +499,387 @@ GET /api/templates?serviceType=sekolah&category=basic
 }
 ```
 
+## Admin API Endpoints
+
+### Dashboard
+
+```bash
+GET /api/admin/dashboard
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "totalUsers": 150,
+    "totalProjects": 320,
+    "totalRevenue": 1500000000,
+    "activeProjects": 245,
+    "pendingInvoices": 15,
+    "monthlyRevenue": 125000000,
+    "recentUsers": [...],
+    "recentProjects": [...]
+  }
+}
+```
+
+### Users Management
+
+#### List Users
+```bash
+GET /api/admin/users?page=1&limit=20&role=CLIENT
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Create User
+```bash
+POST /api/admin/users
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securePassword123",
+  "role": "CLIENT",
+  "phone": "+628123456789"
+}
+```
+
+#### Update User
+```bash
+PUT /api/admin/users/{userId}
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "John Smith",
+  "role": "ADMIN"
+}
+```
+
+#### Delete User
+```bash
+DELETE /api/admin/users/{userId}
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+### Projects Management
+
+#### List Projects
+```bash
+GET /api/admin/projects?page=1&limit=20&status=active
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Update Project Status
+```bash
+PUT /api/admin/projects/{projectId}
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "status": "completed",
+  "notes": "Project completed successfully"
+}
+```
+
+### Templates Management
+
+#### List Templates
+```bash
+GET /api/admin/templates?page=1&limit=20&serviceType=sekolah
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Create Template
+```bash
+POST /api/admin/templates
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "Modern School Template",
+  "description": "Clean and modern school website",
+  "serviceType": "sekolah",
+  "category": "basic",
+  "thumbnail": "https://cdn.example.com/thumb.jpg",
+  "previewUrl": "https://templates.example.com/preview",
+  "isActive": true,
+  "sortOrder": 1
+}
+```
+
+#### Update Template
+```bash
+PUT /api/admin/templates/{templateId}
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Delete Template
+```bash
+DELETE /api/admin/templates/{templateId}
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+### Pricing Plans Management
+
+#### List Pricing Plans
+```bash
+GET /api/admin/pricing?page=1&limit=20&serviceType=sekolah
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Create Pricing Plan
+```bash
+POST /api/admin/pricing
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "name": "Standard",
+  "serviceType": "sekolah",
+  "price": 5000000,
+  "duration": 30,
+  "description": "Complete school website with admin panel",
+  "features": ["Responsive design", "Admin panel", "Student management"],
+  "isActive": true,
+  "sortOrder": 1
+}
+```
+
+### Webhook Queue Management
+
+#### Get Webhook Statistics
+```bash
+GET /api/admin/webhooks
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "pending": 5,
+    "processing": 2,
+    "completed": 150,
+    "failed": 3,
+    "expired": 1,
+    "successRate": 96.8,
+    "averageProcessingTime": 245.3
+  }
+}
+```
+
+#### Retry Failed Webhooks
+```bash
+POST /api/admin/webhooks
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "webhookIds": ["webhook_1", "webhook_2", "webhook_3"]
+}
+```
+
+### Job Queue Management
+
+#### List Jobs
+```bash
+GET /api/admin/jobs?page=1&limit=20&status=PENDING
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Create Job
+```bash
+POST /api/admin/jobs
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "type": "NOTIFICATION",
+  "priority": "HIGH",
+  "payload": {
+    "userId": "user_123",
+    "message": "Your invoice is ready"
+  }
+}
+```
+
+#### Process Jobs
+```bash
+POST /api/admin/jobs/process
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "maxJobs": 10,
+  "jobType": "NOTIFICATION"
+}
+```
+
+#### Get Job Statistics
+```bash
+GET /api/admin/jobs/stats
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "pending": 15,
+    "processing": 5,
+    "completed": 450,
+    "failed": 12,
+    "cancelled": 2,
+    "retrying": 3,
+    "queueHealth": 92.5,
+    "successRate": 94.2
+  }
+}
+```
+
+### Business Intelligence APIs
+
+#### Revenue Analytics
+```bash
+GET /api/admin/bi/revenue?period=7d
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### User Analytics
+```bash
+GET /api/admin/bi/users?period=30d
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Project Analytics
+```bash
+GET /api/admin/bi/projects?period=7d
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### BI Summary
+```bash
+GET /api/admin/bi/summary
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+### Performance Monitoring
+
+#### System Performance
+```bash
+GET /api/admin/performance
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "bundleSize": {
+      "total": 189710,
+      "gzip": 60750,
+      "brotli": 58920
+    },
+    "apiPerformance": {
+      "averageResponseTime": 45.2,
+      "errorRate": 0.01,
+      "throughput": 987.65
+    },
+    "systemHealth": "HEALTHY"
+  }
+}
+```
+
+#### Performance Intelligence
+```bash
+GET /api/admin/performance-intelligence
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Cache Management
+```bash
+GET /api/admin/cache
+Authorization: Bearer ADMIN_JWT_TOKEN
+```
+
+#### Cache Invalidation
+```bash
+POST /api/admin/cache-manage
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "action": "invalidate",
+  "pattern": "dashboard:*"
+}
+```
+
+#### Cache Warming
+```bash
+POST /api/admin/cache-manage
+Authorization: Bearer ADMIN_JWT_TOKEN
+Content-Type: application/json
+
+{
+  "action": "warm"
+}
+```
+
+## System Health Monitoring
+
+### Health Check Endpoint
+
+```bash
+GET /api/health
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "timestamp": "2026-01-08T12:00:00Z",
+    "uptime": 86400,
+    "database": {
+      "status": "connected",
+      "latency": 1.2
+    },
+    "cache": {
+      "status": "connected",
+      "hitRate": 0.89
+    },
+    "services": {
+      "midtrans": {
+        "status": "operational",
+        "lastCheck": "2026-01-08T11:59:00Z"
+      }
+    }
+  }
+}
+```
+
+### OpenAPI Documentation
+
+#### Get OpenAPI Specification
+
+```bash
+GET /api/docs
+Accept: application/json
+```
+
+#### Interactive API Documentation
+
+Visit `/docs` in your browser for interactive Swagger UI documentation.
+
 ## Error Handling
 
 All API responses follow a consistent error format:
@@ -537,6 +926,7 @@ API requests are rate-limited to prevent abuse:
 
 - **Authenticated requests**: 100 requests per minute
 - **Unauthenticated requests**: 20 requests per minute
+- **Sensitive endpoints** (auth, payment): Stricter limits apply
 
 Rate limit headers are included in responses:
 
@@ -545,6 +935,47 @@ X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1704607200
 ```
+
+**Rate Limit Exceeded Response**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests. Please try again later.",
+    "retryAfter": 60
+  }
+}
+```
+
+## CSRF Protection
+
+All authenticated state-changing requests (POST, PUT, DELETE, PATCH) must include a CSRF token in the `x-csrf-token` header.
+
+**How to get CSRF token**:
+- The token is stored in the `jasaweb_csrf` cookie
+- Include the token in your request headers:
+
+```bash
+curl -X POST http://localhost:4321/api/client/projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "x-csrf-token: YOUR_CSRF_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "New Project"}'
+```
+
+**CSRF Validation Error Response**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CSRF_TOKEN_INVALID",
+    "message": "Invalid or missing CSRF token"
+  }
+}
+```
+
+**Note**: CSRF protection is enforced for authenticated state-changing operations to prevent cross-site request forgery attacks.
 
 ## Webhooks
 
@@ -591,64 +1022,79 @@ function verifyWebhook(payload, signature, secret) {
 }
 ```
 
-## SDK Examples
+## HTTP Client Examples
 
 ### JavaScript/Node.js
 
 ```javascript
-const JasaWebClient = require('jasaweb-sdk');
-
-const client = new JasaWebClient({
-  apiKey: 'YOUR_API_KEY'
-});
-
-// List projects
-const projects = await client.projects.list();
+// Using fetch API
+async function getProjects(token) {
+  const response = await fetch('http://localhost:4321/api/client/projects', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  const data = await response.json();
+  return data;
+}
 
 // Create project
-const project = await client.projects.create({
-  name: 'School Website',
-  serviceType: 'sekolah',
-  pricingPlanId: 'plan_123'
-});
-
-// Get invoice
-const invoice = await client.invoices.get('inv_789');
+async function createProject(token, projectData) {
+  const response = await fetch('http://localhost:4321/api/client/projects', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(projectData)
+  });
+  const data = await response.json();
+  return data;
+}
 ```
 
 ### Python
 
 ```python
-from jasaweb import JasaWebClient
+import requests
 
-client = JasaWebClient(api_key='YOUR_API_KEY')
+BASE_URL = 'http://localhost:4321'  # Update to production URL in deployment
 
-# List projects
-projects = client.projects.list()
+def get_projects(token):
+    response = requests.get(
+        f'{BASE_URL}/api/client/projects',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+    )
+    return response.json()
 
-# Create project
-project = client.projects.create(
-    name='School Website',
-    service_type='sekolah',
-    pricing_plan_id='plan_123'
-)
-
-# Get invoice
-invoice = client.invoices.get('inv_789')
+def create_project(token, project_data):
+    response = requests.post(
+        f'{BASE_URL}/api/client/projects',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        },
+        json=project_data
+    )
+    return response.json()
 ```
 
 ## Testing
 
-Use the sandbox environment for testing:
+Use the local development environment for testing:
 
-- **Sandbox Base URL**: `https://sandbox-api.jasaweb.com`
-- **Test Credentials**: Create test account in sandbox
-- **Test Payments**: Use Midtrans sandbox for payment testing
+- **Development Base URL**: `http://localhost:4321`
+- **Development Server**: Start with `pnpm dev`
+- **Test Payments**: Use Midtrans sandbox credentials in `.dev.vars`
 
 ```bash
-# Example: Create project in sandbox
-curl -X POST https://sandbox-api.jasaweb.com/api/client/projects \
-  -H "Authorization: Bearer SANDBOX_TOKEN" \
+# Example: Create project in local development
+curl -X POST http://localhost:4321/api/client/projects \
+  -H "Authorization: Bearer YOUR_DEV_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Test School Website",
@@ -657,14 +1103,23 @@ curl -X POST https://sandbox-api.jasaweb.com/api/client/projects \
   }'
 ```
 
+**Test Environment Setup**:
+1. Copy `.dev.vars.example` to `.dev.vars`
+2. Set up Neon PostgreSQL database
+3. Use Midtrans sandbox credentials (SB-Mid-server-...)
+4. Run `pnpm db:push` to set up database
+5. Start dev server with `pnpm dev`
+
 ## Support
 
-- **Documentation**: https://docs.jasaweb.com
-- **API Reference**: https://docs.jasaweb.com/api
-- **Support Email**: support@jasaweb.com
-- **GitHub Issues**: https://github.com/jasaweb/jasaweb/issues
+- **Documentation**: [README.md](../../README.md)
+- **Architecture**: [Architecture Blueprint](blueprint.md)
+- **Deployment**: [Cloudflare Setup](deployment/SETUP.md)
+- **GitHub Repository**: https://github.com/sulhicmz/jasaweb
+- **GitHub Issues**: https://github.com/sulhicmz/jasaweb/issues
+- **Task Progress**: [Task Checklist](task.md)
 
 ---
 
-**Last Updated**: 2025-01-07
+**Last Updated**: 2026-01-08
 **API Version**: v1
