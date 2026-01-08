@@ -243,7 +243,6 @@ describe('Payment API Routes - Integration', () => {
             };
 
             mockPrisma.invoice.findFirst.mockImplementation((query: any) => {
-                const invoiceId = query.where.id;
                 const userId = query.where.project?.userId;
                 return userId !== 'other-user-456' ? null : Promise.resolve(otherUserInvoice);
             });

@@ -226,8 +226,6 @@ describe('Health Check API - Integration', () => {
             const { GET: healthHandler } = await import('@/pages/api/health');
 
             const request = new Request('http://localhost/api/health');
-            const response = await healthHandler({ request } as any);
-
             await healthHandler({ request } as any);
 
             expect(mockMonitoringInstance.recordSecurityEvent).toHaveBeenCalledWith(
