@@ -36,11 +36,13 @@ const getCategoryLabel = TemplateServerService.getCategoryLabel;
   </Section>
 
   <Section spacing="lg">
-    <div class="filter-bar">
+    <div class="filter-bar" role="group" aria-label="Filter templates by category">
       {categories.map((cat: any) => (
         <button 
           class:list={['filter-btn', { active: cat.value === 'all' }]}
           data-category={cat.value}
+          aria-pressed={cat.value === 'all'}
+          aria-label={`Filter by ${cat.label}`}
         >
           {cat.label}
         </button>
@@ -117,6 +119,20 @@ const getCategoryLabel = TemplateServerService.getCategoryLabel;
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: white;
+  }
+
+  /* Focus Visible Styles */
+  .filter-btn:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.15);
+  }
+
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    .filter-btn {
+      transition: none;
+    }
   }
 
   .templates-grid {

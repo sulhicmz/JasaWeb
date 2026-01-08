@@ -84,6 +84,7 @@ const allClasses = [baseClasses, variantClasses, sizeClasses, widthClasses, disa
     border: 1px solid transparent;
     cursor: pointer;
     text-decoration: none;
+    position: relative;
   }
 
   /* Sizes */
@@ -137,5 +138,54 @@ const allClasses = [baseClasses, variantClasses, sizeClasses, widthClasses, disa
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+  }
+
+  /* Focus Visible Styles */
+  @supports not selector(:focus-visible) {
+    .btn:focus {
+      outline: 3px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .btn:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.15);
+  }
+
+  .btn-primary:focus-visible {
+    outline-color: var(--color-primary-dark);
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.25);
+  }
+
+  .btn-secondary:focus-visible {
+    outline-color: var(--color-primary);
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.2);
+  }
+
+  .btn-outline:focus-visible {
+    outline-color: var(--color-primary);
+    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.2);
+  }
+
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition: none;
+    }
+
+    .btn-primary:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  /* Touch Target Size */
+  @media (hover: none) and (pointer: coarse) {
+    .btn {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 </style>
