@@ -2,9 +2,11 @@
  * Template Service
  * Business logic for template filtering and display
  * Database-driven template management
+ * Enhanced with resilience patterns for production reliability
  */
 import type { TemplateCategory } from '../../lib/config';
 import { templateCategories } from '../../lib/config';
+import { withResilience, ExternalServiceErrorCode } from '../../lib/resilience';
 
 export interface Template {
   id: string;
@@ -37,6 +39,7 @@ export class TemplateService {
 
   /**
    * Fetch templates from API with filtering
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   static async fetchTemplates(params: {
     page?: number;
@@ -47,7 +50,7 @@ export class TemplateService {
     sortOrder?: 'asc' | 'desc';
   } = {}): Promise<TemplateListResponse> {
     const searchParams = new URLSearchParams();
-    
+
     if (params.page) searchParams.set('page', params.page.toString());
     if (params.limit) searchParams.set('limit', params.limit.toString());
     if (params.category) searchParams.set('category', params.category);
@@ -55,11 +58,37 @@ export class TemplateService {
     if (params.sortBy) searchParams.set('sortBy', params.sortBy);
     if (params.sortOrder) searchParams.set('sortOrder', params.sortOrder);
 
-    const response = await fetch(`/api/templates?${searchParams.toString()}`);
+    const response = await withResilience(
+      async () => {
+        const res = await fetch(`/api/templates?${searchParams.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return res;
+      },
+      'TemplateService',
+      'fetchTemplates',
+      {
+        timeout: { timeoutMs: 10000 },
+        retry: {
+          maxRetries: 2,
+          initialDelayMs: 1000,
+          retryableErrors: [
+            ExternalServiceErrorCode.TIMEOUT,
+            ExternalServiceErrorCode.NETWORK_ERROR,
+            ExternalServiceErrorCode.SERVICE_UNAVAILABLE,
+          ],
+        },
+        enableLogging: true,
+      }
+    );
+
     if (!response.ok) {
       throw new Error(`Failed to fetch templates: ${response.statusText}`);
     }
-    
+
     return response.json();
   }
 
@@ -73,50 +102,110 @@ export class TemplateService {
 
   /**
    * Create template data
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   static async createTemplate(data: Omit<Template, 'id' | 'createdAt'>): Promise<Template> {
-    const response = await fetch('/api/admin/templates', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await withResilience(
+      async () => {
+        const res = await fetch('/api/admin/templates', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        return res;
       },
-      body: JSON.stringify(data)
-    });
-    
+      'TemplateService',
+      'createTemplate',
+      {
+        timeout: { timeoutMs: 10000 },
+        retry: {
+          maxRetries: 1,
+          initialDelayMs: 2000,
+          retryableErrors: [
+            ExternalServiceErrorCode.TIMEOUT,
+            ExternalServiceErrorCode.NETWORK_ERROR,
+          ],
+        },
+        enableLogging: true,
+      }
+    );
+
     if (!response.ok) {
       throw new Error(`Failed to create template: ${response.statusText}`);
     }
-    
+
     return response.json();
   }
 
   /**
    * Update template data
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   static async updateTemplate(id: string, data: Partial<Template>): Promise<Template> {
-    const response = await fetch(`/api/admin/templates/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await withResilience(
+      async () => {
+        const res = await fetch(`/api/admin/templates/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        return res;
       },
-      body: JSON.stringify(data)
-    });
-    
+      'TemplateService',
+      'updateTemplate',
+      {
+        timeout: { timeoutMs: 10000 },
+        retry: {
+          maxRetries: 1,
+          initialDelayMs: 2000,
+          retryableErrors: [
+            ExternalServiceErrorCode.TIMEOUT,
+            ExternalServiceErrorCode.NETWORK_ERROR,
+          ],
+        },
+        enableLogging: true,
+      }
+    );
+
     if (!response.ok) {
       throw new Error(`Failed to update template: ${response.statusText}`);
     }
-    
+
     return response.json();
   }
 
   /**
    * Delete template
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   static async deleteTemplate(id: string): Promise<void> {
-    const response = await fetch(`/api/admin/templates/${id}`, {
-      method: 'DELETE',
-    });
-    
+    const response = await withResilience(
+      async () => {
+        const res = await fetch(`/api/admin/templates/${id}`, {
+          method: 'DELETE',
+        });
+        return res;
+      },
+      'TemplateService',
+      'deleteTemplate',
+      {
+        timeout: { timeoutMs: 10000 },
+        retry: {
+          maxRetries: 1,
+          initialDelayMs: 2000,
+          retryableErrors: [
+            ExternalServiceErrorCode.TIMEOUT,
+            ExternalServiceErrorCode.NETWORK_ERROR,
+          ],
+        },
+        enableLogging: true,
+      }
+    );
+
     if (!response.ok) {
       throw new Error(`Failed to delete template: ${response.statusText}`);
     }

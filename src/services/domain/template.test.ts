@@ -43,7 +43,7 @@ describe('TemplateService', () => {
           }
         ],
         pagination: {
-          total: 1,
+          total:1,
           page: 1,
           limit: 12,
           totalPages: 1,
@@ -59,7 +59,15 @@ describe('TemplateService', () => {
 
       const result = await TemplateService.fetchTemplates();
 
-      expect(fetch).toHaveBeenCalledWith('/api/templates?');
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/templates?',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       expect(result).toEqual(mockResponse);
     });
 
@@ -91,7 +99,51 @@ describe('TemplateService', () => {
       });
 
       expect(fetch).toHaveBeenCalledWith(
-        '/api/templates?page=1&limit=10&category=sekolah&search=edu&sortBy=name&sortOrder=asc'
+        '/api/templates?page=1&limit=10&category=sekolah&search=edu&sortBy=name&sortOrder=asc',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    });
+
+    it('should fetch templates with parameters - duplicate test', async () => {
+      const mockResponse = {
+        templates: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        }
+      };
+
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockResponse
+      } as Response);
+
+      await TemplateService.fetchTemplates({
+        page: 1,
+        limit: 10,
+        category: 'sekolah',
+        search: 'edu',
+        sortBy: 'name',
+        sortOrder: 'asc'
+      });
+
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/templates?page=1&limit=10&category=sekolah&search=edu&sortBy=name&sortOrder=asc',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
     });
 

@@ -1,11 +1,13 @@
 /**
  * Billing Service - Atomic billing statistics and invoice calculations
- * 
+ *
  * Extracted from billing.astro to eliminate inline business logic duplication
  * and provide reusable billing utilities across the application.
+ * Enhanced with resilience patterns for production reliability
  */
 
 import type { Invoice } from '@/lib/types';
+import { withResilience, ExternalServiceErrorCode } from '@/lib/resilience';
 
 export interface BillingStats {
   totalAmount: number;
@@ -236,23 +238,51 @@ export function createBillingState(): InvoiceState {
 
 /**
  * Fetch billing statistics from API with error handling
+ * Enhanced with resilience patterns: timeout, retry, logging
  */
 export async function fetchBillingStats(): Promise<{ invoices: Invoice[] } | null> {
   try {
-    const response = await fetch('/api/client/invoices');
+    const response = await withResilience(
+      async () => {
+        const res = await fetch('/api/client/invoices', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return res;
+      },
+      'BillingService',
+      'fetchBillingStats',
+      {
+        timeout: { timeoutMs: 10000 },
+        retry: {
+          maxRetries: 2,
+          initialDelayMs: 1000,
+          retryableErrors: [
+            ExternalServiceErrorCode.TIMEOUT,
+            ExternalServiceErrorCode.NETWORK_ERROR,
+            ExternalServiceErrorCode.SERVICE_UNAVAILABLE,
+          ],
+        },
+        enableLogging: true,
+      }
+    );
+
     if (!response.ok) {
-      console.error('Failed to fetch billing stats:', response.statusText);
+      console.error('[BillingService] Failed to fetch billing stats:', response.statusText);
       return null;
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching billing stats:', error);
+    console.error('[BillingService] Error fetching billing stats:', error);
     return null;
   }
 }
 
 /**
  * Fetch paginated invoices with filtering and sorting
+ * Enhanced with resilience patterns: timeout, retry, logging
  */
 export async function fetchInvoices(params: {
   page: number;
@@ -270,14 +300,40 @@ export async function fetchInvoices(params: {
       ...(params.status && { status: params.status })
     });
 
-    const response = await fetch(`/api/client/invoices?${searchParams}`);
+    const response = await withResilience(
+      async () => {
+        const res = await fetch(`/api/client/invoices?${searchParams}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        return res;
+      },
+      'BillingService',
+      'fetchInvoices',
+      {
+        timeout: { timeoutMs: 10000 },
+        retry: {
+          maxRetries: 2,
+          initialDelayMs: 1000,
+          retryableErrors: [
+            ExternalServiceErrorCode.TIMEOUT,
+            ExternalServiceErrorCode.NETWORK_ERROR,
+            ExternalServiceErrorCode.SERVICE_UNAVAILABLE,
+          ],
+        },
+        enableLogging: true,
+      }
+    );
+
     if (!response.ok) {
-      console.error('Failed to fetch invoices:', response.statusText);
+      console.error('[BillingService] Failed to fetch invoices:', response.statusText);
       return null;
     }
     return await response.json();
   } catch (error) {
-    console.error('Error fetching invoices:', error);
+    console.error('[BillingService] Error fetching invoices:', error);
     return null;
   }
 }
@@ -402,15 +458,41 @@ export class BillingService {
 
   /**
    * Show invoice details modal
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   public async showInvoiceDetails(invoiceId: string): Promise<void> {
     try {
-      const response = await fetch(`/api/client/invoices/${invoiceId}`);
+      const response = await withResilience(
+        async () => {
+          const res = await fetch(`/api/client/invoices/${invoiceId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          return res;
+        },
+        'BillingService',
+        'showInvoiceDetails',
+        {
+          timeout: { timeoutMs: 8000 },
+          retry: {
+            maxRetries: 2,
+            initialDelayMs: 1000,
+            retryableErrors: [
+              ExternalServiceErrorCode.TIMEOUT,
+              ExternalServiceErrorCode.NETWORK_ERROR,
+            ],
+          },
+          enableLogging: true,
+        }
+      );
+
       if (!response.ok) throw new Error('Failed to fetch invoice details');
-      
+
       const invoice = await response.json();
       const invoiceDetailHTML = generateInvoiceDetailHTML(invoice);
-      
+
       // Create modal
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
@@ -423,9 +505,9 @@ export class BillingService {
           </div>
         </div>
       `;
-      
+
       document.body.appendChild(modal);
-      
+
       // Add styles
       if (!document.getElementById('billing-modal-styles')) {
         const modalStyles = document.createElement('style');
@@ -455,31 +537,54 @@ export class BillingService {
         `;
         document.head.appendChild(modalStyles);
       }
-      
+
     } catch (error) {
-      console.error('Error showing invoice details:', error);
+      console.error('[BillingService] Error showing invoice details:', error);
       alert('Gagal memuat detail invoice. Silakan coba lagi.');
     }
   }
 
   /**
    * Create payment for invoice
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   public async createPayment(invoiceId: string): Promise<void> {
     try {
-      const response = await fetch(`/api/client/invoices/${invoiceId}/pay`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
+      const response = await withResilience(
+        async () => {
+          const res = await fetch(`/api/client/invoices/${invoiceId}/pay`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          return res;
+        },
+        'BillingService',
+        'createPayment',
+        {
+          timeout: { timeoutMs: 12000 },
+          retry: {
+            maxRetries: 1,
+            initialDelayMs: 2000,
+            retryableErrors: [
+              ExternalServiceErrorCode.TIMEOUT,
+              ExternalServiceErrorCode.NETWORK_ERROR,
+              ExternalServiceErrorCode.SERVICE_UNAVAILABLE,
+            ],
+          },
+          enableLogging: true,
+        }
+      );
+
       if (!response.ok) throw new Error('Failed to create payment');
-      
+
       const paymentData = await response.json();
-      
+
       if (paymentData.qrisUrl && paymentData.orderId) {
         const invoice = await fetch(`/api/client/invoices/${invoiceId}`).then(res => res.json());
         const qrisHTML = generateQRISPaymentHTML(invoice, paymentData.qrisUrl, paymentData.orderId);
-        
+
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.id = 'paymentModal';
@@ -488,32 +593,58 @@ export class BillingService {
             ${qrisHTML}
           </div>
         `;
-        
+
         document.body.appendChild(modal);
-        
+
         // Start payment timer
         this.startPaymentTimer(paymentData.orderId);
-        
+
       } else {
         alert('Gagal membuat pembayaran. Silakan coba lagi.');
       }
-      
+
     } catch (error) {
-      console.error('Error creating payment:', error);
+      console.error('[BillingService] Error creating payment:', error);
       alert('Gagal membuat pembayaran. Silakan coba lagi.');
     }
   }
 
   /**
    * Check payment status
+   * Enhanced with resilience patterns: timeout, retry, logging
    */
   public async checkPaymentStatus(orderId: string): Promise<void> {
     try {
-      const response = await fetch(`/api/client/payment/status?orderId=${orderId}`);
+      const response = await withResilience(
+        async () => {
+          const res = await fetch(`/api/client/payment/status?orderId=${orderId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          return res;
+        },
+        'BillingService',
+        'checkPaymentStatus',
+        {
+          timeout: { timeoutMs: 8000 },
+          retry: {
+            maxRetries: 2,
+            initialDelayMs: 1000,
+            retryableErrors: [
+              ExternalServiceErrorCode.TIMEOUT,
+              ExternalServiceErrorCode.NETWORK_ERROR,
+            ],
+          },
+          enableLogging: true,
+        }
+      );
+
       if (!response.ok) throw new Error('Failed to check payment status');
-      
+
       const status = await response.json();
-      
+
       if (status.status === 'success') {
         alert('Pembayaran berhasil! Invoice telah diperbarui.');
         this.closePaymentModal();
@@ -527,9 +658,9 @@ export class BillingService {
       } else {
         alert('Status pembayaran tidak diketahui.');
       }
-      
+
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      console.error('[BillingService] Error checking payment status:', error);
       alert('Gagal memeriksa status pembayaran. Silakan coba lagi.');
     }
   }

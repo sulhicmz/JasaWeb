@@ -2,9 +2,11 @@
  * Project Service
  * Business logic for project status mapping and display
  * Extracted from inline JavaScript in dashboard/projects.astro
+ * Enhanced with resilience patterns for production reliability
  */
 
 import type { Project } from '../../lib/types';
+import { ExternalServiceErrorCode } from '../../lib/resilience';
 
 export interface ProjectStatus {
   label: string;
@@ -66,10 +68,39 @@ export class ProjectService {
   /**
    * Load and render projects
    * Extracted from inline loadProjects function
+   * Enhanced with resilience patterns for production reliability
    */
   static async loadProjects(): Promise<string> {
     try {
-      const res = await fetch('/api/client/projects');
+      const { withResilience } = await import('@/lib/resilience');
+
+      const res = await withResilience(
+        async () => {
+          const response = await fetch('/api/client/projects', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          return response;
+        },
+        'ProjectService',
+        'loadProjects',
+        {
+          timeout: { timeoutMs: 8000 },
+          retry: {
+            maxRetries: 2,
+            initialDelayMs: 1000,
+            retryableErrors: [
+              ExternalServiceErrorCode.TIMEOUT,
+              ExternalServiceErrorCode.NETWORK_ERROR,
+              ExternalServiceErrorCode.SERVICE_UNAVAILABLE,
+            ],
+          },
+          enableLogging: true,
+        }
+      );
+
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -85,7 +116,8 @@ export class ProjectService {
       }
 
       return data.data.map((project: Project) => this.generateProjectCard(project)).join('');
-    } catch {
+    } catch (error) {
+      console.error('[ProjectService] Failed to load projects:', error);
       return '<div class="empty-state">Terjadi kesalahan</div>';
     }
   }

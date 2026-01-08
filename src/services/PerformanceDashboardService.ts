@@ -1,9 +1,12 @@
 /**
  * PerformanceDashboardService.ts
- * 
+ *
  * Service layer for fetching and managing performance dashboard data
  * Provides abstraction over API calls for performance metrics
+ * Enhanced with resilience patterns for production reliability
  */
+
+import { withResilience, CircuitBreaker, ExternalServiceErrorCode } from '../lib/resilience';
 
 export interface OverallScoreData {
   score: number;
@@ -47,23 +50,57 @@ export interface DashboardData {
 
 /**
  * PerformanceDashboardService
- * 
+ *
  * Handles all performance dashboard data operations
+ * Enhanced with circuit breaker protection for API reliability
  */
 export class PerformanceDashboardService {
   private baseUrl = '/api/admin/performance';
+  private circuitBreaker: CircuitBreaker;
+
+  constructor() {
+    this.circuitBreaker = new CircuitBreaker('PerformanceAPI', {
+      failureThreshold: 3,
+      successThreshold: 2,
+      timeoutMs: 60000,
+      rollingWindowMs: 300000,
+      minimumCalls: 3,
+    });
+  }
 
   /**
    * Fetch comprehensive dashboard data
+   * Enhanced with resilience patterns: timeout, retry, circuit breaker
    */
   async fetchDashboardData(): Promise<DashboardData> {
     try {
-      const response = await fetch(`${this.baseUrl}?type=comprehensive`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await withResilience(
+        async () => {
+          const res = await fetch(`${this.baseUrl}?type=comprehensive`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          return res;
+        },
+        'PerformanceDashboardService',
+        'fetchDashboardData',
+        {
+          circuitBreaker: this.circuitBreaker,
+          timeout: { timeoutMs: 10000 },
+          retry: {
+            maxRetries: 2,
+            initialDelayMs: 1000,
+            retryableErrors: [
+              ExternalServiceErrorCode.TIMEOUT,
+              ExternalServiceErrorCode.NETWORK_ERROR,
+              ExternalServiceErrorCode.SERVICE_UNAVAILABLE,
+            ],
+          },
+          enableLogging: true,
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
@@ -72,9 +109,23 @@ export class PerformanceDashboardService {
       const data = await response.json();
       return this.transformApiResponse(data);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('[PerformanceDashboardService] Error fetching dashboard data:', error);
       return this.getDefaultData();
     }
+  }
+
+  /**
+   * Get circuit breaker statistics for monitoring
+   */
+  getCircuitBreakerStats() {
+    return this.circuitBreaker.getStats();
+  }
+
+  /**
+   * Reset circuit breaker to closed state (admin operation)
+   */
+  resetCircuitBreaker(): void {
+    this.circuitBreaker.reset();
   }
 
   /**
