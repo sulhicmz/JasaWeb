@@ -444,3 +444,59 @@
   - `src/services/webhook-queue.service.ts` (lines 410-436 optimized from 27 lines to 17 lines - 37% reduction)
   - `src/services/webhook-queue.service.test.ts` (lines 331-359 updated to match optimized implementation)
 - [x] **ARCHITECTURAL COMPLIANCE**: Maintained 99.8/100 architectural score with enhanced algorithmic efficiency
+
+## New Refactoring Tasks (Jan 8, 2026)
+
+## [REFACTOR] API Endpoint Middleware Pattern
+- Location: src/pages/api (24+ API endpoint files)
+- Issue: Rate limiting code duplicated 24+ times, admin authentication duplicated 4+ times, CSRF validation duplicated 3+ times across API endpoints (templates, posts, projects, users endpoints)
+- Suggestion: Create middleware utilities or higher-order functions to handle common API patterns:
+  - `withRateLimit(rateLimitKey)` - Wraps endpoint with rate limiting logic
+  - `withAdminAuth()` - Wraps endpoint with admin authentication validation
+  - `withCsrfProtection()` - Wraps endpoint with CSRF token validation
+  - Combined middleware: `withApiProtection(rateLimitKey, requireAdmin)`
+- Priority: High
+- Effort: Medium
+
+## [REFACTOR] Error Handling Standardization
+- Location: src/pages/api (118 catch blocks across multiple endpoints)
+- Issue: Inconsistent error handling - 118 catch blocks not using handleApiError() utility, leading to inconsistent error responses and reduced maintainability
+- Suggestion: Audit and refactor all API endpoints to use standardized handleApiError() from @/lib/api.ts for consistent error formatting and logging
+  - Create test to identify all catch blocks not using handleApiError
+  - Refactor endpoints systematically with proper error propagation
+  - Add validation tests for error response consistency
+- Priority: High
+- Effort: Medium
+
+## [REFACTOR] BillingService Concern Separation
+- Location: src/services/client/BillingService.ts (795 lines)
+- Issue: Large service mixing multiple responsibilities - statistics calculation, HTML generation, state management, and API calls, making it difficult to test and maintain
+- Suggestion: Split into focused services following Single Responsibility Principle:
+  - `BillingStatsService` - Statistics calculation and aggregation
+  - `BillingHTMLGenerator` - HTML template generation for UI display
+  - `BillingStateManager` - Client-side state management and caching
+  - `BillingService` - Core API integration and orchestration
+- Priority: Medium
+- Effort: Medium
+
+## [REFACTOR] PerformanceIntelligenceService Optimization
+- Location: src/lib/performance-intelligence.ts (850 lines)
+- Issue: Large service file with multiple concerns - ML-based anomaly detection, predictive analytics, pattern detection, and intelligence summaries
+- Suggestion: Split into focused modules:
+  - `AnomalyDetectionService` - Z-score analysis and anomaly detection logic
+  - `PredictiveAnalyticsService` - Linear regression forecasting
+  - `PatternDetectionService` - Auto-correlation and cyclical analysis
+  - `IntelligenceService` - Main orchestration and summary generation
+- Priority: Medium
+- Effort: Medium
+
+## [REFACTOR] OpenAPI Generator Endpoints Completeness
+- Location: src/lib/openapi-generator.ts (lines referencing missing endpoints)
+- Issue: OpenAPI specification missing critical endpoints: `/api/client/payment` (payment creation and status), `/api/admin/dashboard` (admin dashboard data), `/api/health` (system health monitoring)
+- Suggestion: Add complete OpenAPI documentation for missing endpoints with:
+  - Proper request/response schemas
+  - Authentication requirements documentation
+  - Rate limiting information
+  - Error response examples
+- Priority: Medium
+- Effort: Small
