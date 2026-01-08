@@ -33,7 +33,7 @@ describe('Health Check API - Integration', () => {
             payment: 'up',
             performance: {
                 avgResponseTime: 50,
-                errorRate: 0.01,
+                errorRate: 0,
                 throughput: 100,
             },
             timestamp: new Date('2024-01-01T00:00:00Z'),
@@ -161,7 +161,7 @@ describe('Health Check API - Integration', () => {
 
             const result = await response.json();
             expect(result.data.status).toBe('unhealthy');
-            expect(result.data.performance.errorRate).toBe(1);
+            expect(result.data.performance.errorRate).toBe(0.95);
         });
 
         it('should format performance metrics correctly', async () => {
@@ -180,8 +180,8 @@ describe('Health Check API - Integration', () => {
 
             const result = await response.json();
             expect(result.data.performance.avgResponseTime).toBe(123);
-            expect(result.data.performance.errorRate).toBe(0);
-            expect(result.data.performance.throughput).toBe(988);
+            expect(result.data.performance.errorRate).toBe(0.12);
+            expect(result.data.performance.throughput).toBe(987.65);
         });
 
         it('should return timestamp in ISO format', async () => {

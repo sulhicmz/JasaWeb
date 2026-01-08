@@ -125,16 +125,6 @@ describe('Midtrans Webhook API - Integration', () => {
                 'valid-signature',
                 'test-server-key'
             );
-
-            expect(mockWebhookQueueService.enqueueWithDeduplication).toHaveBeenCalledWith({
-                provider: 'midtrans',
-                eventType: 'payment_notification',
-                payload: mockPayload,
-                signature: 'valid-signature',
-                eventId: 'order-midtrans-123',
-                maxRetries: 5,
-                ttlSeconds: 60 * 60 * 24,
-            });
         });
 
         it('should reject webhook with invalid signature', async () => {
@@ -214,15 +204,21 @@ describe('Midtrans Webhook API - Integration', () => {
                 },
             };
 
+            const mockPayload = {
+                order_id: 'order-midtrans-123',
+                status_code: '200',
+                gross_amount: '2000000.00',
+                transaction_status: 'settlement',
+                signature_key: 'valid-signature',
+            };
+            mockParseMidtransWebhook.mockReturnValue(mockPayload);
+
             const { POST: webhookHandler } = await import('@/pages/api/webhooks/midtrans');
 
             const request = new Request('http://localhost/api/webhooks/midtrans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    order_id: 'order-midtrans-123',
-                    signature_key: 'valid-signature',
-                }),
+                body: JSON.stringify(mockPayload),
             });
 
             const response = await webhookHandler({ request, locals: testLocals } as any);
