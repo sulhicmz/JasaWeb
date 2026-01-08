@@ -406,33 +406,29 @@ export class WebhookQueueService {
   /**
    * Retry failed webhooks
    * Can be used to manually retry failed webhooks
+   * Optimized: Single batched update operation instead of N individual queries
    */
   async retryFailedWebhooks(webhookIds: string[]): Promise<number> {
-    let count = 0;
-
-    for (const webhookId of webhookIds) {
-      const webhook = await this.prisma.webhookQueue.findUnique({
-        where: { id: webhookId },
-      });
-
-      if (!webhook || webhook.status !== 'FAILED') {
-        continue;
-      }
-
-      await this.prisma.webhookQueue.update({
-        where: { id: webhookId },
-        data: {
-          status: 'PENDING',
-          retryCount: 0,
-          lastError: null,
-        },
-      });
-
-      count++;
+    if (webhookIds.length === 0) {
+      return 0;
     }
 
-    logger.info('Retried failed webhooks', { count });
-    return count;
+    const result = await this.prisma.webhookQueue.updateMany({
+      where: {
+        id: {
+          in: webhookIds,
+        },
+        status: 'FAILED',
+      },
+      data: {
+        status: 'PENDING',
+        retryCount: 0,
+        lastError: null,
+      },
+    });
+
+    logger.info('Retried failed webhooks', { count: result.count });
+    return result.count;
   }
 
   /**

@@ -329,33 +329,34 @@ describe('WebhookQueueService', () => {
 
   describe('retryFailedWebhooks', () => {
     it('should retry failed webhooks', async () => {
-      const webhooks = [
-        { id: 'webhook-1', status: 'FAILED' },
-        { id: 'webhook-2', status: 'FAILED' },
-      ];
-
-      mockPrisma.webhookQueue.findUnique
-        .mockResolvedValueOnce(webhooks[0] as any)
-        .mockResolvedValueOnce(webhooks[1] as any);
-      mockPrisma.webhookQueue.update.mockResolvedValue({} as any);
+      mockPrisma.webhookQueue.updateMany.mockResolvedValue({ count: 2 } as any);
 
       const retried = await service.retryFailedWebhooks(['webhook-1', 'webhook-2']);
 
       expect(retried).toBe(2);
-      expect(mockPrisma.webhookQueue.findUnique).toHaveBeenCalledTimes(2);
-      expect(mockPrisma.webhookQueue.update).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.webhookQueue.updateMany).toHaveBeenCalledTimes(1);
+
+      const updateCall = mockPrisma.webhookQueue.updateMany.mock.calls[0][0];
+      expect(updateCall.where.id).toEqual({ in: ['webhook-1', 'webhook-2'] });
+      expect(updateCall.where.status).toBe('FAILED');
+      expect(updateCall.data).toEqual({
+        status: 'PENDING',
+        retryCount: 0,
+        lastError: null,
+      });
     });
 
     it('should skip webhooks that are not failed', async () => {
-      mockPrisma.webhookQueue.findUnique.mockResolvedValue({
-        id: 'webhook-1',
-        status: 'COMPLETED',
-      } as any);
+      mockPrisma.webhookQueue.updateMany.mockResolvedValue({ count: 0 } as any);
 
       const retried = await service.retryFailedWebhooks(['webhook-1', 'webhook-2']);
 
       expect(retried).toBe(0);
-      expect(mockPrisma.webhookQueue.update).not.toHaveBeenCalled();
+      expect(mockPrisma.webhookQueue.updateMany).toHaveBeenCalledTimes(1);
+
+      const updateCall = mockPrisma.webhookQueue.updateMany.mock.calls[0][0];
+      expect(updateCall.where.id).toEqual({ in: ['webhook-1', 'webhook-2'] });
+      expect(updateCall.where.status).toBe('FAILED');
     });
   });
 
