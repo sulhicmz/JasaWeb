@@ -38,17 +38,6 @@ function getStatusLabel(statusValue: HealthStatus): string {
   return labels[statusValue];
 }
 
-function getStatusColor(statusValue: HealthStatus): string {
-
-  const colors: Record<HealthStatus, string> = {
-    healthy: 'var(--color-success)',
-    warning: 'var(--color-secondary)',
-    critical: 'var(--color-error)',
-    down: 'var(--color-error)'
-  };
-  return colors[statusValue];
-}
-
 const statusLabel = getStatusLabel(status);
 const lastCheckDate = new Date(lastCheck);
 ---
@@ -73,7 +62,6 @@ const lastCheckDate = new Date(lastCheck);
         <span
           class={`status-dot ${status}`}
           aria-hidden="true"
-          style="background-color: {getStatusColor(status)}"
         ></span>
         <span class="status-text">{statusLabel}</span>
       </div>
@@ -151,6 +139,22 @@ const lastCheckDate = new Date(lastCheck);
     height: 8px;
     border-radius: 50%;
     animation: pulse 2s infinite;
+  }
+
+  .status-dot.healthy {
+    background-color: var(--color-success);
+  }
+
+  .status-dot.warning {
+    background-color: var(--color-secondary);
+  }
+
+  .status-dot.critical {
+    background-color: var(--color-error);
+  }
+
+  .status-dot.down {
+    background-color: var(--color-error);
   }
 
   .status-text {
