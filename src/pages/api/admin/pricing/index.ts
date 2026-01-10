@@ -5,10 +5,11 @@
 import type { APIRoute } from 'astro';
 import { getPricingService } from '@/services/domain/pricing';
 import { getPrisma } from '@/lib/prisma';
-import { 
-    jsonResponse, 
+import {
+    jsonResponse,
     errorResponse,
-    validateRequired 
+    validateRequired,
+    handleApiError
 } from '@/lib/api';
 import { validateAdminAccess } from '@/services/admin/auth';
 import { createAuditService } from '@/lib/audit';
@@ -62,8 +63,7 @@ export const POST: APIRoute = async (context) => {
 
     return jsonResponse(newPlan, 201);
 
-  } catch (error: any) {
-    console.error('Error creating pricing plan:', error);
-    return errorResponse(error.message || 'Internal server error', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 };

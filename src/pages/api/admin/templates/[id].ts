@@ -1,54 +1,42 @@
 /**
  * Admin Templates API
  * CRUD operations for template management
+ * REFACTORED: Uses api-middleware for consistent protection
  */
 import type { APIRoute } from 'astro';
 import { getPrisma } from '@/lib/prisma';
-import { 
-  jsonResponse, 
-  errorResponse, 
-  validateRequired, 
-  handleApiError 
+import {
+  jsonResponse,
+  errorResponse,
+  validateRequired,
+  handleApiError,
 } from '@/lib/api';
-import { validateAdminAccess } from '@/services/admin/auth';
-import { validateCsrfToken, CSRF_COOKIE } from '@/lib/auth';
-import { checkRateLimit, RateLimits } from '@/lib/rate-limit';
+import { withApiProtection } from '@/lib/api-middleware';
+import { RateLimits } from '@/lib/rate-limit';
 
+// ==============================================
 // POST /api/admin/templates - Create template
-export const POST: APIRoute = async (context) => {
-  // Rate limiting
-  if (context.locals.runtime?.env?.CACHE) {
-    const rateLimitResult = await checkRateLimit(
-      context.request, 
-      context.locals.runtime.env.CACHE, 
-      'admin:templates:create', 
-      RateLimits.api
-    );
-    if (rateLimitResult) return rateLimitResult;
-  }
-
+// ==============================================
+export const POST: APIRoute = withApiProtection(
+  'admin:templates:create',
+  RateLimits.api
+)(async (context) => {
   try {
-    // Authentication and admin validation
-    const authValidation = validateAdminAccess(context);
-    if (!authValidation.isAuthorized) {
-      return authValidation.response!;
-    }
-
-    // CSRF protection
-    const csrfToken = context.request.headers.get('x-csrf-token');
-    const csrfCookie = context.cookies.get(CSRF_COOKIE)?.value || null;
-    if (!validateCsrfToken(csrfToken, csrfCookie)) {
-      return errorResponse('Invalid CSRF token', 403);
-    }
-
     const body = await context.request.json();
-    const error = validateRequired(body, ['name', 'category', 'imageUrl', 'demoUrl']);
+    const error = validateRequired(body, [
+      'name',
+      'category',
+      'imageUrl',
+      'demoUrl',
+    ]);
     if (error) return errorResponse(error);
 
     // Validate category
     const validCategories = ['sekolah', 'berita', 'company'];
     if (!validCategories.includes(body.category)) {
-      return errorResponse('Kategori harus salah satu dari: sekolah, berita, company');
+      return errorResponse(
+        'Kategori harus salah satu dari: sekolah, berita, company'
+      );
     }
 
     // Validate URLs
@@ -78,42 +66,26 @@ export const POST: APIRoute = async (context) => {
       },
     });
 
-    return jsonResponse({
-      message: 'Template berhasil dibuat',
-      template,
-    }, 201);
+    return jsonResponse(
+      {
+        message: 'Template berhasil dibuat',
+        template,
+      },
+      201
+    );
   } catch (error) {
     return handleApiError(error);
   }
-};
+});
 
+// ==============================================
 // PUT /api/admin/templates/[id] - Update template
-export const PUT: APIRoute = async (context) => {
-  // Rate limiting
-  if (context.locals.runtime?.env?.CACHE) {
-    const rateLimitResult = await checkRateLimit(
-      context.request, 
-      context.locals.runtime.env.CACHE, 
-      'admin:templates:update', 
-      RateLimits.api
-    );
-    if (rateLimitResult) return rateLimitResult;
-  }
-
+// ==============================================
+export const PUT: APIRoute = withApiProtection(
+  'admin:templates:update',
+  RateLimits.api
+)(async (context) => {
   try {
-    // Authentication and admin validation
-    const authValidation = validateAdminAccess(context);
-    if (!authValidation.isAuthorized) {
-      return authValidation.response!;
-    }
-
-    // CSRF protection
-    const csrfToken = context.request.headers.get('x-csrf-token');
-    const csrfCookie = context.cookies.get(CSRF_COOKIE)?.value || null;
-    if (!validateCsrfToken(csrfToken, csrfCookie)) {
-      return errorResponse('Invalid CSRF token', 403);
-    }
-
     const { id } = context.params;
     if (!id) return errorResponse('Template ID diperlukan');
 
@@ -134,7 +106,9 @@ export const PUT: APIRoute = async (context) => {
     if (body.category) {
       const validCategories = ['sekolah', 'berita', 'company'];
       if (!validCategories.includes(body.category)) {
-        return errorResponse('Kategori harus salah satu dari: sekolah, berita, company');
+        return errorResponse(
+          'Kategori harus salah satu dari: sekolah, berita, company'
+        );
       }
     }
 
@@ -180,35 +154,16 @@ export const PUT: APIRoute = async (context) => {
   } catch (error) {
     return handleApiError(error);
   }
-};
+});
 
+// ==============================================
 // DELETE /api/admin/templates/[id] - Delete template
-export const DELETE: APIRoute = async (context) => {
-  // Rate limiting
-  if (context.locals.runtime?.env?.CACHE) {
-    const rateLimitResult = await checkRateLimit(
-      context.request, 
-      context.locals.runtime.env.CACHE, 
-      'admin:templates:delete', 
-      RateLimits.api
-    );
-    if (rateLimitResult) return rateLimitResult;
-  }
-
+// ==============================================
+export const DELETE: APIRoute = withApiProtection(
+  'admin:templates:delete',
+  RateLimits.api
+)(async (context) => {
   try {
-    // Authentication and admin validation
-    const authValidation = validateAdminAccess(context);
-    if (!authValidation.isAuthorized) {
-      return authValidation.response!;
-    }
-
-    // CSRF protection
-    const csrfToken = context.request.headers.get('x-csrf-token');
-    const csrfCookie = context.cookies.get(CSRF_COOKIE)?.value || null;
-    if (!validateCsrfToken(csrfToken, csrfCookie)) {
-      return errorResponse('Invalid CSRF token', 403);
-    }
-
     const { id } = context.params;
     if (!id) return errorResponse('Template ID diperlukan');
 
@@ -233,4 +188,4 @@ export const DELETE: APIRoute = async (context) => {
   } catch (error) {
     return handleApiError(error);
   }
-};
+});

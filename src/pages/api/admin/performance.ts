@@ -5,7 +5,7 @@
  */
 
 import type { APIRoute } from 'astro';
-import { jsonResponse, errorResponse } from '@/lib/api';
+import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 import { enhancedPerformanceMonitor } from '@/lib/bundle-analyzer';
 import { performanceMonitor } from '@/lib/performance-monitor';
 import { performanceMonitor as newPerformanceMonitor } from '@/lib/performance-monitoring';
@@ -116,7 +116,6 @@ export const GET: APIRoute = async ({ request }) => {
     }
 
   } catch (error) {
-    console.error('Performance monitoring error:', error);
-    return errorResponse('Failed to generate performance report', 500);
+    return handleApiError(error);
   }
 };

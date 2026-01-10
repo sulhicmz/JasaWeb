@@ -4,9 +4,10 @@
  */
 import type { APIRoute } from 'astro';
 import { getPricingService } from '@/services/domain/pricing';
-import { 
-    jsonResponse, 
-    errorResponse 
+import {
+    jsonResponse,
+    errorResponse,
+    handleApiError
 } from '@/lib/api';
 import { validateAdminAccess } from '@/services/admin/auth';
 
@@ -36,8 +37,7 @@ export const GET: APIRoute = async (context) => {
 
     return jsonResponse(plan);
 
-  } catch (error: any) {
-    console.error('Error fetching pricing plan:', error);
-    return errorResponse(error.message || 'Internal server error', 500);
+  } catch (error) {
+    return handleApiError(error);
   }
 };
