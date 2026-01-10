@@ -1,6 +1,6 @@
 /**
  * Cache Monitoring API Endpoint
- * 
+ *
  * Provides comprehensive cache performance insights including hit rates,
  * memory usage, health status, and optimization recommendations
  */
@@ -9,6 +9,7 @@ import type { APIRoute } from 'astro';
 import { jsonResponse, handleApiError } from '@/lib/api';
 import { requireAdmin } from '@/services/admin/auth';
 import { createDashboardCacheService } from '@/lib/dashboard-cache';
+import type { CacheHealth, CacheMetrics } from '@/lib/types';
 
 export const GET: APIRoute = async (context) => {
     try {
@@ -72,8 +73,8 @@ export const GET: APIRoute = async (context) => {
  * Calculate cache performance score (0-100)
  */
 function calculateCachePerformanceScore(
-    health: any,
-    metrics: any
+    health: CacheHealth,
+    metrics: CacheMetrics
 ): number {
     let score = 100;
 
@@ -111,8 +112,8 @@ function getPerformanceGrade(score: number): 'A+' | 'A' | 'B' | 'C' | 'D' {
  * Generate cache optimization recommendations
  */
 function generateCacheRecommendations(
-    health: any,
-    metrics: any
+    health: CacheHealth,
+    metrics: CacheMetrics
 ): string[] {
     const recommendations: string[] = [...health.recommendations];
 

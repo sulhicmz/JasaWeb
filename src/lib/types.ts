@@ -365,3 +365,41 @@ export interface D1Result<T = unknown> {
         served_by: string;
     };
 }
+
+// ==============================================
+// CACHE TYPES
+// ==============================================
+export interface CacheHealth {
+    status: 'healthy' | 'warning' | 'error';
+    statsCount: number;
+    recentCount: number;
+    lastUpdated: string | null;
+    recommendations: string[];
+}
+
+export interface CacheMetrics {
+    totalKeys: number;
+    estimatedMemoryUsage: number;
+    oldestCache: string | null;
+    newestCache: string | null;
+}
+
+export interface CachePerformance {
+    score: number;
+    grade: 'A+' | 'A' | 'B' | 'C' | 'D';
+    hitRateTarget: number;
+    memoryTarget: number;
+}
+
+export interface CacheInfo {
+    health: CacheHealth;
+    metrics: CacheMetrics;
+    performance: CachePerformance;
+}
+
+export interface CacheConfiguration {
+    dashboardStatsTTL: number;
+    recentDataTTL: number;
+    aggregationTTL: number;
+    maxMemoryUsage: number;
+}
