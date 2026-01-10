@@ -4,7 +4,7 @@
  */
 
 import type { APIRoute } from 'astro';
-import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
+import { jsonResponse, errorResponse, validateRequired, handleApiError } from '@/lib/api';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createPrismaClient } from '@/lib/prisma';
 import { createMidtransService, validateInvoiceForPayment } from '@/lib/midtrans-client';
@@ -149,8 +149,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         }
 
     } catch (error) {
-        console.error('Payment initiation error:', error);
-        return errorResponse('Terjadi kesalahan sistem', 500);
+        return handleApiError(error);
     } finally {
         await prisma.$disconnect();
     }
@@ -225,8 +224,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         });
 
     } catch (error) {
-        console.error('Payment status fetch error:', error);
-        return errorResponse('Gagal mengambil status pembayaran', 500);
+        return handleApiError(error);
     } finally {
         await prisma.$disconnect();
     }

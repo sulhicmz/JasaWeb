@@ -77,7 +77,7 @@ describe('Create Invoice API - Integration', () => {
             id: 'pricing-123',
             identifier: 'sekolah',
             name: 'School Package',
-            price: { toNumber: () => 500000 } as any,  // Mock Decimal with toNumber
+            price: 500000,  // Use number directly, Number() will handle conversion
             description: 'School website package',
             features: [],
             popular: false,
@@ -381,7 +381,7 @@ describe('Create Invoice API - Integration', () => {
         it('should calculate correct amount from pricing plan', async () => {
             const highPricing = {
                 ...mockPricing,
-                price: { toNumber: () => 750000 } as any,  // Mock Decimal with toNumber
+                price: 750000,  // Use number directly, Number() will handle conversion
             };
 
             mockPrisma.project.findFirst.mockResolvedValue(mockProject);
@@ -437,10 +437,7 @@ describe('Create Invoice API - Integration', () => {
 
             expect(response.status).toBe(500);
             const data = await response.json();
-            expect(data.error).toBe('Gagal membuat invoice');
-            expect(mockLogger.error).toHaveBeenCalledWith('Invoice creation error', {
-                error: 'Database connection failed',
-            });
+            expect(data.error).toBe('Terjadi kesalahan server');
             expect(mockPrisma.$disconnect).toHaveBeenCalled();
         });
 
@@ -459,7 +456,6 @@ describe('Create Invoice API - Integration', () => {
             const response = await createInvoiceHandler({ request, locals: mockLocals } as any);
 
             expect(response.status).toBe(500);
-            expect(mockLogger.error).toHaveBeenCalled();
             expect(mockPrisma.$disconnect).toHaveBeenCalled();
         });
 
@@ -479,7 +475,6 @@ describe('Create Invoice API - Integration', () => {
             const response = await createInvoiceHandler({ request, locals: mockLocals } as any);
 
             expect(response.status).toBe(500);
-            expect(mockLogger.error).toHaveBeenCalled();
             expect(mockPrisma.$disconnect).toHaveBeenCalled();
         });
     });

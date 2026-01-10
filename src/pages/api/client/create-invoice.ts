@@ -4,7 +4,7 @@
  */
 
 import type { APIRoute } from 'astro';
-import { jsonResponse, errorResponse, validateRequired } from '@/lib/api';
+import { jsonResponse, errorResponse, validateRequired, handleApiError } from '@/lib/api';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { createPrismaClient } from '@/lib/prisma';
 import { formatPrice } from '@/lib/config';
@@ -118,8 +118,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         });
 
     } catch (error) {
-        logger.error('Invoice creation error', { error: error instanceof Error ? error.message : String(error) });
-        return errorResponse('Gagal membuat invoice', 500);
+        return handleApiError(error);
     } finally {
         await prisma.$disconnect();
     }

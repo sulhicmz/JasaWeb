@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { jsonResponse, errorResponse } from '@/lib/api';
+import { jsonResponse, errorResponse, handleApiError } from '@/lib/api';
 import { createAuditService } from '@/lib/audit';
 import { getPrisma } from '@/lib/prisma';
 import type { AuditAction } from '@/lib/audit';
@@ -33,8 +33,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
     return jsonResponse(result);
   } catch (error) {
-    console.error('Failed to fetch audit logs:', error);
-    return errorResponse('Internal server error', 500);
+    return handleApiError(error);
   }
 };
 
@@ -59,7 +58,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     return jsonResponse({ success: true });
   } catch (error) {
-    console.error('Failed to create audit log:', error);
-    return errorResponse('Internal server error', 500);
+    return handleApiError(error);
   }
 };
