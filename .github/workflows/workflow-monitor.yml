@@ -1,0 +1,80 @@
+name: workflow-monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *' # Run every 30 minutes
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  monitor:
+    name: Monitor and Trigger Workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+          
+      - name: Check running workflows
+        id: check_workflows
+        run: |
+          echo "Checking for running workflows..."
+          
+          # Get running workflow runs
+          running_workflows=$(gh run list --json databaseId,name,status,workflowName --jq '.[] | select(.status == "in_progress" or .status == "queued") | "\(.databaseId)|\(.name)|\(.workflowName)"')
+          
+          echo "Running workflows:"
+          echo "$running_workflows"
+          
+          # Check if on-push is running
+          on_push_running=false
+          on_pull_running=false
+          
+          while IFS='|' read -r run_id run_name workflow_name; do
+            if [ "$workflow_name" = "on-push" ]; then
+              on_push_running=true
+            fi
+            if [ "$workflow_name" = "on-pull" ]; then
+              on_pull_running=true
+            fi
+          done <<< "$running_workflows"
+          
+          echo "on-push running: $on_push_running"
+          echo "on-pull running: $on_pull_running"
+          
+          echo "on_push_running=$on_push_running" >> $GITHUB_OUTPUT
+          echo "on_pull_running=$on_pull_running" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Trigger on-push if not running
+        if: steps.check_workflows.outputs.on_push_running == 'false'
+        run: |
+          echo "on-push is not running, triggering workflow..."
+          gh workflow run on-push.yml
+          echo "✓ on-push workflow triggered successfully"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Trigger on-pull if not running
+        if: steps.check_workflows.outputs.on_pull_running == 'false'
+        run: |
+          echo "on-pull is not running, triggering workflow..."
+          gh workflow run on-pull.yml
+          echo "✓ on-pull workflow triggered successfully"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Both workflows running
+        if: steps.check_workflows.outputs.on_push_running == 'true' && steps.check_workflows.outputs.on_pull_running == 'true'
+        run: |
+          echo "✓ Both on-push and on-pull workflows are currently running"
+          echo "No action needed"
