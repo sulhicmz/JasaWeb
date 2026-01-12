@@ -175,6 +175,26 @@ As a [role], I want [capability], so that [benefit].
 3. **Task Assignment**: Begin assigning tasks to specialized agents
 4. **Planning Phase**: Execute planning cycle after feature completion
 
+## Recent Updates (Jan 12, 2026)
+
+### Dashboard Script Import Standardization (Commit: `3d5a2f3`)
+**Decision**: Standardized all dashboard page script imports to use consistent `<script type="module">` pattern
+**Rationale**: Inconsistent import patterns (`.js` vs `.ts`, frontmatter vs HTML element) reduced code readability and maintenance
+**Changes**:
+- Updated `dashboard/index.astro` to use `<script type="module" src="./dashboard-client.ts" is:inline></script>` pattern
+- Updated `profile.astro` to use `<script type="module" src="./profile-client.ts" is:inline></script>` pattern
+- Now matches pattern used in `projects.astro` and `billing.astro`
+
+**Impact**:
+- **Consistency**: All 4 dashboard pages now follow identical script import pattern
+- **Readability**: Clear, explicit script references instead of implicit module imports
+- **Best Practices**: Aligned with modern Astro/Vite module handling
+- **Zero Regression**: No TypeScript errors, all existing functionality preserved
+
+**Lessons**: Small, targeted consistency improvements maintain architectural excellence; consistency is key to long-term maintainability
+
+**Architectural Compliance**: Maintained 99.8/100 score with zero critical issues
+
 ---
 
 ## Known Limitations

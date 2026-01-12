@@ -510,3 +510,10 @@ Failure in any category requires correction before proceeding.
 **Rationale**: Centralized decision-making eliminates bottlenecks and ensures consistent architectural standards
 **Impact**: Streamlined feature development, improved task clarity, enhanced traceability
 **Lessons**: Document-first approach prevents ambiguity; autonomous authority accelerates decision-making
+
+### 2026-01-12: Dashboard Script Import Standardization
+**Decision**: Standardized all dashboard page script imports to use consistent `<script type="module">` pattern
+**Rationale**: Inconsistent import patterns across dashboard pages reduced code readability and maintenance
+**Impact**: Improved consistency, aligned with modern Astro/Vite best practices, zero regression
+**Lessons**: Small, targeted improvements maintain architectural excellence; consistency is key to long-term maintainability
+**Commit**: `3d5a2f3`
