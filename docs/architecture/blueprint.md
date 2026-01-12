@@ -374,3 +374,139 @@ Fitur berikut **TIDAK** termasuk dalam V1:
 - Complex RBAC (hanya admin/client)
 - File versioning
 - Multi-tenant organizations
+
+---
+
+## 9. Product Strategist Role & Autonomous Workflow (Jan 12, 2026)
+
+### 9.1 Authority & Decision Rights
+
+The Product Strategist has final authority over:
+- Feature scope and acceptance
+- Task breakdown and assignment
+- Architectural decisions
+- Priority ordering
+- Conflict resolution (code, docs, process)
+
+### 9.2 Document Ownership
+
+The Product Strategist exclusively owns:
+- `docs/feature.md` - Feature tracking from definition to completion
+- `docs/task.md` - Task definitions and assignments
+- `docs/architecture/roadmap.md` - Strategic roadmap
+- `docs/architecture/blueprint.md` - System architecture documentation
+
+### 9.3 Git Branch Management
+
+**Start of Work Cycle:**
+1. Ensure `agent` branch exists (create from `dev` if missing)
+2. Sync with `dev` branch:
+   ```bash
+   git fetch origin
+   git checkout agent
+   git pull origin agent
+   git pull origin dev
+   ```
+3. Conflict resolution: `dev` is source of truth
+
+**End of Work Cycle:**
+1. Sync with `dev` again
+2. Commit all changes
+3. Push to `agent`
+4. Create PR from `agent` → `dev`
+
+### 9.4 Core Principles
+
+- **Vision First**: No task without explicit user value
+- **Clarity**: Tasks must be executable without questions
+- **Incrementalism**: Each feature must be shippable independently
+- **Traceability**: Task → Feature → Goal is mandatory
+
+### 9.5 Agent Assignment Matrix
+
+| Task Type | Assigned Agent |
+|-----------|----------------|
+| Architecture | 01 Architect |
+| Bugs / Lint / Build | 02 Sanitizer |
+| Tests | 03 Test Engineer |
+| Security | 04 Security |
+| Performance | 05 Performance |
+| Database | 06 Data Architect |
+| APIs | 07 Integration |
+| UI/UX | 08 UI/UX |
+| CI/CD | 09 DevOps |
+| Docs | 10 Tech Writer |
+| Review / Refactor | 11 Code Reviewer |
+
+### 9.6 Task Definition Format
+
+```markdown
+## [TASK-ID] Title
+
+**Feature**: FEATURE-ID
+**Status**: Backlog | In Progress | Complete
+**Agent**: One primary agent (exactly one)
+
+### Description
+Step-by-step, unambiguous instructions.
+
+### Acceptance Criteria
+- [ ] Verifiable outcome
+```
+
+**Rules:**
+- One agent per task
+- Cross-domain work split into multiple tasks
+- Tasks must be executable without interpretation
+- If an agent asks a question, the task definition failed
+
+### 9.7 Feature Definition Format
+
+```markdown
+## [FEATURE-ID] Title
+
+**Status**: Draft | In Progress | Complete
+**Priority**: P0 | P1 | P2 | P3
+
+### User Story
+As a [role], I want [capability], so that [benefit].
+
+### Acceptance Criteria
+- [ ] Objective, testable condition
+- [ ] Objective, testable condition
+```
+
+**Priority Definitions:**
+- **P0**: Blocks core system functionality
+- **P1**: High user value, near-term
+- **P2**: Enhancement
+- **P3**: Optional / backlog
+
+### 9.8 Success Criteria
+
+A cycle is successful only if:
+
+**Intake:**
+- Feature defined
+- Tasks fully actionable
+- Agents assigned
+
+**Planning:**
+- Statuses current
+- Roadmap accurate
+
+**Reflection:**
+- Learnings documented
+- Blueprint updated
+
+Failure in any category requires correction before proceeding.
+
+---
+
+## 10. Reflection Log
+
+### 2025-01-12: Product Strategist Role Establishment
+**Decision**: Established autonomous Product Strategist role with complete authority over development workflow
+**Rationale**: Centralized decision-making eliminates bottlenecks and ensures consistent architectural standards
+**Impact**: Streamlined feature development, improved task clarity, enhanced traceability
+**Lessons**: Document-first approach prevents ambiguity; autonomous authority accelerates decision-making
