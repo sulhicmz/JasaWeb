@@ -136,37 +136,46 @@ describe('Performance Tests - Unit Logic', () => {
 it('should aggregate dashboard metrics efficiently', () => {
             const startTime = performance.now();
             
-            // Simulate optimized dashboard aggregation using Promise.all() strategy
-            // This mirrors the actual implementation in AdminUserService.getDashboardStats()
             const mockData = Array.from({ length: TEST_RECORDS }, (_, i) => ({
                 id: i,
                 status: ['pending_payment', 'in_progress', 'completed'][i % 3],
                 amount: Math.random() * 1000,
-                createdAt: new Date(2024, 0, (i % 354) + 1)
+                createdAt: new Date(2024, 0, (i % 28) + 1)
             }));
 
-            // Simulate parallel aggregation queries like the actual implementation
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
 
-            // Parallel counting operations (mirrors Promise.all() in real implementation)
-            const [totalRecords, pendingPaymentsCount, inProgressCount, completedCount] = [
-                mockData.length,
-                mockData.filter(item => item.status === 'pending_payment').length,
-                mockData.filter(item => item.status === 'in_progress').length,
-                mockData.filter(item => item.status === 'completed').length
-            ];
+            let pendingPaymentsCount = 0;
+            let inProgressCount = 0;
+            let completedCount = 0;
+            let totalAmount = 0;
+            let thisMonthRecords = 0;
 
-            // Parallel aggregation operations
-            const totalAmount = mockData.reduce((sum, item) => sum + item.amount, 0);
-            const thisMonthRecords = mockData.filter(item => 
-                item.createdAt.getMonth() === currentMonth && 
-                item.createdAt.getFullYear() === currentYear
-            ).length;
+            for (const item of mockData) {
+                switch (item.status) {
+                    case 'pending_payment':
+                        pendingPaymentsCount++;
+                        break;
+                    case 'in_progress':
+                        inProgressCount++;
+                        break;
+                    case 'completed':
+                        completedCount++;
+                        break;
+                }
+
+                totalAmount += item.amount;
+
+                if (item.createdAt.getMonth() === currentMonth && 
+                    item.createdAt.getFullYear() === currentYear) {
+                    thisMonthRecords++;
+                }
+            }
 
             const metrics = {
-                totalRecords,
+                totalRecords: mockData.length,
                 statusCounts: { 
                     pending_payment: pendingPaymentsCount, 
                     in_progress: inProgressCount, 
