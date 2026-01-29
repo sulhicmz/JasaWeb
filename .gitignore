@@ -19,6 +19,8 @@ dist/
 .idea/
 *.swp
 *.swo
+.roo/
+.roomodes
 
 # OS
 .DS_Store
