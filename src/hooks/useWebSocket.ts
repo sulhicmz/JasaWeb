@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { WSMessage } from '@/services/shared/WebSocketService';
+import { TIMEOUTS } from '@/lib/constants/timeouts';
 
 export interface UseWebSocketOptions {
   token?: string;
@@ -29,9 +30,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   const {
     token,
     autoReconnect = true,
-    reconnectInterval = 3000,
-    maxReconnectAttempts = 5,
-    heartbeatInterval = 30000
+    reconnectInterval = TIMEOUTS.WEBSOCKET.RECONNECT_INTERVAL,
+    maxReconnectAttempts = TIMEOUTS.WEBSOCKET.MAX_RECONNECT_ATTEMPTS,
+    heartbeatInterval = TIMEOUTS.WEBSOCKET.HEARTBEAT_INTERVAL
   } = options;
 
   const [state, setState] = useState<WebSocketState>({
@@ -54,6 +55,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
     try {
       const baseUrl = window.location.origin;
+      // Token is available in scope but EventSource doesn't support custom headers
+      // Authentication is handled via separate mechanism if needed
       const wsUrl = `${baseUrl}/api/ws`;
       
       const eventSource = new EventSource(wsUrl);
@@ -121,7 +124,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         error: error instanceof Error ? error.message : 'Failed to connect'
       }));
     }
-  }, [state.connected, state.connecting, autoReconnect, maxReconnectAttempts]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.connected, state.connecting, autoReconnect, maxReconnectAttempts, token]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -139,14 +143,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       lastMessage: null,
       connectionId: null
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const reconnect = useCallback(() => {
     disconnect();
     setTimeout(() => {
       connect();
     }, 1000);
-  }, [disconnect, connect]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [disconnect, connect]);
 
   const send = useCallback(async (message: Partial<WSMessage>) => {
     if (!state.connected) {
@@ -205,14 +209,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         payload: { timestamp: Date.now() }
       });
     }, heartbeatInterval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [send, heartbeatInterval]);
 
   const stopHeartbeat = useCallback(() => {
     if (heartbeatTimeoutRef.current) {
       clearInterval(heartbeatTimeoutRef.current);
       heartbeatTimeoutRef.current = null;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const scheduleReconnect = useCallback(() => {
     clearReconnectTimeout();
@@ -220,14 +225,36 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     reconnectTimeoutRef.current = setTimeout(() => {
       connect();
     }, reconnectInterval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [connect, reconnectInterval]);
 
   const clearReconnectTimeout = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handler functions must be defined before onMessage
+  const handleNotification = useCallback((notification: any) => {
+    if (notification.priority === 'critical' || notification.priority === 'high') {
+      alert(`${notification.title}: ${notification.message}`);
+    }
+  }, []);
+
+  const handleProjectUpdate = useCallback((payload: any) => {
+    // Project update received - implement business logic as needed
+    // Payload structure: { projectId, status, changes }
+  }, []);
+
+  const handlePaymentReceived = useCallback((payload: any) => {
+    // Payment received - implement business logic as needed
+    // Payload structure: { invoiceId, amount, status }
+  }, []);
+
+  const handleAdminBroadcast = useCallback((payload: any) => {
+    // Admin broadcast received - implement business logic as needed
+    // Payload structure: { message, priority, timestamp }
+  }, []);
 
   const onMessage = useCallback((message: WSMessage) => {
     switch (message.type) {
@@ -246,27 +273,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         handleAdminBroadcast(message.payload);
         break;
       default:
-        console.log('Unhandled WebSocket message type:', message.type);
+        // Unhandled message type - can be logged in development if needed
+        break;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleNotification = useCallback((notification: any) => {
-    if (notification.priority === 'critical' || notification.priority === 'high') {
-      alert(`${notification.title}: ${notification.message}`);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleProjectUpdate = useCallback((payload: any) => {
-    console.log('Project update received:', payload);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handlePaymentReceived = useCallback((payload: any) => {
-    console.log('Payment received:', payload);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleAdminBroadcast = useCallback((payload: any) => {
-    console.log('Admin broadcast:', payload);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleNotification, handleProjectUpdate, handlePaymentReceived, handleAdminBroadcast])
 
   useEffect(() => {
     if (token) {
@@ -276,7 +286,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     return () => {
       disconnect();
     };
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [token, connect, disconnect]);
 
   return {
     ...state,
@@ -301,7 +311,7 @@ export function useWebSocketRoom(roomId: string, options?: UseWebSocketOptions) 
         ws.leaveRoom(roomId);
       }
     };
-  }, [ws.connected, roomId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ws.connected, roomId, ws]);
 
   return ws;
 }

@@ -297,7 +297,7 @@ _context: any,
       new Date()
     );
 
-    console.log(`Learned from ${operation}: ${extractedPatterns.length} patterns identified`);
+
   }
 
   /**

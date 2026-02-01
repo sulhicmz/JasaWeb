@@ -154,7 +154,7 @@ async function handleWebSocketMessage(
       break;
 
     default:
-      console.log(`Unknown WebSocket message type: ${type}`);
+      // Unknown WebSocket message type received - no action needed
   }
 }
 

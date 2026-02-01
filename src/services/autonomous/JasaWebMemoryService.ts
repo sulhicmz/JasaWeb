@@ -240,7 +240,7 @@ export class JasaWebTempMemory {
    * Consolidate memories to optimize storage
    */
   async consolidateMemories(): Promise<void> {
-    console.log(`Consolidating ${this.factCache.size} facts...`);
+    const initialFactCount = this.factCache.size;
 
     // 1. Identify outdated facts
     const now = new Date();
@@ -264,7 +264,6 @@ export class JasaWebTempMemory {
     // 4. Update last consolidation time
     this.lastConsolidation = new Date();
 
-    console.log(`Consolidation complete: ${outdatedFacts.length} → ${mergedFacts.length} facts`);
   }
 
   /**

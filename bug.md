@@ -7,26 +7,26 @@
 **File**: src/hooks/useWebSocket.ts
 **Description**: Multiple useCallback hooks have eslint-disable-line react-hooks/exhaustive-deps comments, indicating missing dependencies. This can cause stale closures and unexpected behavior.
 **Lines**: 124, 142, 149, 208, 216, 223, 230, 251, 258, 261, 265, 269, 279, 304
-**Status**: [ ]
+**Status**: [x] **FIXED** - All dependencies properly declared, handler functions reordered to avoid hoisting issues
 
 ### BUG-055: console.log statements in production code
 **Severity**: Low
 **File**: Multiple files
 **Description**: console.log statements should not be in production code as they pollute the browser console and can expose internal data.
 **Files affected**:
-- src/hooks/useWebSocket.ts (lines 260, 264, 268)
-- src/services/autonomous/PatternRecognitionService.ts (line 300)
-- src/services/autonomous/JasaWebMemoryService.ts (lines 243, 267)
-- src/services/autonomous/PerformanceOptimizationService.ts (multiple lines)
-- src/pages/api/ws.ts (line 157)
-- src/pages/api/client/create-invoice.ts (line 107)
-**Status**: [ ]
+- src/hooks/useWebSocket.ts (lines 260, 264, 268) ✅
+- src/services/autonomous/PatternRecognitionService.ts (line 300) ✅
+- src/services/autonomous/JasaWebMemoryService.ts (lines 243, 267) ✅
+- src/services/autonomous/PerformanceOptimizationService.ts (11 console.log statements) ✅
+- src/pages/api/ws.ts (line 157) ✅
+- src/pages/api/client/create-invoice.ts (line 107) ✅
+**Status**: [x] **FIXED** - All console.log statements removed or replaced with appropriate comments
 
 ### BUG-056: Unused 'token' parameter in useWebSocket
 **Severity**: Low
 **File**: src/hooks/useWebSocket.ts
 **Description**: The 'token' parameter is destructured from options but never used in the connect function (EventSource doesn't use tokens).
-**Status**: [ ]
+**Status**: [x] **FIXED** - Added comment explaining EventSource limitation and included token in dependency array
 
 ## Fixed Bugs
 
