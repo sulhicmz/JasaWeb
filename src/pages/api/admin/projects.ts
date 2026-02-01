@@ -13,8 +13,8 @@ import {
     parseBody 
 } from '@/lib/api';
 import { requireAdmin, validateAdminAccess } from '@/services/admin/auth';
-import { createProjectService } from '@/services/admin/projects';
-import type { CreateProjectData } from '@/services/admin/projects';
+import { ProjectService } from '@/services/domain/ProjectService';
+import type { CreateProjectData, ProjectWithUser } from '@/services/domain/ProjectService';
 
 // ==============================================
 // GET: List Projects with Pagination and Filters
@@ -28,7 +28,7 @@ export const GET: APIRoute = async (context) => {
         }
 
         const prisma = getPrisma(context.locals);
-        const projectService = createProjectService(prisma);
+        const projectService = new ProjectService(prisma);
 
         // Parse query parameters
         const url = new URL(context.request.url);
@@ -110,10 +110,10 @@ export const POST: APIRoute = async (context) => {
         }
 
         const prisma = getPrisma(context.locals);
-        const projectService = createProjectService(prisma);
+        const projectService = new ProjectService(prisma);
 
         // Create project using service layer
-        const project = await projectService.createProject(body);
+        const project = await projectService.create(body);
 
         return jsonResponse({ 
             message: 'Project berhasil dibuat', 

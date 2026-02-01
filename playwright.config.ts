@@ -1,15 +1,25 @@
 
 import { defineConfig, devices } from '@playwright/test';
 
+// Configuration from environment variables with defaults
+const config = {
+    testDir: process.env.PLAYWRIGHT_TEST_DIR || './tests/e2e',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4321',
+    port: parseInt(process.env.PLAYWRIGHT_PORT || '4321'),
+    timeout: parseInt(process.env.PLAYWRIGHT_TIMEOUT || '120000'), // 2 minutes
+    retries: process.env.CI ? parseInt(process.env.PLAYWRIGHT_RETRIES || '2') : 0,
+    workers: process.env.CI ? 1 : undefined,
+};
+
 export default defineConfig({
-    testDir: './tests/e2e',
+    testDir: config.testDir,
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : undefined, // GitHub Actions usually 1 worker for stability
+    retries: config.retries,
+    workers: config.workers,
     reporter: 'html',
     use: {
-        baseURL: 'http://localhost:4321', // Local preview URL
+        baseURL: config.baseURL,
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
@@ -23,8 +33,8 @@ export default defineConfig({
     ],
     webServer: {
         command: 'pnpm preview', // Run the production build locally
-        url: 'http://localhost:4321',
+        url: `http://localhost:${config.port}`,
         reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000, // 2 minutes to build & start
+        timeout: config.timeout,
     },
 });

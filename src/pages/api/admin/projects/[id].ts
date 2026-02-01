@@ -11,8 +11,8 @@ import {
     parseBody 
 } from '@/lib/api';
 import { requireAdmin, validateAdminAccess } from '@/services/admin/auth';
-import { createProjectService } from '@/services/admin/projects';
-import type { UpdateProjectData } from '@/services/admin/projects';
+import { ProjectService } from '@/services/domain/ProjectService';
+import type { UpdateProjectData } from '@/services/domain/ProjectService';
 
 // ==============================================
 // GET: Single Project by ID
@@ -32,10 +32,10 @@ export const GET: APIRoute = async (context) => {
         }
 
         const prisma = getPrisma(context.locals);
-        const projectService = createProjectService(prisma);
+        const projectService = new ProjectService(prisma);
 
         // Get project by ID
-        const project = await projectService.getProjectById(id);
+        const project = await projectService.findById(id);
 
         if (!project) {
             return errorResponse('Project tidak ditemukan', 404);
@@ -69,10 +69,10 @@ export const PUT: APIRoute = async (context) => {
         }
 
         const prisma = getPrisma(context.locals);
-        const projectService = createProjectService(prisma);
+        const projectService = new ProjectService(prisma);
 
         // Check if project exists first
-        const existingProject = await projectService.getProjectById(id);
+        const existingProject = await projectService.findById(id);
         if (!existingProject) {
             return errorResponse('Project tidak ditemukan', 404);
         }
@@ -104,7 +104,7 @@ export const PUT: APIRoute = async (context) => {
         }
 
         // Update project using service layer
-        const project = await projectService.updateProject(id, body);
+        const project = await projectService.update(id, body);
 
         return jsonResponse({ 
             message: 'Project berhasil diupdate', 
@@ -131,10 +131,10 @@ export const DELETE: APIRoute = async (context) => {
         }
 
         const prisma = getPrisma(context.locals);
-        const projectService = createProjectService(prisma);
+        const projectService = new ProjectService(prisma);
 
         // Check if project exists
-        const existingProject = await projectService.getProjectById(id);
+        const existingProject = await projectService.findById(id);
         if (!existingProject) {
             return errorResponse('Project tidak ditemukan', 404);
         }

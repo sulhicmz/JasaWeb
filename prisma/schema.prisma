@@ -21,6 +21,8 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
 
   projects Project[]
+  webSocketConnections WebSocketConnection[]
+  realTimeNotifications RealTimeNotification[]
 
   @@map("users")
   @@index([email])
@@ -249,4 +251,147 @@ enum AuditAction {
   EXPORT
   IMPORT
   ROLE_CHANGE
+}
+
+// ============================================
+// WEBSOCKET CONNECTIONS
+// ============================================
+model WebSocketConnection {
+  id           String      @id @default(uuid())
+  userId       String      @map("user_id")
+  connectionId String      @unique @map("connection_id")
+  role         Role
+  ipAddress    String?     @map("ip_address")
+  userAgent    String?     @map("user_agent")
+  connectedAt  DateTime    @default(now()) @map("connected_at")
+  lastActivity DateTime    @default(now()) @map("last_activity")
+  isAlive      Boolean     @default(true) @map("is_alive")
+  rooms        String[]    @default([])
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events WebSocketEvent[]
+  messageQueues WebSocketMessageQueue[]
+  roomMemberships WebSocketRoomMembership[]
+
+  @@map("websocket_connections")
+  @@index([userId])
+  @@index([isAlive])
+  @@index([role])
+  @@index([lastActivity])
+  @@index([connectionId])
+}
+
+// ============================================
+// WEBSOCKET EVENTS
+// ============================================
+model WebSocketEvent {
+  id          String              @id @default(uuid())
+  eventType   WebSocketEventType  @map("event_type")
+  connectionId String             @map("connection_id")
+  roomId      String?             @map("room_id")
+  payload     Json
+  createdAt   DateTime            @default(now()) @map("created_at")
+  deliveredAt DateTime?           @map("delivered_at")
+  isDelivered Boolean             @default(false) @map("is_delivered")
+  
+  connection WebSocketConnection @relation(fields: [connectionId], references: [connectionId], onDelete: Cascade)
+
+  @@map("websocket_events")
+  @@index([connectionId])
+  @@index([createdAt])
+  @@index([eventType])
+  @@index([roomId])
+  @@index([isDelivered])
+}
+
+enum WebSocketEventType {
+  project_update
+  payment_received
+  system_alert
+  admin_broadcast
+  connection_status
+  heartbeat
+}
+
+// ============================================
+// WEBSOCKET MESSAGE QUEUE
+// ============================================
+model WebSocketMessageQueue {
+  id          String   @id @default(uuid())
+  connectionId String  @map("connection_id")
+  eventType   String   @map("event_type")
+  payload     Json
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  expiresAt   DateTime? @map("expires_at")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5) @map("max_attempts")
+  
+  connection WebSocketConnection @relation(fields: [connectionId], references: [connectionId], onDelete: Cascade)
+
+  @@map("websocket_message_queue")
+  @@index([connectionId])
+  @@index([priority, createdAt])
+  @@index([expiresAt])
+  @@index([attempts])
+}
+
+// ============================================
+// WEBSOCKET ROOM MEMBERSHIPS
+// ============================================
+model WebSocketRoomMembership {
+  id          String   @id @default(uuid())
+  connectionId String  @map("connection_id")
+  roomId      String   @map("room_id")
+  joinedAt    DateTime @default(now()) @map("joined_at")
+  
+  connection WebSocketConnection @relation(fields: [connectionId], references: [connectionId], onDelete: Cascade)
+
+  @@unique([connectionId, roomId])
+  @@map("websocket_room_memberships")
+  @@index([roomId])
+  @@index([connectionId])
+}
+
+// ============================================
+// REAL-TIME NOTIFICATIONS
+// ============================================
+model RealTimeNotification {
+  id        String              @id @default(uuid())
+  userId    String              @map("user_id")
+  type      NotificationType
+  title     String
+  message   String
+  payload   Json?
+  priority  NotificationPriority @default(medium)
+  read      Boolean             @default(false)
+  createdAt DateTime            @default(now()) @map("created_at")
+  readAt    DateTime?           @map("read_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("real_time_notifications")
+  @@index([userId])
+  @@index([type])
+  @@index([priority])
+  @@index([read])
+  @@index([createdAt])
+  @@index([userId, read])
+  @@index([priority, createdAt])
+}
+
+enum NotificationType {
+  project_status_change
+  payment_received
+  system_announcement
+  admin_alert
+  deadline_reminder
+  new_feature
+}
+
+enum NotificationPriority {
+  low
+  medium
+  high
+  critical
 }

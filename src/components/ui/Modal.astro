@@ -13,11 +13,24 @@ interface Props {
 const { id, title, show = false, class: className = '' } = Astro.props;
 ---
 
-<div id={id} class="modal-overlay" class:list={[className, show && 'modal-visible']} style={show ? 'display: flex' : 'display: none'}>
+<div 
+    id={id} 
+    class="modal-overlay" 
+    class:list={[className, show && 'modal-visible']} 
+    style={show ? 'display: flex' : 'display: none'}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby={`${id}-title`}
+  >
   <div class="modal-content">
     <div class="modal-header">
-      <h3>{title}</h3>
-      <button class="close-btn" onclick={`closeModal('${id}')`}>&times;</button>
+      <h3 id={`${id}-title`}>{title}</h3>
+      <button 
+        class="close-btn" 
+        onclick={`closeModal('${id}')`}
+        aria-label="Close modal"
+        type="button"
+      >&times;</button>
     </div>
     <div class="modal-body">
       <slot />
@@ -111,6 +124,77 @@ const { id, title, show = false, class: className = '' } = Astro.props;
     if (modal) {
       modal.style.display = 'none';
       modal.classList.remove('modal-visible');
+      // Return focus to the trigger element if it exists
+      const trigger = document.querySelector(`[data-modal-trigger="${modalId}"]`) as HTMLElement;
+      if (trigger) {
+        trigger.focus();
+      }
     }
   };
+
+  /**
+   * Initialize modal accessibility features
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    // Handle ESC key to close modal
+    document.addEventListener('keydown', (e: Event) => {
+      const keyboardEvent = e as KeyboardEvent;
+      if (keyboardEvent.key === 'Escape') {
+        const visibleModal = document.querySelector('.modal-visible') as HTMLElement;
+        if (visibleModal) {
+          (window as any).closeModal(visibleModal.id);
+        }
+      }
+    });
+
+    // Trap focus within modal
+    const modals = document.querySelectorAll('.modal-overlay');
+    modals.forEach(modal => {
+modal.addEventListener('keydown', (e: Event) => {
+          const keyboardEvent = e as KeyboardEvent;
+          if (keyboardEvent.key === 'Tab') {
+          const focusableElements = modal.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          ) as NodeListOf<HTMLElement>;
+          
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+
+          if (keyboardEvent.shiftKey) {
+            if (document.activeElement === firstElement) {
+              keyboardEvent.preventDefault();
+              lastElement?.focus();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              keyboardEvent.preventDefault();
+              firstElement?.focus();
+            }
+          }
+        }
+      });
+
+      // Set focus to first focusable element when modal opens
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+            const modal = mutation.target as HTMLElement;
+            if (modal.style.display === 'flex' || modal.classList.contains('modal-visible')) {
+              const firstFocusable = modal.querySelector(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+              ) as HTMLElement;
+              if (firstFocusable) {
+                setTimeout(() => firstFocusable.focus(), 100);
+              }
+            }
+          }
+        });
+      });
+
+      observer.observe(modal, {
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    });
+  });
 </script>
