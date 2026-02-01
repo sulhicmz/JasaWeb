@@ -11,19 +11,30 @@ import { createPerformanceOptimizationService } from './PerformanceOptimizationS
 import type { PerformanceAnomaly } from '@/lib/performance-intelligence';
 
 // Mock dependencies
+const getLatestMetricsMock = vi.fn();
+const generateRecommendationsMock = vi.fn();
+const getAnomaliesMock = vi.fn();
+const getPredictionMock = vi.fn();
+const getAllPredictionsMock = vi.fn();
+const cacheSetMock = vi.fn();
+
 vi.mock('@/lib/performance-monitor', () => ({
   performanceMonitor: {
-    getLatestMetrics: vi.fn(),
-    generateRecommendations: vi.fn(),
+    getLatestMetrics: getLatestMetricsMock,
+    generateRecommendations: generateRecommendationsMock,
   },
 }));
 
 vi.mock('@/lib/performance-intelligence', () => ({
   performanceIntelligence: {
-    getAnomalies: vi.fn(),
-    getPrediction: vi.fn(),
-    getAllPredictions: vi.fn(),
+    getAnomalies: getAnomaliesMock,
+    getPrediction: getPredictionMock,
+    getAllPredictions: getAllPredictionsMock,
   },
+}));
+
+vi.mock('@/lib/kv', () => ({
+  cacheSet: cacheSetMock,
 }));
 
 describe('PerformanceOptimizationService', () => {
@@ -123,8 +134,7 @@ describe('PerformanceOptimizationService', () => {
 
   describe('Bottleneck Detection', () => {
     beforeEach(() => {
-      const { performanceMonitor } = require('@/lib/performance-monitor');
-      performanceMonitor.getLatestMetrics.mockReturnValue({
+      getLatestMetricsMock.mockReturnValue({
         database: { queryTime: 60, indexUsage: 80, slowQueries: 15 },
         cache: { hitRate: 0.75, memoryUsage: 85, evictionRate: 0.25 },
         api: { averageLatency: 120, p95Latency: 200, errorRate: 0.02, throughput: 80 },
@@ -173,8 +183,7 @@ describe('PerformanceOptimizationService', () => {
 
   describe('Cache Optimization', () => {
     it('should execute cache optimization actions', async () => {
-      const { cacheSet } = require('@/lib/kv');
-      cacheSet.mockResolvedValue(undefined);
+      cacheSetMock.mockResolvedValue(undefined);
 
       await (service as any).executeCacheOptimization({
         adaptiveTTL: true,
@@ -182,8 +191,8 @@ describe('PerformanceOptimizationService', () => {
         compressionEnabled: true
       });
 
-      expect(cacheSet).toHaveBeenCalledTimes(3);
-      expect(cacheSet).toHaveBeenCalledWith(
+      expect(cacheSetMock).toHaveBeenCalledTimes(3);
+      expect(cacheSetMock).toHaveBeenCalledWith(
         mockKv,
         'config:cache:adaptive_ttl',
         'true',
@@ -209,13 +218,12 @@ describe('PerformanceOptimizationService', () => {
 
   describe('Bundle Optimization', () => {
     it('should store bundle optimization configuration', async () => {
-      const { cacheSet } = require('@/lib/kv');
-      cacheSet.mockResolvedValue(undefined);
+      cacheSetMock.mockResolvedValue(undefined);
 
       const parameters = { codeSplitting: true, lazyLoading: true };
       await (service as any).executeBundleOptimization(parameters);
 
-      expect(cacheSet).toHaveBeenCalledWith(
+      expect(cacheSetMock).toHaveBeenCalledWith(
         mockKv,
         'config:bundle:optimization',
         JSON.stringify(parameters),
@@ -226,10 +234,7 @@ describe('PerformanceOptimizationService', () => {
 
   describe('Scaling Recommendations', () => {
     beforeEach(() => {
-      const { performanceMonitor } = require('@/lib/performance-monitor');
-      const { performanceIntelligence } = require('@/lib/performance-intelligence');
-
-      performanceMonitor.getLatestMetrics.mockReturnValue({
+      getLatestMetricsMock.mockReturnValue({
         database: { queryTime: 40, indexUsage: 85, slowQueries: 5 },
         cache: { hitRate: 0.9, memoryUsage: 95, evictionRate: 0.1 },
         api: { averageLatency: 80, p95Latency: 150, errorRate: 0.005, throughput: 120 },
@@ -237,7 +242,7 @@ describe('PerformanceOptimizationService', () => {
         timestamp: new Date().toISOString()
       });
 
-      performanceIntelligence.getAllPredictions.mockReturnValue([{
+      getAllPredictionsMock.mockReturnValue([{
         metric: 'database.queryTime',
         predictions: [{
           value: 60,
@@ -267,10 +272,7 @@ describe('PerformanceOptimizationService', () => {
 
   describe('Optimization Cycle', () => {
     beforeEach(() => {
-      const { performanceMonitor } = require('@/lib/performance-monitor');
-      const { performanceIntelligence } = require('@/lib/performance-intelligence');
-
-      performanceMonitor.getLatestMetrics.mockReturnValue({
+      getLatestMetricsMock.mockReturnValue({
         database: { queryTime: 25, indexUsage: 90, slowQueries: 2 },
         cache: { hitRate: 0.9, memoryUsage: 60, evictionRate: 0.05 },
         api: { averageLatency: 60, p95Latency: 100, errorRate: 0.005, throughput: 150 },
@@ -278,8 +280,8 @@ describe('PerformanceOptimizationService', () => {
         timestamp: new Date().toISOString()
       });
 
-      performanceIntelligence.getAnomalies.mockReturnValue([]);
-      performanceIntelligence.getAllPredictions.mockReturnValue([]);
+      getAnomaliesMock.mockReturnValue([]);
+      getAllPredictionsMock.mockReturnValue([]);
     });
 
     it('should run complete optimization cycle', async () => {
@@ -345,10 +347,7 @@ describe('PerformanceOptimizationService', () => {
 
   describe('Strategy Evaluation', () => {
     it('should evaluate strategy conditions correctly', async () => {
-      const { performanceMonitor } = require('@/lib/performance-monitor');
-      const { performanceIntelligence } = require('@/lib/performance-intelligence');
-
-      performanceMonitor.getLatestMetrics.mockReturnValue({
+      getLatestMetricsMock.mockReturnValue({
         database: { queryTime: 60, indexUsage: 80, slowQueries: 5 },
         cache: { hitRate: 0.75, memoryUsage: 85, evictionRate: 0.1 },
         api: { averageLatency: 60, p95Latency: 100, errorRate: 0.005, throughput: 150 },
@@ -356,7 +355,7 @@ describe('PerformanceOptimizationService', () => {
         timestamp: new Date().toISOString()
       });
 
-      performanceIntelligence.getPrediction.mockReturnValue({
+      getPredictionMock.mockReturnValue({
         trend: 'increasing'
       });
 
