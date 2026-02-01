@@ -5,7 +5,7 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
-import { BaseCrudService, type ListOptions } from '../admin/crud';
+import { BaseCrudService } from '../admin/crud';
 import type { Project } from '../../lib/types';
 
 // ==============================================
