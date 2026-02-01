@@ -34,12 +34,15 @@ export function Button({
         lg: 'px-6 py-3 text-base'
     };
 
+    const isDisabled = disabled || loading;
+    
     return (
         <button
             type={type}
             onClick={onClick}
-            disabled={disabled || loading}
-            className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className} ${(disabled || loading) ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
+            disabled={isDisabled}
+            aria-disabled={isDisabled ? 'true' : undefined}
+            className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className} ${isDisabled ? 'opacity-50 cursor-not-allowed transform-none' : ''}`}
         >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
