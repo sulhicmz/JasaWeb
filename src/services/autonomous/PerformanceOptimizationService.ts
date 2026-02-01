@@ -12,8 +12,8 @@
  * - Self-learning optimization strategies
  */
 
-import { performanceMonitor, type PerformanceMetrics, type PerformanceRecommendation } from '../../lib/performance-monitoring';
-import { performanceIntelligence, type PerformanceAnomaly, type PerformancePrediction } from '../../lib/performance-intelligence';
+import { performanceMonitor, type PerformanceMetrics } from '../../lib/performance-monitoring';
+import { performanceIntelligence, type PerformanceAnomaly } from '../../lib/performance-intelligence';
 import { cacheSet } from '@/lib/kv';
 import type { KVNamespace } from '@/lib/types';
 
@@ -708,7 +708,7 @@ export class PerformanceOptimizationService {
   /**
    * Analyze cache performance root cause
    */
-  private analyzeCacheRootCause(cache: any, anomalies: PerformanceAnomaly[]): string {
+  private analyzeCacheRootCause(cache: any, _anomalies: PerformanceAnomaly[]): string {
     if (cache.evictionRate > 0.2) {
       return 'High eviction rate indicates insufficient cache capacity or poor TTL settings';
     }
@@ -723,7 +723,7 @@ export class PerformanceOptimizationService {
   /**
    * Analyze API performance root cause
    */
-  private analyzeApiRootCause(api: any, anomalies: PerformanceAnomaly[]): string {
+  private analyzeApiRootCause(api: any, _anomalies: PerformanceAnomaly[]): string {
     if (api.errorRate > 0.01) {
       return 'High error rate indicates underlying service issues or resource exhaustion';
     }

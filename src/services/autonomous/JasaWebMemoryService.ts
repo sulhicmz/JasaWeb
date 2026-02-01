@@ -240,7 +240,8 @@ export class JasaWebTempMemory {
    * Consolidate memories to optimize storage
    */
   async consolidateMemories(): Promise<void> {
-    const _initialFactCount = this.factCache.size;
+    // Track initial fact count for consolidation metrics
+    void this.factCache.size;
 
     // 1. Identify outdated facts
     const now = new Date();
