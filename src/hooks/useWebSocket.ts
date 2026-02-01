@@ -143,6 +143,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       lastMessage: null,
       connectionId: null
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const reconnect = useCallback(() => {
@@ -225,7 +226,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     reconnectTimeoutRef.current = setTimeout(() => {
       connect();
     }, reconnectInterval);
-  }, [connect, reconnectInterval]);
+    // Dependencies are intentionally omitted to avoid unnecessary re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reconnectInterval]);
 
   const clearReconnectTimeout = useCallback(() => {
     if (reconnectTimeoutRef.current) {
