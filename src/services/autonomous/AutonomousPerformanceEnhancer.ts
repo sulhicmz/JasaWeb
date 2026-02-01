@@ -6,7 +6,7 @@
  */
 
 import { createPerformanceOptimizationService } from './PerformanceOptimizationService';
-import type { PerformanceMetrics, PerformanceRecommendation } from '../../lib/performance-monitoring';
+import type { PerformanceRecommendation } from '../../lib/performance-monitoring';
 import type { PerformanceAnomaly } from '../../lib/performance-intelligence';
 import { JasaWebTempMemory } from './JasaWebMemoryService';
 

@@ -17,6 +17,8 @@ export interface AuthFormConfig {
   successMessage?: string;
   errorMessage?: string;
   validation?: (data: AuthFormData) => string | null;
+  onSubmitStart?: () => void;
+  onSubmitEnd?: () => void;
 }
 
 export class AuthFormHandler {
@@ -54,6 +56,9 @@ export class AuthFormHandler {
     config: AuthFormConfig
   ): Promise<void> {
     try {
+      // Call submit start callback
+      config.onSubmitStart?.();
+      
       // Hide previous messages
       this.hideMessages();
 
@@ -104,6 +109,9 @@ export class AuthFormHandler {
     } catch (error) {
       console.error('Form submission error:', error);
       this.showError(config.errorMessage || 'Terjadi kesalahan. Silakan coba lagi.');
+    } finally {
+      // Call submit end callback
+      config.onSubmitEnd?.();
     }
   }
 

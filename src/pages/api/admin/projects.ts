@@ -14,7 +14,7 @@ import {
 } from '@/lib/api';
 import { requireAdmin, validateAdminAccess } from '@/services/admin/auth';
 import { ProjectService } from '@/services/domain/ProjectService';
-import type { CreateProjectData, ProjectWithUser } from '@/services/domain/ProjectService';
+import type { CreateProjectData } from '@/services/domain/ProjectService';
 
 // ==============================================
 // GET: List Projects with Pagination and Filters

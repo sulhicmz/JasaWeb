@@ -13,7 +13,8 @@ const prisma = new PrismaClient({
 
 export async function createContext(request: Request): Promise<GraphQLContext> {
   let user = undefined;
-  const session = request.headers.get('authorization');
+  // Session extraction for future auth implementation
+  void request.headers.get('authorization');
 
   return {
     prisma,
