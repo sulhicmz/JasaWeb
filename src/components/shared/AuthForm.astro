@@ -156,7 +156,7 @@ const config = formConfigs[type];
       </div>
     )}
 
-    <Button type="submit" variant="primary" fullWidth>{submitText}</Button>
+    <Button type="submit" variant="primary" fullWidth loading={false} data-submit-btn>{submitText}</Button>
 
     <div id="errorMessage" class="error-message"></div>
     {type === 'register' && <div id="successMessage" class="success-message"></div>}
@@ -300,12 +300,33 @@ const config = formConfigs[type];
         throw new Error('Failed to initialize form handler');
       }
 
+      // Get submit button for loading state
+      const form = document.getElementById(formConfig.id);
+      const submitBtn = form?.querySelector('[data-submit-btn]');
+      const originalBtnText = submitBtn?.textContent || '';
+
       // Build configuration based on form type
       const formSetup = {
         endpoint: formConfig.endpoint,
         successRedirect: formConfig.successRedirect,
         errorMessage: formConfig.errorMessage,
-        validation: AuthValidator.createValidator(formConfig.validatorType)
+        validation: AuthValidator.createValidator(formConfig.validatorType),
+        onSubmitStart: () => {
+          // Show loading state
+          if (submitBtn) {
+            submitBtn.setAttribute('disabled', 'true');
+            submitBtn.classList.add('btn-loading');
+            submitBtn.textContent = 'Memproses...';
+          }
+        },
+        onSubmitEnd: () => {
+          // Reset loading state
+          if (submitBtn) {
+            submitBtn.removeAttribute('disabled');
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.textContent = originalBtnText;
+          }
+        }
       };
 
       // Add success message for register forms
