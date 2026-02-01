@@ -241,17 +241,17 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     }
   }, []);
 
-  const handleProjectUpdate = useCallback((payload: any) => {
+  const handleProjectUpdate = useCallback((_payload: any) => {
     // Project update received - implement business logic as needed
     // Payload structure: { projectId, status, changes }
   }, []);
 
-  const handlePaymentReceived = useCallback((payload: any) => {
+  const handlePaymentReceived = useCallback((_payload: any) => {
     // Payment received - implement business logic as needed
     // Payload structure: { invoiceId, amount, status }
   }, []);
 
-  const handleAdminBroadcast = useCallback((payload: any) => {
+  const handleAdminBroadcast = useCallback((_payload: any) => {
     // Admin broadcast received - implement business logic as needed
     // Payload structure: { message, priority, timestamp }
   }, []);
