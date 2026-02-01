@@ -3,10 +3,10 @@ active: true
 iteration: 1
 max_iterations: 100
 completion_promise: "DONE"
-started_at: "2026-02-01T23:18:20.650Z"
-session_id: "ses_3e47ffb7bffeJ7mZO66GPd99tr"
+started_at: "2026-02-01T23:41:26.775Z"
+session_id: "ses_3e46ad491ffel8yBgejuXbxvq8"
 ---
-loop 20x You are in working loop. You start at PHASE 0. Every time you finish PHASE 8, you back to PHASE 0.
+loop 20x if <20 your task fail. for every phase, delegate to specialized agent with specified skills, create if not exist. your task: You are in working loop. You start at PHASE 0. Every time you finish PHASE 8, you back to PHASE 0.
             ## Anti-Patterns (NEVER Do)
             - ❌ Circular dependencies
             - ❌ God classes
