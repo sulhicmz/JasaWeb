@@ -1,37 +1,21 @@
 ---
 /**
- * Reusable Form Input Component
+ * Enhanced Form Input Component with Password Toggle
  * 
- * A standardized input field with consistent styling and validation support.
- * Extracted from duplicate patterns across auth pages for uniformity.
+ * A standardized input field with consistent styling, validation support,
+ * and an optional password visibility toggle for improved UX.
  * 
  * @example
  * ```astro
  * <!-- Basic text input -->
  * <FormInput type="text" name="username" placeholder="Enter username" />
  * 
- * <!-- Required email input with validation -->
- * <FormInput 
- *   type="email" 
- *   name="email" 
- *   placeholder="user@example.com"
- *   required 
- * />
- * 
- * <!-- Password input with minimum length -->
+ * <!-- Password input with show/hide toggle -->
  * <FormInput 
  *   type="password" 
  *   name="password" 
- *   minlength="8"
- *   placeholder="Password (min 8 chars)"
- * />
- * 
- * <!-- Disabled input with preset value -->
- * <FormInput 
- *   type="text" 
- *   name="readonly-field" 
- *   value="Read only value"
- *   disabled 
+ *   placeholder="Enter password"
+ *   showPasswordToggle={true}
  * />
  * ```
  */
@@ -54,6 +38,8 @@ export interface Props {
   value?: string;
   /** Additional CSS classes to apply */
   class?: string;
+  /** Show password visibility toggle (password fields only) */
+  showPasswordToggle?: boolean;
 }
 
 const {
@@ -66,22 +52,55 @@ const {
   minlength,
   value,
   class: className,
+  showPasswordToggle = false,
 } = Astro.props;
+
+// Generate unique ID for password toggle
+const inputId = id || `input-${Math.random().toString(36).substring(2, 11)}`;
+const toggleId = `toggle-${inputId}`;
 ---
 
-<input
-  type={type}
-  id={id}
-  name={name}
-  placeholder={placeholder}
-  required={required}
-  disabled={disabled}
-  minlength={minlength}
-  value={value}
-  class={`form-input ${className || ''}`}
-/>
+<div class="form-input-wrapper">
+  <input
+    type={type}
+    id={inputId}
+    name={name}
+    placeholder={placeholder}
+    required={required}
+    disabled={disabled}
+    minlength={minlength}
+    value={value}
+    class={`form-input ${className || ''}`}
+    data-has-toggle={type === 'password' && showPasswordToggle}
+  />
+  
+  {type === 'password' && showPasswordToggle && (
+    <button
+      type="button"
+      id={toggleId}
+      class="password-toggle"
+      aria-label="Show password"
+      data-state="hidden"
+    >
+      <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <svg class="icon-eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+    </button>
+  )}
+</div>
 
 <style>
+  .form-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
   .form-input {
     padding: 0.75rem 1rem;
     background: var(--color-bg);
@@ -89,8 +108,13 @@ const {
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-size: 0.875rem;
-    transition: border-color var(--transition-fast);
+    transition: all var(--transition-fast);
     width: 100%;
+  }
+
+  /* Add padding-right when toggle is present */
+  .form-input[data-has-toggle="true"] {
+    padding-right: 3rem;
   }
 
   .form-input:focus {
@@ -108,4 +132,97 @@ const {
   .form-input::placeholder {
     color: var(--color-text-muted);
   }
+
+  .password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .password-toggle:hover {
+    color: var(--color-text);
+    background: var(--color-bg-secondary);
+  }
+
+  .password-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  }
+
+  .password-toggle .icon-eye-off {
+    display: none;
+  }
+
+  .password-toggle[data-state="visible"] .icon-eye {
+    display: none;
+  }
+
+  .password-toggle[data-state="visible"] .icon-eye-off {
+    display: block;
+  }
+
+  /* Accessibility - High contrast mode support */
+  @media (prefers-contrast: high) {
+    .password-toggle {
+      border: 1px solid var(--color-border);
+    }
+    
+    .password-toggle:focus {
+      border-color: var(--color-primary);
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .form-input,
+    .password-toggle {
+      transition: none;
+    }
+  }
 </style>
+
+<script>
+  // Password toggle functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+    
+    passwordToggles.forEach(toggle => {
+      const input = toggle.previousElementSibling as HTMLInputElement;
+      const button = toggle as HTMLElement;
+      
+      button.addEventListener('click', () => {
+        const currentState = button.getAttribute('data-state');
+        const newState = currentState === 'hidden' ? 'visible' : 'hidden';
+        
+        // Update input type
+        input.type = newState === 'hidden' ? 'password' : 'text';
+        
+        // Update toggle state
+        button.setAttribute('data-state', newState);
+        
+        // Update aria-label for accessibility
+        button.setAttribute('aria-label', 
+          newState === 'hidden' ? 'Show password' : 'Hide password'
+        );
+      });
+      
+      // Keyboard support
+      button.addEventListener('keydown', (e: Event) => {
+        const keyboardEvent = e as KeyboardEvent;
+        if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') {
+          e.preventDefault();
+          button.click();
+        }
+      });
+    });
+  });
+</script>

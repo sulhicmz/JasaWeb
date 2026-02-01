@@ -133,6 +133,7 @@ const config = formConfigs[type];
         placeholder={type === 'register' ? 'Minimal 8 karakter' : '••••••••'}
         minlength={type === 'register' ? 8 : undefined}
         required
+        showPasswordToggle={true}
       />
     </FormGroup>
 
@@ -144,6 +145,7 @@ const config = formConfigs[type];
           name="confirmPassword"
           placeholder="Ulangi password"
           required
+          showPasswordToggle={true}
         />
       </FormGroup>
     )}

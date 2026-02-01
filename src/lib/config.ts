@@ -205,9 +205,9 @@ export const siteConfig = {
     heroBadge: '✨ Platform #1 untuk Jasa Web',
     description: 'Kami membantu Anda membuat website sekolah, portal berita, dan company profile dengan kualitas premium.',
     footerDescription: 'Platform jasa pembuatan website profesional dengan solusi lengkap untuk kebutuhan digital Anda.',
-    url: 'https://jasaweb.id',
-    email: 'hello@jasaweb.id',
-    phone: '+62 812 3456 7890',
+    url: import.meta.env.PUBLIC_SITE_URL || 'https://jasaweb.id',
+    email: import.meta.env.PUBLIC_CONTACT_EMAIL || 'hello@jasaweb.id',
+    phone: import.meta.env.PUBLIC_CONTACT_PHONE || '+62 812 3456 7890',
 } as const;
 
 // ==============================================

@@ -285,24 +285,14 @@ class MonitoringService {
   }
 
   private async checkCacheHealth(): Promise<SystemHealth['cache']> {
-    try {
-      // Implement KV health check - for now always return healthy
-      // TODO: Add actual KV health check logic when needed
-      return 'healthy';
-      // eslint-disable-next-line no-unreachable
-    } catch {
-      return 'down';
-    }
+    // Implement KV health check - for now always return healthy
+    // TODO: Add actual KV health check logic when needed
+    return 'healthy';
   }
 
   private async checkStorageHealth(): Promise<SystemHealth['storage']> {
-    try {
-      // Implement R2 storage health check
-      return 'healthy';
-      // eslint-disable-next-line no-unreachable
-    } catch {
-      return 'down';
-    }
+    // Implement R2 storage health check
+    return 'healthy';
   }
 
   private async checkPaymentHealth(): Promise<SystemHealth['payment']> {

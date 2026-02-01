@@ -3,7 +3,8 @@
  * Handles project loading and display using existing ProjectService
  */
 
-import { ProjectService } from '@/services/client/ProjectService';
+import { ProjectService } from '@/services/domain/ProjectService';
+import type { Project } from '@/lib/types';
 
 declare global {
   interface Window {
@@ -47,7 +48,7 @@ export class ProjectsPageHandler {
 
       // Use existing service for data transformation
       const projects = data.data;
-      const displayProjects = ProjectService.getProjectsWithDisplay(projects);
+      const displayProjects = projects.map((p: Project) => ProjectService.transformProjectForDisplay(p));
       
       // Generate HTML using transformed data
       const projectsHTML = this.generateProjectCardsHTML(displayProjects);

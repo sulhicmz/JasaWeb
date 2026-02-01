@@ -35,12 +35,12 @@ class RedisCacheService {
     constructor() {
         // Configuration from environment variables with defaults
         this.config = {
-            host: 'localhost',
-            port: 6379,
-            password: undefined,
-            defaultTTL: 300, // 5 minutes
-            maxRetries: 3,
-            retryDelay: 1000
+            host: import.meta.env.REDIS_HOST || 'localhost',
+            port: parseInt(import.meta.env.REDIS_PORT || '6379'),
+            password: import.meta.env.REDIS_PASSWORD,
+            defaultTTL: parseInt(import.meta.env.REDIS_DEFAULT_TTL || '300'), // 5 minutes
+            maxRetries: parseInt(import.meta.env.REDIS_MAX_RETRIES || '3'),
+            retryDelay: parseInt(import.meta.env.REDIS_RETRY_DELAY || '1000')
         };
 
         this.stats = {

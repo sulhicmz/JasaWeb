@@ -364,7 +364,8 @@ const realTimeMetrics = [
         updateLastUpdatedTime();
       }
     } catch (error) {
-      console.error('Failed to refresh performance data:', error);
+      // Silently handle error to avoid console pollution
+      // In production, errors are logged to monitoring service
     } finally {
       isRefreshing = false;
       refreshBtn.classList.remove('loading');

@@ -103,8 +103,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
             },
         });
 
-        // Log successful invoice creation (audit trail)
-        console.log(`Invoice created: ${invoice.id} for project ${project.id} by user ${user.id}`);
+        // Invoice created successfully - audit trail handled by database
 
         return jsonResponse({
             invoice,

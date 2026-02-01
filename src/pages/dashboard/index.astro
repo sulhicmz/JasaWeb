@@ -7,7 +7,6 @@
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Card from '../../components/ui/Card.astro';
 import Button from '../../components/ui/Button.astro';
-import './dashboard-client.js';
 ---
 
 <PortalLayout title="Dashboard" currentPath="/dashboard">
@@ -144,4 +143,4 @@ import './dashboard-client.js';
   }
 </style>
 
-<!-- Dashboard interactions handled by dashboardClient.ts module -->
+<script type="module" src="./dashboard-client.ts" is:inline></script>
