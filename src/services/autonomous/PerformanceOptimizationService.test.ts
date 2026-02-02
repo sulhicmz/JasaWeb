@@ -10,22 +10,33 @@ import type { KVNamespace } from '@/lib/types';
 import { createPerformanceOptimizationService } from './PerformanceOptimizationService';
 import type { PerformanceAnomaly } from '@/lib/performance-intelligence';
 
-// Mock dependencies
-const getLatestMetricsMock = vi.fn();
-const generateRecommendationsMock = vi.fn();
-const getAnomaliesMock = vi.fn();
-const getPredictionMock = vi.fn();
-const getAllPredictionsMock = vi.fn();
-const cacheSetMock = vi.fn();
+// Use vi.hoisted for mock functions that need to be referenced in vi.mock
+const {
+  getLatestMetricsMock,
+  generateRecommendationsMock,
+  getAnomaliesMock,
+  getPredictionMock,
+  getAllPredictionsMock,
+  cacheSetMock
+} = vi.hoisted(() => ({
+  getLatestMetricsMock: vi.fn(),
+  generateRecommendationsMock: vi.fn(),
+  getAnomaliesMock: vi.fn(),
+  getPredictionMock: vi.fn(),
+  getAllPredictionsMock: vi.fn(),
+  cacheSetMock: vi.fn(),
+}));
 
-vi.mock('@/lib/performance-monitor', () => ({
+vi.mock('../../lib/performance-monitoring', () => ({
+  PerformanceMonitor: vi.fn(),
   performanceMonitor: {
     getLatestMetrics: getLatestMetricsMock,
     generateRecommendations: generateRecommendationsMock,
   },
 }));
 
-vi.mock('@/lib/performance-intelligence', () => ({
+vi.mock('../../lib/performance-intelligence', () => ({
+  PerformanceIntelligenceService: vi.fn(),
   performanceIntelligence: {
     getAnomalies: getAnomaliesMock,
     getPrediction: getPredictionMock,
@@ -141,6 +152,7 @@ describe('PerformanceOptimizationService', () => {
         bundle: { size: 250, largestChunk: 60, compressionRatio: 0.3 },
         timestamp: new Date().toISOString()
       });
+      getAnomaliesMock.mockReturnValue([]);
     });
 
     it('should detect database bottlenecks', async () => {

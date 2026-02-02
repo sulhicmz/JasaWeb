@@ -258,15 +258,15 @@ it('should trigger consolidation when cache is full', async () => {
       await memory.storeFact('old1', 'HAS_PROPERTY', 'value1', {}, oldDate);
       await memory.storeFact('old2', 'HAS_PROPERTY', 'value2', {}, oldDate);
 
-      // Spy on console.log
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
+      const statsBefore = await memory.getMemoryStats();
+      
       await memory.consolidateMemories();
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Consolidating'));
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Consolidation complete'));
-
-      consoleSpy.mockRestore();
+      const statsAfter = await memory.getMemoryStats();
+      
+      // Verify consolidation occurred
+      expect(statsAfter.lastConsolidation).not.toBeNull();
+      expect(statsAfter.lastConsolidation).not.toEqual(statsBefore.lastConsolidation);
     });
 
     it('should merge related facts', async () => {

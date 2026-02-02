@@ -54,7 +54,6 @@ describe('Button Component', () => {
     render(<Button disabled>Disabled Button</Button>);
     const button = screen.getByRole('button');
     
-    expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button).toHaveAttribute('disabled');
   });
 

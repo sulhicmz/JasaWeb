@@ -107,6 +107,7 @@ export interface ScalingRecommendation {
   costImpact: number; // % cost change
   performanceGain: number; // % performance gain
   timeframe: string; // When to scale
+  createdAt: string;
 }
 
 // ========================================
@@ -661,7 +662,8 @@ export class PerformanceOptimizationService {
         reasoning: `Database query time predicted to increase to ${predictedIncrease.toFixed(1)}ms`,
         costImpact: 25,
         performanceGain: 35,
-        timeframe: 'next 24 hours'
+        timeframe: 'next 24 hours',
+        createdAt: new Date().toISOString()
       });
     }
 
@@ -676,7 +678,8 @@ export class PerformanceOptimizationService {
         reasoning: `Cache memory usage at ${currentMetrics.cache.memoryUsage}% of capacity`,
         costImpact: 15,
         performanceGain: 20,
-        timeframe: 'next 12 hours'
+        timeframe: 'next 12 hours',
+        createdAt: new Date().toISOString()
       });
     }
 
@@ -842,7 +845,7 @@ export class PerformanceOptimizationService {
    */
   getScalingRecommendations(): ScalingRecommendation[] {
     return this.scalingHistory.filter(r => 
-      new Date(r.timeframe).getTime() > Date.now() - 24 * 3600000 // Last 24 hours
+      new Date(r.createdAt).getTime() > Date.now() - 24 * 3600000 // Last 24 hours
     );
   }
 
