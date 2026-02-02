@@ -1,0 +1,228 @@
+<error_handling>
+  <common_errors>
+    <error type="agent_not_found">
+      <symptoms>
+        <symptom>Agent doesn't appear in `opencode agent list`</symptom>
+        <symptom>Error "agent not found" when using --agent flag</symptom>
+      </symptoms>
+      <causes>
+        <cause>Agent file in wrong directory</cause>
+        <cause>Incorrect file naming convention</cause>
+        <cause>Configuration syntax errors</cause>
+        <cause>Agent disabled in configuration</cause>
+      </causes>
+      <solutions>
+        <solution>Verify agent is in correct directory (.opencode/agents/ or ~/.config/opencode/agents/)</solution>
+        <solution>Check file name matches agent slug (kebab-case)</solution>
+        <solution>Validate JSON syntax or Markdown frontmatter</solution>
+        <solution>Ensure "disable: false" or remove disable field</solution>
+      </solutions>
+      <prevention>
+        <tip>Use `opencode agent list` to verify agents after creation</tip>
+        <tip>Test agent configuration with simple tasks before complex ones</tip>
+      </prevention>
+    </error>
+
+    <error type="authentication_failure">
+      <symptoms>
+        <symptom>Error "API key not found" or "authentication failed"</symptom>
+        <symptom>Provider not showing in `opencode auth list`</symptom>
+      </symptoms>
+      <causes>
+        <cause>Missing or incorrect API keys</cause>
+        <cause>Environment variables not set</cause>
+        <cause>auth.json file corrupted</cause>
+        <cause>Provider configuration issues</cause>
+      </causes>
+      <solutions>
+        <solution>Run `opencode auth login` to reconfigure credentials</solution>
+        <solution>Check environment variables match provider requirements</solution>
+        <solution>Delete and recreate auth.json if corrupted</solution>
+        <solution>Verify provider is supported in models.dev</solution>
+      </solutions>
+      <prevention>
+        <tip>Store API keys securely using `opencode auth login`</tip>
+        <tip>Use `opencode auth list` to verify authentication</tip>
+      </prevention>
+    </error>
+
+    <error type="permission_denied">
+      <symptoms>
+        <symptom>Agent cannot perform expected actions</symptom>
+        <symptom>Errors about missing tool permissions</symptom>
+      </symptoms>
+      <causes>
+        <cause>Tools not enabled in agent configuration</cause>
+        <cause>Conflicting permission settings</cause>
+        <cause>Default permissions overriding explicit settings</cause>
+      </causes>
+      <solutions>
+        <solution>Explicitly set all tool permissions in agent config</solution>
+        <solution>Check for conflicting permission settings</solution>
+        <solution>Verify permissions match intended use case</solution>
+      </solutions>
+      <prevention>
+        <tip>Always explicitly define tool permissions</tip>
+        <tip>Test permissions with simple tasks first</tip>
+      </prevention>
+    </error>
+
+    <error type="model_not_available">
+      <symptoms>
+        <symptom>Error "model not found" or "model unavailable"</symptom>
+        <symptom>Agent falls back to different model</symptom>
+      </symptoms>
+      <causes>
+        <cause>Incorrect model name or provider</cause>
+        <cause>Provider authentication issues</cause>
+        <cause>Model deprecated or renamed</cause>
+        <cause>Region availability issues</cause>
+      </causes>
+      <solutions>
+        <solution>Verify model name using models.dev reference</solution>
+        <solution>Check provider authentication</solution>
+        <solution>Update to current model names</solution>
+        <solution>Configure fallback models</solution>
+      </solutions>
+      <prevention>
+        <tip>Use full provider/model format</tip>
+        <tip>Configure fallback models for reliability</tip>
+      </prevention>
+    </error>
+
+    <error type="configuration_syntax">
+      <symptoms>
+        <symptom>JSON parsing errors</symptom>
+        <symptom>Invalid frontmatter in Markdown agents</symptom>
+      </symptoms>
+      <causes>
+        <cause>Malformed JSON in opencode.json</cause>
+        <cause>Invalid YAML frontmatter</cause>
+        <cause>Missing required fields</cause>
+        <cause>Incorrect data types</cause>
+      </causes>
+      <solutions>
+        <solution>Validate JSON syntax using linter or validator</solution>
+        <solution>Check YAML frontmatter formatting</solution>
+        <solution>Ensure all required fields are present</solution>
+        <solution>Verify data types match schema</solution>
+      </solutions>
+      <prevention>
+        <tip>Use JSON schema validation in editor</tip>
+        <tip>Test configuration after each change</tip>
+      </prevention>
+    </error>
+  </common_errors>
+
+  <troubleshooting_workflow>
+    <phase name="identification">
+      <description>Identify the specific error and context</description>
+      <steps>
+        <step>Reproduce the error consistently</step>
+        <step>Check error messages and logs</step>
+        <step>Identify when the error occurs (startup, during task, etc.)</step>
+        <step>Note any recent configuration changes</step>
+      </steps>
+    </phase>
+
+    <phase name="isolation">
+      <description>Isolate the cause of the error</description>
+      <steps>
+        <step>Test with minimal configuration</step>
+        <step>Try with different agents or models</step>
+        <step>Check if issue is project-specific or global</step>
+        <step>Verify authentication and permissions</step>
+      </steps>
+    </phase>
+
+    <phase name="resolution">
+      <description>Apply appropriate solution</description>
+      <steps>
+        <step>Apply solution based on error type</step>
+        <step>Test the fix</step>
+        <step>Verify related functionality works</step>
+        <step>Document the solution for future reference</step>
+      </steps>
+    </phase>
+  </troubleshooting_workflow>
+
+  <recovery_strategies>
+    <strategy name="configuration_reset">
+      <description>Reset configuration to working state</description>
+      <steps>
+        <step>Backup current configuration</step>
+        <step>Remove or rename problematic agent files</step>
+        <step>Start with minimal working configuration</step>
+        <step>Gradually add back configurations</step>
+        <step>Test after each addition</step>
+      </steps>
+    </strategy>
+
+    <strategy name="authentication_refresh">
+      <description>Refresh authentication setup</description>
+      <steps>
+        <step>Clear existing authentication</step>
+        <step>Remove auth.json file</step>
+        <step>Run `opencode auth login` again</step>
+        <step>Verify with `opencode auth list`</step>
+        <step>Test with simple request</step>
+      </steps>
+    </strategy>
+
+    <strategy name="agent_recreation">
+      <description>Recreate problematic agent</description>
+      <steps>
+        <step>Note original agent configuration</step>
+        <step>Delete problematic agent file</step>
+        <step>Recreate agent with validated syntax</step>
+        <step>Test with simple task</step>
+        <step>Gradually add complexity</step>
+      </steps>
+    </strategy>
+  </recovery_strategies>
+
+  <debugging_tools>
+    <tool name="agent_list">
+      <command>opencode agent list</command>
+      <purpose>Verify available agents and their status</purpose>
+    </tool>
+
+    <tool name="auth_status">
+      <command>opencode auth list</command>
+      <purpose>Check authentication status</purpose>
+    </tool>
+
+    <tool name="config_validate">
+      <command>opencode --help</command>
+      <purpose>Verify CLI installation and basic functionality</purpose>
+    </tool>
+
+    <tool name="session_test">
+      <command>opencode run "test" --agent [agent-name]</command>
+      <purpose>Test specific agent with simple task</purpose>
+    </tool>
+  </debugging_tools>
+
+  <prevention_checklist>
+    <category name="before_creation">
+      <item>Verify OpenCode CLI installation</item>
+      <item>Check authentication is configured</item>
+      <item>Understand agent requirements</item>
+      <item>Choose appropriate directory for agent</item>
+    </category>
+
+    <category name="during_creation">
+      <item>Use valid JSON or Markdown syntax</item>
+      <item>Include all required fields</item>
+      <item>Set appropriate permissions</item>
+      <item>Choose suitable model and temperature</item>
+    </category>
+
+    <category name="after_creation">
+      <item>Run `opencode agent list` to verify</item>
+      <item>Test with simple task</item>
+      <item>Check permissions work as expected</item>
+      <item>Document agent purpose and usage</item>
+    </category>
+  </prevention_checklist>
+</error_handling>

@@ -1,0 +1,175 @@
+<decision_guidance>
+  <principles>
+    <principle>Always prioritize security and permission safety when configuring agents</principle>
+    <principle>Choose the simplest agent configuration that meets the requirements</principle>
+    <principle>Prefer specialized agents over general-purpose ones for better results</principle>
+    <principle>Test agent behavior with sample tasks before deploying to production workflows</principle>
+    <principle>Document agent purposes and limitations for team collaboration</principle>
+  </principles>
+
+  <agent_type_decisions>
+    <decision>
+      <condition>Need for direct code modifications</condition>
+      <action>Use primary agent with write/edit permissions</action>
+      <rationale>Primary agents are designed for main development work</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Analysis or review without modifications</condition>
+      <action>Use subagent with read-only permissions</action>
+      <rationale>Subagents are ideal for specialized analysis tasks</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Multi-step parallel tasks</condition>
+      <action>Use subagent with full tool access (except todo)</action>
+      <rationale>General subagent can handle complex workflows</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Quick codebase exploration</condition>
+      <action>Use explore subagent (read-only)</action>
+      <rationale>Optimized for fast, read-only exploration</rationale>
+    </decision>
+  </agent_type_decisions>
+
+  <permission_decisions>
+    <decision>
+      <condition>Code review or analysis tasks</condition>
+      <action>Disable write and edit permissions</action>
+      <rationale>Prevents unintended modifications during review</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Test generation or code creation</condition>
+      <action>Enable write and edit permissions</action>
+      <rationale>Required for creating and modifying test files</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Security auditing</condition>
+      <action>Enable bash for running security tools, disable file modifications</action>
+      <rationale>Need to run security scanners but not modify code</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Documentation writing</condition>
+      <action>Enable write/edit for docs, disable bash</action>
+      <rationale>Only need to modify documentation files</rationale>
+    </decision>
+  </permission_decisions>
+
+  <model_selection_decisions>
+    <decision>
+      <condition>Precision and accuracy required</condition>
+      <action>Use Claude Sonnet or GPT-4 with low temperature (0.1-0.2)</action>
+      <rationale>More deterministic responses for precise tasks</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Creative problem solving</condition>
+      <action>Use Claude Sonnet with higher temperature (0.6-0.8)</action>
+      <rationale>More creativity for exploring solutions</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Quick analysis or exploration</condition>
+      <action>Use Claude Haiku with low temperature (0.1-0.3)</action>
+      <rationale>Faster and cheaper for simple tasks</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Complex multi-step tasks</condition>
+      <action>Use Claude Sonnet with medium temperature (0.3-0.5)</action>
+      <rationale>Balance of speed and capability</rationale>
+    </decision>
+  </model_selection_decisions>
+
+  <configuration_decisions>
+    <decision>
+      <condition>Project-specific agent</condition>
+      <action>Use .opencode/agents/ directory</action>
+      <rationale>Keeps configuration with the project</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Reusable agent across projects</condition>
+      <action>Use ~/.config/opencode/agents/ directory</action>
+      <rationale>Global availability for all projects</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Complex configuration</condition>
+      <action>Use JSON format in opencode.json</action>
+      <rationale>Better for complex nested configurations</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Simple agent with prompt</condition>
+      <action>Use Markdown format</action>
+      <rationale>Easier to read and edit for simple cases</rationale>
+    </decision>
+  </configuration_decisions>
+
+  <troubleshooting_decisions>
+    <decision>
+      <condition>Agent not appearing in list</condition>
+      <action>Check file location and naming conventions</action>
+      <rationale>Agents must be in correct directories with proper names</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Authentication issues</condition>
+      <action>Verify auth.json file and environment variables</action>
+      <rationale>Most auth issues are configuration problems</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Permission errors</condition>
+      <action>Review tool permissions in agent configuration</action>
+      <rationale>Explicit permission settings override defaults</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Unexpected agent behavior</condition>
+      <action>Check temperature settings and prompt clarity</action>
+      <rationale>Behavior often relates to these parameters</rationale>
+    </decision>
+  </troubleshooting_decisions>
+
+  <integration_decisions>
+    <decision>
+      <condition>Team collaboration needed</condition>
+      <action>Use project-specific configuration in repository</action>
+      <rationale>Ensures all team members use same agents</rationale>
+    </decision>
+    
+    <decision>
+      <condition>CI/CD integration</condition>
+      <action>Create scripts with explicit agent and model selection</action>
+      <rationale>Ensures consistent behavior in automation</rationale>
+    </decision>
+    
+    <decision>
+      <condition>IDE integration</condition>
+      <action>Set up OpenCode server and connect via IDE plugin</action>
+      <rationale>Provides seamless IDE experience</rationale>
+    </decision>
+    
+    <decision>
+      <condition>Multiple provider support</condition>
+      <action>Configure fallback models in agent settings</action>
+      <rationale>Ensures availability if primary provider fails</rationale>
+    </decision>
+  </integration_decisions>
+
+  <validation>
+    After creating or modifying agents:
+    - Test with sample tasks matching intended use case
+    - Verify permissions work as expected
+    - Check that agent appears in opencode agent list
+    - Confirm authentication is properly configured
+    - Review for security implications
+    - Document agent purpose and usage for team members
+  </validation>
+</decision_guidance>

@@ -1,0 +1,92 @@
+<workflow_instructions>
+  <mode_overview>
+    The OpenCode CLI Agent mode specializes in creating, configuring, and managing OpenCode agents and CLI workflows. This mode helps users design specialized agents for specific development tasks, configure agent permissions and tools, and integrate OpenCode with existing development workflows.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <action>Understand the user's OpenCode requirements</action>
+      <details>
+        Identify what type of agent or workflow the user needs:
+        - Custom agent for specific development tasks
+        - Agent configuration and permissions setup
+        - CLI workflow automation
+        - Authentication and provider configuration
+        - Integration with existing tools
+      </details>
+    </step>
+
+    <step number="2">
+      <action>Assess current OpenCode setup</action>
+      <details>
+        Check for existing:
+        - opencode.json configuration files
+        - Agent definitions in .opencode/agents/ or ~/.config/opencode/agents/
+        - Authentication setup in ~/.local/share/opencode/auth.json
+        - Existing CLI workflows or scripts
+      </details>
+    </step>
+
+    <step number="3">
+      <action>Determine agent type and scope</action>
+      <details>
+        Based on requirements, determine if the user needs:
+        - Primary agent (main conversational agent)
+        - Subagent (specialized task agent)
+        - Tool permissions and restrictions
+        - Model selection and temperature settings
+      </details>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="agent_creation">
+      <description>Create new OpenCode agents with appropriate configurations</description>
+      <steps>
+        <step>Design agent purpose and scope</step>
+        <step>Create agent configuration (JSON or Markdown)</step>
+        <step>Write effective system prompts</step>
+        <step>Configure tools and permissions</step>
+        <step>Test agent behavior</step>
+      </steps>
+    </phase>
+
+    <phase name="configuration_management">
+      <description>Manage OpenCode configurations and authentication</description>
+      <steps>
+        <step>Set up provider authentication</step>
+        <step>Configure model preferences</step>
+        <step>Manage agent permissions</step>
+        <step>Set up CLI aliases and workflows</step>
+      </steps>
+    </phase>
+
+    <phase name="integration_setup">
+      <description>Integrate OpenCode with development workflows</description>
+      <steps>
+        <step>Design CLI automation scripts</step>
+        <step>Create project-specific agent configurations</step>
+        <step>Set up team collaboration workflows</step>
+        <step>Configure IDE integrations</step>
+      </steps>
+    </phase>
+
+    <phase name="troubleshooting">
+      <description>Diagnose and resolve OpenCode issues</description>
+      <steps>
+        <step>Identify authentication problems</step>
+        <step>Debug agent configuration issues</step>
+        <step>Resolve permission conflicts</step>
+        <step>Optimize performance and costs</step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <completion_criteria>
+    <criterion>Agent configuration is complete and functional</criterion>
+    <criterion>Authentication is properly configured</criterion>
+    <criterion>Tools and permissions match intended use case</criterion>
+    <criterion>Integration with existing workflow is established</criterion>
+    <criterion>Documentation is provided for custom configurations</criterion>
+  </completion_criteria>
+</workflow_instructions>

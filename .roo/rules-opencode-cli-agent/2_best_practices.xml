@@ -1,0 +1,134 @@
+<best_practices>
+  <general_principles>
+    <principle priority="high">
+      <name>Principle of Least Privilege</name>
+      <description>Agents should only have the minimum permissions necessary to complete their intended tasks</description>
+      <rationale>Prevents unintended modifications and security risks</rationale>
+      <example>
+        <scenario>Creating a code review agent</scenario>
+        <good>Set write/edit tools to false, only allow read access</good>
+        <bad>Grant full bash and file modification permissions</bad>
+      </example>
+    </principle>
+
+    <principle priority="high">
+      <name>Clear Purpose Definition</name>
+      <description>Each agent should have a single, well-defined purpose</description>
+      <rationale>Ensures agents remain focused and effective</rationale>
+      <example>
+        <scenario>Designing agents</scenario>
+        <good>Create separate agents for testing, documentation, and code review</good>
+        <bad>Create one "do-everything" agent with vague instructions</bad>
+      </example>
+    </principle>
+
+    <principle priority="medium">
+      <name>Temperature Tuning</name>
+      <description>Adjust temperature based on task requirements</description>
+      <rationale>Optimizes for task-appropriate creativity vs. determinism</rationale>
+      <example>
+        <scenario>Setting agent temperature</scenario>
+        <good>Use 0.1-0.2 for code analysis, 0.3-0.5 for development, 0.6-0.8 for creative tasks</good>
+        <bad>Use default temperature for all agents regardless of purpose</bad>
+      </example>
+    </principle>
+  </general_principles>
+
+  <agent_configuration>
+    <convention category="naming">
+      <rule>Use descriptive, kebab-case names for agents</rule>
+      <examples>
+        <good>code-reviewer, test-generator, doc-writer</good>
+        <bad>agent1, helper, do-stuff</bad>
+      </examples>
+    </convention>
+
+    <convention category="description">
+      <rule>Provide clear, actionable descriptions that explain when to use the agent</rule>
+      <template>
+        "Reviews [what] for [purpose] with [focus areas]"
+      </template>
+    </convention>
+
+    <convention category="permissions">
+      <rule>Explicitly define tool permissions rather than relying on defaults</rule>
+      <template>
+        tools: {
+          write: [true/false],
+          edit: [true/false],
+          bash: [true/false],
+          read: [true/false]
+        }
+      </template>
+    </convention>
+  </agent_configuration>
+
+  <prompt_engineering>
+    <guideline category="structure">
+      <rule>Structure prompts with clear sections</rule>
+      <template>
+        ## Role
+        [Define the agent's role and expertise]
+
+        ## Focus Areas
+        [List specific areas to focus on]
+
+        ## Constraints
+        [List what the agent should NOT do]
+
+        ## Output Format
+        [Specify expected output format]
+      </template>
+    </guideline>
+
+    <guideline category="constraints">
+      <rule>Clearly define boundaries and limitations</rule>
+      <examples>
+        <good>"Do not make direct code changes, only provide suggestions"</good>
+        <good>"Focus on security implications and performance impact"</good>
+        <bad>"Be helpful" (too vague)</bad>
+      </examples>
+    </guideline>
+  </prompt_engineering>
+
+  <common_pitfalls>
+    <pitfall>
+      <description>Over-permissioned agents</description>
+      <why_problematic>Increases risk of unintended changes and security vulnerabilities</why_problematic>
+      <correct_approach>Start with minimal permissions and add only what's necessary</correct_approach>
+    </pitfall>
+
+    <pitfall>
+      <description>Vague agent descriptions</description>
+      <why_problematic>Makes it difficult to choose the right agent for a task</why_problematic>
+      <correct_approach>Include specific use cases and focus areas in descriptions</correct_approach>
+    </pitfall>
+
+    <pitfall>
+      <description>Ignoring temperature settings</description>
+      <why_problematic>Results in suboptimal agent behavior for specific tasks</why_problematic>
+      <correct_approach>Adjust temperature based on whether tasks require creativity or precision</correct_approach>
+    </pitfall>
+  </common_pitfalls>
+
+  <quality_checklist>
+    <category name="before_creating">
+      <item>Define clear purpose and scope for the agent</item>
+      <item>Identify specific tasks the agent will perform</item>
+      <item>Determine minimum required permissions</item>
+      <item>Consider security implications</item>
+    </category>
+    <category name="during_configuration">
+      <item>Use descriptive, kebab-case agent names</item>
+      <item>Write clear, actionable descriptions</item>
+      <item>Set appropriate temperature for the task type</item>
+      <item>Explicitly configure all tool permissions</item>
+    </category>
+    <category name="after_creation">
+      <item>Test agent with sample tasks</item>
+      <item>Verify permissions work as expected</item>
+      <item>Document agent purpose and usage</item>
+      <item>Review for security concerns</item>
+    </category>
+  </quality_checklist>
+</best_practices>
