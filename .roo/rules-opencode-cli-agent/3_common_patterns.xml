@@ -1,0 +1,214 @@
+<common_patterns>
+  <agent_patterns>
+    <pattern name="code_reviewer">
+      <description>Agent for reviewing code quality and best practices</description>
+      <configuration>
+        <mode>subagent</mode>
+        <temperature>0.1</temperature>
+        <tools>
+          <write>false</write>
+          <edit>false</edit>
+          <bash>false</bash>
+          <read>true</read>
+        </tools>
+      </configuration>
+      <prompt_template>
+        You are a code reviewer focused on:
+        - Security vulnerabilities and best practices
+        - Performance implications and optimizations
+        - Code maintainability and readability
+        - Adherence to project conventions
+        
+        Provide constructive feedback without making direct changes.
+        Highlight specific issues and suggest improvements.
+      </prompt_template>
+    </pattern>
+
+    <pattern name="test_generator">
+      <description>Agent for generating comprehensive test suites</description>
+      <configuration>
+        <mode>subagent</mode>
+        <temperature>0.3</temperature>
+        <tools>
+          <write>true</write>
+          <edit>true</edit>
+          <bash>true</bash>
+          <read>true</read>
+        </tools>
+      </configuration>
+      <prompt_template>
+        You are a test generation specialist. Create comprehensive tests that:
+        - Cover edge cases and error conditions
+        - Follow testing best practices for the language/framework
+        - Include both unit and integration tests where appropriate
+        - Are maintainable and well-documented
+        
+        Focus on test coverage and reliability.
+      </prompt_template>
+    </pattern>
+
+    <pattern name="documentation_writer">
+      <description>Agent for creating and updating documentation</description>
+      <configuration>
+        <mode>subagent</mode>
+        <temperature>0.4</temperature>
+        <tools>
+          <write>true</write>
+          <edit>true</edit>
+          <bash>false</bash>
+          <read>true</read>
+        </tools>
+      </configuration>
+      <prompt_template>
+        You are a technical writer. Create documentation that is:
+        - Clear, concise, and easy to understand
+        - Well-structured with proper formatting
+        - Comprehensive yet scannable
+        - Targeted at the appropriate audience
+        
+        Include examples and use cases where helpful.
+      </prompt_template>
+    </pattern>
+
+    <pattern name="security_auditor">
+      <description>Agent for security analysis and vulnerability assessment</description>
+      <configuration>
+        <mode>subagent</mode>
+        <temperature>0.1</temperature>
+        <tools>
+          <write>false</write>
+          <edit>false</edit>
+          <bash>true</bash>
+          <read>true</read>
+        </tools>
+      </configuration>
+      <prompt_template>
+        You are a security specialist. Analyze code for:
+        - Common vulnerabilities (OWASP Top 10)
+        - Input validation and sanitization
+        - Authentication and authorization issues
+        - Data exposure and privacy concerns
+        - Dependency security
+        
+        Provide detailed findings and remediation recommendations.
+      </prompt_template>
+    </pattern>
+  </agent_patterns>
+
+  <configuration_patterns>
+    <pattern name="project_specific_config">
+      <description>Project-specific OpenCode configuration</description>
+      <file_structure>
+        <file>.opencode/agents/custom-agent.md</file>
+        <file>opencode.json</file>
+        <file>.opencode/prompts/</file>
+      </file_structure>
+      <example>
+        {
+          "$schema": "https://opencode.ai/config.json",
+          "agent": {
+            "custom-agent": {
+              "description": "Specialized for [project] development",
+              "mode": "primary",
+              "model": "anthropic/claude-sonnet-4-20250514",
+              "prompt": "{file:./.opencode/prompts/custom-agent.txt}",
+              "tools": {
+                "write": true,
+                "edit": true,
+                "bash": true
+              }
+            }
+          }
+        }
+      </example>
+    </pattern>
+
+    <pattern name="global_agent_config">
+      <description>Global agent configuration for reuse across projects</description>
+      <location>~/.config/opencode/agents/</location>
+      <example>
+        ---
+        description: Reviews code for best practices and potential issues
+        mode: subagent
+        model: anthropic/claude-sonnet-4-20250514
+        temperature: 0.1
+        tools:
+          write: false
+          edit: false
+          bash: false
+        ---
+        
+        You are in code review mode. Focus on:
+        - Code quality and best practices
+        - Potential bugs and edge cases
+        - Performance implications
+        - Security considerations
+        
+        Provide constructive feedback without making direct changes.
+      </example>
+    </pattern>
+  </configuration_patterns>
+
+  <workflow_patterns>
+    <pattern name="agent_creation_workflow">
+      <description>Standard workflow for creating new agents</description>
+      <steps>
+        <step>Define agent purpose and scope</step>
+        <step>Choose agent type (primary/subagent)</step>
+        <step>Set permissions and tools</step>
+        <step>Write system prompt</step>
+        <step>Configure model and temperature</step>
+        <step>Test with sample tasks</step>
+        <step>Refine based on results</step>
+      </steps>
+    </pattern>
+
+    <pattern name="authentication_setup">
+      <description>Setting up OpenCode authentication</description>
+      <commands>
+        <command>opencode auth login</command>
+        <command>opencode auth list</command>
+      </commands>
+      <notes>
+        Authentication is stored in ~/.local/share/opencode/auth.json
+        Environment variables and .env files are also supported
+      </notes>
+    </pattern>
+
+    <pattern name="cli_automation">
+      <description>Automating OpenCode CLI workflows</description>
+      <examples>
+        <example name="Batch processing">
+          <command>opencode run "Analyze all .ts files for security issues" --agent security-auditor</command>
+        </example>
+        <example name="Session management">
+          <command>opencode --session project-analysis --agent code-reviewer</command>
+        </example>
+      </examples>
+    </pattern>
+  </workflow_patterns>
+
+  <integration_patterns>
+    <pattern name="ide_integration">
+      <description>Integrating OpenCode with IDE workflows</description>
+      <setup>
+        <item>Configure OpenCode server with opencode serve</item>
+        <item>Connect IDE to OpenCode backend</item>
+        <item>Set up project-specific agents</item>
+        <item>Configure keybindings for agent switching</item>
+      </setup>
+    </pattern>
+
+    <pattern name="ci_cd_integration">
+      <description>Using OpenCode agents in CI/CD pipelines</description>
+      <example>
+        # GitHub Actions example
+        - name: Code Review with OpenCode
+          run: |
+            opencode run "Review PR changes for security and quality" \
+              --agent security-auditor \
+              --output pr-review.md
+      </example>
+    </pattern>
+  </integration_patterns>
+</common_patterns>

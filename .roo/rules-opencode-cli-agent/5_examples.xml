@@ -1,0 +1,356 @@
+<complete_examples>
+  <example name="create_security_auditor_agent">
+    <scenario>
+      User wants to create a specialized agent for security auditing that can run security tools but not modify code
+    </scenario>
+
+    <user_request>
+      I need to create a security auditor agent for my team. It should be able to run security scanning tools but shouldn't be able to modify any code directly.
+    </user_request>
+
+    <workflow>
+      <step number="1">
+        <description>Determine agent requirements</description>
+        <approach>
+          Analyze the need for a security-focused agent that can:
+          - Run security scanning tools (requires bash)
+          - Read code for analysis (requires read)
+          - Not modify code (write/edit disabled)
+          - Provide detailed security reports
+        </approach>
+        <expected_outcome>Clear understanding of agent purpose and required permissions</expected_outcome>
+      </step>
+
+      <step number="2">
+        <description>Choose agent type and configuration format</description>
+        <approach>
+          Select subagent type since it's a specialized task, and use Markdown format for simplicity
+        </approach>
+        <analysis>Subagents are ideal for specialized analysis tasks, and Markdown format is easier to edit</analysis>
+      </step>
+
+      <step number="3">
+        <description>Create the agent configuration</description>
+        <approach>
+          Create ~/.config/opencode/agents/security-auditor.md with appropriate settings
+        </approach>
+        <implementation>
+          ---
+          description: Security auditor for vulnerability assessment and security analysis
+          mode: subagent
+          model: anthropic/claude-sonnet-4-20250514
+          temperature: 0.1
+          tools:
+            write: false
+            edit: false
+            bash: true
+            read: true
+          maxSteps: 10
+          ---
+          
+          You are a security specialist. Analyze code for:
+          - Common vulnerabilities (OWASP Top 10)
+          - Input validation and sanitization
+          - Authentication and authorization issues
+          - Data exposure and privacy concerns
+          - Dependency security
+          - Insecure configurations
+          
+          Use available security tools to scan code and dependencies.
+          Provide detailed findings with:
+          - Severity levels (Critical, High, Medium, Low)
+          - Specific locations of vulnerabilities
+          - Remediation recommendations
+          - References to security best practices
+          
+          Do not modify code directly. Focus on analysis and reporting.
+        </implementation>
+      </step>
+
+      <step number="4">
+        <description>Test the agent</description>
+        <approach>
+          Test with a sample security analysis task
+        </approach>
+        <implementation>
+          opencode run "Analyze src/auth.ts for security vulnerabilities" --agent security-auditor
+        </implementation>
+      </step>
+
+      <step number="5">
+        <description>Verify agent appears in list</description>
+        <approach>
+          Check that the new agent is available
+        </approach>
+        <implementation>
+          opencode agent list
+        </implementation>
+      </step>
+    </workflow>
+
+    <completion>
+      Created a security auditor subagent with read and bash permissions but no write/edit capabilities. The agent uses low temperature (0.1) for consistent analysis and is limited to 10 steps to control costs. It can now be invoked with @security-auditor or used directly with the --agent flag.
+    </completion>
+
+    <key_takeaways>
+      <takeaway>Subagents are ideal for specialized analysis tasks</takeaway>
+      <takeaway>Disable write/edit permissions for analysis-only agents</takeaway>
+      <takeaway>Use low temperature for consistent security analysis</takeaway>
+      <takeaway>Set maxSteps to control costs for complex analysis</takeaway>
+    </key_takeaways>
+  </example>
+
+  <example name="setup_team_workflow">
+    <scenario>
+      User wants to set up OpenCode for a team with shared agents and authentication
+    </scenario>
+
+    <user_request>
+      I need to set up OpenCode for my development team. We want shared agents for code review and testing, and everyone should use the same model configuration.
+    </user_request>
+
+    <workflow>
+      <step number="1">
+        <description>Plan team configuration structure</description>
+        <approach>
+          Determine what needs to be shared:
+          - Agent configurations
+          - Model preferences
+          - Authentication setup
+          - Project-specific settings
+        </approach>
+        <expected_outcome>Clear plan for team-wide OpenCode configuration</expected_outcome>
+      </step>
+
+      <step number="2">
+        <description>Create shared project configuration</description>
+        <approach>
+          Create opencode.json in the project root with team agents
+        </approach>
+        <implementation>
+          {
+            "$schema": "https://opencode.ai/config.json",
+            "model": "anthropic/claude-sonnet-4-20250514",
+            "agent": {
+              "code-reviewer": {
+                "description": "Reviews code for team standards and best practices",
+                "mode": "subagent",
+                "temperature": 0.2,
+                "tools": {
+                  "write": false,
+                  "edit": false,
+                  "bash": false,
+                  "read": true
+                },
+                "prompt": "{file:./.opencode/prompts/code-reviewer.txt}"
+              },
+              "test-generator": {
+                "description": "Creates comprehensive test suites",
+                "mode": "subagent",
+                "temperature": 0.3,
+                "tools": {
+                  "write": true,
+                  "edit": true,
+                  "bash": true,
+                  "read": true
+                },
+                "prompt": "{file:./.opencode/prompts/test-generator.txt}"
+              }
+            }
+          }
+        </implementation>
+      </step>
+
+      <step number="3">
+        <description>Create prompt files</description>
+        <approach>
+          Create detailed prompt files for each agent
+        </approach>
+        <implementation>
+          Create .opencode/prompts/code-reviewer.txt:
+          You are a code reviewer for this team. Focus on:
+          - Adherence to team coding standards
+          - Code quality and maintainability
+          - Performance implications
+          - Security considerations
+          - Test coverage
+          
+          Provide constructive feedback with specific examples.
+          
+          Create .opencode/prompts/test-generator.txt:
+          You are a test generator. Create tests that:
+          - Cover all critical paths and edge cases
+          - Follow our testing framework conventions
+          - Include both unit and integration tests
+          - Are maintainable and well-documented
+          
+          Ensure high test coverage and reliability.
+        </implementation>
+      </step>
+
+      <step number="4">
+        <description>Set up authentication guide</description>
+        <approach>
+          Create documentation for team authentication setup
+        </approach>
+        <implementation>
+          Create .opencode/SETUP.md with authentication instructions
+        </implementation>
+      </step>
+
+      <step number="5">
+        <description>Create team usage documentation</description>
+        <approach>
+          Document how to use the shared agents
+        </approach>
+        <implementation>
+          Create .opencode/USAGE.md with examples:
+          - Using @code-reviewer during PR reviews
+          - Generating tests with @test-generator
+          - Switching between agents with Tab key
+        </implementation>
+      </step>
+    </workflow>
+
+    <completion>
+      Set up a complete team OpenCode configuration with shared agents for code review and testing. Created project-specific opencode.json with agent definitions, prompt files with detailed instructions, and documentation for team onboarding. Team members can now use @code-reviewer and @test-generator consistently.
+    </completion>
+
+    <key_takeaways>
+      <takeaway>Use project-specific configuration for team consistency</takeaway>
+      <takeaway>Separate prompt files make agents easier to maintain</takeaway>
+      <takeaway>Documentation is crucial for team adoption</takeaway>
+      <takeaway>Set default model in project config for consistency</takeaway>
+    </key_takeaways>
+  </example>
+
+  <example name="create_cli_workflow">
+    <scenario>
+      User wants to automate code quality checks using OpenCode CLI
+    </scenario>
+
+    <user_request>
+      I want to create a CLI workflow that runs security analysis and code review on all changed files before each commit.
+    </user_request>
+
+    <workflow>
+      <step number="1">
+        <description>Identify requirements for automated workflow</description>
+        <approach>
+          Determine what the workflow needs to do:
+          - Identify changed files
+          - Run security analysis on changes
+          - Perform code review
+          - Generate reports
+          - Integrate with git pre-commit hook
+        </approach>
+        <expected_outcome>Clear understanding of workflow requirements</expected_outcome>
+      </step>
+
+      <step number="2">
+        <description>Create script for file analysis</description>
+        <approach>
+          Create a shell script that identifies changed files and runs OpenCode analysis
+        </approach>
+        <implementation>
+          Create .opencode/scripts/pre-commit-check.sh:
+          
+          #!/bin/bash
+          # Pre-commit code quality check
+          
+          echo "Running OpenCode pre-commit checks..."
+          
+          # Get changed files
+          CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|js|tsx|jsx)$')
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No relevant files changed"
+            exit 0
+          fi
+          
+          # Run security analysis
+          echo "Running security analysis..."
+          opencode run "Analyze these files for security vulnerabilities: $CHANGED_FILES" \
+            --agent security-auditor \
+            --output .opencode/reports/security-report.md
+          
+          # Run code review
+          echo "Running code review..."
+          opencode run "Review these files for code quality: $CHANGED_FILES" \
+            --agent code-reviewer \
+            --output .opencode/reports/code-review.md
+          
+          # Check for critical issues
+          if grep -q "Critical" .opencode/reports/security-report.md; then
+            echo "❌ Critical security issues found. Commit blocked."
+            exit 1
+          fi
+          
+          echo "✅ Pre-commit checks passed"
+        </implementation>
+      </step>
+
+      <step number="3">
+        <description>Create git pre-commit hook</description>
+        <approach>
+          Set up git hook to run the script automatically
+        </approach>
+        <implementation>
+          Create .git/hooks/pre-commit:
+          
+          #!/bin/bash
+          ./.opencode/scripts/pre-commit-check.sh
+        </implementation>
+      </step>
+
+      <step number="4">
+        <description>Create Makefile for easy execution</description>
+        <approach>
+          Create Makefile with convenient targets
+        </approach>
+        <implementation>
+          Create Makefile:
+          
+          .PHONY: check-security check-review pre-commit-check
+          
+          check-security:
+            opencode run "Analyze current branch for security issues" --agent security-auditor
+          
+          check-review:
+            opencode run "Review current branch for code quality" --agent code-reviewer
+          
+          pre-commit-check:
+            ./.opencode/scripts/pre-commit-check.sh
+          
+          setup-hooks:
+            chmod +x .opencode/scripts/pre-commit-check.sh
+            cp .git/hooks/pre-commit.sample .git/hooks/pre-commit
+            echo '#!/bin/bash' > .git/hooks/pre-commit
+            echo './.opencode/scripts/pre-commit-check.sh' >> .git/hooks/pre-commit
+            chmod +x .git/hooks/pre-commit
+        </implementation>
+      </step>
+
+      <step number="5">
+        <description>Test the workflow</description>
+        <approach>
+          Test the workflow with sample changes
+        </approach>
+        <implementation>
+          make pre-commit-check
+        </implementation>
+      </step>
+    </workflow>
+
+    <completion>
+      Created an automated CLI workflow that runs security analysis and code review on changed files before commits. The workflow includes a shell script to identify changed files, run OpenCode agents, generate reports, and block commits with critical issues. Added a Makefile for easy execution and setup instructions.
+    </completion>
+
+    <key_takeaways>
+      <takeaway>OpenCode CLI can be automated through shell scripts</takeaway>
+      <takeaway>Git hooks integrate OpenCode into development workflow</takeaway>
+      <takeaway>Output to files enables integration with other tools</takeaway>
+      <takeaway>Makefiles provide convenient interface for common tasks</takeaway>
+    </key_takeaways>
+  </example>
+</complete_examples>
