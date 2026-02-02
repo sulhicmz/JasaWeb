@@ -344,7 +344,10 @@
         "systematic-debugging",
         "git-commit-message",
         "autonomous-agent",
-        "memory-systems"
+        "memory-systems",
+        "sulhi-sabil-github-workflow-automation",
+        "sulhi-sabil-planning",
+        "sulhi-sabil-skill-creator"
       ]
     },
     "cmz-enhanced": {
@@ -369,7 +372,10 @@
         "systematic-debugging",
         "git-commit-message",
         "autonomous-agent",
-        "memory-systems"
+        "memory-systems",
+        "sulhi-sabil-github-workflow-automation",
+        "sulhi-sabil-planning",
+        "sulhi-sabil-skill-creator"
       ]
     },
     "jasaweb-architect": {
