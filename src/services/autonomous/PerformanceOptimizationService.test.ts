@@ -153,9 +153,10 @@ describe('PerformanceOptimizationService', () => {
   describe('Optimization Cycle', () => {
     beforeEach(() => {
       (performanceMonitor.getLatestMetrics as any).mockReturnValue({
-        database: { queryTime: 25, indexUsage: 90, slowQueries: 2 },
-        cache: { hitRate: 0.9, memoryUsage: 60, evictionRate: 0.05 },
-        api: { averageLatency: 60, p95Latency: 100, errorRate: 0.005, throughput: 150 },
+        bundle: { size: 189.71, gzippedSize: 60.75, chunkCount: 2, largestChunk: 120, compressionRatio: 0.32, score: 85 },
+        database: { queryTime: 25, indexUsage: 90, slowQueries: 2, score: 95 },
+        cache: { hitRate: 0.9, memoryUsage: 60, evictionRate: 0.05, score: 92 },
+        api: { averageLatency: 60, p95Latency: 100, p99Latency: 120, errorRate: 0.005, throughput: 150, score: 88 },
         timestamp: new Date().toISOString()
       });
 
