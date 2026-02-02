@@ -1,1 +1,83 @@
-{"$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/main/dist/oh-my-opencode.schema.json", "google_auth": false, "agents": {"frontend-ui-ux-engineer": {"model": "iflow/qwen3-vl-plus", "description": "Frontend development specialist for JasaWeb UI components with vision capabilities"}, "document-writer": {"model": "iflow/qwen3-max", "description": "Documentation specialist for JasaWeb project docs"}, "multimodal-looker": {"model": "iflow/qwen3-vl-plus", "description": "Visual analysis specialist for JasaWeb design reviews"}, "oracle": {"model": "iflow/qwen3-235b-a22b-thinking-2507", "description": "Architecture and debugging specialist for JasaWeb with high reasoning"}, "librarian": {"model": "iflow/qwen3-max", "description": "Codebase exploration and documentation specialist"}, "explore": {"model": "iflow/qwen3-32b", "description": "Fast codebase search and analysis"}, "autonomous-agent": {"model": "iflow/glm-4.6:max", "description": "Self-healing, self-learning, self-evolving agent for continuous improvement with maximum thinking"}, "skill-builder": {"model": "iflow/glm-4.6:medium", "description": "Skill development specialist for OpenCode skill creation with enhanced thinking"}, "backend-models": {"model": "iflow/qwen3-coder-plus", "description": "Database modeling and architecture specialist"}, "systematic-debugging": {"model": "iflow/deepseek-r1:max", "description": "Systematic debugging and problem resolution specialist with maximum reasoning"}, "moai-opencode": {"model": "iflow/qwen3-max", "description": "OpenCode configuration and integration specialist"}, "memory-systems": {"model": "iflow/glm-4.6:max", "description": "Memory architecture and temporal knowledge systems specialist with maximum thinking"}}, "background_tasks": {"concurrency_limits": {"opencode": 5, "iflow": 3, "google": 1}}, "categories": {"visual": ["frontend-ui-ux-engineer", "multimodal-looker"], "business-logic": ["jasaweb-developer", "jasaweb-architect"], "security": ["jasaweb-security"], "testing": ["jasaweb-tester"], "autonomous": ["autonomous-agent"], "skill-development": ["skill-builder"], "database": ["backend-models"], "debugging": ["systematic-debugging"], "infrastructure": ["moai-opencode"], "memory": ["memory-systems"]}, "disabled_hooks": [], "sisyphus": {"prometheus": {"model": "iflow/qwen3-235b-a22b-thinking-2507"}, "metis": {"model": "iflow/glm-4.6:max"}}, "context_injection": {"files": ["AGENTS.md", "README.md"], "conditional_rules": {"src/": "Follow JasaWeb architectural patterns and maintain 99.8/100 score"}}, "productivity": {"todo_enforcer": true, "comment_checker": true, "ralph_loop": true, "ultrawork": true, "autonomous_improvement": true}, "self_healing": {"enabled": true, "error_recovery": true, "performance_monitoring": true, "automatic_optimization": true}, "self_learning": {"enabled": true, "interaction_analytics": true, "pattern_discovery": true, "continuous_improvement": true}, "self_evolving": {"enabled": true, "behavior_optimization": true, "strategy_adaptation": true, "goal_refinement": true}}
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/main/dist/oh-my-opencode.schema.json",
+  "google_auth": false,
+  "agents": {
+    "frontend-ui-ux-engineer": {
+      "model": "opencode/glm-4.7-free",
+      "description": "Frontend development specialist for JasaWeb UI components"
+    },
+    "document-writer": {
+      "model": "opencode/minimax-m2.1-free",
+      "description": "Documentation specialist for JasaWeb project docs"
+    },
+    "multimodal-looker": {
+      "model": "opencode/glm-4.7-free",
+      "description": "Visual analysis specialist for JasaWeb design reviews"
+    },
+    "oracle": {
+      "model": "opencode/kimi-k2.5-free",
+      "description": "Architecture and debugging specialist for JasaWeb with high reasoning"
+    },
+    "librarian": {
+      "model": "opencode/minimax-m2.1-free",
+      "description": "Codebase exploration and documentation specialist"
+    },
+    "explore": {
+      "model": "opencode/glm-4.7-free",
+      "description": "Fast codebase search and analysis"
+    },
+    "autonomous-agent": {
+      "model": "opencode/kimi-k2.5-free",
+      "description": "Self-healing, self-learning, self-evolving agent for continuous improvement"
+    },
+    "skill-builder": {
+      "model": "opencode/glm-4.7-free",
+      "description": "Skill development specialist for OpenCode skill creation"
+    },
+    "backend-models": {
+      "model": "opencode/minimax-m2.1-free",
+      "description": "Database modeling and architecture specialist"
+    },
+    "systematic-debugging": {
+      "model": "opencode/kimi-k2.5-free",
+      "description": "Systematic debugging and problem resolution specialist"
+    },
+    "moai-opencode": {
+      "model": "opencode/minimax-m2.1-free",
+      "description": "OpenCode configuration and integration specialist"
+    },
+    "memory-systems": {
+      "model": "opencode/kimi-k2.5-free",
+      "description": "Memory architecture and temporal knowledge systems specialist"
+    }
+  },
+  "background_tasks": {
+    "concurrency_limits": {
+      "opencode": 5,
+      "iflow": 3,
+      "google": 1
+    }
+  },
+  "categories": {
+    "visual": ["frontend-ui-ux-engineer", "multimodal-looker"],
+    "business-logic": ["jasaweb-developer", "jasaweb-architect"],
+    "security": ["jasaweb-security"],
+    "testing": ["jasaweb-tester"],
+    "documentation": ["document-writer"],
+    "research": ["librarian", "explore"],
+    "debugging": ["systematic-debugging", "oracle"],
+    "architecture": ["oracle", "jasaweb-architect"],
+    "development": ["jasaweb-developer", "skill-builder"],
+    "autonomous": ["autonomous-agent", "memory-systems"]
+  },
+  "sisyphus": {
+    "prometheus": {
+      "model": "opencode/kimi-k2.5-free",
+      "description": "Planning specialist for task decomposition and strategy"
+    },
+    "metis": {
+      "model": "opencode/glm-4.7-free",
+      "description": "Pre-planning analysis and ambiguity detection specialist"
+    }
+  }
+}
