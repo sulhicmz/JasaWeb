@@ -26,17 +26,19 @@ describe('Button Component', () => {
 
   it('should show loading spinner when loading prop is true', () => {
     render(<Button loading>Submit</Button>);
+    const button = screen.getByRole('button');
     
-    expect(screen.getByRole('button')).toContainHTML('animate-spin');
-    expect(screen.getByRole('button')).toHaveAttribute('disabled');
+    expect(button).toContainHTML('animate-spin');
+    expect(button).toHaveAttribute('disabled');
+    expect(button).toHaveAttribute('aria-busy', 'true');
   });
 
   it('should apply correct variant classes', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-blue-600');
+    expect(screen.getByRole('button')).toHaveClass('bg-primary');
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('bg-gray-600');
+    expect(screen.getByRole('button')).toHaveClass('bg-secondary');
   });
 
   it('should apply correct size classes', () => {

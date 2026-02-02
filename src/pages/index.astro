@@ -21,10 +21,10 @@ import { siteConfig, servicesArray, type ServiceConfig } from '../lib/config';
         dengan Mudah
       </h1>
       <p class="hero-description">{siteConfig.description}</p>
-      <div class="hero-actions">
+       <div class="hero-actions">
         <Button href="/register" variant="primary" size="lg">
           Mulai Sekarang
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
@@ -62,7 +62,7 @@ import { siteConfig, servicesArray, type ServiceConfig } from '../lib/config';
       <p>Daftar sekarang dan dapatkan konsultasi gratis untuk proyek website Anda.</p>
       <Button href="/register" variant="primary" size="lg">
         Daftar Gratis
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
@@ -189,6 +189,12 @@ import { siteConfig, servicesArray, type ServiceConfig } from '../lib/config';
   }
 
   /* Responsive */
+  @media (max-width: 1024px) {
+    .services-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   @media (max-width: 768px) {
     .hero-title {
       font-size: 2.25rem;
