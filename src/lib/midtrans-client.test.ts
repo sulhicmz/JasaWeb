@@ -196,18 +196,18 @@ describe('Midtrans Payment Service', () => {
             mockCoreApi.charge.mockRejectedValue(new Error('Midtrans API Error'));
 
             const service = createMidtransService(mockRuntime);
-            
+
             await expect(service.createQrisPayment(mockInvoice, mockUser))
-                .rejects.toThrow('Payment creation failed: Midtrans API Error');
+                .rejects.toThrow(/Midtrans API Error/);
         });
 
         it('should handle invalid charge response', async () => {
             mockCoreApi.charge.mockResolvedValue({ invalid_response: true });
 
             const service = createMidtransService(mockRuntime);
-            
+
             await expect(service.createQrisPayment(mockInvoice, mockUser))
-                .rejects.toThrow('Payment creation failed: Invalid payment response from Midtrans');
+                .rejects.toThrow(/Invalid payment response from Midtrans/);
         });
 
         it('should handle missing QRIS URL in response', async () => {
@@ -219,9 +219,9 @@ describe('Midtrans Payment Service', () => {
             mockCoreApi.charge.mockResolvedValue(mockResponse);
 
             const service = createMidtransService(mockRuntime);
-            
+
             await expect(service.createQrisPayment(mockInvoice, mockUser))
-                .rejects.toThrow('Payment creation failed: QRIS URL not found in payment response');
+                .rejects.toThrow(/QRIS URL not found in payment response/);
         });
     });
 
@@ -246,9 +246,9 @@ describe('Midtrans Payment Service', () => {
             mockCoreApi.transaction.status.mockRejectedValue(new Error('Status fetch failed'));
 
             const service = createMidtransService(mockRuntime);
-            
+
             await expect(service.getPaymentStatus('ORDER-123'))
-                .rejects.toThrow('Status check failed: Status fetch failed');
+                .rejects.toThrow(/Status fetch failed/);
         });
     });
 
@@ -272,9 +272,9 @@ describe('Midtrans Payment Service', () => {
             mockCoreApi.transaction.cancel.mockRejectedValue(new Error('Cancel failed'));
 
             const service = createMidtransService(mockRuntime);
-            
+
             await expect(service.cancelPayment('ORDER-123'))
-                .rejects.toThrow('Cancellation failed: Cancel failed');
+                .rejects.toThrow(/Cancel failed/);
         });
     });
 
@@ -313,9 +313,9 @@ describe('Midtrans Payment Service', () => {
             mockCoreApi.transaction.refund.mockRejectedValue(new Error('Refund failed'));
 
             const service = createMidtransService(mockRuntime);
-            
+
             await expect(service.refundPayment('ORDER-123'))
-                .rejects.toThrow('Refund failed: Refund failed');
+                .rejects.toThrow(/Refund failed/);
         });
     });
 

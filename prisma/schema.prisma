@@ -395,3 +395,31 @@ enum NotificationPriority {
   high
   critical
 }
+
+// ============================================
+// WEBHOOK QUEUE
+// ============================================
+model WebhookQueue {
+  id          String              @id @default(uuid())
+  orderId     String              @map("order_id")
+  payload     Json
+  attempts    Int                @default(0)
+  maxAttempts Int                @default(5) @map("max_attempts")
+  status      WebhookJobStatus    @default(pending)
+  lastAttempt DateTime?           @map("last_attempt")
+  nextAttempt DateTime            @default(now()) @map("next_attempt")
+  error       String?
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@map("webhook_queue")
+  @@index([status])
+  @@index([nextAttempt])
+  @@index([orderId])
+}
+
+enum WebhookJobStatus {
+  pending
+  processing
+  failed
+  completed
+}

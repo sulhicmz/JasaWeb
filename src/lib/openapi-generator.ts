@@ -800,6 +800,97 @@ const adminEndpoints: Record<string, OpenAPIV3.PathItemObject> = {
                 }
             }
         }
+    },
+
+    '/api/admin/resilience': {
+        get: {
+            tags: ['Admin Panel'],
+            summary: 'Get circuit breaker statistics',
+            description: 'Retrieve circuit breaker state and failure counts for monitoring',
+            security: [{ bearerAuth: [] }],
+            responses: {
+                '200': {
+                    description: 'Circuit breaker statistics retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    circuitBreakers: {
+                                        type: 'object',
+                                        properties: {
+                                            midtrans: {
+                                                type: 'object',
+                                                properties: {
+                                                    state: { type: 'string', enum: ['CLOSED', 'OPEN', 'HALF_OPEN'], example: 'CLOSED' },
+                                                    failureCount: { type: 'number', example: 0 }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    timestamp: { type: 'string', format: 'date-time' }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        post: {
+            tags: ['Admin Panel'],
+            summary: 'Reset circuit breaker',
+            description: 'Reset a circuit breaker to CLOSED state (admin operation)',
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                key: { type: 'string', example: 'midtrans' }
+                            },
+                            required: ['key']
+                        }
+                    }
+                }
+            },
+            responses: {
+                '200': {
+                    description: 'Circuit breaker reset successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    success: { type: 'boolean', example: true },
+                                    message: { type: 'string', example: "Circuit breaker 'midtrans' has been reset" },
+                                    key: { type: 'string', example: 'midtrans' },
+                                    state: { type: 'string', example: 'CLOSED' },
+                                    timestamp: { type: 'string', format: 'date-time' }
+                                }
+                            }
+                        }
+                    }
+                },
+                '400': {
+                    description: 'Invalid circuit breaker key',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                },
+                '401': {
+                    description: 'Unauthorized',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/ErrorResponse' }
+                        }
+                    }
+                }
+            }
+        }
     }
 };
 

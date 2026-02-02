@@ -1,11 +1,13 @@
 /**
  * Midtrans Payment Service
  * Handles QRIS payment generation and order management
+ * Enhanced with resilience patterns: timeouts, retries, circuit breaker
  */
 
 import { CoreApi } from 'midtrans-client';
 import type { Project, Invoice } from '@prisma/client';
 import type { PaymentResponse, RuntimeEnv } from '@/lib/types';
+import { resilienceService } from '@/lib/resilience';
 
 /**
  * Midtrans service interface
@@ -69,6 +71,7 @@ export class MidtransPaymentService implements MidtransService {
 
     /**
      * Creates QRIS payment for an invoice
+     * Enhanced with resilience: retries, timeout, circuit breaker
      * 
      * @param invoice - Invoice with project details
      * @param userDetails - Optional user details for customer information
@@ -78,7 +81,7 @@ export class MidtransPaymentService implements MidtransService {
         invoice: Invoice & { project: Project }, 
         userDetails?: { email: string; name: string; phone?: string | null }
     ): Promise<PaymentResponse> {
-        try {
+        return resilienceService.execute('midtrans', async () => {
             // Generate unique order ID with invoice prefix for easier tracking
             const orderId = `INV-${invoice.id.slice(0, 8).toUpperCase()}-${Date.now()}`;
 
@@ -130,58 +133,71 @@ export class MidtransPaymentService implements MidtransService {
                 transactionId: chargeResponse.transaction_id,
                 message: chargeResponse.status_message || 'Payment created successfully',
             };
-
-        } catch (error) {
-            console.error('QRIS payment creation failed:', {
-                invoiceId: invoice.id,
-                error: error instanceof Error ? error.message : 'Unknown error',
-            });
-
-            throw new Error(`Payment creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        }, {
+            timeout: 15000,
+            retry: {
+                maxAttempts: 3,
+                baseDelay: 1000,
+                maxDelay: 5000,
+                backoffMultiplier: 2,
+            },
+        });
     }
 
     /**
      * Gets payment status from Midtrans
+     * Enhanced with resilience: retries, timeout, circuit breaker
      * 
      * @param orderId - Midtrans order ID
      * @returns Transaction status from Midtrans
      */
     async getPaymentStatus(orderId: string) {
-        try {
+        return resilienceService.execute('midtrans', async () => {
             const status = await this.midtransClient.transaction.status(orderId);
             return status;
-        } catch (error) {
-            console.error('Payment status check failed:', error);
-            throw new Error(`Status check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        }, {
+            timeout: 10000,
+            retry: {
+                maxAttempts: 2,
+                baseDelay: 500,
+                maxDelay: 2000,
+                backoffMultiplier: 2,
+            },
+        });
     }
 
     /**
      * Cancels a pending payment
+     * Enhanced with resilience: retries, timeout, circuit breaker
      * 
      * @param orderId - Midtrans order ID
      * @returns Cancellation response
      */
     async cancelPayment(orderId: string) {
-        try {
+        return resilienceService.execute('midtrans', async () => {
             const response = await this.midtransClient.transaction.cancel(orderId);
             return response;
-        } catch (error) {
-            console.error('Payment cancellation failed:', error);
-            throw new Error(`Cancellation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        }, {
+            timeout: 10000,
+            retry: {
+                maxAttempts: 2,
+                baseDelay: 500,
+                maxDelay: 2000,
+                backoffMultiplier: 2,
+            },
+        });
     }
 
     /**
      * Refunds a paid transaction
+     * Enhanced with resilience: retries, timeout, circuit breaker
      * 
      * @param orderId - Midtrans order ID
      * @param amount - Amount to refund (optional, defaults to full amount)
      * @returns Refund response
      */
     async refundPayment(orderId: string, amount?: number) {
-        try {
+        return resilienceService.execute('midtrans', async () => {
             const parameter: Record<string, unknown> = {};
             if (amount) {
                 parameter.amount = amount;
@@ -189,10 +205,15 @@ export class MidtransPaymentService implements MidtransService {
 
             const response = await this.midtransClient.transaction.refund(orderId, parameter);
             return response;
-        } catch (error) {
-            console.error('Payment refund failed:', error);
-            throw new Error(`Refund failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        }, {
+            timeout: 15000,
+            retry: {
+                maxAttempts: 3,
+                baseDelay: 1000,
+                maxDelay: 5000,
+                backoffMultiplier: 2,
+            },
+        });
     }
 }
 
