@@ -281,5 +281,5 @@ jobs:
           - No functionality is broken (Regression check).
           PROMPT
           )" \
-            --model iflowcn/glm-4.6 \
+            --model opencode/kimi-k2.5-frer \
             --share false \
