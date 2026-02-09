@@ -309,5 +309,5 @@ jobs:
           END OF PROMPT
           PROMPT
           )" \
-            --model opencode/glm-4.7-free \
+            --model opencode/big-pickle \
             --share false \
