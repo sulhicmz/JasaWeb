@@ -373,19 +373,19 @@
       ]
     },
     "jasaweb-architect": {
-      "mode": ""subagent",
+      "mode": "subagent",
       "model": "opencode/glm-4.7-free",
       "temperature": 0.5,
       "hidden": false
     },
     "jasaweb-developer": {
-      "mode": ""subagent",
+      "mode": "subagent",
       "model": "opencode/minimax-m2.1-free",
       "temperature": 0.7,
       "hidden": false
     },
     "jasaweb-security": {
-      "mode": ""subagent",
+      "mode": "subagent",
       "model": "opencode/kimi-k2.5-free",
       "temperature": 0.3,
       "hidden": false
