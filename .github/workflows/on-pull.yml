@@ -54,17 +54,6 @@ jobs:
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
-      - name: Branch Management
-        run: |
-          git fetch --all
-          if git branch -r | grep "origin/agent-workspace"; then
-            git checkout agent-workspace
-            git pull origin agent-workspace
-          else
-            git checkout -b agent-workspace
-          fi
-          git merge origin/main --no-edit || echo "Merge conflict or already up to date"
-
       - name: Install Dependencies
         continue-on-error: true
         run: npm ci
@@ -160,18 +149,14 @@ jobs:
           Make every PR safely mergable and merge it without conflicts.
 
           PROCESS:
-          1. Sort PRs by urgency:
-             a. Merge conflict present
-             b. CI failing
-             c. Ready to merge
-             d. Draft
+          1. Sort PRs by time created, choose latest pr.
 
           2. For each PR (one at a time):
              - Checkout PR branch
              - Fetch latest DEFAULT_BRANCH
              - Rebase or merge DEFAULT_BRANCH INTO PR branch
              - Resolve conflicts ONLY if trivial and deterministic
-               - If not trivial → comment with explanation and STOP on that PR
+               - If not trivial → comment with explanation and CLOSE that PR
              - All comments must be resolved.
               - Run build and test suite
               - BEFORE fixing, analyze issues using tools:
