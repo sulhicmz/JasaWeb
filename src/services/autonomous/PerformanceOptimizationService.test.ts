@@ -105,9 +105,10 @@ describe('PerformanceOptimizationService', () => {
   describe('Bottleneck Detection', () => {
     it('should detect database bottlenecks', async () => {
       const metrics = {
-        database: { queryTime: 150, indexUsage: 60, slowQueries: 25 },
-        cache: { hitRate: 0.85, memoryUsage: 50 },
-        api: { averageLatency: 80, errorRate: 0.01 },
+        database: { queryTime: 150, indexUsage: 60, slowQueries: 25, connectionPool: 50, score: 65 },
+        cache: { hitRate: 0.85, memoryUsage: 50, missRate: 0.15, evictionRate: 0.05, score: 85 },
+        api: { averageLatency: 80, p95Latency: 120, p99Latency: 150, errorRate: 0.01, throughput: 100, score: 80 },
+        bundle: { size: 189, gzippedSize: 60, chunkCount: 5, largestChunk: 45, compressionRatio: 0.68, score: 90 },
         timestamp: new Date().toISOString()
       };
 
@@ -130,9 +131,10 @@ describe('PerformanceOptimizationService', () => {
   describe('Scaling Recommendations', () => {
     beforeEach(() => {
       (performanceMonitor.getLatestMetrics as any).mockReturnValue({
-        database: { queryTime: 40, indexUsage: 85, slowQueries: 5 },
-        cache: { hitRate: 0.9, memoryUsage: 95, evictionRate: 0.1 },
-        api: { averageLatency: 80, p95Latency: 150, errorRate: 0.005, throughput: 120 },
+        database: { queryTime: 40, indexUsage: 85, slowQueries: 5, connectionPool: 70, score: 85 },
+        cache: { hitRate: 0.9, memoryUsage: 95, missRate: 0.1, evictionRate: 0.1, score: 88 },
+        api: { averageLatency: 80, p95Latency: 150, p99Latency: 200, errorRate: 0.005, throughput: 120, score: 85 },
+        bundle: { size: 189, gzippedSize: 60, chunkCount: 5, largestChunk: 45, compressionRatio: 0.68, score: 90 },
         timestamp: new Date().toISOString()
       });
 
@@ -153,9 +155,10 @@ describe('PerformanceOptimizationService', () => {
   describe('Optimization Cycle', () => {
     beforeEach(() => {
       (performanceMonitor.getLatestMetrics as any).mockReturnValue({
-        database: { queryTime: 25, indexUsage: 90, slowQueries: 2 },
-        cache: { hitRate: 0.9, memoryUsage: 60, evictionRate: 0.05 },
-        api: { averageLatency: 60, p95Latency: 100, errorRate: 0.005, throughput: 150 },
+        database: { queryTime: 25, indexUsage: 90, slowQueries: 2, connectionPool: 60, score: 92 },
+        cache: { hitRate: 0.9, memoryUsage: 60, missRate: 0.1, evictionRate: 0.05, score: 90 },
+        api: { averageLatency: 60, p95Latency: 100, p99Latency: 120, errorRate: 0.005, throughput: 150, score: 90 },
+        bundle: { size: 189, gzippedSize: 60, chunkCount: 5, largestChunk: 45, compressionRatio: 0.68, score: 90 },
         timestamp: new Date().toISOString()
       });
 
@@ -185,10 +188,10 @@ describe('PerformanceOptimizationService', () => {
   describe('Optimization Summary', () => {
     it('should provide summary', () => {
       (performanceMonitor.getLatestMetrics as any).mockReturnValue({
-        bundle: { score: 90 },
-        api: { score: 85 },
-        database: { score: 88 },
-        cache: { score: 92 },
+        bundle: { size: 189, gzippedSize: 60, chunkCount: 5, largestChunk: 45, compressionRatio: 0.68, score: 90 },
+        api: { averageLatency: 60, p95Latency: 100, p99Latency: 120, errorRate: 0.005, throughput: 150, score: 85 },
+        database: { queryTime: 25, indexUsage: 90, slowQueries: 2, connectionPool: 60, score: 88 },
+        cache: { hitRate: 0.9, memoryUsage: 60, missRate: 0.1, evictionRate: 0.05, score: 92 },
         timestamp: new Date().toISOString()
       });
 
