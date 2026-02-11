@@ -70,10 +70,10 @@ export const GET: APIRoute = async ({ request, locals }) => {
       }
 
       case 'anomalies': {
-        const anomalies = performanceIntelligence.getAnomalies({ 
-          severity: severity || undefined, 
-          metric: metric || undefined, 
-          timeRange 
+        const anomalies = performanceIntelligence.getAnomalies({
+          severity: severity || undefined,
+          metric: metric || undefined,
+          timeRange
         });
         return jsonResponse({
           anomalies,
