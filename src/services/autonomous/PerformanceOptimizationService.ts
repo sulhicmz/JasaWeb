@@ -457,19 +457,19 @@ export class PerformanceOptimizationService {
     metrics: PerformanceMetrics
   ): Promise<boolean> {
     const metricValues: Record<string, number> = {
-      'database.queryTime': metrics.database.queryTime,
-      'database.indexUsage': metrics.database.indexUsage,
-      'database.slowQueries': metrics.database.slowQueries,
-      'cache.hitRate': metrics.cache.hitRate * 100,
-      'cache.memoryUsage': metrics.cache.memoryUsage,
-      'cache.evictionRate': metrics.cache.evictionRate * 100,
-      'api.averageLatency': metrics.api.averageLatency,
-      'api.p95Latency': metrics.api.p95Latency,
-      'api.errorRate': metrics.api.errorRate * 100,
-      'api.throughput': metrics.api.throughput,
-      'bundle.size': metrics.bundle.size,
-      'bundle.largestChunk': metrics.bundle.largestChunk,
-      'bundle.compressionRatio': metrics.bundle.compressionRatio * 100
+      'database.queryTime': metrics.database?.queryTime ?? 0,
+      'database.indexUsage': metrics.database?.indexUsage ?? 0,
+      'database.slowQueries': metrics.database?.slowQueries ?? 0,
+      'cache.hitRate': (metrics.cache?.hitRate ?? 0) * 100,
+      'cache.memoryUsage': metrics.cache?.memoryUsage ?? 0,
+      'cache.evictionRate': (metrics.cache?.evictionRate ?? 0) * 100,
+      'api.averageLatency': metrics.api?.averageLatency ?? 0,
+      'api.p95Latency': metrics.api?.p95Latency ?? 0,
+      'api.errorRate': (metrics.api?.errorRate ?? 0) * 100,
+      'api.throughput': metrics.api?.throughput ?? 0,
+      'bundle.size': metrics.bundle?.size ?? 0,
+      'bundle.largestChunk': metrics.bundle?.largestChunk ?? 0,
+      'bundle.compressionRatio': (metrics.bundle?.compressionRatio ?? 0) * 100
     };
 
     for (const condition of strategy.conditions) {
@@ -773,10 +773,10 @@ export class PerformanceOptimizationService {
     const currentMetrics = performanceMonitor.getLatestMetrics();
     if (currentMetrics) {
       this.cacheConfig.metrics = {
-        hitRate: currentMetrics.cache.hitRate,
-        memoryUsage: currentMetrics.cache.memoryUsage,
-        evictionRate: currentMetrics.cache.evictionRate,
-        compressionRatio: currentMetrics.bundle.compressionRatio
+        hitRate: currentMetrics.cache?.hitRate ?? 0,
+        memoryUsage: currentMetrics.cache?.memoryUsage ?? 0,
+        evictionRate: currentMetrics.cache?.evictionRate ?? 0,
+        compressionRatio: currentMetrics.bundle?.compressionRatio ?? 0
       };
     }
   }
