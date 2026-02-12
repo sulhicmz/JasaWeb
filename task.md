@@ -9,7 +9,7 @@
 | TASK-010 | Remove unused 'e' variables in catch blocks across job API endpoints | [ ] | Low |
 | TASK-011 | Fix lexical declarations in case blocks in performance-optimization API | [ ] | Medium |
 | TASK-012 | Fix React Hook missing dependencies in JobQueueDashboard and useWebSocket | [ ] | Medium |
-| TASK-013 | Fix 11 failing tests in PerformanceOptimizationService.test.ts | [ ] | High |
+| TASK-013 | Fix 11 failing tests in PerformanceOptimizationService.test.ts | [x] | High |
 | TASK-001 | Fix NODE_ENV read-only property error in image-optimization.test.ts | [x] | High |
 | TASK-002 | Remove unused React import from JobQueueDashboard.tsx | [x] | Medium |
 | TASK-003 | Replace deprecated substr() with substring() across codebase | [x] | Low |
