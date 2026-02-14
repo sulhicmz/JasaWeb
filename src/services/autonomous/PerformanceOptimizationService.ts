@@ -456,20 +456,21 @@ export class PerformanceOptimizationService {
     strategy: OptimizationStrategy,
     metrics: PerformanceMetrics
   ): Promise<boolean> {
-    const metricValues: Record<string, number> = {
-      'database.queryTime': metrics.database.queryTime,
-      'database.indexUsage': metrics.database.indexUsage,
-      'database.slowQueries': metrics.database.slowQueries,
-      'cache.hitRate': metrics.cache.hitRate * 100,
-      'cache.memoryUsage': metrics.cache.memoryUsage,
-      'cache.evictionRate': metrics.cache.evictionRate * 100,
-      'api.averageLatency': metrics.api.averageLatency,
-      'api.p95Latency': metrics.api.p95Latency,
-      'api.errorRate': metrics.api.errorRate * 100,
-      'api.throughput': metrics.api.throughput,
-      'bundle.size': metrics.bundle.size,
-      'bundle.largestChunk': metrics.bundle.largestChunk,
-      'bundle.compressionRatio': metrics.bundle.compressionRatio * 100
+    // BUGFIX: Add null-safety checks for all metric sub-objects to prevent runtime errors
+    const metricValues: Record<string, number | undefined> = {
+      'database.queryTime': metrics.database?.queryTime,
+      'database.indexUsage': metrics.database?.indexUsage,
+      'database.slowQueries': metrics.database?.slowQueries,
+      'cache.hitRate': metrics.cache?.hitRate != null ? metrics.cache.hitRate * 100 : undefined,
+      'cache.memoryUsage': metrics.cache?.memoryUsage,
+      'cache.evictionRate': metrics.cache?.evictionRate != null ? metrics.cache.evictionRate * 100 : undefined,
+      'api.averageLatency': metrics.api?.averageLatency,
+      'api.p95Latency': metrics.api?.p95Latency,
+      'api.errorRate': metrics.api?.errorRate != null ? metrics.api.errorRate * 100 : undefined,
+      'api.throughput': metrics.api?.throughput,
+      'bundle.size': metrics.bundle?.size,
+      'bundle.largestChunk': metrics.bundle?.largestChunk,
+      'bundle.compressionRatio': metrics.bundle?.compressionRatio != null ? metrics.bundle.compressionRatio * 100 : undefined
     };
 
     for (const condition of strategy.conditions) {
@@ -772,11 +773,12 @@ export class PerformanceOptimizationService {
     // For now, we'll update cache metrics
     const currentMetrics = performanceMonitor.getLatestMetrics();
     if (currentMetrics) {
+      // BUGFIX: Add null-safety checks for nested metric objects
       this.cacheConfig.metrics = {
-        hitRate: currentMetrics.cache.hitRate,
-        memoryUsage: currentMetrics.cache.memoryUsage,
-        evictionRate: currentMetrics.cache.evictionRate,
-        compressionRatio: currentMetrics.bundle.compressionRatio
+        hitRate: currentMetrics.cache?.hitRate ?? 0,
+        memoryUsage: currentMetrics.cache?.memoryUsage ?? 0,
+        evictionRate: currentMetrics.cache?.evictionRate ?? 0,
+        compressionRatio: currentMetrics.bundle?.compressionRatio ?? 0
       };
     }
   }

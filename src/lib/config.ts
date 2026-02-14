@@ -105,17 +105,18 @@ function validateEnvVar(spec: EnvSpec, value: string | undefined): { isValid: bo
 /**
  * Validate all environment variables
  * This should be called during application startup
+ * SECURITY: Only uses runtimeEnv from Cloudflare bindings, never import.meta.env
  */
-export function validateEnvironment(runtimeEnv?: Record<string, any>): EnvValidationResult {
+export function validateEnvironment(runtimeEnv: Record<string, any> = {}): EnvValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
     for (const spec of ENV_VARS) {
-        // Prioritize runtime env (Cloudflare), fallback to import.meta.env (Vite/Build)
-        const value = runtimeEnv?.[spec.name] || import.meta.env[spec.name];
+        // SECURITY: Use only runtime env (Cloudflare bindings), never import.meta.env
+        const value = runtimeEnv[spec.name];
 
         // Special handling for DATABASE_URL with Hyperdrive
-        if (spec.name === 'DATABASE_URL' && !value && runtimeEnv?.HYPERDRIVE) {
+        if (spec.name === 'DATABASE_URL' && !value && runtimeEnv.HYPERDRIVE) {
              // database is configured via Hyperdrive
              continue;
         }
@@ -137,26 +138,26 @@ export function validateEnvironment(runtimeEnv?: Record<string, any>): EnvValida
     }
 
     // Additional cross-variable validation
-    const isProduction = import.meta.env.NODE_ENV === 'production';
+    const isProduction = runtimeEnv.NODE_ENV === 'production';
 
     if (isProduction) {
         const requiredInProd = ['JWT_SECRET', 'MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY'];
         for (const varName of requiredInProd) {
-            const hasValue = runtimeEnv?.[varName] || import.meta.env[varName];
+            const hasValue = runtimeEnv[varName];
             if (!hasValue) {
                 errors.push(`'${varName}' is required in production environment`);
             }
         }
         
         // Check DATABASE_URL only if Hyperdrive is NOT present
-        if (!runtimeEnv?.HYPERDRIVE && !import.meta.env.DATABASE_URL && !runtimeEnv?.DATABASE_URL) {
+        if (!runtimeEnv.HYPERDRIVE && !runtimeEnv.DATABASE_URL) {
              errors.push(`'DATABASE_URL' is required in production environment (or Hyperdrive binding)`);
         }
     }
 
     // Check for development vs production Midtrans configuration
-    const midtransServerKey = import.meta.env.MIDTRANS_SERVER_KEY;
-    const midtransIsProduction = import.meta.env.MIDTRANS_IS_PRODUCTION === 'true';
+    const midtransServerKey = runtimeEnv.MIDTRANS_SERVER_KEY;
+    const midtransIsProduction = runtimeEnv.MIDTRANS_IS_PRODUCTION === 'true';
 
     if (midtransServerKey) {
         const isSandboxKey = midtransServerKey.startsWith('SB-Mid-server-');
@@ -177,19 +178,20 @@ export function validateEnvironment(runtimeEnv?: Record<string, any>): EnvValida
 
 /**
  * Get environment configuration summary (safe to display)
+ * SECURITY: Requires runtimeEnv parameter, never uses import.meta.env
  */
-export function getEnvironmentInfo(): {
+export function getEnvironmentInfo(runtimeEnv: Record<string, any> = {}): {
     environment: string;
     database: 'configured' | 'missing';
     payment: 'configured' | 'missing';
     auth: 'configured' | 'missing';
 } {
-    const database = import.meta.env.DATABASE_URL ? 'configured' : 'missing';
-    const payment = (import.meta.env.MIDTRANS_SERVER_KEY && import.meta.env.MIDTRANS_CLIENT_KEY) ? 'configured' : 'missing';
-    const auth = import.meta.env.JWT_SECRET ? 'configured' : 'missing';
+    const database = runtimeEnv.DATABASE_URL ? 'configured' : 'missing';
+    const payment = (runtimeEnv.MIDTRANS_SERVER_KEY && runtimeEnv.MIDTRANS_CLIENT_KEY) ? 'configured' : 'missing';
+    const auth = runtimeEnv.JWT_SECRET ? 'configured' : 'missing';
 
     return {
-        environment: import.meta.env.NODE_ENV || 'unknown',
+        environment: runtimeEnv.NODE_ENV || 'unknown',
         database,
         payment,
         auth,
@@ -199,15 +201,16 @@ export function getEnvironmentInfo(): {
 // ==============================================
 // SITE METADATA
 // ==============================================
+// SECURITY: Hardcoded defaults instead of import.meta.env for consistency
 export const siteConfig = {
     name: 'JasaWeb',
     tagline: 'Platform Jasa Pembuatan Website Profesional',
     heroBadge: '✨ Platform #1 untuk Jasa Web',
     description: 'Kami membantu Anda membuat website sekolah, portal berita, dan company profile dengan kualitas premium.',
     footerDescription: 'Platform jasa pembuatan website profesional dengan solusi lengkap untuk kebutuhan digital Anda.',
-    url: import.meta.env.PUBLIC_SITE_URL || 'https://jasaweb.id',
-    email: import.meta.env.PUBLIC_CONTACT_EMAIL || 'hello@jasaweb.id',
-    phone: import.meta.env.PUBLIC_CONTACT_PHONE || '+62 812 3456 7890',
+    url: 'https://jasaweb.id',
+    email: 'hello@jasaweb.id',
+    phone: '+62 812 3456 7890',
 } as const;
 
 // ==============================================

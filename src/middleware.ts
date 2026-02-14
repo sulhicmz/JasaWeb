@@ -29,11 +29,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const env = locals.runtime?.env;
 
     // Environment validation (only once per application lifetime)
+    // SECURITY: Only use env from locals.runtime.env, never import.meta.env
     if (!envValidated) {
-        const validation = validateEnvironment(env);
+        const validation = validateEnvironment(env || {});
         if (!validation.isValid) {
-            const env = context.locals.runtime?.env;
-            const isDev = env?.NODE_ENV === 'development' || import.meta.env.DEV;
+            // SECURITY: Use only runtime env, never import.meta.env
+            const isDev = env?.NODE_ENV === 'development';
 
             if (isDev) {
                 // In development, show detailed errors but don't crash
@@ -63,7 +64,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
                 );
             }
         } else if (validation.warnings.length > 0) {
-            const isDev = env?.NODE_ENV === 'development' || import.meta.env.DEV;
+            // SECURITY: Use only runtime env, never import.meta.env
+            const isDev = env?.NODE_ENV === 'development';
             if (isDev) {
                 console.warn('⚠️ Environment Variable Warnings:');
                 validation.warnings.forEach(warning => console.warn(`  - ${warning}`));

@@ -18,6 +18,15 @@ interface CacheStats {
     lastReset: Date;
 }
 
+interface RedisConfig {
+    host?: string;
+    port?: number;
+    password?: string;
+    defaultTTL?: number;
+    maxRetries?: number;
+    retryDelay?: number;
+}
+
 class RedisCacheService {
     private config: {
         host: string;
@@ -32,15 +41,16 @@ class RedisCacheService {
     private isAvailable: boolean = false;
     private mockCache: Map<string, { value: string; expiry: number }> = new Map();
 
-    constructor() {
+    constructor(envConfig?: RedisConfig) {
         // Configuration from environment variables with defaults
+        // SECURITY: Accept config via parameter to avoid import.meta.env in lib files
         this.config = {
-            host: import.meta.env.REDIS_HOST || 'localhost',
-            port: parseInt(import.meta.env.REDIS_PORT || '6379'),
-            password: import.meta.env.REDIS_PASSWORD,
-            defaultTTL: parseInt(import.meta.env.REDIS_DEFAULT_TTL || '300'), // 5 minutes
-            maxRetries: parseInt(import.meta.env.REDIS_MAX_RETRIES || '3'),
-            retryDelay: parseInt(import.meta.env.REDIS_RETRY_DELAY || '1000')
+            host: envConfig?.host || 'localhost',
+            port: envConfig?.port || 6379,
+            password: envConfig?.password,
+            defaultTTL: envConfig?.defaultTTL || 300, // 5 minutes
+            maxRetries: envConfig?.maxRetries || 3,
+            retryDelay: envConfig?.retryDelay || 1000
         };
 
         this.stats = {
