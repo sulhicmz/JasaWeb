@@ -134,8 +134,9 @@ export const GET: APIRoute = async ({ request, locals }) => {
         });
       }
 
-      default:
+      default: {
         return errorResponse('Invalid intelligence type. Use: summary, anomalies, predictions, patterns, or intelligence', 400);
+      }
     }
 
   } catch (error) {
@@ -204,8 +205,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
         });
       }
 
-      default:
+      default: {
         return errorResponse('Invalid action. Use: add-metrics, clear-data, or reset-anomalies', 400);
+      }
     }
 
   } catch (error) {
