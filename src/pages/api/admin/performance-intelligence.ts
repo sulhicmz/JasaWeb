@@ -109,11 +109,12 @@ export const GET: APIRoute = async ({ request, locals }) => {
       }
 
       case 'intelligence': {
-        // Full intelligence report
-        const fullSummary = performanceIntelligence.getIntelligenceSummary();
-        const allAnomalies = performanceIntelligence.getAnomalies();
-        const allPatterns = performanceIntelligence.getPatterns();
-        const allPredictions = performanceIntelligence.getAllPredictions();
+        // Full intelligence report - each const in its own block scope
+        {
+          const fullSummary = performanceIntelligence.getIntelligenceSummary();
+          const allAnomalies = performanceIntelligence.getAnomalies();
+          const allPatterns = performanceIntelligence.getPatterns();
+          const allPredictions = performanceIntelligence.getAllPredictions();
 
         return jsonResponse({
           summary: fullSummary,
@@ -132,6 +133,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
           currentMetrics,
           lastUpdated: new Date().toISOString()
         });
+        }
       }
 
       default:
