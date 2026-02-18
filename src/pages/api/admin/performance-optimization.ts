@@ -108,10 +108,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
           timestamp: new Date().toISOString()
         });
 
-case 'add-strategy': {
+      case 'add-strategy': {
         const strategyError = validateRequired(body, ['strategy']);
         if (strategyError) return errorResponse(strategyError);
-        
+
         optService.addStrategy(body.strategy);
         return jsonResponse({
           message: 'Optimization strategy added',

@@ -79,16 +79,16 @@ export default function JobQueueDashboard() {
         return () => clearInterval(interval);
     }, [fetchJobs]);
 
-    const fetchStatus = async () => {
+    const fetchStatus = useCallback(async () => {
         try {
             const response = await fetch(API_ENDPOINTS.ADMIN.JOB_STATUS);
             const data = await response.json();
-            
+
             setProcessorStatus(data.processor);
         } catch (error) {
             console.error('Failed to fetch status:', error);
         }
-    };
+    }, []);
 
     const handleStartProcessor = async () => {
         try {
