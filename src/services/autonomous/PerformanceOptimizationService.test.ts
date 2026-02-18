@@ -10,14 +10,14 @@ import type { KVNamespace } from '@/lib/types';
 import { createPerformanceOptimizationService } from './PerformanceOptimizationService';
 
 // Mock dependencies - factories must not reference outer variables
-vi.mock('@/lib/performance-monitoring', () => ({
+vi.mock('../../lib/performance-monitoring', () => ({
   performanceMonitor: {
     getLatestMetrics: vi.fn(),
     generateRecommendations: vi.fn(),
   },
 }));
 
-vi.mock('@/lib/performance-intelligence', () => ({
+vi.mock('../../lib/performance-intelligence', () => ({
   performanceIntelligence: {
     getAnomalies: vi.fn(),
     getPrediction: vi.fn(),
@@ -26,8 +26,8 @@ vi.mock('@/lib/performance-intelligence', () => ({
 }));
 
 // Import mocked modules to access mock functions
-import { performanceMonitor } from '@/lib/performance-monitoring';
-import { performanceIntelligence } from '@/lib/performance-intelligence';
+import { performanceMonitor } from '../../lib/performance-monitoring';
+import { performanceIntelligence } from '../../lib/performance-intelligence';
 
 describe('PerformanceOptimizationService', () => {
   let service: ReturnType<typeof createPerformanceOptimizationService>;
