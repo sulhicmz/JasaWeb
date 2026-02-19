@@ -139,7 +139,7 @@ it('should aggregate dashboard metrics efficiently', () => {
             const mockData = Array.from({ length: TEST_RECORDS }, (_, i) => ({
                 id: i,
                 status: ['pending_payment', 'in_progress', 'completed'][i % 3],
-                amount: Math.random() * 1000,
+                amount: (i * 137) % 1000, // Deterministic pseudo-random (faster than Math.random)
                 createdAt: new Date(2024, 0, (i % 28) + 1)
             }));
 
