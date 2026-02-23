@@ -1,0 +1,332 @@
+name: parallel
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+
+  # ================================================================
+  # STAGE 1 — ARCHITECT (THE BRAIN)
+  # ================================================================
+  architect:
+    name: "Architect: Strategy & Triage"
+    runs-on: ubuntu-24.04-arm
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.opencode
+            ~/.npm
+          key: opencode-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-v1
+          restore-keys: |
+            opencode-${{ runner.os }}-v1
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci || true
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Architect Intelligence Cycle
+        timeout-minutes: 30
+        run: |
+          opencode run /ulw-loop "
+          You are a Fully Autonomous System Orchestrator.
+
+          SYSTEM TARGET:
+          Fullstack serverless production-grade application.
+
+          YOU LEAD AI AGENT TEAM:
+          Repository-manager, RnD, Product-Architect, ai-agent-engineer,
+          backend-engineer, frontend-engineer, ui-ux-engineer,
+          platform-engineer, security-engineer,
+          quality-assurance, DX-engineer,
+          technical-writer, user-story-engineer.
+
+          OBJECTIVE:
+          Continuously improve architecture, frontend, backend,
+          infrastructure, testing, documentation, flows, and DX.
+
+          PRIMARY TASK:
+          1. Deep full-repository audit.
+          2. Detect inefficiencies, architectural drift, tech debt,
+             missing tests, security gaps, DX friction, system flow.
+          3. Create atomic, non-overlapping GitHub Issues.
+          4. maintain docs/blueprint.md
+
+          WORK PRINCIPLES:
+          - Production-grade discipline
+          - Zero redundancy
+          - Clean architecture boundaries
+          - Security-first mindset
+          - Test-first validation
+          - Performance-aware design
+          - Avoid overengineering
+
+          STRICT PHASE:
+          ANALYZE → PLAN → DESIGN → REVIEW → VERIFY → DELIVER
+
+          ISSUE FORMAT:
+          Title:
+          Label:
+          Problem Statement:
+          Proposed Solution:
+          Acceptance Criteria:
+          Impact:
+          Priority: High | Medium | Low
+
+          Never create duplicate issues.
+          Never create vague issues.
+          Never overlap responsibility.
+          One issue per agent.
+          Optimize for long-term maintainability.
+          " \
+          --model opencode/glm-5-free \
+          --share false
+
+  # ================================================================
+  # STAGE 2 — SPECIALISTS (THE MUSCLE)
+  # ================================================================
+  specialists:
+    name: "Specialist: ${{ matrix.role }}"
+    needs: architect
+    runs-on: ubuntu-24.04-arm
+    continue-on-error: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        role:
+          - Repository-manager
+          - RnD
+          - Product-Architect
+          - ai-agent-engineer
+          - backend-engineer
+          - frontend-engineer
+          - ui-ux-engineer
+          - platform-engineer
+          - security-engineer
+          - quality-assurance
+          - DX-engineer
+          - technical-writer
+          - user-story-engineer
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if Open PR Exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COUNT=$(gh pr list --state open --json number --jq length)
+          if [ "$COUNT" -gt 0 ]; then
+            echo "🚫 Open PR exists. Skipping."
+            exit 0
+          fi
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Execute Specialist Work
+        timeout-minutes: 30
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          echo "🚀 Specialist ${{ matrix.role }} executing"
+
+          opencode run /ulw-loop "
+          You are Autonomous ${{ matrix.role }} Specialist.
+
+          DOMAIN: ${{ matrix.role }}
+
+          OBJECTIVE:
+          Deliver small, safe, measurable improvements
+          strictly inside your domain.
+
+          EXECUTION MODE:
+          - If Issue exists with label ${{ matrix.role }} → execute.
+          - If none → proactive scan limited to domain.
+          - If nothing valuable → exit safely.
+
+          STRICT PHASE:
+          RESEARCH → PLAN → IMPLEMENT → VERIFY → SELF-REVIEW → DELIVER
+
+          PR REQUIREMENTS:
+          - Label: ${{ matrix.role }}
+          - Linked to issue
+          - Up to date with default branch
+          - No conflict
+          - Build/lint/test success
+          - ZERO warnings
+          - Small atomic diff
+
+          Never refactor unrelated modules.
+          Never introduce unnecessary abstraction.
+          " \
+          --model opencode/glm-5-free \
+          --agent ${{ matrix.role }} \
+          --share false
+
+  # ================================================================
+  # STAGE 3 — FIXER
+  # ================================================================
+  Fixer:
+    name: "Fixer"
+    needs: specialists
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci || true
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Audit & Fix PRs
+        timeout-minutes: 60
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          opencode run /ulw-loop "
+          You are Autonomous PR Fixer.
+
+          Audit ALL non-merged PRs.
+          For each PR:
+          - Ensure up to date
+          - No conflicts
+          - Build/lint/test success
+          - ZERO warnings
+          - All CI green
+
+          Fix minor issues automatically.
+          Add detailed technical comments.
+          DO NOT merge PR.
+          " \
+          --model opencode/glm-5-free \
+          --share false
+
+  # ================================================================
+  # STAGE 4 — PR HANDLER
+  # ================================================================
+  PR-Handler:
+    name: "PR-Handler"
+    needs: Fixer
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install OpenCode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
+      - name: Merge Qualified PRs
+        timeout-minutes: 60
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IFLOW_API_KEY: ${{ secrets.IFLOW_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          opencode run /ulw-loop "
+          You are PR-Handler.
+
+          Process ALL open PR from latest.
+
+          Merge ONLY IF:
+          - Up to date
+          - No conflict
+          - Build/lint/test success
+          - ZERO warnings
+          - All CI green
+
+          If conflict → close with explanation.
+          Never merge risky PR.
+          Never bypass CI.
+          " \
+          --model opencode/glm-5-free \
+          --share false
